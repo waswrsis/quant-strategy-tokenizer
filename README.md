@@ -22,34 +22,40 @@ QST treats a strategy as a sequence of explicit decisions:
 
 ```mermaid
 flowchart TD
-    subgraph Row1["Shape the problem"]
-        direction LR
-        A["Strategy idea<br/>notes, code, or agent request"] --> B["Bring your own data<br/>rows, DataFrame, records"] --> C["Normalize once<br/>schema and field mapping"]
-    end
+    A(["Strategy idea<br/>notes, code, or agent request"])
+    B["Caller-owned data<br/>rows, DataFrame, records"]
+    C["Normalize once<br/>schema and field mapping"]
 
-    subgraph Row2["Turn market facts into candidates"]
-        direction RL
-        F["Candidate list<br/>ranked and explainable"] --> E["Context filters<br/>status, history, cooldown, MRQ"] --> D["Market features<br/>EMA, ATR, VWAP, CHOP"]
-    end
+    D{{"Reusable strategy tokens"}}
+    E["Market features<br/>EMA, ATR, VWAP, CHOP"]
+    F["Context filters<br/>status, history, cooldown, MRQ"]
+    G["Signals and votes<br/>direction, score, explanation"]
 
-    subgraph Row3["Make the decision auditable"]
-        direction LR
-        G["Decision layer<br/>signals and votes"] --> H["Risk gate<br/>freeze, fail-closed, unknowns"] --> I["Plan and explain<br/>orders, state, reports"]
-    end
+    H["Candidate decision<br/>ranked and inspectable"]
+    I{"Risk gate"}
+    J["Order plan<br/>venue-neutral, non-executing"]
+    K["Explain and stop<br/>blocked, unknown, or invalid"]
+    L["State and reports<br/>auditable output for users and agents"]
 
-    C --> D
-    F --> G
+    A --> B --> C --> D
+    D --> E --> H
+    D --> F --> H
+    D --> G --> H
+    H --> I
+    I -->|"allow"| J --> L
+    I -->|"block / unknown"| K --> L
 
-    classDef intake fill:#f8fafc,stroke:#334155,color:#111827;
-    classDef research fill:#eef2ff,stroke:#475569,color:#111827;
-    classDef decision fill:#ecfeff,stroke:#155e75,color:#111827;
-    classDef guard fill:#fff7ed,stroke:#9a3412,color:#111827;
+    classDef source fill:#f8fafc,stroke:#334155,color:#111827,stroke-width:1.5px;
+    classDef token fill:#eef2ff,stroke:#475569,color:#111827,stroke-width:1.5px;
+    classDef decision fill:#ecfeff,stroke:#155e75,color:#111827,stroke-width:1.5px;
+    classDef risk fill:#fff7ed,stroke:#9a3412,color:#111827,stroke-width:1.5px;
+    classDef output fill:#f0fdf4,stroke:#166534,color:#111827,stroke-width:1.5px;
 
-    class A,B,C intake;
-    class D,E,F research;
-    class G decision;
-    class H guard;
-    class I intake;
+    class A,B,C source;
+    class D,E,F,G token;
+    class H decision;
+    class I,J,K risk;
+    class L output;
 ```
 
 Each step can be called independently. A user can run only VWAP, only universe filtering, only order planning, or a full pipeline assembled from smaller modules.
