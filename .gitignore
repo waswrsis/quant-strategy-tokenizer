@@ -1,0 +1,54 @@
+# Python caches and local build artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local environments and credentials
+.env
+.env.*
+*.env
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.csr
+*secret*
+*.token
+*.tokens
+token.json
+tokens.json
+*credential*
+
+# Logs, state, and generated reports
+*.log
+logs/
+remote_logs/
+backtest_runs_*/
+*_state.json
+mrv*_state.json
+state.json
+blacklist.txt
+
+# Local backups and deployment snapshots
+backups/
+deploy/
+remote_builds/
+remote_patch/
+_tmp_*
+_remote_*
+_deploy_*
+_sync_*
+
+# Large/local analysis artifacts
+_bench_*.json
+texts_distilled*
+deep_research_docx_extracted.txt
+
+# Unrelated local projects or personal workspaces in this folder
+create self/
+.idea/
