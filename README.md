@@ -94,7 +94,7 @@ Each step can be called independently. A user can run only VWAP, only universe f
 ## Project Map
 
 ```text
-quant-strategy-tokenizer/
+Quant-Strategy-Tokenizer/
   README.md
   pyproject.toml
   quant_strategy_tokenizer/
@@ -294,8 +294,8 @@ See [docs/PROJECT_EXPERIENCE.md](docs/PROJECT_EXPERIENCE.md) for the project exp
 Clone the repository first:
 
 ```bash
-git clone https://github.com/waswrsis/quant-strategy-tokenizer.git
-cd quant-strategy-tokenizer
+git clone https://github.com/waswrsis/Quant-Strategy-Tokenizer.git
+cd Quant-Strategy-Tokenizer
 ```
 
 Install QST in editable mode. This installs the local `quant_strategy_tokenizer` package and the runtime dependencies declared in `pyproject.toml`.
