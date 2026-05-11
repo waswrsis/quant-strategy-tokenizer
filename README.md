@@ -18,7 +18,27 @@ It is built for agents and developers who need to inspect, split, recombine, tes
 
 ## What It Does
 
-QST treats a strategy as a sequence of explicit decisions:
+QST is not a trading bot and not a broker adapter. It is a strategy workbench for agents: a place to break a complex trading system into small pieces, name each piece clearly, test it alone, and then recombine the pieces into research, simulation, or production-adjacent workflows.
+
+The core idea is that a trading strategy should not live as one opaque script. QST encourages every component to declare its inputs, outputs, configuration, failure semantics, and side-effect boundary. That makes it easier for an agent to inspect the strategy, explain what it is doing, and replace one module without rewriting the entire system.
+
+### Built-in Strategy Decomposition Tools
+
+QST ships with prompt assets specifically designed to help agents analyze and decompose complete strategy codebases:
+
+| Tool | Purpose |
+| --- | --- |
+| [`12_strategy_code_decomposition_agent.md`](quant_strategy_tokenizer/agent_prompts/12_strategy_code_decomposition_agent.md) | Teaches an agent how to read a full strategy codebase and split it into reusable strategy tokens. |
+| [`13_strategy_decomposition_task_template.md`](quant_strategy_tokenizer/agent_prompts/13_strategy_decomposition_task_template.md) | Provides a fill-in task template for applying the decomposition workflow to a concrete project. |
+| [`11_agent_project_usage_guide.md`](quant_strategy_tokenizer/agent_prompts/11_agent_project_usage_guide.md) | Shows another agent how to call QST modules, inspect outputs, and compose workflows safely. |
+| `Params / Request / Report / ModuleResult` contracts | Give each extracted token a predictable interface that can be reused across strategies. |
+
+In practice, an agent can use QST in two directions:
+
+- **Decompose** an existing strategy into alpha, filters, risk, order-planning, state, and reporting tokens.
+- **Compose** new workflows by arranging those tokens around user-provided market data.
+
+The operating flow looks like this:
 
 ```mermaid
 flowchart TD
