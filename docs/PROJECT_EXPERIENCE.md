@@ -1,6 +1,13 @@
 # Quant Strategy Tokenizer 项目经历
 *EN: Quant Strategy Tokenizer Project Experience*
 
+<p align="center">
+  <img src="assets/performance-90d.png" alt="90-day strategy performance snapshot" width="100%">
+</p>
+
+*90 天实盘表现截图（项目背景材料）*
+*EN: 90-day live performance snapshot used as project background context.*
+
 你们好啊，我将在这里添加一些跟项目有关的背景和经历
 *EN: Hello, I will add some project-related background and experience here.*
 
