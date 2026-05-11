@@ -291,15 +291,32 @@ See [docs/PROJECT_EXPERIENCE.md](docs/PROJECT_EXPERIENCE.md) for the project exp
 
 ## Installation
 
-```bash
-pip install -e .
-```
-
-Or install the runtime packages directly:
+Clone the repository first:
 
 ```bash
-pip install -r requirements.txt
+git clone https://github.com/waswrsis/quant-strategy-tokenizer.git
+cd quant-strategy-tokenizer
 ```
+
+Install QST in editable mode. This installs the local `quant_strategy_tokenizer` package and the runtime dependencies declared in `pyproject.toml`.
+
+```bash
+python -m pip install -e .
+```
+
+Verify the install:
+
+```bash
+python -c "import quant_strategy_tokenizer as qst; print(qst.__file__)"
+```
+
+If you only want the third-party runtime packages without installing the QST package itself, use:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+That command installs only `numpy` and `pandas`. It does not install `quant_strategy_tokenizer` as an importable package.
 
 ## Safety Boundary
 
