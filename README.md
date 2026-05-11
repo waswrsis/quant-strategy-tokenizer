@@ -1,6 +1,6 @@
-#Quant Strategy Tokenizer
-
 <div align="center">
+
+<h1>Quant Strategy Tokenizer</h1>
 
 **Decompose complex trading strategies into small, reusable, auditable strategy tokens.**
 
