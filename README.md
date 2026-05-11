@@ -21,16 +21,30 @@ It is built for agents and developers who need to inspect, split, recombine, tes
 QST treats a strategy as a sequence of explicit decisions:
 
 ```mermaid
-flowchart LR
-    A["Raw or normalized market data"] --> B["Data schema and normalization"]
-    B --> C["Indicators"]
-    C --> D["Filters"]
-    D --> E["Candidate pool"]
-    E --> F["Signals and votes"]
-    F --> G["Risk decisions"]
-    G --> H["Order plans"]
-    H --> I["State and reconciliation"]
-    I --> J["Reports for users or agents"]
+flowchart TD
+    A["User or Agent<br/>strategy idea, codebase, or simulation need"]
+    B["Caller-Owned Data<br/>raw rows, DataFrame, records, or custom objects"]
+    C["Normalize and Validate<br/>data_schema.py / normalization.py"]
+    D["Measure the Market<br/>EMA / ATR / VWAP / CHOP / spike / MRQ"]
+    E["Remove Bad Context<br/>blacklist / status / history / cooldown / MRQ / VWAP filters"]
+    F["Build Candidates<br/>universe_selector.py / candidate_pool.py"]
+    G["Decide Direction<br/>signal_trigger.py / vote_engine.py"]
+    H["Control Risk<br/>market_freeze.py / fail-closed semantics"]
+    I["Plan Orders<br/>order_planner.py, venue-neutral and non-executing"]
+    J["Check State<br/>state_model.py / position_reconciler.py"]
+    K["Explain the Run<br/>structured reports for users and agents"]
+
+    A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K
+
+    classDef input fill:#eef2ff,stroke:#475569,color:#111827;
+    classDef compute fill:#ecfeff,stroke:#155e75,color:#111827;
+    classDef risk fill:#fff7ed,stroke:#9a3412,color:#111827;
+    classDef output fill:#f8fafc,stroke:#334155,color:#111827;
+
+    class A,B input;
+    class C,D,E,F,G compute;
+    class H,I,J risk;
+    class K output;
 ```
 
 Each step can be called independently. A user can run only VWAP, only universe filtering, only order planning, or a full pipeline assembled from smaller modules.
@@ -75,6 +89,99 @@ quant-strategy-tokenizer/
     PROJECT_EXPERIENCE_TEMPLATE.md
     SUBMISSION_NOTES.md
 ```
+
+## Python Dependency Map
+
+Runtime dependency is intentionally small: **Python 3.10+** and **pandas**. Everything else is standard library.
+
+The internal Python dependencies are layered so that strategy modules depend downward on shared contracts and helpers. Pure modules do not import live exchange adapters or deployment code.
+
+```mermaid
+flowchart TD
+    Contracts["contracts.py<br/>ModuleResult, failures, context, schemas"]
+
+    Normalization["normalization.py<br/>raw input to standard tables"]
+    RowUtils["row_utils.py<br/>safe row extraction"]
+    Reporting["reporting.py<br/>redacted JSON / JSONL output"]
+    DataSchema["data_schema.py<br/>tabular validation"]
+
+    Indicators["indicators/*<br/>ema, atr, vwap, chop, spike, rolling return, beta residual, MRQ touch"]
+    Filters["filters/*<br/>blacklist, status, history, cooldown, backoff, VWAP, MRQ"]
+
+    Universe["universe_selector.py"]
+    Signals["signal_trigger.py"]
+    Votes["vote_engine.py"]
+    Candidates["candidate_pool.py"]
+    Freeze["market_freeze.py"]
+
+    Orders["order_planner.py"]
+    Positions["position_reconciler.py"]
+    State["state_model.py"]
+    Pipeline["pipeline.py"]
+    PublicAPI["__init__.py"]
+
+    PublicAPI --> Contracts
+
+    Normalization --> Contracts
+    RowUtils --> Contracts
+    Reporting --> Contracts
+    DataSchema --> Contracts
+    DataSchema --> Normalization
+    DataSchema --> Reporting
+
+    Indicators --> Contracts
+    Indicators --> Normalization
+    Indicators --> Reporting
+
+    Filters --> Contracts
+    Filters --> RowUtils
+    Filters --> Reporting
+
+    Universe --> Contracts
+    Universe --> RowUtils
+    Universe --> Reporting
+
+    Signals --> Contracts
+    Signals --> RowUtils
+    Signals --> Reporting
+
+    Votes --> Contracts
+    Votes --> RowUtils
+    Votes --> Reporting
+
+    Candidates --> Contracts
+    Candidates --> RowUtils
+    Candidates --> Reporting
+
+    Freeze --> Contracts
+    Freeze --> RowUtils
+    Freeze --> Reporting
+
+    Orders --> Contracts
+    Orders --> RowUtils
+    Positions --> Contracts
+    State --> Contracts
+    Pipeline --> Contracts
+
+    classDef core fill:#f8fafc,stroke:#334155,color:#111827;
+    classDef helper fill:#eef2ff,stroke:#475569,color:#111827;
+    classDef module fill:#ecfeff,stroke:#155e75,color:#111827;
+    classDef plan fill:#fff7ed,stroke:#9a3412,color:#111827;
+
+    class Contracts core;
+    class Normalization,RowUtils,Reporting,DataSchema helper;
+    class Indicators,Filters,Universe,Signals,Votes,Candidates,Freeze module;
+    class Orders,Positions,State,Pipeline,PublicAPI plan;
+```
+
+| Layer | Python files | Depends on |
+| --- | --- | --- |
+| Core contract | `contracts.py` | standard library only |
+| Input / output helpers | `normalization.py`, `row_utils.py`, `reporting.py`, `data_schema.py` | `contracts.py`, `pandas` where tabular work is needed |
+| Indicators | `indicators/*.py` | `contracts.py`, `normalization.py`, `reporting.py`, `pandas` |
+| Filters | `filters/*.py` | `contracts.py`, `row_utils.py`, `reporting.py` |
+| Strategy composition | `universe_selector.py`, `signal_trigger.py`, `vote_engine.py`, `candidate_pool.py`, `market_freeze.py` | `contracts.py`, `row_utils.py`, `reporting.py` |
+| Planning / state | `order_planner.py`, `position_reconciler.py`, `state_model.py`, `pipeline.py` | `contracts.py`, plus `row_utils.py` where row extraction is needed |
 
 ## Minimal Example
 
