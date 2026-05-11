@@ -289,6 +289,10 @@ This project was distilled from a live quantitative strategy engineering process
 
 See [docs/PROJECT_EXPERIENCE.md](docs/PROJECT_EXPERIENCE.md) for the project experience write-up.
 
+## License
+
+Quant Strategy Tokenizer is released under the [MIT License](LICENSE).
+
 ## Installation
 
 Clone the repository first:
