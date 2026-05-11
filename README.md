@@ -22,29 +22,34 @@ QST treats a strategy as a sequence of explicit decisions:
 
 ```mermaid
 flowchart TD
-    A["User or Agent<br/>strategy idea, codebase, or simulation need"]
-    B["Caller-Owned Data<br/>raw rows, DataFrame, records, or custom objects"]
-    C["Normalize and Validate<br/>data_schema.py / normalization.py"]
-    D["Measure the Market<br/>EMA / ATR / VWAP / CHOP / spike / MRQ"]
-    E["Remove Bad Context<br/>blacklist / status / history / cooldown / MRQ / VWAP filters"]
-    F["Build Candidates<br/>universe_selector.py / candidate_pool.py"]
-    G["Decide Direction<br/>signal_trigger.py / vote_engine.py"]
-    H["Control Risk<br/>market_freeze.py / fail-closed semantics"]
-    I["Plan Orders<br/>order_planner.py, venue-neutral and non-executing"]
-    J["Check State<br/>state_model.py / position_reconciler.py"]
-    K["Explain the Run<br/>structured reports for users and agents"]
+    subgraph Row1["Shape the problem"]
+        direction LR
+        A["Strategy idea<br/>notes, code, or agent request"] --> B["Bring your own data<br/>rows, DataFrame, records"] --> C["Normalize once<br/>schema and field mapping"]
+    end
 
-    A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K
+    subgraph Row2["Turn market facts into candidates"]
+        direction RL
+        F["Candidate list<br/>ranked and explainable"] --> E["Context filters<br/>status, history, cooldown, MRQ"] --> D["Market features<br/>EMA, ATR, VWAP, CHOP"]
+    end
 
-    classDef input fill:#eef2ff,stroke:#475569,color:#111827;
-    classDef compute fill:#ecfeff,stroke:#155e75,color:#111827;
-    classDef risk fill:#fff7ed,stroke:#9a3412,color:#111827;
-    classDef output fill:#f8fafc,stroke:#334155,color:#111827;
+    subgraph Row3["Make the decision auditable"]
+        direction LR
+        G["Decision layer<br/>signals and votes"] --> H["Risk gate<br/>freeze, fail-closed, unknowns"] --> I["Plan and explain<br/>orders, state, reports"]
+    end
 
-    class A,B input;
-    class C,D,E,F,G compute;
-    class H,I,J risk;
-    class K output;
+    C --> D
+    F --> G
+
+    classDef intake fill:#f8fafc,stroke:#334155,color:#111827;
+    classDef research fill:#eef2ff,stroke:#475569,color:#111827;
+    classDef decision fill:#ecfeff,stroke:#155e75,color:#111827;
+    classDef guard fill:#fff7ed,stroke:#9a3412,color:#111827;
+
+    class A,B,C intake;
+    class D,E,F research;
+    class G decision;
+    class H guard;
+    class I intake;
 ```
 
 Each step can be called independently. A user can run only VWAP, only universe filtering, only order planning, or a full pipeline assembled from smaller modules.
