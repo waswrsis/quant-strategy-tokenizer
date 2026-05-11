@@ -1,4 +1,4 @@
-#<div align="center"> Quant Strategy Tokenizer</div>
+#Quant Strategy Tokenizer
 
 <div align="center">
 
