@@ -97,7 +97,19 @@ quant-strategy-tokenizer/
 
 ## Python Dependency Map
 
-Runtime dependency is intentionally small: **Python 3.10+** and **pandas**. Everything else is standard library.
+Runtime dependency is intentionally small: **Python 3.10+**, **pandas**, and **numpy**. Everything else is standard library.
+
+```text
+numpy
+pandas
+```
+
+| Package | Why QST needs it |
+| --- | --- |
+| `pandas` | Normalizes tabular market data and powers indicator/report calculations. |
+| `numpy` | Supports numerical routines used by CHOP, rolling return, and beta-residual modules. |
+
+There are no live-exchange dependencies in the package: no `ccxt`, no Binance client, no broker SDK, and no credential handling.
 
 The internal Python dependencies are layered so that strategy modules depend downward on shared contracts and helpers. Pure modules do not import live exchange adapters or deployment code.
 
@@ -257,10 +269,10 @@ See [docs/PROJECT_EXPERIENCE.md](docs/PROJECT_EXPERIENCE.md) for the project exp
 pip install -e .
 ```
 
-Runtime dependency is intentionally small:
+Or install the runtime packages directly:
 
-```text
-pandas
+```bash
+pip install -r requirements.txt
 ```
 
 ## Safety Boundary

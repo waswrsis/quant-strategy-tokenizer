@@ -9,6 +9,7 @@ description = "Agent-oriented modules for decomposing trading strategies into re
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+  "numpy",
   "pandas",
 ]
 keywords = [
