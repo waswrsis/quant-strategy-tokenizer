@@ -115,6 +115,10 @@ EN: Indicator layer.
   EN: Shared normalization, backend, calculation, and report logic for momentum indicators.
 - `indicators/<momentum_token>.py`: 一个动量指标一个独立 token。
   EN: One independent token per momentum indicator.
+- `indicators/volatility_common.py`: 波动指标共享归一化、后端、计算和报告逻辑。
+  EN: Shared normalization, backend, calculation, and report logic for volatility indicators.
+- `indicators/<volatility_token>.py`: 一个波动指标一个独立 token。
+  EN: One independent token per volatility indicator.
 
 策略组合层。
 EN: Strategy composition layer.
@@ -248,7 +252,141 @@ EN: Momentum indicator list.
 | Multi-line momentum | `kst`, `true_strength_index`, `relative_vigor_index`, `fisher_transform`, `stochastic_momentum_index`, `kdj` |
 | Price/volume pressure | `bop`, `awesome_oscillator`, `accelerator_oscillator`, `elder_ray`, `qstick`, `coppock_curve`, `connors_rsi` |
 
-## 8. 示例：调用一个动量指标
+## 8. 波动指标 Token 总览
+
+EN: Volatility indicator token overview.
+
+波动指标 token 已经实现为独立模块。
+EN: Volatility indicators are implemented as independent modules.
+
+每个波动 token 都只处理用户传入的数据，不拉行情、不连接交易所、不读账户、不下单。
+EN: Every volatility token processes caller-provided data only; it does not fetch data, connect to venues, read accounts, or place orders.
+
+公共输出是 `ModuleResult[VolatilityReport]`。
+EN: The common output is `ModuleResult[VolatilityReport]`.
+
+`VolatilityReport` 的关键字段如下。
+EN: Key `VolatilityReport` fields are listed below.
+
+- `quality`: 计算质量，例如 `ok`。
+  EN: Calculation quality, for example `ok`.
+- `indicator`: 指标名称。
+  EN: Indicator name.
+- `last_value`: 主输出的最新有效值。
+  EN: Latest valid value of the primary output.
+- `last_values`: 多线指标的最新值字典。
+  EN: Dictionary of latest values for multi-line indicators.
+- `volatility_direction`: `expanding`, `contracting`, `stable`, or `unknown`。
+  EN: Volatility direction label such as `expanding`, `contracting`, `stable`, or `unknown`.
+- `volatility_level`: `low`, `normal`, `high`, `extreme`, or `unknown`。
+  EN: Volatility level label such as `low`, `normal`, `high`, `extreme`, or `unknown`.
+- `signal`: 压缩、扩张、风险升高或状态信号。
+  EN: Compression, expansion, risk, or state signal.
+- `regime`: 波动状态标签。
+  EN: Volatility regime label.
+- `normalized_value`: 通常是 0-100 的滚动百分位或标准化强度。
+  EN: Usually a 0-100 rolling percentile or normalized intensity.
+- `series` / `series_by_name`: 仅在 `DetailLevel.FULL` 或更高时返回完整序列。
+  EN: Full series output, returned only at `DetailLevel.FULL` or above.
+
+## 9. 波动指标清单
+
+EN: Volatility indicator list.
+
+| Family | Tokens |
+| --- | --- |
+| Range / ATR | `true_range`, `natr`, `high_low_range`, `rolling_range`, `average_range`, `gap_range`, `range_percent`, `range_expansion` |
+| Statistical volatility | `rolling_stddev`, `rolling_variance`, `historical_volatility`, `realized_volatility`, `ewma_volatility`, `parkinson_volatility`, `garman_klass_volatility`, `rogers_satchell_volatility`, `yang_zhang_volatility`, `downside_volatility`, `volatility_of_volatility` |
+| Bands and squeeze | `bollinger_bands`, `bollinger_bandwidth`, `percent_b`, `zscore`, `zscore_bands`, `ttm_squeeze`, `bollinger_keltner_squeeze` |
+| Regime and special | `chaikin_volatility`, `mass_index`, `ulcer_index`, `relative_volatility_index`, `inertia`, `vertical_horizontal_filter`, `volatility_ratio`, `volatility_regime` |
+
+## 10. 示例：调用一个波动指标
+EN: Example: call one volatility indicator.
+
+适用场景：用户传入价格序列，希望判断当前波动处在历史百分位的哪个状态。
+EN: Use case: the user provides price rows and wants the current volatility percentile regime.
+
+```python
+from quant_strategy_tokenizer.indicators.volatility_regime import (
+    VolatilityRegimeParams,
+    VolatilityRegimeRequest,
+    run as run_volatility_regime,
+)
+
+result = run_volatility_regime(
+    VolatilityRegimeRequest(
+        data=bars,
+        params=VolatilityRegimeParams(window=20, regime_window=100),
+    )
+)
+
+if result.ok:
+    report = result.value
+    print(report.regime, report.normalized_value, report.volatility_direction)
+else:
+    print(result.failure.kind, result.failure.message)
+```
+
+## 11. 示例：组合多个波动 token
+EN: Example: compose multiple volatility tokens.
+
+多个波动指标通常都需要原始行情，因此在 pipeline 中使用 `input_key="initial"`。
+EN: Multiple volatility indicators usually need the original market data, so use `input_key="initial"` in pipelines.
+
+```python
+from quant_strategy_tokenizer.contracts import ModuleResult
+from quant_strategy_tokenizer.pipeline import PipelineStep, run_pipeline
+from quant_strategy_tokenizer.indicators.atr import ATRParams, ATRRequest, run as run_atr
+from quant_strategy_tokenizer.indicators.bollinger_bandwidth import (
+    BollingerBandwidthParams,
+    BollingerBandwidthRequest,
+    run as run_bandwidth,
+)
+from quant_strategy_tokenizer.indicators.volatility_regime import (
+    VolatilityRegimeParams,
+    VolatilityRegimeRequest,
+    run as run_regime,
+)
+
+steps = [
+    PipelineStep(
+        name="atr",
+        input_key="initial",
+        output_key="atr_last",
+        take="last_value",
+        fn=lambda data: run_atr(ATRRequest(data=data, params=ATRParams())),
+    ),
+    PipelineStep(
+        name="bandwidth",
+        input_key="initial",
+        output_key="bandwidth_last",
+        take="last_value",
+        fn=lambda data: run_bandwidth(BollingerBandwidthRequest(data=data, params=BollingerBandwidthParams())),
+    ),
+    PipelineStep(
+        name="regime",
+        input_key="initial",
+        output_key="vol_regime",
+        take="regime",
+        fn=lambda data: run_regime(VolatilityRegimeRequest(data=data, params=VolatilityRegimeParams())),
+    ),
+    PipelineStep(
+        name="summary",
+        pass_state=True,
+        fn=lambda state: ModuleResult.success(
+            {
+                "atr": state.get("atr_last"),
+                "bandwidth": state.get("bandwidth_last"),
+                "regime": state.get("vol_regime"),
+            }
+        ),
+    ),
+]
+
+result = run_pipeline(initial_payload=bars, steps=steps)
+```
+
+## 12. 示例：调用一个动量指标
 
 EN: Example: call one momentum indicator.
 
@@ -272,7 +410,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 9. 示例：组合多个动量 token
+## 13. 示例：组合多个动量 token
 
 EN: Example: compose multiple momentum tokens.
 
@@ -316,7 +454,7 @@ steps = [
 result = run_pipeline(initial_payload=bars, steps=steps)
 ```
 
-## 10. 示例：调用一个趋势指标
+## 14. 示例：调用一个趋势指标
 
 EN: Example: call one trend indicator.
 
@@ -350,7 +488,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 7. 示例：非标准字段映射
+## 15. 示例：非标准字段映射
 
 EN: Example: nonstandard field mapping.
 
@@ -384,7 +522,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 8. 示例：请求完整序列
+## 16. 示例：请求完整序列
 
 EN: Example: request full series.
 
@@ -415,7 +553,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 9. 示例：组合多个趋势 token
+## 17. 示例：组合多个趋势 token
 
 EN: Example: compose multiple trend tokens.
 
@@ -467,7 +605,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 10. 示例：写入标准报告文件
+## 18. 示例：写入标准报告文件
 
 EN: Example: write standard report files.
 
@@ -505,7 +643,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 11. Agent 选择指南
+## 19. Agent 选择指南
 
 EN: Agent selection guide.
 
@@ -533,7 +671,16 @@ EN: If the user asks for speed or momentum change, use `momentum`, `roc`, `rocp`
 如果用户说“帮我看量价动量”，使用 `mfi`；如果只需要价格/蜡烛压力，使用 `bop`, `elder_ray`, `qstick`, `awesome_oscillator`。
 EN: If the user asks for volume-price momentum, use `mfi`; for price/candle pressure, use `bop`, `elder_ray`, `qstick`, or `awesome_oscillator`.
 
-## 12. 常见坑
+如果用户说“帮我看波动、止损距离或风险区间”，使用 `atr`, `natr`, `true_range`, `historical_volatility`, `realized_volatility`。
+EN: If the user asks for volatility, stop distance, or risk range, use `atr`, `natr`, `true_range`, `historical_volatility`, or `realized_volatility`.
+
+如果用户说“帮我判断波动压缩或突破前的挤压”，使用 `bollinger_bandwidth`, `ttm_squeeze`, `bollinger_keltner_squeeze`, `range_expansion`。
+EN: If the user asks for compression or pre-breakout squeeze, use `bollinger_bandwidth`, `ttm_squeeze`, `bollinger_keltner_squeeze`, or `range_expansion`.
+
+如果用户说“帮我判断波动 regime”，使用 `volatility_regime`, `volatility_ratio`, `volatility_of_volatility`, `ulcer_index`。
+EN: If the user asks for volatility regime, use `volatility_regime`, `volatility_ratio`, `volatility_of_volatility`, or `ulcer_index`.
+
+## 20. 常见坑
 
 EN: Common pitfalls.
 

@@ -19,6 +19,7 @@ import pandas as pd
 from ..contracts import DataFrameSpec, DetailLevel, ExtractorSpec, ModuleEvent, ModuleResult, ModuleRunContext, detail_at_least
 from ..normalization import normalize_frame
 from ..reporting import write_module_report
+from .volatility_common import classify_volatility_direction
 
 
 @dataclass
@@ -47,6 +48,13 @@ class CHOPReport:
     quality: str
     window: int
     last_value: Optional[float]
+    indicator: str = "chop"
+    last_values: Dict[str, Optional[float]] = field(default_factory=dict)
+    volatility_direction: str = "unknown"
+    volatility_level: str = "unknown"
+    signal: str = "none"
+    regime: str = "unknown"
+    normalized_value: Optional[float] = None
     series: Optional[List[Optional[float]]] = None
     summary: Dict[str, Any] = field(default_factory=dict)
     input_profile: Dict[str, Any] = field(default_factory=dict)
@@ -80,11 +88,19 @@ def run(request: CHOPRequest) -> ModuleResult[CHOPReport]:
     rng = h.rolling(n, min_periods=n).max() - l.rolling(n, min_periods=n).min()
     chop = 100.0 * np.log10((tr_sum / rng.replace(0, np.nan)).replace([np.inf, -np.inf], np.nan)) / np.log10(n)
     last = None if chop.empty or pd.isna(chop.iloc[-1]) else float(chop.iloc[-1])
+    regime = "choppy" if last is not None and last >= 61.8 else "trending" if last is not None and last <= 38.2 else "neutral"
+    volatility_direction = classify_volatility_direction(chop)
     detail = request.context.detail_level
     report = CHOPReport(
         quality="ok" if last is not None else "insufficient_data",
         window=n,
         last_value=last,
+        last_values={"value": last},
+        volatility_direction=volatility_direction,
+        volatility_level="normal" if last is not None else "unknown",
+        signal=regime,
+        regime=regime,
+        normalized_value=last,
         series=[None if pd.isna(x) else float(x) for x in chop.tolist()] if detail_at_least(detail, DetailLevel.FULL) else None,
         summary={"rows": int(len(c))},
         input_profile=nf.input_profile,

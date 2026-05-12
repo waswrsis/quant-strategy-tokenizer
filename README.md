@@ -102,7 +102,7 @@ Quant-Strategy-Tokenizer/
     data_schema.py            OHLCV and tabular input validation
     normalization.py          raw input normalization helpers
     row_utils.py              row extraction and typed lookup helpers
-    indicators/               EMA, ATR, VWAP, CHOP, spike, rolling return, MRQ, trend and momentum tokens
+    indicators/               EMA, ATR, VWAP, CHOP, spike, rolling return, MRQ, trend, momentum, and volatility tokens
     filters/                  blacklist, status, history, cooldown, backoff, VWAP, MRQ
     universe_selector.py      market-neutral symbol selection primitive
     candidate_pool.py         candidate assembly and ranking
@@ -123,6 +123,7 @@ Quant-Strategy-Tokenizer/
     test_core_behaviors.py
     test_trend_indicators.py
     test_momentum_indicators.py
+    test_volatility_indicators.py
 ```
 
 ## Python Dependency Map
@@ -140,7 +141,7 @@ TA-Lib
 | --- | --- |
 | `pandas` | Normalizes tabular market data and powers indicator/report calculations. |
 | `numpy` | Supports numerical routines used by indicator and feature modules. |
-| `TA-Lib` | Optional backend for users who need parity with TA-Lib trend indicators. Native pandas/numpy implementations remain the default. |
+| `TA-Lib` | Optional backend for users who need parity with supported indicator tokens. Native pandas/numpy implementations remain the default. |
 
 There are no live-exchange dependencies in the package: no `ccxt`, no Binance client, no broker SDK, and no credential handling.
 
@@ -155,7 +156,7 @@ flowchart TD
     Reporting["reporting.py<br/>redacted JSON / JSONL output"]
     DataSchema["data_schema.py<br/>tabular validation"]
 
-    Indicators["indicators/*<br/>ema, atr, vwap, chop, spike, rolling return, beta residual, MRQ touch, trend and momentum tokens"]
+    Indicators["indicators/*<br/>ema, atr, vwap, chop, spike, rolling return, beta residual, MRQ touch, trend, momentum, and volatility tokens"]
     Filters["filters/*<br/>blacklist, status, history, cooldown, backoff, VWAP, MRQ"]
 
     Universe["universe_selector.py"]
@@ -384,6 +385,43 @@ else:
 | Multi-line momentum | `kst`, `true_strength_index`, `relative_vigor_index`, `fisher_transform`, `stochastic_momentum_index`, `kdj` |
 | Price/volume pressure | `bop`, `awesome_oscillator`, `accelerator_oscillator`, `elder_ray`, `qstick`, `coppock_curve`, `connors_rsi` |
 
+## Volatility Indicator Tokens
+
+QST includes atomic volatility indicators for range, return-volatility, bands, squeeze states, drawdown risk, and volatility regimes. They follow the same public interface:
+
+```text
+Params / Request / Report / normalize_input(request) / run(request)
+```
+
+They return `ModuleResult[VolatilityReport]` with `last_value`, `last_values`, `volatility_direction`, `volatility_level`, `signal`, `regime`, `normalized_value`, optional full series, field mappings, warnings, and diagnostics.
+
+```python
+from quant_strategy_tokenizer.indicators.volatility_regime import (
+    VolatilityRegimeParams,
+    VolatilityRegimeRequest,
+    run as run_volatility_regime,
+)
+
+result = run_volatility_regime(
+    VolatilityRegimeRequest(
+        data=my_price_rows,
+        params=VolatilityRegimeParams(window=20, regime_window=100),
+    )
+)
+
+if result.ok:
+    print(result.value.regime, result.value.normalized_value)
+else:
+    print(result.failure.kind, result.failure.message)
+```
+
+| Family | Tokens |
+| --- | --- |
+| Range / ATR | `true_range`, `natr`, `high_low_range`, `rolling_range`, `average_range`, `gap_range`, `range_percent`, `range_expansion` |
+| Statistical volatility | `rolling_stddev`, `rolling_variance`, `historical_volatility`, `realized_volatility`, `ewma_volatility`, `parkinson_volatility`, `garman_klass_volatility`, `rogers_satchell_volatility`, `yang_zhang_volatility`, `downside_volatility`, `volatility_of_volatility` |
+| Bands and squeeze | `bollinger_bands`, `bollinger_bandwidth`, `percent_b`, `zscore`, `zscore_bands`, `ttm_squeeze`, `bollinger_keltner_squeeze` |
+| Regime and special | `chaikin_volatility`, `mass_index`, `ulcer_index`, `relative_volatility_index`, `inertia`, `vertical_horizontal_filter`, `volatility_ratio`, `volatility_regime` |
+
 ## Agent Prompts
 
 QST includes prompts that teach another agent how to use, audit, decompose, and extend strategy modules:
@@ -391,7 +429,7 @@ QST includes prompts that teach another agent how to use, audit, decompose, and 
 | Prompt | Use |
 | --- | --- |
 | `agent_prompts/10_full_agent_prompt.md` | General-purpose quant engineering agent. |
-| `agent_prompts/11_agent_project_usage_guide.md` | Step-by-step QST usage guide with trend and momentum indicator token examples. |
+| `agent_prompts/11_agent_project_usage_guide.md` | Step-by-step QST usage guide with trend, momentum, and volatility indicator token examples. |
 | `agent_prompts/12_strategy_code_decomposition_agent.md` | Analyze a full strategy codebase and split it into tokens. |
 | `agent_prompts/13_strategy_decomposition_task_template.md` | Fill-in task template for applying the decomposition workflow. |
 

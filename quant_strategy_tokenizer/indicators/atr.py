@@ -18,6 +18,7 @@ import pandas as pd
 from ..contracts import DataFrameSpec, DetailLevel, ExtractorSpec, ModuleEvent, ModuleResult, ModuleRunContext, detail_at_least
 from ..normalization import normalize_frame
 from ..reporting import write_module_report
+from .volatility_common import classify_volatility_direction, classify_volatility_level, last_percentile
 
 
 @dataclass
@@ -48,6 +49,13 @@ class ATRReport:
     quality: str
     window: int
     last_value: Optional[float]
+    indicator: str = "atr"
+    last_values: Dict[str, Optional[float]] = field(default_factory=dict)
+    volatility_direction: str = "unknown"
+    volatility_level: str = "unknown"
+    signal: str = "none"
+    regime: str = "unknown"
+    normalized_value: Optional[float] = None
     series: Optional[List[Optional[float]]] = None
     true_range_last: Optional[float] = None
     summary: Dict[str, Any] = field(default_factory=dict)
@@ -85,13 +93,23 @@ def run(request: ATRRequest) -> ModuleResult[ATRReport]:
     else:
         atr = tr.ewm(alpha=1 / n, adjust=False, min_periods=n).mean()
     last = None if atr.empty or pd.isna(atr.iloc[-1]) else float(atr.iloc[-1])
+    tr_last = None if tr.empty or pd.isna(tr.iloc[-1]) else float(tr.iloc[-1])
+    normalized = last_percentile(atr, max(n * 5, 20))
+    volatility_level = classify_volatility_level(normalized)
+    volatility_direction = classify_volatility_direction(atr)
     detail = request.context.detail_level
     report = ATRReport(
         quality="ok" if last is not None else "insufficient_data",
         window=n,
         last_value=last,
+        last_values={"value": last, "true_range": tr_last},
+        volatility_direction=volatility_direction,
+        volatility_level=volatility_level,
+        signal="risk_expanding" if volatility_level in {"high", "extreme"} and volatility_direction == "expanding" else volatility_direction,
+        regime=volatility_level,
+        normalized_value=normalized,
         series=[None if pd.isna(x) else float(x) for x in atr.tolist()] if detail_at_least(detail, DetailLevel.FULL) else None,
-        true_range_last=None if tr.empty or pd.isna(tr.iloc[-1]) else float(tr.iloc[-1]),
+        true_range_last=tr_last,
         summary={"rows": int(len(c)), "smoothing": str(params.smoothing).lower()},
         input_profile=nf.input_profile,
         used_fields=nf.used_fields,

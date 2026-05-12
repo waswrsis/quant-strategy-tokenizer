@@ -51,6 +51,14 @@ class SpikeReport:
     spike: bool
     spike_count: int
     max_ratio: Optional[float]
+    indicator: str = "spike"
+    last_value: Optional[float] = None
+    last_values: Dict[str, Optional[float]] = field(default_factory=dict)
+    volatility_direction: str = "unknown"
+    volatility_level: str = "unknown"
+    signal: str = "none"
+    regime: str = "unknown"
+    normalized_value: Optional[float] = None
     ratios: Optional[List[Optional[float]]] = None
     summary: Dict[str, Any] = field(default_factory=dict)
     input_profile: Dict[str, Any] = field(default_factory=dict)
@@ -87,11 +95,20 @@ def run(request: SpikeRequest) -> ModuleResult[SpikeReport]:
     flags = ratio >= float(p.multiplier)
     spike_count = int(flags.fillna(False).sum())
     max_ratio = None if ratio.dropna().empty else float(ratio.max())
+    normalized = None if max_ratio is None else min(100.0, 100.0 * max_ratio / float(p.multiplier))
+    volatility_level = "extreme" if spike_count > 0 else "normal"
     report = SpikeReport(
         quality="ok",
         spike=bool(spike_count > 0),
         spike_count=spike_count,
         max_ratio=max_ratio,
+        last_value=max_ratio,
+        last_values={"value": max_ratio, "spike_count": float(spike_count)},
+        volatility_direction="expanding" if spike_count > 0 else "stable",
+        volatility_level=volatility_level,
+        signal="spike" if spike_count > 0 else "normal",
+        regime=volatility_level,
+        normalized_value=normalized,
         ratios=[None if pd.isna(x) else float(x) for x in ratio.tolist()] if detail_at_least(request.context.detail_level, DetailLevel.FULL) else None,
         summary={"lookback_bars": lb, "atr_window": n, "multiplier": float(p.multiplier)},
         input_profile=nf.input_profile,
