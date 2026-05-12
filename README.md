@@ -102,7 +102,7 @@ Quant-Strategy-Tokenizer/
     data_schema.py            OHLCV and tabular input validation
     normalization.py          raw input normalization helpers
     row_utils.py              row extraction and typed lookup helpers
-    indicators/               EMA, ATR, VWAP, CHOP, spike, rolling return, MRQ, trend, momentum, and volatility tokens
+    indicators/               EMA, ATR, VWAP, CHOP, spike, rolling return, MRQ, trend, momentum, volatility, and volume tokens
     filters/                  blacklist, status, history, cooldown, backoff, VWAP, MRQ
     universe_selector.py      market-neutral symbol selection primitive
     candidate_pool.py         candidate assembly and ranking
@@ -124,6 +124,7 @@ Quant-Strategy-Tokenizer/
     test_trend_indicators.py
     test_momentum_indicators.py
     test_volatility_indicators.py
+    test_volume_indicators.py
 ```
 
 ## Python Dependency Map
@@ -156,7 +157,7 @@ flowchart TD
     Reporting["reporting.py<br/>redacted JSON / JSONL output"]
     DataSchema["data_schema.py<br/>tabular validation"]
 
-    Indicators["indicators/*<br/>ema, atr, vwap, chop, spike, rolling return, beta residual, MRQ touch, trend, momentum, and volatility tokens"]
+    Indicators["indicators/*<br/>ema, atr, vwap, chop, spike, rolling return, beta residual, MRQ touch, trend, momentum, volatility, and volume tokens"]
     Filters["filters/*<br/>blacklist, status, history, cooldown, backoff, VWAP, MRQ"]
 
     Universe["universe_selector.py"]
@@ -422,6 +423,44 @@ else:
 | Bands and squeeze | `bollinger_bands`, `bollinger_bandwidth`, `percent_b`, `zscore`, `zscore_bands`, `ttm_squeeze`, `bollinger_keltner_squeeze` |
 | Regime and special | `chaikin_volatility`, `mass_index`, `ulcer_index`, `relative_volatility_index`, `inertia`, `vertical_horizontal_filter`, `volatility_ratio`, `volatility_regime` |
 
+## Volume Indicator Tokens
+
+QST includes atomic volume indicators for participation, accumulation/distribution, money flow, abnormal volume, and OHLCV proxy diagnostics. They follow the same public interface:
+
+```text
+Params / Request / Report / normalize_input(request) / run(request)
+```
+
+They return `ModuleResult[VolumeReport]` with `last_value`, `last_values`, `volume_direction`, `volume_level`, `flow_direction`, `signal`, `regime`, `normalized_value`, optional full series, field mappings, warnings, and diagnostics. Existing price-volume tokens such as `mfi`, `vwma`, and `vwap` remain available in their original modules.
+
+```python
+from quant_strategy_tokenizer.indicators.relative_volume import (
+    RelativeVolumeParams,
+    RelativeVolumeRequest,
+    run as run_relative_volume,
+)
+
+result = run_relative_volume(
+    RelativeVolumeRequest(
+        data=my_ohlcv_rows,
+        params=RelativeVolumeParams(window=20, spike_multiplier=2.5),
+    )
+)
+
+if result.ok:
+    print(result.value.last_value, result.value.volume_level)
+else:
+    print(result.failure.kind, result.failure.message)
+```
+
+| Family | Tokens |
+| --- | --- |
+| Raw volume / regime | `volume_sma`, `volume_ema`, `volume_roc`, `volume_zscore`, `relative_volume`, `volume_percentile`, `volume_spike`, `volume_dry_up`, `volume_trend`, `volume_oscillator` |
+| Accumulation / distribution | `obv`, `accumulation_distribution_line`, `chaikin_money_flow`, `chaikin_oscillator`, `volume_price_trend`, `positive_volume_index`, `negative_volume_index` |
+| Flow / pressure | `force_index`, `ease_of_movement`, `intraday_intensity`, `money_flow_volume`, `klinger_oscillator`, `volume_flow_indicator`, `demand_index` |
+| Proxy diagnostics | `signed_volume_proxy`, `cumulative_signed_volume_proxy`, `price_volume_divergence`, `volume_confirmation` |
+| Existing price-volume tokens | `mfi`, `vwma`, `vwap` |
+
 ## Agent Prompts
 
 QST includes prompts that teach another agent how to use, audit, decompose, and extend strategy modules:
@@ -429,7 +468,7 @@ QST includes prompts that teach another agent how to use, audit, decompose, and 
 | Prompt | Use |
 | --- | --- |
 | `agent_prompts/10_full_agent_prompt.md` | General-purpose quant engineering agent. |
-| `agent_prompts/11_agent_project_usage_guide.md` | Step-by-step QST usage guide with trend, momentum, and volatility indicator token examples. |
+| `agent_prompts/11_agent_project_usage_guide.md` | Step-by-step QST usage guide with trend, momentum, volatility, and volume indicator token examples. |
 | `agent_prompts/12_strategy_code_decomposition_agent.md` | Analyze a full strategy codebase and split it into tokens. |
 | `agent_prompts/13_strategy_decomposition_task_template.md` | Fill-in task template for applying the decomposition workflow. |
 

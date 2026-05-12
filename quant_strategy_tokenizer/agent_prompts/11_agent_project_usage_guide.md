@@ -119,6 +119,10 @@ EN: Indicator layer.
   EN: Shared normalization, backend, calculation, and report logic for volatility indicators.
 - `indicators/<volatility_token>.py`: 一个波动指标一个独立 token。
   EN: One independent token per volatility indicator.
+- `indicators/volume_common.py`: 成交量指标共享归一化、后端、计算和报告逻辑。
+  EN: Shared normalization, backend, calculation, and report logic for volume indicators.
+- `indicators/<volume_token>.py`: 一个成交量指标一个独立 token。
+  EN: One independent token per volume indicator.
 
 策略组合层。
 EN: Strategy composition layer.
@@ -386,7 +390,140 @@ steps = [
 result = run_pipeline(initial_payload=bars, steps=steps)
 ```
 
-## 12. 示例：调用一个动量指标
+## 12. 成交量指标 Token 总览
+
+EN: Volume indicator token overview.
+
+成交量指标 token 已经实现为独立模块。
+EN: Volume indicators are implemented as independent modules.
+
+每个成交量 token 都只处理用户传入的数据，不拉行情、不连接交易所、不读账户、不下单。
+EN: Every volume token processes caller-provided data only; it does not fetch data, connect to venues, read accounts, or place orders.
+
+公共输出是 `ModuleResult[VolumeReport]`。
+EN: The common output is `ModuleResult[VolumeReport]`.
+
+`VolumeReport` 的关键字段如下。
+EN: Key `VolumeReport` fields are listed below.
+
+- `quality`: 计算质量，例如 `ok`。
+  EN: Calculation quality, for example `ok`.
+- `indicator`: 指标名称。
+  EN: Indicator name.
+- `last_value`: 主输出的最新有效值。
+  EN: Latest valid value of the primary output.
+- `last_values`: 多线指标的最新值字典。
+  EN: Dictionary of latest values for multi-line indicators.
+- `volume_direction`: `increasing`, `decreasing`, `stable`, `mixed`, or `unknown`。
+  EN: Volume direction label such as `increasing`, `decreasing`, `stable`, `mixed`, or `unknown`.
+- `volume_level`: `dry_up`, `low`, `normal`, `high`, `extreme`, or `unknown`。
+  EN: Volume level label such as `dry_up`, `low`, `normal`, `high`, `extreme`, or `unknown`.
+- `flow_direction`: `accumulation`, `distribution`, `neutral`, or `unknown`。
+  EN: Flow direction label such as `accumulation`, `distribution`, `neutral`, or `unknown`.
+- `signal`: 放量、缩量、资金流或确认状态信号。
+  EN: Expansion, dry-up, flow, or confirmation signal.
+- `regime`: 成交量状态标签。
+  EN: Volume regime label.
+- `normalized_value`: 通常是 0-100 的滚动百分位或标准化强度。
+  EN: Usually a 0-100 rolling percentile or normalized intensity.
+- `series` / `series_by_name`: 仅在 `DetailLevel.FULL` 或更高时返回完整序列。
+  EN: Full series output, returned only at `DetailLevel.FULL` or above.
+
+## 13. 成交量指标清单
+
+EN: Volume indicator list.
+
+| Family | Tokens |
+| --- | --- |
+| Raw volume / regime | `volume_sma`, `volume_ema`, `volume_roc`, `volume_zscore`, `relative_volume`, `volume_percentile`, `volume_spike`, `volume_dry_up`, `volume_trend`, `volume_oscillator` |
+| Accumulation / distribution | `obv`, `accumulation_distribution_line`, `chaikin_money_flow`, `chaikin_oscillator`, `volume_price_trend`, `positive_volume_index`, `negative_volume_index` |
+| Flow / pressure | `force_index`, `ease_of_movement`, `intraday_intensity`, `money_flow_volume`, `klinger_oscillator`, `volume_flow_indicator`, `demand_index` |
+| Proxy diagnostics | `signed_volume_proxy`, `cumulative_signed_volume_proxy`, `price_volume_divergence`, `volume_confirmation` |
+| Existing price-volume tokens | `mfi`, `vwma`, `vwap` |
+
+## 14. 示例：调用一个成交量指标
+EN: Example: call one volume indicator.
+
+适用场景：用户传入 OHLCV 行情，希望判断当前成交量相对近期均量是否异常。
+EN: Use case: the user provides OHLCV rows and wants to judge whether current volume is abnormal versus recent average volume.
+
+```python
+from quant_strategy_tokenizer.indicators.relative_volume import (
+    RelativeVolumeParams,
+    RelativeVolumeRequest,
+    run as run_relative_volume,
+)
+
+result = run_relative_volume(
+    RelativeVolumeRequest(
+        data=bars,
+        params=RelativeVolumeParams(window=20, spike_multiplier=2.5),
+    )
+)
+
+if result.ok:
+    report = result.value
+    print(report.last_value, report.volume_level, report.signal)
+else:
+    print(result.failure.kind, result.failure.message)
+```
+
+## 15. 示例：组合多个成交量 token
+EN: Example: compose multiple volume tokens.
+
+多个成交量指标通常都需要原始行情，因此在 pipeline 中使用 `input_key="initial"`。
+EN: Multiple volume indicators usually need the original market data, so use `input_key="initial"` in pipelines.
+
+```python
+from quant_strategy_tokenizer.contracts import ModuleResult
+from quant_strategy_tokenizer.pipeline import PipelineStep, run_pipeline
+from quant_strategy_tokenizer.indicators.relative_volume import RelativeVolumeParams, RelativeVolumeRequest, run as run_relative_volume
+from quant_strategy_tokenizer.indicators.obv import OBVParams, OBVRequest, run as run_obv
+from quant_strategy_tokenizer.indicators.volume_confirmation import (
+    VolumeConfirmationParams,
+    VolumeConfirmationRequest,
+    run as run_confirmation,
+)
+
+steps = [
+    PipelineStep(
+        name="relative_volume",
+        input_key="initial",
+        output_key="rv_last",
+        take="last_value",
+        fn=lambda data: run_relative_volume(RelativeVolumeRequest(data=data, params=RelativeVolumeParams())),
+    ),
+    PipelineStep(
+        name="obv",
+        input_key="initial",
+        output_key="obv_flow",
+        take="flow_direction",
+        fn=lambda data: run_obv(OBVRequest(data=data, params=OBVParams())),
+    ),
+    PipelineStep(
+        name="confirmation",
+        input_key="initial",
+        output_key="confirmation_signal",
+        take="signal",
+        fn=lambda data: run_confirmation(VolumeConfirmationRequest(data=data, params=VolumeConfirmationParams())),
+    ),
+    PipelineStep(
+        name="summary",
+        pass_state=True,
+        fn=lambda state: ModuleResult.success(
+            {
+                "relative_volume": state.get("rv_last"),
+                "obv_flow": state.get("obv_flow"),
+                "confirmation": state.get("confirmation_signal"),
+            }
+        ),
+    ),
+]
+
+result = run_pipeline(initial_payload=bars, steps=steps)
+```
+
+## 16. 示例：调用一个动量指标
 
 EN: Example: call one momentum indicator.
 
@@ -410,7 +547,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 13. 示例：组合多个动量 token
+## 17. 示例：组合多个动量 token
 
 EN: Example: compose multiple momentum tokens.
 
@@ -454,7 +591,7 @@ steps = [
 result = run_pipeline(initial_payload=bars, steps=steps)
 ```
 
-## 14. 示例：调用一个趋势指标
+## 18. 示例：调用一个趋势指标
 
 EN: Example: call one trend indicator.
 
@@ -488,7 +625,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 15. 示例：非标准字段映射
+## 19. 示例：非标准字段映射
 
 EN: Example: nonstandard field mapping.
 
@@ -522,7 +659,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 16. 示例：请求完整序列
+## 20. 示例：请求完整序列
 
 EN: Example: request full series.
 
@@ -553,7 +690,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 17. 示例：组合多个趋势 token
+## 21. 示例：组合多个趋势 token
 
 EN: Example: compose multiple trend tokens.
 
@@ -605,7 +742,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 18. 示例：写入标准报告文件
+## 22. 示例：写入标准报告文件
 
 EN: Example: write standard report files.
 
@@ -643,7 +780,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 19. Agent 选择指南
+## 23. Agent 选择指南
 
 EN: Agent selection guide.
 
@@ -680,7 +817,16 @@ EN: If the user asks for compression or pre-breakout squeeze, use `bollinger_ban
 如果用户说“帮我判断波动 regime”，使用 `volatility_regime`, `volatility_ratio`, `volatility_of_volatility`, `ulcer_index`。
 EN: If the user asks for volatility regime, use `volatility_regime`, `volatility_ratio`, `volatility_of_volatility`, or `ulcer_index`.
 
-## 20. 常见坑
+如果用户说“帮我看放量、缩量或相对成交量”，使用 `relative_volume`, `volume_spike`, `volume_dry_up`, `volume_percentile`, `volume_oscillator`。
+EN: If the user asks for volume expansion, dry-up, or relative volume, use `relative_volume`, `volume_spike`, `volume_dry_up`, `volume_percentile`, or `volume_oscillator`.
+
+如果用户说“帮我看资金流、吸筹或派发”，使用 `obv`, `accumulation_distribution_line`, `chaikin_money_flow`, `chaikin_oscillator`, `volume_price_trend`。
+EN: If the user asks for money flow, accumulation, or distribution, use `obv`, `accumulation_distribution_line`, `chaikin_money_flow`, `chaikin_oscillator`, or `volume_price_trend`.
+
+如果用户说“帮我判断量价背离或成交量确认”，使用 `price_volume_divergence`, `volume_confirmation`；如果用户只有 OHLCV 而没有订单流，可使用 `signed_volume_proxy` 并明确这是代理估计。
+EN: If the user asks for price-volume divergence or volume confirmation, use `price_volume_divergence` or `volume_confirmation`; if only OHLCV is available without order flow, use `signed_volume_proxy` and state that it is a proxy estimate.
+
+## 24. 常见坑
 
 EN: Common pitfalls.
 
