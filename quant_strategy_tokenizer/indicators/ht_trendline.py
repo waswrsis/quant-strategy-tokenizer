@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.ht_trendline
-=================================================
-Module purpose: Hilbert transform instantaneous trendline token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+================================================
+Module purpose: Hilbert transform trendline token.
+Core idea: Use TA-Lib Hilbert trendline when available, or a native EMA-based phase approximation. The implementation assumes detrended phase information can produce a smoother dominant trendline; native mode is approximate.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, HTTrendlineParams, and ModuleRunContext.
 Outputs: HTTrendlineReport with quality, last values, trend direction, signal,

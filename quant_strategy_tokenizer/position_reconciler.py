@@ -1,41 +1,12 @@
 """
-Module: position_reconciler
-
-Module purpose
---------------
-Compare previous and current position snapshots and classify transitions such
-as newly opened, increased, reduced, fully closed, flipped, or unknown-flat.
-
-Core idea
----------
-Position reconciliation is a strategy-agnostic accounting step. It should not
-query a venue or infer success from missing data. Callers provide snapshots and
-optional close evidence; the module returns explicit classifications and
-unknown states for the strategy or risk layer to handle.
-
-Inputs
-------
-- `previous_positions` and `current_positions`: iterable dict-like rows.
-- Required fields are configurable; defaults are `symbol`, `quantity`, `side`.
-- `close_evidence`: optional mapping symbol -> evidence dict/list, for example
-  order-history matches, stop/take-profit hit flags, or manual-exit markers.
-
-Outputs
--------
-- `ModuleResult.value` is `PositionReconcilerReport`.
-- `transitions` lists one `PositionTransition` per changed symbol.
-- `unknown` contains transitions that need later confirmation.
-
-Failure semantics
------------------
-Malformed individual rows are reported as warnings and skipped. A failed
-`ModuleResult` is returned only when snapshots are not iterable.
-
-Market generalization
----------------------
-The module treats quantities as signed exposure and has no asset-class or venue
-assumptions. It can reconcile spot inventory, futures contracts, CFDs, or paper
-positions if the caller maps them to the configured fields.
+quant_strategy_tokenizer.position_reconciler
+============================================
+Module purpose: compare previous and current position snapshots and classify exposure transitions.
+Core idea: Normalize signed quantities by symbol, compare old and new exposures, and use optional close evidence to distinguish expected flat from unknown or unexpected flat. Assumes venue queries are outside the module and missing evidence must remain explicit.
+Inputs: previous_positions, current_positions, optional close_evidence, field mapping params, and ModuleRunContext.
+Outputs: PositionReconcilerReport with transitions, unchanged symbols, unknown transitions, warnings, and diagnostics.
+Failure semantics: malformed rows are warned or skipped; non-iterable snapshots or unusable request data return ModuleResult.fail.
+Market generalization: quantity semantics are caller-mapped and can represent spot, futures, CFDs, paper positions, or simulations.
 """
 
 from __future__ import annotations

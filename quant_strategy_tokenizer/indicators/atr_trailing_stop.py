@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.atr_trailing_stop
-======================================================
+=====================================================
 Module purpose: ATR trailing stop trend token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+Core idea: Compute long and short trailing stops around close using ATR multiples and flip when price crosses the active stop. The implementation assumes volatility-scaled trailing levels can describe trend state and exit pressure.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, ATRTrailingStopParams, and ModuleRunContext.
 Outputs: ATRTrailingStopReport with quality, last values, trend direction, signal,

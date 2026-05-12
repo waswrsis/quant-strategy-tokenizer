@@ -1,13 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.filters.status_filter
-======================================
-Module purpose: accept candidates whose caller-supplied trading status is OK.
-Core idea: status is external data; this module only interprets supplied flags.
-Inputs: candidates and status_by_symbol mapping.
-Outputs: StatusFilterReport with accepted/rejected rows.
-Failure semantics: unknown symbols are rejected when fail_closed is True.
-Market generalization: statuses are caller-defined strings/booleans and work
-for equities, futures, crypto, or custom venues.
+==============================================
+Module purpose: reject candidates whose external status flags are not accepted.
+Core idea: Look up each candidate symbol in caller-supplied status state and compare against accepted values. Assumes listing/trading status comes from an upstream data source and missing status should fail closed when configured.
+Inputs: candidate rows, status_by_symbol mapping, accepted status params, and ModuleRunContext.
+Outputs: StatusFilterReport with accepted rows, rejected rows, and status reason counts.
+Failure semantics: missing status rejects rows when required; unusable candidate input fails the request.
+Market generalization: status values are free-form caller labels and can represent exchange, research, or custom tradability states.
 """
 from __future__ import annotations
 

@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.aroon_oscillator
-=====================================================
-Module purpose: Aroon oscillator trend token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+====================================================
+Module purpose: Aroon oscillator trend-recency token.
+Core idea: Compute Aroon Up minus Aroon Down. The implementation assumes the distance between recent-high recency and recent-low recency is a compact trend-direction measure.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, AroonOscillatorParams, and ModuleRunContext.
 Outputs: AroonOscillatorReport with quality, last values, trend direction, signal,

@@ -1,16 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.signal_trigger
-===============================
-Module purpose: turn caller-supplied indicator features into long/short/none
-trigger decisions.
-Core idea: signal triggering is separate from indicator calculation; this
-module consumes caller-supplied price, center, and width fields.
-Inputs: feature rows with price, center, width fields; trigger params; optional
-output_dir.
-Outputs: SignalTriggerReport with per-symbol trigger decisions and reasons.
-Failure semantics: missing feature fields reject that row with detailed reason.
-Market generalization: "center" and "width" can represent EMA/ATR, moving
-average/band, fair value/spread, or any user-defined mean-reversion channel.
+=======================================
+Module purpose: generate long, short, or none signals from precomputed price, center, and width fields.
+Core idea: Compare price against center plus/minus configurable width multiples and emit a directional trigger. Assumes fair-value and width calculations are external, so this token only owns boundary logic and row-level rejection.
+Inputs: feature rows with configurable symbol, price, center, and width fields plus trigger params.
+Outputs: SignalTriggerReport with generated signals, rejected rows, counts, and diagnostics.
+Failure semantics: missing or invalid row fields reject that row; unusable row input fails the request.
+Market generalization: works with any instrument when caller provides numeric price, center, and width features.
 """
 from __future__ import annotations
 

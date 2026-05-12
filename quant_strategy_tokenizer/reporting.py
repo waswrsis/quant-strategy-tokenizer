@@ -1,20 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.reporting
-==========================
-Module purpose: write standard module reports for humans and automation.
-Core idea: every module can optionally emit a stable set of files without
-owning business logic or hidden side effects.
+==================================
+Module purpose: write standard redacted module reports for humans and automation.
+Core idea: Serialize ModuleResult into summary, events, and data files only when output_dir is explicitly supplied. Assumes report writing is an opt-in side effect and sensitive-looking keys/values must be redacted recursively.
 Inputs: module name, ModuleResult, output directory, and optional run id.
-Configuration: callers choose `module_name`, `output_dir`, and `run_id`.
-Modules should call this only when `ModuleRunContext.output_dir` is explicitly
-set by the user.
-Outputs: summary JSON, events JSONL, and data JSON paths in OutputFiles.
-Failure semantics: report write failures are surfaced by the caller as normal
-Python exceptions; modules should call this only when output_dir is explicit.
-Leak-prevention semantics: report payloads are recursively redacted for common
-credential, identity, account, token, and secret field names before writing.
-Market generalization: report schema is module-agnostic and does not assume a
-venue or asset class.
+Outputs: OutputFiles pointing to summary JSON, events JSONL, and data JSON.
+Failure semantics: file-system errors are raised to the caller; modules should call this only after successful explicit output_dir configuration.
+Market generalization: report format is module-agnostic and does not assume venue, account, or asset class.
 """
 from __future__ import annotations
 

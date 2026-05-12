@@ -1,21 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.pipeline
-=========================
+=================================
 Module purpose: run user-selected modules in a deterministic sequence.
-Core idea: preserve each module's standalone Request/Result API while giving
-the pipeline a small data bus. Steps can read the initial payload, current
-payload, prior step outputs, or the whole PipelineState for fan-in.
-Inputs: initial payload and PipelineStep definitions. A step callable receives
-the selected input and returns ModuleResult.
-Configuration: `input_key` selects input from state, `take` selects a field from
-the successful report for downstream use, `output_key` stores that selected
-payload under a reusable name, and `pass_state=True` passes the full state.
-Outputs: PipelineReport with per-step results, named values, and final payload.
-Failure semantics: missing inputs, missing selected fields, exceptions, or
-failed modules return explicit ModuleResult.fail. The pipeline stops on the
-first failed step unless continue_on_failure=True.
-Market generalization: the pipeline is data-shape agnostic and does not know
-about instruments or venues.
+Core idea: Use a small state bus so each step can read initial data, current payload, named outputs, or prior results. Assumes pipeline composition should make data dependencies explicit with input_key/take/output_key instead of guessing how reports feed each other.
+Inputs: initial payload, PipelineStep definitions, step callables, and optional continue_on_failure flag.
+Outputs: PipelineReport containing final payload, per-step results, named values, and results by step.
+Failure semantics: missing inputs, duplicate step names, exceptions, failed modules, or invalid output selections return explicit pipeline failures.
+Market generalization: pipeline is data-shape agnostic and does not know about instruments, exchanges, or strategies.
 """
 from __future__ import annotations
 

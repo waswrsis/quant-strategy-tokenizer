@@ -1,14 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.filters.mrq_filter
-===================================
-Module purpose: filter candidates using precomputed MRQ touch reports.
-Core idea: MRQ calculation is separate; this filter only applies pass/fail
-policy to supplied diagnostics.
-Inputs: candidates and mrq_by_symbol mapping with passed/touch_count/reason.
-Outputs: accepted/rejected rows and summary.
-Failure semantics: missing MRQ state rejects when fail_closed is True.
-Market generalization: MRQ meaning is caller-defined and can represent any
-mean-reversion quality criterion across markets.
+===========================================
+Module purpose: apply precomputed MRQ touch/pass-fail diagnostics to candidate rows.
+Core idea: Consume MRQ decisions from an external indicator step and reject candidates with failing or unavailable MRQ state. Assumes MRQ calculation is separate and this filter only enforces its output policy.
+Inputs: candidate rows, mrq state by symbol, fail-closed params, and ModuleRunContext.
+Outputs: MRQFilterReport with accepted rows, rejected rows, and MRQ reason counts.
+Failure semantics: missing MRQ state rejects rows when fail_closed is enabled; unusable candidate input fails the request.
+Market generalization: MRQ labels are caller-defined and not tied to a specific venue or instrument type.
 """
 from __future__ import annotations
 

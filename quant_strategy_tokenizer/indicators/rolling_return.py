@@ -1,15 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.indicators.rolling_return
-==========================================
-Module purpose: calculate rolling percentage or log returns.
-Core idea: normalize a value series and compare it to its lagged value.
-Inputs: raw value/price data, DataFrameSpec mapping, lookback periods, return
-mode, and detail_level.
-Outputs: RollingReturnReport with last return, optional series, and diagnostics.
-Failure semantics: missing value field, non-positive values for log returns, or
-insufficient rows returns explicit failure.
-Market generalization: works for any numeric time series, including prices,
-rates, spreads, or custom factors.
+==================================================
+Module purpose: calculate lagged or rolling returns from a caller-supplied value series.
+Core idea: Normalize one value series and compare each row to a lagged value over a configured lookback. Assumes row order represents time order and percentage or absolute changes are sufficient for interval return features.
+Inputs: value-series data, DataFrameSpec mapping, RollingReturnParams, optional ExtractorSpec, and ModuleRunContext.
+Outputs: RollingReturnReport with latest return, optional series, summary, field mapping, and diagnostics.
+Failure semantics: invalid lookback, missing value field, insufficient rows, zero denominator when needed, or invalid numeric data return ModuleResult.fail.
+Market generalization: returns are computed from generic numeric values and are independent of instrument type.
 """
 from __future__ import annotations
 

@@ -1,15 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.filters.history_filter
-=======================================
-Module purpose: reject candidates without enough caller-supplied history.
-Core idea: history availability is external; this filter only compares counts
-or booleans supplied by the caller.
-Inputs: candidates, history_by_symbol mapping of row counts/days/booleans, and
-minimum threshold.
-Outputs: HistoryFilterReport with accepted/rejected rows.
-Failure semantics: missing history state rejects when fail_closed is True.
-Market generalization: threshold units are caller-defined, so the same module
-works for bars, days, sessions, ticks, or custom samples.
+===============================================
+Module purpose: reject candidates without enough caller-supplied historical data coverage.
+Core idea: Compare per-symbol history counts or durations against a minimum threshold. Assumes data availability is measured upstream and insufficient or missing history should not be treated as tradable by default.
+Inputs: candidate rows, history_by_symbol mapping, minimum history params, and ModuleRunContext.
+Outputs: HistoryFilterReport with accepted rows, rejected rows, and reason counts.
+Failure semantics: missing history rejects rows when required; unusable candidate input fails the request.
+Market generalization: history units are caller-defined and can represent bars, days, samples, or vendor coverage scores.
 """
 from __future__ import annotations
 

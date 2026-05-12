@@ -1,18 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.indicators.beta_residual
-=========================================
-Module purpose: calculate beta, correlation, R^2, and residual diagnostics
-between two numeric series.
-Core idea: normalize two user-supplied series, align by row order, and run a
-simple least-squares regression y = alpha + beta*x.
-Inputs: y raw data, x raw data, DataFrameSpec/extractors for both sides,
-window, and detail_level.
-Outputs: BetaResidualReport with beta, alpha, corr, r2, residual z/slope, and
-optional residual series.
-Failure semantics: missing values, insufficient overlapping rows, or zero x
-variance returns explicit failure.
-Market generalization: works for any pair of numeric series, including
-benchmark neutralization, equity beta, spread residuals, or macro factors.
+=================================================
+Module purpose: estimate beta-adjusted residual movement against a benchmark series.
+Core idea: Align asset and benchmark series by row order, run rolling or windowed linear regression, and report residuals from the fitted relationship. Assumes the benchmark explains a linear component of the asset move and the leftover residual is useful as relative strength/dispersion.
+Inputs: asset series, benchmark series, field mapping params, BetaResidualParams, and ModuleRunContext.
+Outputs: BetaResidualReport with beta, alpha, residual, optional series, summary, warnings, and diagnostics.
+Failure semantics: missing fields, insufficient aligned rows, zero-variance benchmark, or invalid numeric data return ModuleResult.fail.
+Market generalization: works for any two comparable numeric series supplied by the caller.
 """
 from __future__ import annotations
 

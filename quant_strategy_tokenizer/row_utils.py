@@ -1,17 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.row_utils
-==========================
-Module purpose: shared defensive helpers for row-oriented modules.
-Core idea: reusable strategy blocks should treat imperfect caller inputs as
-data-quality issues, not unhandled Python exceptions.
-Inputs: arbitrary row-like objects, scalar values, and numeric values.
-Configuration: callers do not configure this module directly; row-oriented
-modules pass their configured symbol field when coercing raw rows.
-Outputs: plain dictionaries, normalized finite floats, and small diagnostics.
-Failure semantics: helpers return `None` for invalid numeric values and produce
-fallback row dictionaries for scalar rows; policy decisions stay in callers.
-Market generalization: helpers do not assume venue, asset class, or symbol
-format.
+==================================
+Module purpose: small row-coercion and typed lookup helpers for non-tabular modules.
+Core idea: Centralize defensive extraction from mappings, dataclasses, or objects so strategy modules can reject bad rows consistently. Assumes caller data may be imperfect and should be classified rather than silently coerced into false success.
+Inputs: dict-like rows, objects with attributes, and scalar values to parse as finite floats or strings.
+Outputs: plain dictionaries, optional string values, finite floats, and normalized booleans.
+Failure semantics: helpers return None or simple defaults so calling modules can decide whether a row is rejected or the request fails.
+Market generalization: row helpers know nothing about instruments or venues and operate on caller-configured field names.
 """
 from __future__ import annotations
 

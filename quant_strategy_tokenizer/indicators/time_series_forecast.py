@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.time_series_forecast
-=========================================================
-Module purpose: Rolling linear-regression forecast trend token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+========================================================
+Module purpose: Time Series Forecast trend token.
+Core idea: Project the rolling regression line forward by a configurable number of periods. The implementation assumes the recent linear trend persists over the short forecast horizon.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, TimeSeriesForecastParams, and ModuleRunContext.
 Outputs: TimeSeriesForecastReport with quality, last values, trend direction, signal,

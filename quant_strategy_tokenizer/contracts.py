@@ -1,17 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.contracts
-==========================
-Module purpose: shared contracts for every extracted strategy module.
-Core idea: use small dataclasses so modules can be chained, inspected, tested,
-and called from simulations or live sidecars without importing the runner.
-Inputs: raw data, DataFrameSpec column mappings, optional ExtractorSpec
-callbacks, ModuleRunContext, and module Params dataclasses.
-Outputs: ModuleResult[T] with detailed events, warnings, failures, and optional
-OutputFiles.
-Failure semantics: modules must return ModuleResult.fail(...) for missing data,
-invalid schemas, unknown state, insufficient data, or unsupported inputs.
-Market generalization: InstrumentRef does not assume quote, settlement, venue,
-asset class, or symbol format.
+==================================
+Module purpose: shared dataclass contracts for module inputs, outputs, runtime context, events, and failures.
+Core idea: Represent module boundaries with small explicit dataclasses instead of loose dictionaries. Assumes every token should preserve success, failure, warnings, and file outputs in a predictable shape so agents can compose modules safely.
+Inputs: module parameters, field specs, extractor callbacks, runtime context, events, and typed result values.
+Outputs: ModuleResult, ModuleFailure, ModuleEvent, DataFrameSpec, ExtractorSpec, ModuleRunContext, and helper enums.
+Failure semantics: contracts do not perform business validation; failures are represented as data for downstream modules.
+Market generalization: contract types carry optional metadata but do not encode venue, asset-class, or broker assumptions.
 """
 from __future__ import annotations
 

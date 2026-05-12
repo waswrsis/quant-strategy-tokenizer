@@ -1,44 +1,12 @@
 """
-Module: order_planner
-
-Module purpose
---------------
-Convert strategy decisions or candidate rows into a structured, venue-neutral
-order plan. This module never sends orders. It only describes intended legs.
-
-Core idea
----------
-Trading systems should separate "what we want to do" from "how a venue submits
-it". The planner turns normalized symbol/side/price/notional inputs, or
-explicit caller-supplied leg rows, into a stable list of order legs.
-Venue-specific fields are kept in metadata so another adapter can translate the
-plan later.
-
-Inputs
-------
-- `decisions`: list of dict-like rows. Raw candidate rows are accepted.
-- Required by default: `symbol`, `side`.
-- Optional: `price`, `notional`, `quantity`, `order_type`, `stop_loss`,
-  `take_profit`, and explicit `legs`.
-- Field names are configurable via params.
-
-Outputs
--------
-- `ModuleResult.value` is `OrderPlannerReport`.
-- `plans` contains one `OrderPlan` per accepted decision.
-- `rejected` records rows that could not be converted and why.
-
-Failure semantics
------------------
-Missing or invalid required fields reject only that row. The module returns a
-failed `ModuleResult` only when the request itself is unusable, for example when
-`decisions` is not iterable.
-
-Market generalization
----------------------
-No venue, asset-class, or broker assumptions are embedded. Quantities are
-unitless from the module's view; downstream execution adapters apply lot size,
-tick size, contract multiplier, reduce-only, or margin-specific translation.
+quant_strategy_tokenizer.order_planner
+======================================
+Module purpose: convert strategy decisions into structured venue-neutral order plans without execution.
+Core idea: Separate trade intent from venue submission by translating symbol/side/price/notional and optional TP/SL/add legs into OrderPlan and OrderLeg objects. Assumes downstream adapters handle precision, margin mode, reduce-only semantics, and actual placement.
+Inputs: decision rows with configurable symbol, side, price, quantity, notional, order type, stop loss, take profit, and explicit legs.
+Outputs: OrderPlannerReport with accepted OrderPlan objects and rejected decision rows.
+Failure semantics: bad individual decisions are rejected; the request fails only when decisions are not iterable or global params are unusable.
+Market generalization: plans are venue-neutral and can be translated for crypto, equities, futures, FX, simulation, or paper trading.
 """
 
 from __future__ import annotations

@@ -1,19 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.indicators.ema
-===============================
-Module purpose: calculate an exponential moving average from raw or normalized
-price data.
-Core idea: normalize user input into a single value series, then apply pandas
-ewm with configurable span.
-Inputs: DataFrame/Series/list/dict/custom object, DataFrameSpec value/close
-mapping, window, min_periods, detail_level, and optional output_dir.
-Outputs: EMAReport with last value, full/partial series by detail level,
-input mapping, quality, and diagnostics.
-Failure semantics: missing value field, invalid numeric data, or insufficient
-rows returns ModuleResult.fail; no implicit column guessing unless aliases are
-enabled in DataFrameSpec.
-Market generalization: any market with a numeric price or value series can use
-this module.
+=======================================
+Module purpose: calculate an exponential moving average from raw or normalized price data.
+Core idea: Normalize one value series and apply pandas ewm with configurable span, min_periods, and adjust mode. Assumes recent observations should receive exponentially larger weight and that EMA is a lagging trend/fair-value reference.
+Inputs: DataFrame, Series, list, dict, or ExtractorSpec data with a configured value field, EMAParams, and ModuleRunContext.
+Outputs: EMAReport with latest EMA, optional full series, field mapping, summary, warnings, and diagnostics.
+Failure semantics: invalid window, missing value field, insufficient numeric rows, or bad normalization return ModuleResult.fail.
+Market generalization: works for any numeric value series regardless of venue, symbol format, or asset class.
 """
 from __future__ import annotations
 

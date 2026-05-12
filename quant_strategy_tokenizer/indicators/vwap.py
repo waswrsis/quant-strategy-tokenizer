@@ -1,17 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.indicators.vwap
-================================
-Module purpose: calculate VWAP and related cross/touch diagnostics.
-Core idea: normalize price/volume inputs, select a price source, and divide
-rolling price-volume sum by rolling volume sum.
-Inputs: OHLCV or price/volume raw data, DataFrameSpec mapping, window,
-price_source, optional touch_band, and detail_level.
-Outputs: VWAPReport with last VWAP, deviation, crossover/touch statistics,
-optional series, input mapping, and diagnostics.
-Failure semantics: missing volume or price source returns explicit failure;
-markets without real volume should pass a user-chosen proxy column explicitly.
-Market generalization: works for any market where caller supplies a meaningful
-volume/proxy-volume series.
+========================================
+Module purpose: calculate rolling VWAP and touch/cross diagnostics from price and volume data.
+Core idea: Select a price source, compute rolling price-volume over volume, then classify price interaction with VWAP by cross or tolerance band. Assumes volume-weighted price is a useful intraperiod reference and touch semantics must be explicit.
+Inputs: OHLCV-like data, DataFrameSpec mapping, VWAPParams, optional ExtractorSpec, and ModuleRunContext.
+Outputs: VWAPReport with latest VWAP, latest price, deviation, touch/cross counts, optional series, and diagnostics.
+Failure semantics: missing price/volume fields, invalid window, zero volume, insufficient rows, or bad normalization return ModuleResult.fail.
+Market generalization: works for any market with caller-provided price and volume fields.
 """
 from __future__ import annotations
 

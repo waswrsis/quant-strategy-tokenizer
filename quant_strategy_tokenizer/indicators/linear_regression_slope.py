@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.linear_regression_slope
-============================================================
-Module purpose: Rolling linear regression slope trend token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+===========================================================
+Module purpose: Rolling linear regression slope token.
+Core idea: Fit a rolling least-squares line and return its slope. The implementation assumes slope is the direct directional speed of the local trend.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, LinearRegressionSlopeParams, and ModuleRunContext.
 Outputs: LinearRegressionSlopeReport with quality, last values, trend direction, signal,

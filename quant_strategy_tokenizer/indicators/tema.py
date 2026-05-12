@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.tema
-=========================================
+========================================
 Module purpose: Triple exponential moving average trend token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+Core idea: Compute TEMA from the first, second, and third EMA layers. The implementation assumes deeper EMA lag correction gives a faster trend line, with the tradeoff that turning points and noise may be emphasized.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, TEMAParams, and ModuleRunContext.
 Outputs: TEMAReport with quality, last values, trend direction, signal,

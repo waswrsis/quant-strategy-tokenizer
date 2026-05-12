@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.trima
-==========================================
+=========================================
 Module purpose: Triangular moving average trend token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+Core idea: Compute a double-smoothed simple moving average that creates triangular weighting. The implementation assumes a centered-style smooth trend estimate is more useful than a fast trigger; signals are intentionally lagging.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, TRIMAParams, and ModuleRunContext.
 Outputs: TRIMAReport with quality, last values, trend direction, signal,

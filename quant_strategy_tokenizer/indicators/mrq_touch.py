@@ -1,18 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.indicators.mrq_touch
-=====================================
-Module purpose: evaluate mean-reversion quality by counting whether price
-touches a reference band in recent history.
-Core idea: normalize OHLC or close/reference data, build a reference band, and
-report touch count, latest distance, and consecutive no-touch run.
-Inputs: raw market data, DataFrameSpec mapping, lookback, band value, reference
-mode, and detail_level.
-Outputs: MRQTouchReport with pass/fail, touch count, no-touch run, distances,
-and diagnostics.
-Failure semantics: missing required fields or insufficient history returns
-explicit failure. If no reference can be built, the module does not fail open.
-Market generalization: works for any market with price observations; callers
-choose the reference mode and band appropriate to the asset.
+=============================================
+Module purpose: diagnose whether price has touched or respected an MRQ-style reference band.
+Core idea: Build or consume a reference band, compare recent price action against it, and report touch/inside/outside diagnostics. Assumes the caller defines the meaningful reference level and that missing reference data should not be treated as a valid pass.
+Inputs: OHLC or close/reference data, DataFrameSpec mapping, MRQTouchParams, optional ExtractorSpec, and ModuleRunContext.
+Outputs: MRQTouchReport with touch state, counts, latest distance, optional series, warnings, and diagnostics.
+Failure semantics: missing price/reference fields, invalid windows, insufficient rows, or invalid numeric data return ModuleResult.fail.
+Market generalization: reference-band logic is generic and can apply to any instrument with price data.
 """
 from __future__ import annotations
 

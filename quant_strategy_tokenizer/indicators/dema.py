@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.dema
-=========================================
+========================================
 Module purpose: Double exponential moving average trend token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+Core idea: Compute DEMA as two times the EMA minus the EMA of the EMA. The implementation assumes part of EMA lag can be cancelled algebraically; this can react faster than a plain EMA but may amplify noisy price moves.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, DEMAParams, and ModuleRunContext.
 Outputs: DEMAReport with quality, last values, trend direction, signal,

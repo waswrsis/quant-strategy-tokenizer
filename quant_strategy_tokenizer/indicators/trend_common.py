@@ -1,19 +1,12 @@
 """
 quant_strategy_tokenizer.indicators.trend_common
-========================================
-Module purpose: shared implementation helpers for trend indicator tokens.
-Core idea: keep every public trend indicator as an independently callable
-module while centralizing normalization, numerical routines, backend policy,
-and report construction.
-Inputs: raw user data, DataFrameSpec/ExtractorSpec, TrendParams-compatible
-configuration, and a trend indicator name.
-Outputs: TrendReport wrapped in ModuleResult, with stable diagnostics,
-last values, optional series, and explicit failure states.
-Failure semantics: invalid parameters, missing fields, insufficient history,
-unsupported backends, or unavailable TA-Lib return ModuleResult.fail; no hidden
-data fetching, exchange access, or silent fail-open behavior is used.
-Market generalization: all calculations operate on caller-supplied numeric
-fields and do not assume asset class, venue, session model, or symbol format.
+================================================
+Module purpose: shared implementation layer for atomic trend indicator tokens.
+Core idea: Resolve inputs, validate parameters, choose native or optional TA-Lib backend, run the selected numerical routine, and build a uniform TrendReport. Assumes public indicator modules should stay small wrappers while calculation semantics, backend policy, explicit failure states, and output shaping remain consistent.
+Inputs: raw user data, DataFrameSpec/ExtractorSpec, TrendParams-compatible configuration, indicator name, input kind, and ModuleRunContext.
+Outputs: TrendReport wrapped in ModuleResult with last values, direction, strength, optional series, diagnostics, warnings, and report files when requested.
+Failure semantics: invalid params, missing fields, insufficient history, unsupported backend, unavailable TA-Lib, and calculation errors return ModuleResult.fail.
+Market generalization: all calculations operate on caller-supplied numeric fields and do not assume asset class, venue, session model, or symbol format.
 """
 from __future__ import annotations
 

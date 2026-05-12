@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.donchian_channel
-=====================================================
+====================================================
 Module purpose: Donchian channel breakout trend token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+Core idea: Compute rolling highest high, lowest low, and their midpoint. The implementation assumes channel extremes define breakout context while the midpoint gives a trend reference.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, DonchianChannelParams, and ModuleRunContext.
 Outputs: DonchianChannelReport with quality, last values, trend direction, signal,

@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.mcginley_dynamic
-=====================================================
-Module purpose: McGinley Dynamic adaptive trend token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+====================================================
+Module purpose: McGinley Dynamic trend token.
+Core idea: Compute a dynamic average whose update speed changes with the ratio of price to the current average. The implementation assumes fast markets need adaptive smoothing to avoid stale trend references.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, McGinleyDynamicParams, and ModuleRunContext.
 Outputs: McGinleyDynamicReport with quality, last values, trend direction, signal,

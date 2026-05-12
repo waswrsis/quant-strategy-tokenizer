@@ -1,42 +1,12 @@
 """
-Module: state_model
-
-Module purpose
---------------
-Create, validate, and merge strategy state envelopes without reading or writing
-files. The module defines a portable state boundary that prevents accidental
-cross-strategy or cross-account contamination.
-
-Core idea
----------
-State should have a small standard envelope and an arbitrary strategy payload.
-The envelope identifies schema version, strategy id, instance id, and account
-scope. Strategy-specific data remains inside `payload` so modules can be
-recombined without sharing hidden globals.
-
-Inputs
-------
-- `state`: optional dict-like existing state.
-- `payload_updates`: optional dict merged into `payload`.
-- Expected `strategy_id`, `instance_id`, `account_scope`, and `schema_version`
-  come from params.
-
-Outputs
--------
-- `ModuleResult.value` is `StateModelReport`.
-- `state` contains the validated or merged envelope.
-- `mismatches` lists identity/schema violations.
-
-Failure semantics
------------------
-Mismatches fail closed by default. Set `allow_create=True` to create a new
-envelope when state is missing. This module never silently accepts missing
-identity fields when validation is requested.
-
-Market generalization
----------------------
-The state envelope has no venue-specific fields. It can hold crypto, stock,
-futures, FX, simulation, or research state as payload data.
+quant_strategy_tokenizer.state_model
+====================================
+Module purpose: create, validate, and merge portable strategy state envelopes without file I/O.
+Core idea: Keep state identity in a small envelope and strategy-specific data in payload, then validate schema version, strategy id, instance id, and account scope before merging updates. Assumes state contamination is a serious risk and identity mismatches should fail closed by default.
+Inputs: optional existing state, optional payload_updates, expected identity params, and ModuleRunContext.
+Outputs: StateModelReport with validated or created state, mismatches, created/upgraded flags, and warnings.
+Failure semantics: missing state fails unless creation is allowed; identity or schema mismatches fail when fail_on_identity_mismatch is enabled.
+Market generalization: state envelope is generic and can hold crypto, equity, futures, FX, research, or simulation payloads.
 """
 
 from __future__ import annotations

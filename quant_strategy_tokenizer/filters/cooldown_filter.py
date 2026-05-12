@@ -1,15 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.filters.cooldown_filter
-========================================
-Module purpose: reject candidates that are still inside a caller-supplied
-cooldown window.
-Core idea: cooldown state is external; this module only compares current time
-with per-symbol until timestamps.
-Inputs: candidates, cooldown_until_by_symbol epoch seconds, and current now_ts.
-Outputs: accepted/rejected rows with remaining seconds.
-Failure semantics: missing cooldown means accepted; invalid timestamps reject
-only when fail_closed is True.
-Market generalization: works for any symbol namespace and any cooldown reason.
+================================================
+Module purpose: reject candidates that are still inside caller-supplied cooldown windows.
+Core idea: Compare as-of time with per-symbol cooldown-until timestamps and pass only expired rows. Assumes cooldown state is maintained by another strategy component and missing required state should fail closed when configured.
+Inputs: candidate rows, cooldown state by symbol, time/asof params, and ModuleRunContext.
+Outputs: CooldownFilterReport with accepted rows, rejected rows, and reason counts.
+Failure semantics: invalid or missing timestamps reject rows; unusable candidate input fails the request.
+Market generalization: cooldown semantics are strategy-defined and do not depend on venue or asset class.
 """
 from __future__ import annotations
 

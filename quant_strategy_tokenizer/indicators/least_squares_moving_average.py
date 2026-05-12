@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.least_squares_moving_average
-=================================================================
-Module purpose: Least-squares moving average trend token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+================================================================
+Module purpose: Least Squares Moving Average trend token.
+Core idea: Use the rolling regression fitted value as a moving average. The implementation assumes the fitted regression endpoint is a smoother trend estimate than raw close.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, LeastSquaresMovingAverageParams, and ModuleRunContext.
 Outputs: LeastSquaresMovingAverageReport with quality, last values, trend direction, signal,

@@ -1,14 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.vote_engine
-============================
-Module purpose: combine independent judge outputs into an allow/reject decision.
-Core idea: voting is a small, reusable aggregation step; judges can be trend,
-macro, liquidity, risk, or any user-defined evaluator.
-Inputs: candidate rows and judge_by_symbol mapping with support/neutral/veto
-style fields or numeric scores.
-Outputs: VoteEngineReport with outcome, allowed flag, score, and diagnostics.
-Failure semantics: missing judge state rejects when fail_closed is True.
-Market generalization: judge labels are generic and not tied to any market.
+====================================
+Module purpose: aggregate caller-supplied judge outcomes into allow/reject candidate decisions.
+Core idea: Read per-symbol judge dictionaries, enforce outcome and optional score thresholds, and preserve rejection reasons. Assumes judges are external modules or user logic; this token only normalizes and gates their outputs.
+Inputs: candidate rows, judge_by_symbol mapping, vote params, and ModuleRunContext.
+Outputs: VoteEngineReport with decisions, rejected rows, accepted rows, and summary counts.
+Failure semantics: missing symbols or judge state reject rows when fail_closed is enabled; unusable candidate input fails the request.
+Market generalization: judge labels and scores are strategy-defined and not bound to any asset class or venue.
 """
 from __future__ import annotations
 

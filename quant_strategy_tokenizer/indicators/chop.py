@@ -1,16 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.indicators.chop
-================================
-Module purpose: calculate the Choppiness Index from OHLC data.
-Core idea: compare rolling summed true range with rolling high-low range to
-estimate whether movement is directional or choppy.
-Inputs: OHLC raw data, DataFrameSpec mapping, window, detail_level.
-Outputs: CHOPReport with last CHOP, optional series, input mapping, and
-diagnostics.
-Failure semantics: missing OHLC, non-positive rolling range, or insufficient
-rows returns explicit failure.
-Market generalization: works for any OHLC market; no exchange or asset-class
-assumptions.
+========================================
+Module purpose: calculate Choppiness Index from OHLC data.
+Core idea: Compare rolling summed true range against the rolling high-low range on a logarithmic scale. Assumes directional trends cover distance efficiently while choppy regimes spend more range per net progress.
+Inputs: OHLC-like data, DataFrameSpec mapping, CHOPParams, optional ExtractorSpec, and ModuleRunContext.
+Outputs: CHOPReport with latest choppiness value, regime label, optional series, and diagnostics.
+Failure semantics: missing OHLC fields, invalid window, insufficient rows, or invalid numeric data return ModuleResult.fail.
+Market generalization: CHOP is range-based and independent of symbol format, venue, or asset class.
 """
 from __future__ import annotations
 

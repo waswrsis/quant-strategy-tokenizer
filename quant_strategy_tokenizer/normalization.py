@@ -1,20 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.normalization
-==============================
+======================================
 Module purpose: convert raw user inputs into predictable pandas DataFrames.
-Core idea: modules should accept convenient raw inputs, but all computation
-should operate on a validated normalized frame with explicit field mappings.
-Inputs: pandas DataFrame/Series, list[dict], dict[list], scalar sequences, or
-arbitrary objects handled by user-provided ExtractorSpec callbacks.
-Configuration: pass a `DataFrameSpec` to map logical fields to columns, enable
-or disable aliases, require UTC timestamps, and enforce closed bars. Pass an
-`ExtractorSpec` when raw input is a custom object or nested SDK response.
-Outputs: ModuleResult[NormalizedFrame] with normalized frame, used fields,
-missing fields, input profile, and warnings.
-Failure semantics: required fields missing, bad extractor output, empty input,
-non-UTC timestamps, or numeric conversion failures return explicit failures.
-Market generalization: no market assumptions are made; callers map whichever
-columns their market or data vendor provides.
+Core idea: Accept convenient raw shapes, resolve logical field names through DataFrameSpec, and coerce only the fields a module declares. Assumes computation should happen after explicit field resolution rather than implicit mutation of user data.
+Inputs: DataFrame, Series, list[dict], dict[list], scalar sequences, or custom objects handled by ExtractorSpec.
+Outputs: NormalizedFrame with frame, used_fields, missing fields, input profile, and warnings.
+Failure semantics: unsupported input, empty input, bad extractor output, missing required fields, invalid timestamps, or all-NaN numeric fields return ModuleResult.fail.
+Market generalization: normalization maps fields only; it does not assume OHLCV source, symbol format, venue, or market type.
 """
 from __future__ import annotations
 

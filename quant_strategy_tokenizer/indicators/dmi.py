@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.dmi
-========================================
+=======================================
 Module purpose: Directional Movement Index token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+Core idea: Compute +DI and -DI from high/low directional movement and use their spread as the primary value. The implementation assumes directional range expansion identifies whether buyers or sellers dominate.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, DMIParams, and ModuleRunContext.
 Outputs: DMIReport with quality, last values, trend direction, signal,

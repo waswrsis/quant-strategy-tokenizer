@@ -1,13 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.filters.backoff_filter
-=======================================
-Module purpose: reject candidates in a retry/backoff window.
-Core idea: backoff is a generic risk-control state independent of market type.
-Inputs: candidates, backoff_until_by_symbol epoch seconds, now_ts.
-Outputs: accepted/rejected rows with remaining backoff seconds.
-Failure semantics: invalid backoff timestamps reject when fail_closed is True.
-Market generalization: works for network, symbol, execution, or model backoff
-states across any asset class.
+===============================================
+Module purpose: reject candidates that are still inside caller-supplied retry/backoff windows.
+Core idea: Compare current time with per-symbol retry_after/backoff-until state and accept only expired rows. Assumes retry state is produced elsewhere and unavailable required state should reject when fail_closed is enabled.
+Inputs: candidate rows, backoff state by symbol, time/asof params, and ModuleRunContext.
+Outputs: BackoffFilterReport with accepted rows, rejected rows, and reason counts.
+Failure semantics: missing symbols or invalid timestamps reject rows; unusable candidate input fails the request.
+Market generalization: backoff state is symbol-generic and works for any strategy or venue.
 """
 from __future__ import annotations
 

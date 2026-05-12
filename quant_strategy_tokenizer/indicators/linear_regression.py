@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.linear_regression
-======================================================
-Module purpose: Rolling linear regression fitted-value trend token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+=====================================================
+Module purpose: Rolling linear regression trend-line token.
+Core idea: Fit a rolling least-squares line to the selected price field and return the fitted last-point value. The implementation assumes recent price can be approximated by a linear trend over the lookback window.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, LinearRegressionParams, and ModuleRunContext.
 Outputs: LinearRegressionReport with quality, last values, trend direction, signal,

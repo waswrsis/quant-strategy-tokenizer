@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.hma
-========================================
+=======================================
 Module purpose: Hull moving average trend token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+Core idea: Compute HMA from weighted moving averages at half, full, and square-root windows. The implementation assumes WMA differencing can reduce lag while retaining enough smoothing for trend direction.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, HMAParams, and ModuleRunContext.
 Outputs: HMAReport with quality, last values, trend direction, signal,

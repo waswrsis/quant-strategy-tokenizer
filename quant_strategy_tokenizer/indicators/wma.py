@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.wma
-========================================
+=======================================
 Module purpose: Weighted moving average trend token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+Core idea: Compute a rolling moving average with linearly larger weights on recent bars. The implementation assumes recent prices should dominate older observations while preserving a finite lookback. Price/average crosses are interpreted as trend signals.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, WMAParams, and ModuleRunContext.
 Outputs: WMAReport with quality, last values, trend direction, signal,

@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.ht_dominant_cycle_period
-=============================================================
-Module purpose: Hilbert transform dominant cycle period token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+============================================================
+Module purpose: Hilbert dominant cycle period token.
+Core idea: Estimate dominant cycle period using TA-Lib or native autocorrelation over rolling windows. The implementation assumes repeated price structure creates measurable lag correlation; native mode is approximate.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, HTDominantCyclePeriodParams, and ModuleRunContext.
 Outputs: HTDominantCyclePeriodReport with quality, last values, trend direction, signal,

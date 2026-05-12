@@ -1,17 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.indicators.atr
-===============================
-Module purpose: calculate Average True Range from raw OHLC data.
-Core idea: normalize high/low/close fields, calculate true range, then smooth
-with rolling mean or Wilder RMA.
-Inputs: OHLC raw data, DataFrameSpec field mapping, window, smoothing mode, and
-detail_level.
-Outputs: ATRReport with true range diagnostics, last ATR, optional series, and
-input field mapping.
-Failure semantics: missing OHLC, invalid numeric data, or insufficient rows
-returns explicit failure.
-Market generalization: works for any market with high/low/close observations;
-it does not assume tick size or contract type.
+=======================================
+Module purpose: calculate Average True Range from caller-supplied OHLC data.
+Core idea: Compute true range from high-low and prior-close gaps, then smooth it with Wilder RMA or a configured moving average. Assumes gaps and intrabar range jointly describe volatility risk.
+Inputs: OHLC-like data, DataFrameSpec mapping, ATRParams, optional ExtractorSpec, and ModuleRunContext.
+Outputs: ATRReport with latest ATR, optional series, summary, used fields, warnings, and diagnostics.
+Failure semantics: missing OHLC fields, invalid window, insufficient rows, or invalid numeric data return ModuleResult.fail.
+Market generalization: ATR uses generic OHLC fields and does not assume exchange sessions or asset class.
 """
 from __future__ import annotations
 

@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.keltner_channel
-====================================================
-Module purpose: Keltner channel trend envelope token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+===================================================
+Module purpose: Keltner channel trend token.
+Core idea: Compute an EMA basis with ATR-based upper and lower bands. The implementation assumes trend should be evaluated relative to a volatility-adjusted moving average envelope.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, KeltnerChannelParams, and ModuleRunContext.
 Outputs: KeltnerChannelReport with quality, last values, trend direction, signal,

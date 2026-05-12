@@ -1,17 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.data_schema
-============================
-Module purpose: validate raw market data against user-specified field needs.
-Core idea: expose normalization as a standalone module so users can check data
-before running indicators or filters.
-Inputs: raw data, required/optional field names, DataFrameSpec, optional
-ExtractorSpec, detail_level, optional output_dir.
-Outputs: DataSchemaReport with used fields, missing fields, row count, column
-profile, warnings, and diagnostics.
-Failure semantics: missing required fields, unsupported input, empty data, or
-invalid timestamps return explicit failure and no computation is attempted.
-Market generalization: field names are user-mapped and not tied to OHLCV,
-crypto, equities, or a specific vendor.
+====================================
+Module purpose: standalone tabular data-schema validation token.
+Core idea: Run the same normalization path that indicators use, then return field mappings, row profile, and schema diagnostics. Assumes callers may want to validate raw vendor data before passing it into a strategy module.
+Inputs: raw tabular data, required fields, optional fields, DataFrameSpec, ExtractorSpec, and ModuleRunContext.
+Outputs: DataSchemaReport with row count, resolved fields, missing fields, input profile, warnings, and optional files.
+Failure semantics: missing required fields, invalid timestamps, invalid numeric fields, empty input, and unsupported input return ModuleResult.fail.
+Market generalization: schema validation is field-based and does not assume symbols, sessions, venues, or asset class.
 """
 from __future__ import annotations
 

@@ -1,18 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.candidate_pool
-===============================
-Module purpose: combine caller-supplied candidate rows and filter outputs into
-a final candidate pool report.
-Core idea: this module orchestrates already-computed filters/features; it does
-not calculate indicators or fetch data.
-Inputs: candidate rows, optional filter decisions by symbol, optional score
-field, ranking params, and optional output_dir.
-Outputs: CandidatePoolReport with accepted_candidates, rejected_candidates,
-filter_summary, vote_summary, and ranked_symbols.
-Failure semantics: missing symbol is rejected; missing filter state rejects
-when fail_closed is True.
-Market generalization: rows are generic dicts and symbols are arbitrary user
-identifiers.
+=======================================
+Module purpose: combine caller-supplied candidates and external filter decisions into a final ranked pool.
+Core idea: Accept candidate rows, attach optional filter state, reject unavailable or failed rows, and optionally sort by a score field. Assumes indicators, votes, and filters have already been computed elsewhere; this module only assembles and ranks.
+Inputs: candidate rows, optional filter_state_by_symbol, score/ranking params, and ModuleRunContext.
+Outputs: CandidatePoolReport with accepted candidates, rejected candidates, ranked symbols, and summaries.
+Failure semantics: missing symbol rejects a row; missing filter state rejects when fail_closed is enabled; unusable candidate iterables fail the request.
+Market generalization: candidate rows are generic mappings and symbols are arbitrary caller identifiers.
 """
 from __future__ import annotations
 

@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.ma_ribbon
-==============================================
-Module purpose: Moving average ribbon trend-alignment token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+=============================================
+Module purpose: Moving-average ribbon trend-alignment token.
+Core idea: Compute several moving averages and inspect their ordering and spread. The implementation assumes aligned short-to-long averages imply trend agreement, while tangled averages imply mixed trend.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, MARibbonParams, and ModuleRunContext.
 Outputs: MARibbonReport with quality, last values, trend direction, signal,

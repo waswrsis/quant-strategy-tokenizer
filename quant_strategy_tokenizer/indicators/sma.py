@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.sma
-========================================
+=======================================
 Module purpose: Simple moving average trend token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+Core idea: Compute a rolling arithmetic mean of the selected price field. The implementation treats the moving average as a lagging fair-value line; price above it is bullish, price below it is bearish. It assumes bars are ordered, roughly comparable in spacing, and that a plain average is a useful baseline for trend direction.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, SMAParams, and ModuleRunContext.
 Outputs: SMAReport with quality, last values, trend direction, signal,

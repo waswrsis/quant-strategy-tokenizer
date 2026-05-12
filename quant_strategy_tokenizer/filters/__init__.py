@@ -1,17 +1,11 @@
-﻿"""
-quant_strategy_tokenizer.filters
-========================
-Module purpose: atomic, reusable candidate filters.
-Core idea: each filter accepts a candidate list plus caller-supplied state or
-features, then returns accepted/rejected records with detailed reasons.
-Inputs: module-specific Request dataclasses.
-Configuration: pass candidates plus caller-supplied state mappings into each
-filter Request; use each filter's `*Params` dataclass to set field names,
-thresholds, accepted values, and fail-closed behavior.
-Outputs: ModuleResult containing accepted/rejected symbols and diagnostics.
-Failure semantics: unknown required state is rejected/fail-closed by default.
-Market generalization: filters operate on generic symbol identifiers and do
-not assume asset class, venue, quote, or settlement.
 """
-
+quant_strategy_tokenizer.filters
+================================
+Module purpose: package namespace for independently callable filter tokens.
+Core idea: Expose filter modules as standalone row/state gates rather than embedding them in a runner. Assumes filters consume external state snapshots and should not calculate indicators or query live systems themselves.
+Inputs: module-specific candidate rows, state mappings, params, and runtime context.
+Outputs: ModuleResult objects containing accepted/rejected rows or per-symbol decisions.
+Failure semantics: filter modules fail explicitly on unusable input and reject rows when configured fail-closed.
+Market generalization: filters operate on caller identifiers and metadata without venue assumptions.
+"""
 __all__ = []

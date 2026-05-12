@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.ht_phasor
-==============================================
+=============================================
 Module purpose: Hilbert transform phasor token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+Core idea: Compute in-phase and quadrature components using TA-Lib or native detrended/derivative approximations. The implementation assumes phase components summarize local cycle state; native mode is approximate.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, HTPhasorParams, and ModuleRunContext.
 Outputs: HTPhasorReport with quality, last values, trend direction, signal,

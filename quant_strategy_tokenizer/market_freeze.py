@@ -1,17 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.market_freeze
-==============================
-Module purpose: evaluate market breadth freeze/observe conditions from
-caller-supplied returns.
-Core idea: freezing is a pure risk decision based on broad-market direction;
-order cancellation or position closing happens elsewhere.
-Inputs: per-symbol returns or rows with return fields, threshold ratio,
-minimum sample count, and optional previous freeze state.
-Outputs: MarketFreezeReport with action, direction, ratios, and reasons.
-Failure semantics: insufficient sample returns fail-closed block_new_risk when
-configured.
-Market generalization: returns can be crypto, equity breadth, sector breadth,
-FX basket movement, or any custom universe metric.
+======================================
+Module purpose: pure broad-market freeze and new-risk blocking decision token.
+Core idea: Count caller-supplied instrument returns above and below thresholds, then trigger block_new_risk when one side dominates enough of the sample. Assumes breadth imbalance is a risk regime signal and insufficient breadth should fail closed when configured.
+Inputs: rows with returns, symbol field, threshold params, minimum sample params, and ModuleRunContext.
+Outputs: MarketFreezeReport with freeze flag, action, direction, ratios, accepted rows, rejected rows, and reason.
+Failure semantics: invalid rows are rejected; too few valid rows can return fail-closed decision or explicit failure depending on params.
+Market generalization: works for any universe whose members can be represented by interval returns.
 """
 from __future__ import annotations
 

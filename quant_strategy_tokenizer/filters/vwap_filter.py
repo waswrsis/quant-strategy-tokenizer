@@ -1,15 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.filters.vwap_filter
-====================================
-Module purpose: filter candidates using precomputed VWAP diagnostics.
-Core idea: VWAP calculation lives in indicators.vwap; this filter consumes
-caller-supplied VWAP fields and applies policy.
-Inputs: candidates and vwap_by_symbol mapping with deviation/no_touch/touch
-fields.
-Outputs: accepted/rejected rows with detailed reasons.
-Failure semantics: missing VWAP diagnostics reject when fail_closed is True.
-Market generalization: works with any VWAP-like metric supplied by the caller,
-including tick-volume proxies or custom fair-value bands.
+============================================
+Module purpose: apply precomputed VWAP pause/pass-fail state to candidate rows.
+Core idea: Consume external VWAP diagnostics and reject symbols that are paused, too far from VWAP, or missing required state. Assumes VWAP calculation is handled by indicators.vwap or another upstream module.
+Inputs: candidate rows, VWAP state by symbol, fail-closed params, and ModuleRunContext.
+Outputs: VWAPFilterReport with accepted rows, rejected rows, and VWAP reason counts.
+Failure semantics: missing VWAP state rejects rows when fail_closed is enabled; unusable candidate input fails the request.
+Market generalization: VWAP state is caller-provided and can be computed from any market with price and volume data.
 """
 from __future__ import annotations
 

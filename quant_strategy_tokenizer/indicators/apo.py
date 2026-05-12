@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.apo
-========================================
+=======================================
 Module purpose: Absolute Price Oscillator trend-momentum token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+Core idea: Compute the absolute fast/slow EMA spread, then a signal line and histogram. The implementation assumes raw price-distance between EMA horizons is the desired momentum unit.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, APOParams, and ModuleRunContext.
 Outputs: APOReport with quality, last values, trend direction, signal,

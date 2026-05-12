@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.alligator
-==============================================
-Module purpose: Williams Alligator trend structure token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+=============================================
+Module purpose: Williams Alligator structured trend token.
+Core idea: Compute shifted smoothed moving averages for jaw, teeth, and lips. The implementation assumes ordered separation of the three lines indicates trend direction, while entanglement indicates neutral or mixed conditions.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, AlligatorParams, and ModuleRunContext.
 Outputs: AlligatorReport with quality, last values, trend direction, signal,

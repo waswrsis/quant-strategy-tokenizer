@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.adx
-========================================
+=======================================
 Module purpose: Average Directional Index trend-strength token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+Core idea: Compute +DI, -DI, DX, and ADX from high/low/close directional movement. The implementation assumes high/low range expansion contains trend-strength information; ADX measures strength, while +DI vs -DI gives direction.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, ADXParams, and ModuleRunContext.
 Outputs: ADXReport with quality, last values, trend direction, signal,

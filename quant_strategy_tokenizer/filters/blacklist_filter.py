@@ -1,15 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.filters.blacklist_filter
-=========================================
-Module purpose: remove candidates present in a user-supplied blacklist.
-Core idea: compare normalized candidate symbols against a blacklist set and
-record explicit rejection reasons.
-Inputs: candidates as strings or dicts with symbol field, blacklist iterable,
-and optional output_dir.
-Outputs: BlacklistFilterReport with accepted/rejected rows and counts.
-Failure semantics: missing candidate symbols are rejected as invalid input.
-Market generalization: symbol comparison is string-based; caller controls
-normalization/case policy.
+=================================================
+Module purpose: remove candidates whose symbols appear in a caller-supplied blacklist.
+Core idea: Normalize symbol strings, compare them against a blacklist set, and return accepted/rejected rows with reasons. Assumes blacklist policy is external and this module should not infer why a symbol is banned.
+Inputs: candidate rows, blacklist symbols, symbol field params, and ModuleRunContext.
+Outputs: BlacklistFilterReport with accepted rows, rejected rows, and blacklist hit counts.
+Failure semantics: missing symbol rejects a row; unusable candidate input fails the request.
+Market generalization: symbols are opaque caller identifiers and need not follow exchange notation.
 """
 from __future__ import annotations
 

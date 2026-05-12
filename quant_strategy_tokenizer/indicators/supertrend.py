@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.supertrend
-===============================================
+==============================================
 Module purpose: ATR-based Supertrend direction token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+Core idea: Build ATR bands around the median price and carry forward final bands to create a trailing trend line. The implementation assumes volatility-adjusted bands separate trend continuation from reversal noise.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, SupertrendParams, and ModuleRunContext.
 Outputs: SupertrendReport with quality, last values, trend direction, signal,

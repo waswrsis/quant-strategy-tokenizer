@@ -1,18 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.universe_selector
-==================================
-Module purpose: select a tradeable universe from caller-supplied market
-metadata and ranking fields.
-Core idea: universe selection is pure filtering/ranking over snapshots; data
-collection belongs to the caller.
-Inputs: instruments/candidates as dicts or strings, optional rank/status/
-blacklist/history fields, selection params, and optional output_dir.
-Outputs: UniverseReport with selected/rejected rows, ranking details, and
-summary.
-Failure semantics: unknown required state rejects when fail_closed is True;
-empty selected universe is a successful fail-closed report, not a fallback.
-Market generalization: works with any symbol set and ranking metric such as
-volume, market cap, liquidity score, spread, or user-defined score.
+==========================================
+Module purpose: select a tradable or research universe from caller-provided candidate snapshots.
+Core idea: Filter candidates by blacklist, status, history availability, and optional ranking field, then return selected and rejected rows. Assumes universe construction should be fail-closed when required metadata is missing and should never silently fall back to a default symbol.
+Inputs: candidate rows, blacklist, status_by_symbol, history_by_symbol, selection params, and ModuleRunContext.
+Outputs: UniverseReport with selected rows, rejected rows, selected symbols, and reason counts.
+Failure semantics: bad candidate rows are rejected; missing required metadata rejects rows when configured; unusable candidates fail the request.
+Market generalization: selection operates on generic rows and symbols with caller-defined status and history semantics.
 """
 from __future__ import annotations
 

@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.gmma
-=========================================
+========================================
 Module purpose: Guppy Multiple Moving Average trend token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+Core idea: Compute short-term and long-term EMA groups and compare their averages/spread. The implementation assumes trader and investor EMA groups separate during strong trends and compress during uncertainty.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, GMMAParams, and ModuleRunContext.
 Outputs: GMMAReport with quality, last values, trend direction, signal,

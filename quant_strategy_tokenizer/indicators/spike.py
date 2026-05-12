@@ -1,18 +1,12 @@
-﻿"""
+"""
 quant_strategy_tokenizer.indicators.spike
-=================================
-Module purpose: detect abnormal price ranges or returns relative to recent
-volatility.
-Core idea: normalize OHLC data, compute true range, compare recent bars against
-a rolling ATR-like baseline, and report whether a spike is present.
-Inputs: OHLC raw data, DataFrameSpec mapping, lookback, ATR window, multiplier,
-and detail_level.
-Outputs: SpikeReport with spike flag, count, max ratio, recent bars, and
-diagnostics.
-Failure semantics: missing OHLC or insufficient history returns explicit
-failure, never a safe pass.
-Market generalization: any OHLC market can use the detector; callers decide
-what multiplier is appropriate for the asset and timeframe.
+=========================================
+Module purpose: detect abnormal range or return spikes in OHLC data.
+Core idea: Compute recent true range or return magnitude and compare it with rolling baseline thresholds. Assumes unusually large recent movement can invalidate normal signal logic or require risk filtering.
+Inputs: OHLC-like data, DataFrameSpec mapping, SpikeParams, optional ExtractorSpec, and ModuleRunContext.
+Outputs: SpikeReport with spike flag, latest measures, threshold, optional series, warnings, and diagnostics.
+Failure semantics: missing fields, invalid thresholds/windows, insufficient rows, or invalid numeric data return ModuleResult.fail.
+Market generalization: spike detection uses generic price ranges and can apply to any bar-based market.
 """
 from __future__ import annotations
 

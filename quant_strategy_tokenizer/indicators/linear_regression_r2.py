@@ -1,9 +1,8 @@
 """
 quant_strategy_tokenizer.indicators.linear_regression_r2
-=========================================================
-Module purpose: Rolling linear regression R-squared trend-quality token.
-Core idea: tokenize one trend calculation behind the standard QST
-Params/Request/Report/run interface so agents can compose it independently.
+========================================================
+Module purpose: Rolling linear regression R-squared token.
+Core idea: Fit a rolling least-squares line and return its R-squared. The implementation assumes higher linear fit quality means the trend is cleaner and less noisy.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, LinearRegressionR2Params, and ModuleRunContext.
 Outputs: LinearRegressionR2Report with quality, last values, trend direction, signal,
