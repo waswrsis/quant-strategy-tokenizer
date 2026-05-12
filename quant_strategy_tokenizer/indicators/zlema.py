@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.zlema
 =========================================
-Module purpose: Zero-lag exponential moving average trend token.
+Purpose: Zero-lag exponential moving average trend token.
 Core idea: Compute EMA on a lag-adjusted price series using price minus its delayed value. The implementation assumes recent momentum can compensate for EMA lag, which may make signals faster but more sensitive to noise.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, ZLEMAParams, and ModuleRunContext.

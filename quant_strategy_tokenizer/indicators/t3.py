@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.t3
 ======================================
-Module purpose: Tillson T3 moving average trend token.
+Purpose: Tillson T3 moving average trend token.
 Core idea: Compute a multi-stage EMA blend using the Tillson volume factor. The implementation assumes repeated smoothing plus controlled overshoot can produce a cleaner trend line than a basic EMA.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, T3Params, and ModuleRunContext.

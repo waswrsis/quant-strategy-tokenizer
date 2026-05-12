@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.chop
 ========================================
-Module purpose: calculate Choppiness Index from OHLC data.
+Purpose: calculate Choppiness Index from OHLC data.
 Core idea: Compare rolling summed true range against the rolling high-low range on a logarithmic scale. Assumes directional trends cover distance efficiently while choppy regimes spend more range per net progress.
 Inputs: OHLC-like data, DataFrameSpec mapping, CHOPParams, optional ExtractorSpec, and ModuleRunContext.
 Outputs: CHOPReport with latest choppiness value, regime label, optional series, and diagnostics.

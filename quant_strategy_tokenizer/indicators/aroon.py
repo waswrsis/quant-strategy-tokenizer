@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.aroon
 =========================================
-Module purpose: Aroon trend-recency token.
+Purpose: Aroon trend-recency token.
 Core idea: Measure how recently the rolling highest high and lowest low occurred. The implementation assumes fresh highs imply bullish trend pressure and fresh lows imply bearish pressure.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, AroonParams, and ModuleRunContext.

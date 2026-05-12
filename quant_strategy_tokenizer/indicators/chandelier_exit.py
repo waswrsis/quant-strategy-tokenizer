@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.chandelier_exit
 ===================================================
-Module purpose: Chandelier Exit trend-stop token.
+Purpose: Chandelier Exit trend-stop token.
 Core idea: Compute long and short trailing stops from rolling extremes minus or plus an ATR multiple. The implementation assumes stops should hang from recent extremes and widen with volatility.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, ChandelierExitParams, and ModuleRunContext.

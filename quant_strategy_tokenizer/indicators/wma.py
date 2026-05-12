@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.wma
 =======================================
-Module purpose: Weighted moving average trend token.
+Purpose: Weighted moving average trend token.
 Core idea: Compute a rolling moving average with linearly larger weights on recent bars. The implementation assumes recent prices should dominate older observations while preserving a finite lookback. Price/average crosses are interpreted as trend signals.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, WMAParams, and ModuleRunContext.

@@ -111,6 +111,10 @@ EN: Indicator layer.
   EN: Shared normalization, backend, calculation, and report logic for trend indicators.
 - `indicators/<trend_token>.py`: 一个趋势指标一个独立 token。
   EN: One independent token per trend indicator.
+- `indicators/momentum_common.py`: 动量指标共享归一化、后端、计算和报告逻辑。
+  EN: Shared normalization, backend, calculation, and report logic for momentum indicators.
+- `indicators/<momentum_token>.py`: 一个动量指标一个独立 token。
+  EN: One independent token per momentum indicator.
 
 策略组合层。
 EN: Strategy composition layer.
@@ -196,7 +200,123 @@ EN: Trend indicator list.
 | Hilbert / MESA / Ehlers | `mama`, `ht_trendline`, `ht_trendmode`, `ht_sinewave`, `ht_phasor`, `ht_dominant_cycle_period`, `ht_dominant_cycle_phase` |
 | Composite trend scoring | `trend_strength_index`, `chande_trend_meter` |
 
-## 6. 示例：调用一个趋势指标
+## 6. 动量指标 Token 总览
+
+EN: Momentum indicator token overview.
+
+动量指标 token 已经实现为独立模块。
+EN: Momentum indicators are implemented as independent modules.
+
+每个动量 token 都接受用户传入的数据，不拉行情、不连接交易所、不下单。
+EN: Every momentum token processes caller-provided data only; it does not fetch data, connect to venues, or place orders.
+
+公共输出是 `ModuleResult[MomentumReport]`。
+EN: The common output is `ModuleResult[MomentumReport]`.
+
+`MomentumReport` 的关键字段如下。
+EN: Key `MomentumReport` fields are listed below.
+
+- `quality`: 计算质量，例如 `ok`。
+  EN: Calculation quality, for example `ok`.
+- `indicator`: 指标名称。
+  EN: Indicator name.
+- `last_value`: 主输出的最新有效值。
+  EN: Latest valid value of the primary output.
+- `last_values`: 多线指标的最新值字典。
+  EN: Dictionary of latest values for multi-line indicators.
+- `momentum_direction`: `bullish`, `bearish`, `neutral`, `mixed`, or `unknown`。
+  EN: Direction label such as `bullish`, `bearish`, `neutral`, `mixed`, or `unknown`.
+- `momentum_strength`: 动量强度、距离或标准化强度。
+  EN: Momentum strength, distance, or normalized strength.
+- `signal`: 交叉、方向、超买超卖或状态信号。
+  EN: Cross, direction, overbought/oversold, or state signal.
+- `zone`: `overbought`, `oversold`, `neutral`, `bullish`, `bearish`, or `unknown`。
+  EN: Zone label such as `overbought`, `oversold`, `neutral`, `bullish`, `bearish`, or `unknown`.
+- `overbought` / `oversold`: 当前报告使用的阈值。
+  EN: Thresholds used by the current report.
+- `series` / `series_by_name`: 仅在 `DetailLevel.FULL` 或更高时返回完整序列。
+  EN: Full series output, returned only at `DetailLevel.FULL` or above.
+
+## 7. 动量指标清单
+
+EN: Momentum indicator list.
+
+| Family | Tokens |
+| --- | --- |
+| Bounded oscillators | `rsi`, `stochastic_oscillator`, `stochastic_fast`, `stochastic_rsi`, `cci`, `cmo`, `williams_r`, `ultimate_oscillator`, `mfi`, `demarker`, `relative_momentum_index` |
+| Rate-of-change | `momentum`, `roc`, `rocp`, `rocr`, `rocr100`, `trix`, `dpo`, `chande_forecast_oscillator` |
+| Multi-line momentum | `kst`, `true_strength_index`, `relative_vigor_index`, `fisher_transform`, `stochastic_momentum_index`, `kdj` |
+| Price/volume pressure | `bop`, `awesome_oscillator`, `accelerator_oscillator`, `elder_ray`, `qstick`, `coppock_curve`, `connors_rsi` |
+
+## 8. 示例：调用一个动量指标
+
+EN: Example: call one momentum indicator.
+
+适用场景：用户传入价格序列，希望判断 RSI 动量状态。
+EN: Use case: the user provides price rows and wants the RSI momentum state.
+
+```python
+from quant_strategy_tokenizer.indicators.rsi import RSIParams, RSIRequest, run as run_rsi
+
+result = run_rsi(
+    RSIRequest(
+        data=bars,
+        params=RSIParams(window=14, overbought=70, oversold=30),
+    )
+)
+
+if result.ok:
+    report = result.value
+    print(report.last_value, report.momentum_direction, report.zone)
+else:
+    print(result.failure.kind, result.failure.message)
+```
+
+## 9. 示例：组合多个动量 token
+
+EN: Example: compose multiple momentum tokens.
+
+如果多个动量指标都需要原始行情，使用 `input_key="initial"`。
+EN: If multiple momentum indicators need the original market data, use `input_key="initial"`.
+
+```python
+from quant_strategy_tokenizer.contracts import ModuleResult
+from quant_strategy_tokenizer.pipeline import PipelineStep, run_pipeline
+from quant_strategy_tokenizer.indicators.rsi import RSIParams, RSIRequest, run as run_rsi
+from quant_strategy_tokenizer.indicators.mfi import MFIParams, MFIRequest, run as run_mfi
+
+steps = [
+    PipelineStep(
+        name="rsi",
+        input_key="initial",
+        output_key="rsi_last",
+        take="last_value",
+        fn=lambda data: run_rsi(RSIRequest(data=data, params=RSIParams())),
+    ),
+    PipelineStep(
+        name="mfi",
+        input_key="initial",
+        output_key="mfi_zone",
+        take="zone",
+        fn=lambda data: run_mfi(MFIRequest(data=data, params=MFIParams())),
+    ),
+    PipelineStep(
+        name="summary",
+        pass_state=True,
+        fn=lambda state: ModuleResult.success(
+            {
+                "rsi_last": state.get("rsi_last"),
+                "mfi_zone": state.get("mfi_zone"),
+                "rsi_direction": state.get("rsi.momentum_direction"),
+            }
+        ),
+    ),
+]
+
+result = run_pipeline(initial_payload=bars, steps=steps)
+```
+
+## 10. 示例：调用一个趋势指标
 
 EN: Example: call one trend indicator.
 
@@ -404,6 +524,15 @@ EN: If the user asks for trend stops or channels, use `parabolic_sar`, `supertre
 如果用户说“帮我做趋势打分”，使用 `trend_strength_index` 或 `chande_trend_meter`，必要时再用 `pipeline.py` 聚合其它 token。
 EN: If the user asks for trend scoring, use `trend_strength_index` or `chande_trend_meter`, and aggregate additional tokens through `pipeline.py` if needed.
 
+如果用户说“帮我判断超买超卖”，优先使用 `rsi`, `stochastic_oscillator`, `stochastic_rsi`, `williams_r`, `mfi`, `demarker`。
+EN: If the user asks for overbought/oversold state, prefer `rsi`, `stochastic_oscillator`, `stochastic_rsi`, `williams_r`, `mfi`, or `demarker`.
+
+如果用户说“帮我判断速度或动量变化”，使用 `momentum`, `roc`, `rocp`, `trix`, `true_strength_index`, `kst`。
+EN: If the user asks for speed or momentum change, use `momentum`, `roc`, `rocp`, `trix`, `true_strength_index`, or `kst`.
+
+如果用户说“帮我看量价动量”，使用 `mfi`；如果只需要价格/蜡烛压力，使用 `bop`, `elder_ray`, `qstick`, `awesome_oscillator`。
+EN: If the user asks for volume-price momentum, use `mfi`; for price/candle pressure, use `bop`, `elder_ray`, `qstick`, or `awesome_oscillator`.
+
 ## 12. 常见坑
 
 EN: Common pitfalls.
@@ -428,4 +557,3 @@ EN: Do not treat `order_planner.py` as an order executor.
 
 不要把空 universe 自动替换成默认标的。
 EN: Do not replace an empty universe with a default instrument.
-

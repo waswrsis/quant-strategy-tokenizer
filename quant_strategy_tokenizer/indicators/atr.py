@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.atr
 =======================================
-Module purpose: calculate Average True Range from caller-supplied OHLC data.
+Purpose: calculate Average True Range from caller-supplied OHLC data.
 Core idea: Compute true range from high-low and prior-close gaps, then smooth it with Wilder RMA or a configured moving average. Assumes gaps and intrabar range jointly describe volatility risk.
 Inputs: OHLC-like data, DataFrameSpec mapping, ATRParams, optional ExtractorSpec, and ModuleRunContext.
 Outputs: ATRReport with latest ATR, optional series, summary, used fields, warnings, and diagnostics.

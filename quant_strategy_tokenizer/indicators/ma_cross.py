@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.ma_cross
 ============================================
-Module purpose: Moving-average cross trend token.
+Purpose: Moving-average cross trend token.
 Core idea: Compute fast and slow moving averages using the selected smoothing mode and evaluate their spread/cross. The implementation assumes a faster average crossing a slower average marks trend regime change.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, MACrossParams, and ModuleRunContext.

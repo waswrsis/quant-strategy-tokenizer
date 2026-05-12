@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.smma
 ========================================
-Module purpose: Smoothed moving average trend token.
+Purpose: Smoothed moving average trend token.
 Core idea: Compute a Wilder-style recursive moving average. The implementation assumes trends should be smoothed more heavily than a normal EMA, accepting extra lag in exchange for lower noise. Price relative to the smoothed line drives direction.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, SMMAParams, and ModuleRunContext.

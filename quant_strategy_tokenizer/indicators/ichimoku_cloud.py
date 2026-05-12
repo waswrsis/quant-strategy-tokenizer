@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.ichimoku_cloud
 ==================================================
-Module purpose: Ichimoku cloud structured trend token.
+Purpose: Ichimoku cloud structured trend token.
 Core idea: Compute Tenkan, Kijun, Senkou spans, cloud midpoint, and Chikou from rolling high/low midpoints. The implementation assumes multi-horizon range midpoints and displaced spans capture support, resistance, and trend regime.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, IchimokuCloudParams, and ModuleRunContext.

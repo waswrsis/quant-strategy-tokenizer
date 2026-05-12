@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.chande_trend_meter
 ======================================================
-Module purpose: Chande-style composite trend meter token.
+Purpose: Chande-style composite trend meter token.
 Core idea: Score trend agreement from EMA position, EMA alignment, DMI direction, ADX strength, ROC, and RSI. The implementation assumes multiple simple confirmations are more robust than a single trend indicator.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, ChandeTrendMeterParams, and ModuleRunContext.

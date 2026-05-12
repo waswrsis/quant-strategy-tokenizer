@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.spike
 =========================================
-Module purpose: detect abnormal range or return spikes in OHLC data.
+Purpose: detect abnormal range or return spikes in OHLC data.
 Core idea: Compute recent true range or return magnitude and compare it with rolling baseline thresholds. Assumes unusually large recent movement can invalidate normal signal logic or require risk filtering.
 Inputs: OHLC-like data, DataFrameSpec mapping, SpikeParams, optional ExtractorSpec, and ModuleRunContext.
 Outputs: SpikeReport with spike flag, latest measures, threshold, optional series, warnings, and diagnostics.

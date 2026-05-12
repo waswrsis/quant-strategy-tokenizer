@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.macd
 ========================================
-Module purpose: Moving Average Convergence/Divergence trend-momentum token.
+Purpose: Moving Average Convergence/Divergence trend-momentum token.
 Core idea: Compute fast EMA minus slow EMA, then a signal EMA and histogram. The implementation assumes convergence/divergence between two EMA horizons captures trend acceleration; histogram sign and line relation drive signal semantics.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, MACDParams, and ModuleRunContext.

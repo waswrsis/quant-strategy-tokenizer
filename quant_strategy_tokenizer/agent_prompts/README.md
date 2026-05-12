@@ -16,7 +16,7 @@ The prompts were distilled from the engineering process of building, hardening, 
 - `08_incident_analysis_agent.md`: Live incident analysis prompt.
 - `09_pre_deployment_check_agent.md`: Deployment and restart checklist prompt.
 - `10_full_agent_prompt.md`: Combined prompt for direct use.
-- `11_agent_project_usage_guide.md`: Step-by-step guide for teaching another agent how to use QST modules, including the implemented trend indicator tokens and composition examples.
+- `11_agent_project_usage_guide.md`: Step-by-step guide for teaching another agent how to use QST modules, including the implemented trend and momentum indicator tokens and composition examples.
 - `12_strategy_code_decomposition_agent.md`: Agent prompt for analyzing and decomposing a full strategy codebase into QST modules.
 - `13_strategy_decomposition_task_template.md`: Fill-in task template for applying the decomposition prompt to a concrete strategy project.
 
@@ -28,7 +28,7 @@ Use the most specific prompt for the job. For example:
 - For a code audit, use `04_code_review_agent.md`.
 - For implementation after review findings, use `05_fix_implementation_agent.md`.
 - For a general-purpose agent, use `10_full_agent_prompt.md`.
-- To onboard another agent to this module package or the trend indicator tokens, use `11_agent_project_usage_guide.md`.
+- To onboard another agent to this module package or the indicator tokens, use `11_agent_project_usage_guide.md`.
 - To analyze a complete existing strategy and split it into reusable tokens, use `12_strategy_code_decomposition_agent.md`.
 - To ask another agent to perform a concrete decomposition task, use `13_strategy_decomposition_task_template.md`.
 

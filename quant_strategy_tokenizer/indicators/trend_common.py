@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.trend_common
 ================================================
-Module purpose: shared implementation layer for atomic trend indicator tokens.
+Purpose: shared implementation layer for atomic trend indicator tokens.
 Core idea: Resolve inputs, validate parameters, choose native or optional TA-Lib backend, run the selected numerical routine, and build a uniform TrendReport. Assumes public indicator modules should stay small wrappers while calculation semantics, backend policy, explicit failure states, and output shaping remain consistent.
 Inputs: raw user data, DataFrameSpec/ExtractorSpec, TrendParams-compatible configuration, indicator name, input kind, and ModuleRunContext.
 Outputs: TrendReport wrapped in ModuleResult with last values, direction, strength, optional series, diagnostics, warnings, and report files when requested.

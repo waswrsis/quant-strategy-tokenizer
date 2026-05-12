@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.adxr
 ========================================
-Module purpose: Average Directional Movement Rating trend-strength token.
+Purpose: Average Directional Movement Rating trend-strength token.
 Core idea: Compute ADXR as a smoothed average of current ADX and lagged ADX. The implementation assumes ADX is useful but noisy, so a lagged blend better represents persistent trend strength.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, ADXRParams, and ModuleRunContext.

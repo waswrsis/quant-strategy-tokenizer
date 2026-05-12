@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.linear_regression_angle
 ===========================================================
-Module purpose: Rolling linear regression angle token.
+Purpose: Rolling linear regression angle token.
 Core idea: Convert rolling regression slope into an angle in degrees. The implementation assumes angle is a readable transform of slope, but it still depends on the scale of the input price units.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, LinearRegressionAngleParams, and ModuleRunContext.

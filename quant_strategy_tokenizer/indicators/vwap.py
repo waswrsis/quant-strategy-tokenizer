@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.vwap
 ========================================
-Module purpose: calculate rolling VWAP and touch/cross diagnostics from price and volume data.
+Purpose: calculate rolling VWAP and touch/cross diagnostics from price and volume data.
 Core idea: Select a price source, compute rolling price-volume over volume, then classify price interaction with VWAP by cross or tolerance band. Assumes volume-weighted price is a useful intraperiod reference and touch semantics must be explicit.
 Inputs: OHLCV-like data, DataFrameSpec mapping, VWAPParams, optional ExtractorSpec, and ModuleRunContext.
 Outputs: VWAPReport with latest VWAP, latest price, deviation, touch/cross counts, optional series, and diagnostics.

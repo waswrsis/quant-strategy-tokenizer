@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.donchian_channel
 ====================================================
-Module purpose: Donchian channel breakout trend token.
+Purpose: Donchian channel breakout trend token.
 Core idea: Compute rolling highest high, lowest low, and their midpoint. The implementation assumes channel extremes define breakout context while the midpoint gives a trend reference.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, DonchianChannelParams, and ModuleRunContext.

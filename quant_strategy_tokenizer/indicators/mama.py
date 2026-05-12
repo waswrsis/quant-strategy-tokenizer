@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.mama
 ========================================
-Module purpose: MESA Adaptive Moving Average trend token.
+Purpose: MESA Adaptive Moving Average trend token.
 Core idea: Use TA-Lib MAMA when requested, or a native efficiency-ratio approximation with MAMA/FAMA lines. The implementation assumes adaptive smoothing can follow cycles and trends better than fixed-window averages; native mode is an approximation.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, MAMAParams, and ModuleRunContext.

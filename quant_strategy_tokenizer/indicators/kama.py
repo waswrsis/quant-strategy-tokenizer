@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.kama
 ========================================
-Module purpose: Kaufman adaptive moving average trend token.
+Purpose: Kaufman adaptive moving average trend token.
 Core idea: Compute an adaptive average from efficiency ratio and smoothing constants. The implementation assumes directional moves should speed up smoothing and choppy moves should slow it down.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, KAMAParams, and ModuleRunContext.

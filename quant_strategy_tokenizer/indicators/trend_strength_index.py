@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.trend_strength_index
 ========================================================
-Module purpose: Composite trend strength index token.
+Purpose: Composite trend strength index token.
 Core idea: Combine rolling regression slope, average absolute movement, and R-squared into a signed strength score. The implementation assumes clean directional linear movement deserves higher trend confidence than noisy movement.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, TrendStrengthIndexParams, and ModuleRunContext.

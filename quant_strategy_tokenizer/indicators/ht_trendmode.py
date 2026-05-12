@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.ht_trendmode
 ================================================
-Module purpose: Hilbert transform trend/cycle mode token.
+Purpose: Hilbert transform trend/cycle mode token.
 Core idea: Classify whether recent movement behaves more like trend or cycle using TA-Lib when available or a native trend-ratio approximation. The implementation assumes trend persistence and cyclic movement can be separated from price smoothness ratios.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, HTTrendModeParams, and ModuleRunContext.

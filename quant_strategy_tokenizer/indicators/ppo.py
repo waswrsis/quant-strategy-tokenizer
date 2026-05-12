@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.ppo
 =======================================
-Module purpose: Percentage Price Oscillator trend-momentum token.
+Purpose: Percentage Price Oscillator trend-momentum token.
 Core idea: Compute the fast/slow EMA spread as a percentage of the slow EMA, then a signal line and histogram. The implementation assumes percentage normalization makes momentum comparable across price levels.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, PPOParams, and ModuleRunContext.

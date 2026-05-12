@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.beta_residual
 =================================================
-Module purpose: estimate beta-adjusted residual movement against a benchmark series.
+Purpose: estimate beta-adjusted residual movement against a benchmark series.
 Core idea: Align asset and benchmark series by row order, run rolling or windowed linear regression, and report residuals from the fitted relationship. Assumes the benchmark explains a linear component of the asset move and the leftover residual is useful as relative strength/dispersion.
 Inputs: asset series, benchmark series, field mapping params, BetaResidualParams, and ModuleRunContext.
 Outputs: BetaResidualReport with beta, alpha, residual, optional series, summary, warnings, and diagnostics.

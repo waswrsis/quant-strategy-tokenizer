@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.parabolic_sar
 =================================================
-Module purpose: Parabolic SAR trend-stop token.
+Purpose: Parabolic SAR trend-stop token.
 Core idea: Iteratively update a trailing stop using an extreme point and acceleration factor. The implementation assumes persistent trends should tighten stops as new extremes form and flip direction when price breaches the stop.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, ParabolicSARParams, and ModuleRunContext.

@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.ma_ribbon
 =============================================
-Module purpose: Moving-average ribbon trend-alignment token.
+Purpose: Moving-average ribbon trend-alignment token.
 Core idea: Compute several moving averages and inspect their ordering and spread. The implementation assumes aligned short-to-long averages imply trend agreement, while tangled averages imply mixed trend.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, MARibbonParams, and ModuleRunContext.

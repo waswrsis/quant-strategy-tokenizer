@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.mrq_touch
 =============================================
-Module purpose: diagnose whether price has touched or respected an MRQ-style reference band.
+Purpose: diagnose whether price has touched or respected an MRQ-style reference band.
 Core idea: Build or consume a reference band, compare recent price action against it, and report touch/inside/outside diagnostics. Assumes the caller defines the meaningful reference level and that missing reference data should not be treated as a valid pass.
 Inputs: OHLC or close/reference data, DataFrameSpec mapping, MRQTouchParams, optional ExtractorSpec, and ModuleRunContext.
 Outputs: MRQTouchReport with touch state, counts, latest distance, optional series, warnings, and diagnostics.

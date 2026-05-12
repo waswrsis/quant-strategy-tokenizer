@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.keltner_channel
 ===================================================
-Module purpose: Keltner channel trend token.
+Purpose: Keltner channel trend token.
 Core idea: Compute an EMA basis with ATR-based upper and lower bands. The implementation assumes trend should be evaluated relative to a volatility-adjusted moving average envelope.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, KeltnerChannelParams, and ModuleRunContext.

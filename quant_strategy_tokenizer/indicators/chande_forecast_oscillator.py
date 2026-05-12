@@ -1,0 +1,63 @@
+"""
+quant_strategy_tokenizer.indicators.chande_forecast_oscillator
+==============================================================
+Purpose: Chande Forecast Oscillator token.
+Core idea: Compare close with a rolling linear-regression fitted value and scale the distance by close. The implementation assumes deviations from a local forecast line represent forecast momentum error.
+Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
+optional ExtractorSpec, ChandeForecastOscillatorParams, and ModuleRunContext.
+Outputs: ChandeForecastOscillatorReport with quality, last values, momentum direction, signal,
+zone, optional series, input profile, used fields, warnings, and diagnostics.
+Failure semantics: invalid parameters, missing fields, insufficient history, or
+unavailable requested backend return ModuleResult.fail without hidden fallback.
+Market generalization: works on caller-mapped numeric fields and does not assume
+asset class, venue, quote currency, session, or live exchange access.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Any, Optional
+
+from ..contracts import DataFrameSpec, ExtractorSpec, ModuleResult, ModuleRunContext
+from .momentum_common import MomentumParams, MomentumReport, normalize_momentum_input, run_momentum_indicator
+
+
+INDICATOR = 'chande_forecast_oscillator'
+INPUT_KIND = 'price'
+
+
+@dataclass
+class ChandeForecastOscillatorParams(MomentumParams):
+    """Configuration for the chande_forecast_oscillator momentum token.
+
+    Configuration:
+    - `backend`: `native`, `talib`, or `auto`; TA-Lib is optional.
+    - field names are logical names resolved by DataFrameSpec.
+    - threshold fields shape report `zone` semantics and do not place trades.
+    """
+
+    window: int = 14
+    overbought: float = 0.0
+    oversold: float = 0.0
+
+
+@dataclass
+class ChandeForecastOscillatorRequest:
+    data: Any
+    params: ChandeForecastOscillatorParams = field(default_factory=ChandeForecastOscillatorParams)
+    spec: DataFrameSpec = field(default_factory=DataFrameSpec)
+    extractor: Optional[ExtractorSpec] = None
+    context: ModuleRunContext = field(default_factory=lambda: ModuleRunContext(module=INDICATOR))
+
+
+ChandeForecastOscillatorReport = MomentumReport
+
+
+def normalize_input(request: ChandeForecastOscillatorRequest):
+    return normalize_momentum_input(request, INPUT_KIND)
+
+
+def run(request: ChandeForecastOscillatorRequest) -> ModuleResult[ChandeForecastOscillatorReport]:
+    return run_momentum_indicator(INDICATOR, request, input_kind=INPUT_KIND, module_name=INDICATOR)
+
+
+__all__ = ["ChandeForecastOscillatorParams", "ChandeForecastOscillatorRequest", "ChandeForecastOscillatorReport", "normalize_input", "run"]

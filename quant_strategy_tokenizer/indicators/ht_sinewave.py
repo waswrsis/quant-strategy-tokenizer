@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.ht_sinewave
 ===============================================
-Module purpose: Hilbert transform sinewave token.
+Purpose: Hilbert transform sinewave token.
 Core idea: Compute sine and lead-sine cycle components using TA-Lib or a native phase approximation. The implementation assumes cycle phase can help identify turns; native mode is approximate and diagnostic rather than exact.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, HTSineWaveParams, and ModuleRunContext.

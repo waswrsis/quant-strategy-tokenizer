@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.rolling_return
 ==================================================
-Module purpose: calculate lagged or rolling returns from a caller-supplied value series.
+Purpose: calculate lagged or rolling returns from a caller-supplied value series.
 Core idea: Normalize one value series and compare each row to a lagged value over a configured lookback. Assumes row order represents time order and percentage or absolute changes are sufficient for interval return features.
 Inputs: value-series data, DataFrameSpec mapping, RollingReturnParams, optional ExtractorSpec, and ModuleRunContext.
 Outputs: RollingReturnReport with latest return, optional series, summary, field mapping, and diagnostics.

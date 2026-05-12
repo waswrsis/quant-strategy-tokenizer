@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.vwma
 ========================================
-Module purpose: Volume-weighted moving average trend token.
+Purpose: Volume-weighted moving average trend token.
 Core idea: Compute a rolling volume-weighted average of the selected price field. The implementation assumes high-volume bars carry more information than low-volume bars; it requires price and volume but not full OHLC.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, VWMAParams, and ModuleRunContext.

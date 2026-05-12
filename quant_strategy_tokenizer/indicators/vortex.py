@@ -1,7 +1,7 @@
 """
 quant_strategy_tokenizer.indicators.vortex
 ==========================================
-Module purpose: Vortex directional movement token.
+Purpose: Vortex directional movement token.
 Core idea: Compute positive and negative vortex movement from current highs/lows relative to prior lows/highs. The implementation assumes directional range paths reveal trend dominance better than close-only moves.
 Inputs: raw market data supplied by the caller, DataFrameSpec field mapping,
 optional ExtractorSpec, VortexParams, and ModuleRunContext.
