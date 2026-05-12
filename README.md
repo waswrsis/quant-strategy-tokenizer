@@ -119,6 +119,8 @@ Quant-Strategy-Tokenizer/
     PROJECT_EXPERIENCE.md
     PROJECT_EXPERIENCE_TEMPLATE.md
     SUBMISSION_NOTES.md
+  tests/
+    test_core_behaviors.py
 ```
 
 ## Python Dependency Map
@@ -251,14 +253,37 @@ else:
 ## Compose Modules
 
 ```python
+from quant_strategy_tokenizer.contracts import ModuleResult
 from quant_strategy_tokenizer.pipeline import PipelineStep, run_pipeline
+from quant_strategy_tokenizer.indicators.ema import EMARequest, EMAParams, run as run_ema
 from quant_strategy_tokenizer.indicators.vwap import VWAPRequest, VWAPParams, run as run_vwap
 
 steps = [
     PipelineStep(
         name="vwap",
-        fn=lambda data: run_vwap(VWAPRequest(data=data, params=VWAPParams())),
-    )
+        input_key="initial",
+        output_key="vwap_deviation",
+        take="last_deviation",
+        fn=lambda data: run_vwap(VWAPRequest(data=data, params=VWAPParams(window=2))),
+    ),
+    PipelineStep(
+        name="ema",
+        input_key="initial",
+        output_key="ema_last",
+        take="last_value",
+        fn=lambda data: run_ema(EMARequest(data=data, params=EMAParams(window=2, min_periods=2))),
+    ),
+    PipelineStep(
+        name="summary",
+        pass_state=True,
+        fn=lambda state: ModuleResult.success(
+            {
+                "ema": state.get("ema_last"),
+                "vwap_deviation": state.get("vwap_deviation"),
+                "vwap_touches": state.get("vwap.touch_count"),
+            }
+        ),
+    ),
 ]
 
 result = run_pipeline(
@@ -270,7 +295,7 @@ if result.ok:
     print(result.value.final_payload)
 ```
 
-The pipeline layer is intentionally thin. It coordinates module calls but keeps data ownership, exchange access, and strategy policy outside the framework.
+The pipeline layer is a small data bus, not a hidden runner. `input_key` selects data from the bus, `take` selects fields from a module report, `output_key` stores reusable downstream payloads, and `pass_state=True` lets a step combine multiple previous outputs. Data fetching, exchange access, and strategy policy still stay outside the framework.
 
 ## Agent Prompts
 

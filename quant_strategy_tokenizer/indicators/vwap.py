@@ -1,13 +1,13 @@
 ﻿"""
 quant_strategy_tokenizer.indicators.vwap
 ================================
-Module purpose: calculate VWAP and related touch/no-touch diagnostics.
+Module purpose: calculate VWAP and related cross/touch diagnostics.
 Core idea: normalize price/volume inputs, select a price source, and divide
 rolling price-volume sum by rolling volume sum.
 Inputs: OHLCV or price/volume raw data, DataFrameSpec mapping, window,
 price_source, optional touch_band, and detail_level.
-Outputs: VWAPReport with last VWAP, deviation, touch statistics, optional
-series, input mapping, and diagnostics.
+Outputs: VWAPReport with last VWAP, deviation, crossover/touch statistics,
+optional series, input mapping, and diagnostics.
 Failure semantics: missing volume or price source returns explicit failure;
 markets without real volume should pass a user-chosen proxy column explicitly.
 Market generalization: works for any market where caller supplies a meaningful
@@ -33,8 +33,9 @@ class VWAPParams:
     - `window`: rolling VWAP lookback in rows/bars.
     - `price_source`: price construction; choose `typical`, `hlc3`, `ohlc4`,
       `close`, or `price` depending on supplied data.
-    - `touch_band`: absolute band around VWAP counted as a touch; zero requires
-      exact crossing/touch.
+    - `touch_band`: optional absolute proximity band around VWAP. Default zero
+      counts VWAP touches as price/VWAP crossovers only. Positive values count
+      either a crossover or proximity within the band.
     """
 
     window: int = 48
@@ -59,6 +60,7 @@ class VWAPReport:
     last_price: Optional[float]
     last_deviation: Optional[float]
     touch_count: int = 0
+    cross_count: int = 0
     no_touch_run: int = 0
     series: Optional[List[Optional[float]]] = None
     summary: Dict[str, Any] = field(default_factory=dict)
@@ -108,10 +110,21 @@ def run(request: VWAPRequest) -> ModuleResult[VWAPReport]:
     last_price = None if valid.empty or pd.isna(valid["price"].iloc[-1]) else float(valid["price"].iloc[-1])
     dev = None if last_value is None or last_price is None or last_value == 0 else float((last_price - last_value) / last_value)
     band = float(params.touch_band or 0.0)
-    diff = (valid["price"] - vwap).abs()
-    touches = (diff <= band).fillna(False) if band > 0 else (diff <= 0).fillna(False)
+    if band < 0:
+        return ModuleResult.fail("invalid_parameter", "touch_band must be non-negative", field="touch_band")
+    spread = valid["price"] - vwap
+    usable = vwap.notna() & spread.notna()
+    crosses = _crosses_zero(spread) & usable
+    if band > 0:
+        band_touches = (spread.abs() <= band) & usable
+        touches = (crosses | band_touches).fillna(False)
+        touch_mode = "cross_or_band"
+    else:
+        band_touches = pd.Series(False, index=spread.index)
+        touches = crosses.fillna(False)
+        touch_mode = "cross"
     no_touch_run = 0
-    for flag in reversed(touches.tolist()):
+    for flag in reversed(touches[usable].tolist()):
         if flag:
             break
         no_touch_run += 1
@@ -123,13 +136,22 @@ def run(request: VWAPRequest) -> ModuleResult[VWAPReport]:
         last_price=last_price,
         last_deviation=dev,
         touch_count=int(touches.sum()),
+        cross_count=int(crosses.sum()),
         no_touch_run=int(no_touch_run),
         series=[None if pd.isna(x) else float(x) for x in vwap.tolist()] if detail_at_least(detail, DetailLevel.FULL) else None,
-        summary={"rows": int(len(valid)), "price_source": str(params.price_source).lower(), "touch_band": band},
+        summary={
+            "rows": int(len(valid)),
+            "price_source": str(params.price_source).lower(),
+            "touch_band": band,
+            "touch_mode": touch_mode,
+            "cross_count": int(crosses.sum()),
+            "band_touch_count": int(band_touches.sum()),
+            "valid_vwap_rows": int(usable.sum()),
+        },
         input_profile=nf.input_profile,
         used_fields=nf.used_fields,
         warnings=nf.warnings,
-        diagnostics={"volume_col": nf.used_fields.get("volume")} if detail_at_least(detail, DetailLevel.STANDARD) else {},
+        diagnostics={"volume_col": nf.used_fields.get("volume"), "touch_mode": touch_mode} if detail_at_least(detail, DetailLevel.STANDARD) else {},
     )
     result = ModuleResult.success(report, events=[ModuleEvent(event="vwap.calculated", fields={"window": n, "last_value": last_value})], warnings=nf.warnings)
     if request.context.output_dir:
@@ -145,6 +167,14 @@ def _price_series(df: pd.DataFrame, used: Dict[str, str], source: str) -> pd.Ser
     if source == "price":
         return df[used["price"]]
     return df[used["close"]]
+
+
+def _crosses_zero(spread: pd.Series) -> pd.Series:
+    prev = spread.shift(1)
+    has_pair = spread.notna() & prev.notna()
+    exact_touch = spread.eq(0)
+    sign_change = ((spread > 0) & (prev < 0)) | ((spread < 0) & (prev > 0))
+    return (exact_touch | (has_pair & sign_change)).fillna(False)
 
 
 __all__ = ["VWAPParams", "VWAPRequest", "VWAPReport", "normalize_input", "run"]

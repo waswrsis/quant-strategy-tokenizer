@@ -547,6 +547,7 @@ judge_by_symbol = {
 steps = [
     PipelineStep(
         name="universe",
+        take="selected",
         fn=lambda payload: run_universe(
             UniverseSelectorRequest(
                 candidates=payload,
@@ -556,9 +557,10 @@ steps = [
     ),
     PipelineStep(
         name="vote",
-        fn=lambda universe_report: run_vote(
+        take="decisions",
+        fn=lambda selected: run_vote(
             VoteEngineRequest(
-                candidates=universe_report.selected,
+                candidates=selected,
                 judge_by_symbol=judge_by_symbol,
                 params=VoteEngineParams(min_score=0.80),
             )
@@ -566,9 +568,9 @@ steps = [
     ),
     PipelineStep(
         name="candidate_pool",
-        fn=lambda vote_report: run_pool(
+        fn=lambda decisions: run_pool(
             CandidatePoolRequest(
-                candidates=vote_report.decisions,
+                candidates=decisions,
                 params=CandidatePoolParams(score_field="score"),
             )
         ),
