@@ -102,7 +102,7 @@ Quant-Strategy-Tokenizer/
     data_schema.py            OHLCV and tabular input validation
     normalization.py          raw input normalization helpers
     row_utils.py              row extraction and typed lookup helpers
-    indicators/               EMA, ATR, VWAP, CHOP, spike, rolling return, MRQ, trend, momentum, volatility, and volume tokens
+    indicators/               EMA, ATR, VWAP, CHOP, spike, rolling return, MRQ, trend, momentum, volatility, volume, and structure tokens
     filters/                  blacklist, status, history, cooldown, backoff, VWAP, MRQ
     universe_selector.py      market-neutral symbol selection primitive
     candidate_pool.py         candidate assembly and ranking
@@ -125,6 +125,7 @@ Quant-Strategy-Tokenizer/
     test_momentum_indicators.py
     test_volatility_indicators.py
     test_volume_indicators.py
+    test_structure_indicators.py
 ```
 
 ## Python Dependency Map
@@ -157,7 +158,7 @@ flowchart TD
     Reporting["reporting.py<br/>redacted JSON / JSONL output"]
     DataSchema["data_schema.py<br/>tabular validation"]
 
-    Indicators["indicators/*<br/>ema, atr, vwap, chop, spike, rolling return, beta residual, MRQ touch, trend, momentum, volatility, and volume tokens"]
+    Indicators["indicators/*<br/>ema, atr, vwap, chop, spike, rolling return, beta residual, MRQ touch, trend, momentum, volatility, volume, and structure tokens"]
     Filters["filters/*<br/>blacklist, status, history, cooldown, backoff, VWAP, MRQ"]
 
     Universe["universe_selector.py"]
@@ -461,6 +462,46 @@ else:
 | Proxy diagnostics | `signed_volume_proxy`, `cumulative_signed_volume_proxy`, `price_volume_divergence`, `volume_confirmation` |
 | Existing price-volume tokens | `mfi`, `vwma`, `vwap` |
 
+## Structure Indicator Tokens
+
+QST includes atomic structure indicators for swing points, support/resistance, breakouts, ranges, gaps, liquidity proxies, and profile approximations. They follow the same public interface:
+
+```text
+Params / Request / Report / normalize_input(request) / run(request)
+```
+
+They return `ModuleResult[StructureReport]` with `last_value`, `last_values`, `structure_bias`, `structure_state`, nearest support/resistance fields, structured `levels`, structured `zones`, `signal`, `regime`, `normalized_value`, optional full series, field mappings, warnings, and diagnostics.
+
+```python
+from quant_strategy_tokenizer.indicators.support_resistance_zones import (
+    SupportResistanceZonesParams,
+    SupportResistanceZonesRequest,
+    run as run_support_resistance_zones,
+)
+
+result = run_support_resistance_zones(
+    SupportResistanceZonesRequest(
+        data=my_ohlcv_rows,
+        params=SupportResistanceZonesParams(window=80, min_touches=2),
+    )
+)
+
+if result.ok:
+    print(result.value.nearest_support, result.value.nearest_resistance)
+else:
+    print(result.failure.kind, result.failure.message)
+```
+
+Profile and order-block style modules are explicit OHLCV approximations. Without tick data, footprint data, or order book data, they do not claim to represent true order flow or true traded distribution.
+
+| Family | Tokens |
+| --- | --- |
+| Swing / market structure | `swing_points`, `fractal_pivots`, `zigzag_structure`, `higher_high_lower_low`, `market_structure_shift`, `break_of_structure`, `change_of_character`, `trendline_structure` |
+| Support / resistance | `pivot_points`, `rolling_support_resistance`, `support_resistance_zones`, `nearest_support_resistance`, `level_touch_count`, `breakout_detector`, `retest_detector`, `false_breakout_detector` |
+| Range / consolidation | `range_box`, `consolidation_zone`, `inside_bar`, `outside_bar`, `narrow_range`, `wide_range`, `range_position`, `range_breakout_strength` |
+| Gaps / liquidity proxies | `price_gap`, `fair_value_gap`, `liquidity_sweep`, `equal_highs_lows`, `order_block_proxy`, `supply_demand_zone` |
+| Profile approximation | `volume_profile`, `market_profile`, `point_of_control`, `value_area`, `profile_acceptance` |
+
 ## Agent Prompts
 
 QST includes prompts that teach another agent how to use, audit, decompose, and extend strategy modules:
@@ -468,7 +509,7 @@ QST includes prompts that teach another agent how to use, audit, decompose, and 
 | Prompt | Use |
 | --- | --- |
 | `agent_prompts/10_full_agent_prompt.md` | General-purpose quant engineering agent. |
-| `agent_prompts/11_agent_project_usage_guide.md` | Step-by-step QST usage guide with trend, momentum, volatility, and volume indicator token examples. |
+| `agent_prompts/11_agent_project_usage_guide.md` | Step-by-step QST usage guide with trend, momentum, volatility, volume, and structure indicator token examples. |
 | `agent_prompts/12_strategy_code_decomposition_agent.md` | Analyze a full strategy codebase and split it into tokens. |
 | `agent_prompts/13_strategy_decomposition_task_template.md` | Fill-in task template for applying the decomposition workflow. |
 

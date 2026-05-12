@@ -123,6 +123,10 @@ EN: Indicator layer.
   EN: Shared normalization, backend, calculation, and report logic for volume indicators.
 - `indicators/<volume_token>.py`: 一个成交量指标一个独立 token。
   EN: One independent token per volume indicator.
+- `indicators/structure_common.py`: 结构指标共享归一化、局部极值、水平聚类、突破检测、profile 近似和报告逻辑。
+  EN: Shared normalization, local extrema, level clustering, breakout detection, profile approximation, and report logic for structure indicators.
+- `indicators/<structure_token>.py`: 一个结构指标一个独立 token。
+  EN: One independent token per structure indicator.
 
 策略组合层。
 EN: Strategy composition layer.
@@ -523,7 +527,118 @@ steps = [
 result = run_pipeline(initial_payload=bars, steps=steps)
 ```
 
-## 16. 示例：调用一个动量指标
+## 16. 结构类指标 Token 总览
+
+EN: Structure indicator token overview.
+
+结构类指标 token 已经实现为独立模块。
+EN: Structure indicators are implemented as independent modules.
+
+每个结构 token 都只处理用户传入的数据，不拉行情、不连接交易所、不读账户、不下单。
+EN: Every structure token processes caller-provided data only; it does not fetch data, connect to venues, read accounts, or place orders.
+
+公共输出是 `ModuleResult[StructureReport]`。
+EN: The common output is `ModuleResult[StructureReport]`.
+
+`StructureReport` 的关键字段如下。
+EN: Key `StructureReport` fields are listed below.
+
+- `quality`: 计算质量，例如 `ok`。
+  EN: Calculation quality, for example `ok`.
+- `indicator`: 指标名称。
+  EN: Indicator name.
+- `last_value`: 主输出的最新有效值。
+  EN: Latest valid value of the primary output.
+- `last_values`: 多输出结构指标的最新值字典。
+  EN: Dictionary of latest values for multi-output structure indicators.
+- `structure_bias`: `bullish`, `bearish`, `range`, `mixed`, or `unknown`。
+  EN: Structure bias label such as `bullish`, `bearish`, `range`, `mixed`, or `unknown`.
+- `structure_state`: `breakout`, `breakdown`, `retest`, `sweep`, `consolidation`, `expansion`, `neutral`, or `unknown`。
+  EN: Structure state label such as `breakout`, `breakdown`, `retest`, `sweep`, `consolidation`, `expansion`, `neutral`, or `unknown`.
+- `nearest_support` / `nearest_resistance`: 离当前价格最近的支撑和阻力。
+  EN: Nearest support and resistance around the current price.
+- `levels`: 结构化水平列表，包含 `price`, `kind`, `strength`, `touch_count`, `last_touch_index`。
+  EN: Structured level list with `price`, `kind`, `strength`, `touch_count`, and `last_touch_index`.
+- `zones`: 结构化区域列表，包含 `lower`, `upper`, `kind`, `strength`。
+  EN: Structured zone list with `lower`, `upper`, `kind`, and `strength`.
+- `series` / `series_by_name`: 仅在 `DetailLevel.FULL` 或更高时返回完整序列。
+  EN: Full series output, returned only at `DetailLevel.FULL` or above.
+- `warnings` / `diagnostics`: 警告和诊断；profile 与 order-block proxy 会明确标注为 OHLCV 近似。
+  EN: Warnings and diagnostics; profile and order-block proxies explicitly mark OHLCV approximation.
+
+## 17. 结构类指标清单
+
+EN: Structure indicator list.
+
+| Family | Tokens |
+| --- | --- |
+| Swing / market structure | `swing_points`, `fractal_pivots`, `zigzag_structure`, `higher_high_lower_low`, `market_structure_shift`, `break_of_structure`, `change_of_character`, `trendline_structure` |
+| Support / resistance | `pivot_points`, `rolling_support_resistance`, `support_resistance_zones`, `nearest_support_resistance`, `level_touch_count`, `breakout_detector`, `retest_detector`, `false_breakout_detector` |
+| Range / consolidation | `range_box`, `consolidation_zone`, `inside_bar`, `outside_bar`, `narrow_range`, `wide_range`, `range_position`, `range_breakout_strength` |
+| Gaps / liquidity proxies | `price_gap`, `fair_value_gap`, `liquidity_sweep`, `equal_highs_lows`, `order_block_proxy`, `supply_demand_zone` |
+| Profile approximation | `volume_profile`, `market_profile`, `point_of_control`, `value_area`, `profile_acceptance` |
+
+## 18. 示例：组合多个结构 token
+
+EN: Example: compose multiple structure tokens.
+
+多数结构类模块都需要原始 OHLC 或 OHLCV 行情，因此在 pipeline 中使用 `input_key="initial"`。
+EN: Most structure tokens need the original OHLC or OHLCV data, so use `input_key="initial"` in pipelines.
+
+```python
+from quant_strategy_tokenizer.contracts import ModuleResult
+from quant_strategy_tokenizer.pipeline import PipelineStep, run_pipeline
+from quant_strategy_tokenizer.indicators.swing_points import SwingPointsParams, SwingPointsRequest, run as run_swings
+from quant_strategy_tokenizer.indicators.support_resistance_zones import (
+    SupportResistanceZonesParams,
+    SupportResistanceZonesRequest,
+    run as run_zones,
+)
+from quant_strategy_tokenizer.indicators.breakout_detector import (
+    BreakoutDetectorParams,
+    BreakoutDetectorRequest,
+    run as run_breakout,
+)
+
+steps = [
+    PipelineStep(
+        name="swing_points",
+        input_key="initial",
+        output_key="swing_bias",
+        take="structure_bias",
+        fn=lambda data: run_swings(SwingPointsRequest(data=data, params=SwingPointsParams())),
+    ),
+    PipelineStep(
+        name="zones",
+        input_key="initial",
+        output_key="nearest_resistance",
+        take="nearest_resistance",
+        fn=lambda data: run_zones(SupportResistanceZonesRequest(data=data, params=SupportResistanceZonesParams())),
+    ),
+    PipelineStep(
+        name="breakout",
+        input_key="initial",
+        output_key="breakout_state",
+        take="structure_state",
+        fn=lambda data: run_breakout(BreakoutDetectorRequest(data=data, params=BreakoutDetectorParams())),
+    ),
+    PipelineStep(
+        name="summary",
+        pass_state=True,
+        fn=lambda state: ModuleResult.success(
+            {
+                "swing_bias": state.get("swing_bias"),
+                "nearest_resistance": state.get("nearest_resistance"),
+                "breakout_state": state.get("breakout_state"),
+            }
+        ),
+    ),
+]
+
+result = run_pipeline(initial_payload=bars, steps=steps)
+```
+
+## 19. 示例：调用一个动量指标
 
 EN: Example: call one momentum indicator.
 
@@ -547,7 +662,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 17. 示例：组合多个动量 token
+## 20. 示例：组合多个动量 token
 
 EN: Example: compose multiple momentum tokens.
 
@@ -591,7 +706,7 @@ steps = [
 result = run_pipeline(initial_payload=bars, steps=steps)
 ```
 
-## 18. 示例：调用一个趋势指标
+## 21. 示例：调用一个趋势指标
 
 EN: Example: call one trend indicator.
 
@@ -625,7 +740,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 19. 示例：非标准字段映射
+## 22. 示例：非标准字段映射
 
 EN: Example: nonstandard field mapping.
 
@@ -659,7 +774,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 20. 示例：请求完整序列
+## 23. 示例：请求完整序列
 
 EN: Example: request full series.
 
@@ -690,7 +805,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 21. 示例：组合多个趋势 token
+## 24. 示例：组合多个趋势 token
 
 EN: Example: compose multiple trend tokens.
 
@@ -742,7 +857,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 22. 示例：写入标准报告文件
+## 25. 示例：写入标准报告文件
 
 EN: Example: write standard report files.
 
@@ -780,7 +895,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 23. Agent 选择指南
+## 26. Agent 选择指南
 
 EN: Agent selection guide.
 
@@ -826,7 +941,19 @@ EN: If the user asks for money flow, accumulation, or distribution, use `obv`, `
 如果用户说“帮我判断量价背离或成交量确认”，使用 `price_volume_divergence`, `volume_confirmation`；如果用户只有 OHLCV 而没有订单流，可使用 `signed_volume_proxy` 并明确这是代理估计。
 EN: If the user asks for price-volume divergence or volume confirmation, use `price_volume_divergence` or `volume_confirmation`; if only OHLCV is available without order flow, use `signed_volume_proxy` and state that it is a proxy estimate.
 
-## 24. 常见坑
+如果用户说“帮我找支撑、阻力、关键价位或触碰次数”，使用 `support_resistance_zones`, `nearest_support_resistance`, `level_touch_count`, `pivot_points`。
+EN: If the user asks for support, resistance, key levels, or touch counts, use `support_resistance_zones`, `nearest_support_resistance`, `level_touch_count`, or `pivot_points`.
+
+如果用户说“帮我看市场结构、HH/LL、BOS 或 CHoCH”，使用 `higher_high_lower_low`, `market_structure_shift`, `break_of_structure`, `change_of_character`, `swing_points`。
+EN: If the user asks for market structure, HH/LL, BOS, or CHoCH, use `higher_high_lower_low`, `market_structure_shift`, `break_of_structure`, `change_of_character`, or `swing_points`.
+
+如果用户说“帮我判断箱体、盘整、突破、回踩或假突破”，使用 `range_box`, `consolidation_zone`, `breakout_detector`, `retest_detector`, `false_breakout_detector`, `range_breakout_strength`。
+EN: If the user asks for ranges, consolidation, breakout, retest, or false breakout, use `range_box`, `consolidation_zone`, `breakout_detector`, `retest_detector`, `false_breakout_detector`, or `range_breakout_strength`.
+
+如果用户说“帮我看缺口、流动性扫点、等高等低或 profile”，使用 `price_gap`, `fair_value_gap`, `liquidity_sweep`, `equal_highs_lows`, `volume_profile`, `point_of_control`, `value_area`；对 `order_block_proxy` 和 profile 模块必须说明它们只是 OHLCV 近似。
+EN: If the user asks for gaps, liquidity sweeps, equal highs/lows, or profile, use `price_gap`, `fair_value_gap`, `liquidity_sweep`, `equal_highs_lows`, `volume_profile`, `point_of_control`, or `value_area`; for `order_block_proxy` and profile modules, state that they are OHLCV approximations.
+
+## 27. 常见坑
 
 EN: Common pitfalls.
 
