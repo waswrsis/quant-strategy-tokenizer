@@ -102,7 +102,7 @@ Quant-Strategy-Tokenizer/
     data_schema.py            OHLCV and tabular input validation
     normalization.py          raw input normalization helpers
     row_utils.py              row extraction and typed lookup helpers
-    indicators/               EMA, ATR, VWAP, CHOP, spike, rolling return, MRQ, trend, momentum, volatility, volume, and structure tokens
+    indicators/               EMA, ATR, VWAP, CHOP, spike, rolling return, MRQ, trend, momentum, volatility, volume, structure, and breadth tokens
     filters/                  blacklist, status, history, cooldown, backoff, VWAP, MRQ
     universe_selector.py      market-neutral symbol selection primitive
     candidate_pool.py         candidate assembly and ranking
@@ -126,6 +126,7 @@ Quant-Strategy-Tokenizer/
     test_volatility_indicators.py
     test_volume_indicators.py
     test_structure_indicators.py
+    test_breadth_indicators.py
 ```
 
 ## Python Dependency Map
@@ -158,7 +159,7 @@ flowchart TD
     Reporting["reporting.py<br/>redacted JSON / JSONL output"]
     DataSchema["data_schema.py<br/>tabular validation"]
 
-    Indicators["indicators/*<br/>ema, atr, vwap, chop, spike, rolling return, beta residual, MRQ touch, trend, momentum, volatility, volume, and structure tokens"]
+    Indicators["indicators/*<br/>ema, atr, vwap, chop, spike, rolling return, beta residual, MRQ touch, trend, momentum, volatility, volume, structure, and breadth tokens"]
     Filters["filters/*<br/>blacklist, status, history, cooldown, backoff, VWAP, MRQ"]
 
     Universe["universe_selector.py"]
@@ -502,6 +503,48 @@ Profile and order-block style modules are explicit OHLCV approximations. Without
 | Gaps / liquidity proxies | `price_gap`, `fair_value_gap`, `liquidity_sweep`, `equal_highs_lows`, `order_block_proxy`, `supply_demand_zone` |
 | Profile approximation | `volume_profile`, `market_profile`, `point_of_control`, `value_area`, `profile_acceptance` |
 
+## Breadth Indicator Tokens
+
+QST includes atomic breadth indicators for market participation, advance/decline pressure, new-high/new-low leadership, volume breadth, cross-sectional diagnostics, and index-breadth confirmation. They follow the same public interface:
+
+```text
+Params / Request / Report / normalize_input(request) / run(request)
+```
+
+They return `ModuleResult[BreadthReport]` with `last_value`, `last_values`, `breadth_direction`, `breadth_state`, participation counts, volume breadth fields, sample coverage, `signal`, `regime`, `normalized_value`, optional full series, field mappings, warnings, and diagnostics.
+
+Breadth tokens support both raw cross-sectional data and pre-aggregated breadth data. Long-panel rows should contain `ts`, `symbol`, and `close`; optional fields include `volume`, `weight`, and `index_close`. Aggregate rows can provide fields such as `advances`, `declines`, `unchanged`, `up_volume`, `down_volume`, `new_highs`, `new_lows`, and `index_close`.
+
+```python
+from quant_strategy_tokenizer.indicators.breadth_regime import (
+    BreadthRegimeParams,
+    BreadthRegimeRequest,
+    run as run_breadth_regime,
+)
+
+result = run_breadth_regime(
+    BreadthRegimeRequest(
+        data=my_cross_sectional_rows,
+        params=BreadthRegimeParams(min_symbols=20, min_coverage=0.75),
+    )
+)
+
+if result.ok:
+    print(result.value.breadth_state, result.value.participation_rate)
+else:
+    print(result.failure.kind, result.failure.message)
+```
+
+| Family | Tokens |
+| --- | --- |
+| Advance / decline | `advance_decline_line`, `advance_decline_ratio`, `advance_decline_percent`, `net_advances`, `absolute_breadth_index`, `breadth_thrust` |
+| McClellan | `mcclellan_oscillator`, `mcclellan_summation_index`, `mcclellan_ratio_adjusted_oscillator` |
+| New high / new low | `new_highs`, `new_lows`, `net_new_highs`, `new_high_new_low_ratio`, `high_low_index`, `cumulative_new_highs_new_lows` |
+| Percent participation | `percent_positive_return`, `percent_above_ma`, `percent_above_ema`, `percent_above_threshold`, `percent_near_high`, `percent_near_low` |
+| Volume breadth | `up_down_volume_ratio`, `up_down_volume_line`, `volume_advance_decline_percent`, `arms_index`, `trin`, `volume_breadth_thrust` |
+| Cross-sectional diagnostics | `cross_sectional_dispersion`, `cross_sectional_correlation_proxy`, `equal_weighted_return`, `cap_weighted_breadth`, `breadth_momentum`, `breadth_regime` |
+| Divergence / confirmation | `index_breadth_divergence`, `breadth_confirmation`, `breadth_freeze_pressure` |
+
 ## Agent Prompts
 
 QST includes prompts that teach another agent how to use, audit, decompose, and extend strategy modules:
@@ -509,7 +552,7 @@ QST includes prompts that teach another agent how to use, audit, decompose, and 
 | Prompt | Use |
 | --- | --- |
 | `agent_prompts/10_full_agent_prompt.md` | General-purpose quant engineering agent. |
-| `agent_prompts/11_agent_project_usage_guide.md` | Step-by-step QST usage guide with trend, momentum, volatility, volume, and structure indicator token examples. |
+| `agent_prompts/11_agent_project_usage_guide.md` | Step-by-step QST usage guide with trend, momentum, volatility, volume, structure, and breadth indicator token examples. |
 | `agent_prompts/12_strategy_code_decomposition_agent.md` | Analyze a full strategy codebase and split it into tokens. |
 | `agent_prompts/13_strategy_decomposition_task_template.md` | Fill-in task template for applying the decomposition workflow. |
 

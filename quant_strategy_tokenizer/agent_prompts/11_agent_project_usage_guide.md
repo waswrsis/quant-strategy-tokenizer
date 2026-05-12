@@ -127,6 +127,10 @@ EN: Indicator layer.
   EN: Shared normalization, local extrema, level clustering, breakout detection, profile approximation, and report logic for structure indicators.
 - `indicators/<structure_token>.py`: 一个结构指标一个独立 token。
   EN: One independent token per structure indicator.
+- `indicators/breadth_common.py`: 宽度指标共享面板/宽表/聚合序列归一化、市场内部参与度计算和报告逻辑。
+  EN: Shared normalization, market-internal participation calculation, and report logic for breadth indicators from panels, wide matrices, or aggregate rows.
+- `indicators/<breadth_token>.py`: 一个宽度指标一个独立 token。
+  EN: One independent token per breadth indicator.
 
 策略组合层。
 EN: Strategy composition layer.
@@ -638,7 +642,122 @@ steps = [
 result = run_pipeline(initial_payload=bars, steps=steps)
 ```
 
-## 19. 示例：调用一个动量指标
+## 19. 宽度类指标 Token 总览
+
+EN: Breadth indicator token overview.
+
+宽度类指标 token 已经实现为独立模块。
+EN: Breadth indicators are implemented as independent modules.
+
+每个宽度 token 都只处理用户传入的数据，不拉行情、不连接交易所、不读账户、不下单。
+EN: Every breadth token processes caller-provided data only; it does not fetch data, connect to venues, read accounts, or place orders.
+
+公共输出是 `ModuleResult[BreadthReport]`。
+EN: The common output is `ModuleResult[BreadthReport]`.
+
+宽度 token 支持三类输入：long panel rows/DataFrame、wide close matrix、aggregate breadth rows。
+EN: Breadth tokens support long panel rows/DataFrames, wide close matrices, and aggregate breadth rows.
+
+- long panel 默认字段：`ts`, `symbol`, `close`，可选 `volume`, `weight`, `index_close`。
+  EN: Long panels default to `ts`, `symbol`, and `close`, with optional `volume`, `weight`, and `index_close`.
+- aggregate 默认字段：`advances`, `declines`, `unchanged`, `up_volume`, `down_volume`, `new_highs`, `new_lows`, `index_close`。
+  EN: Aggregate rows default to `advances`, `declines`, `unchanged`, `up_volume`, `down_volume`, `new_highs`, `new_lows`, and `index_close`.
+
+`BreadthReport` 的关键字段如下。
+EN: Key `BreadthReport` fields are listed below.
+
+- `breadth_direction`: `bullish`, `bearish`, `neutral`, or `unknown`。
+  EN: Breadth direction label such as `bullish`, `bearish`, `neutral`, or `unknown`.
+- `breadth_state`: `broad_up`, `broad_down`, `mixed`, `thrust`, `divergence`, `freeze_pressure`, or `neutral` 等状态。
+  EN: Breadth state labels such as `broad_up`, `broad_down`, `mixed`, `thrust`, `divergence`, `freeze_pressure`, or `neutral`.
+- `participation_rate`: 有方向变化的成分占有效样本的比例。
+  EN: Fraction of valid constituents with directional movement.
+- `advance_count` / `decline_count` / `unchanged_count`: 上涨、下跌、无变化数量。
+  EN: Advance, decline, and unchanged counts.
+- `sample_count` / `coverage`: 有效样本数量和覆盖率。
+  EN: Valid sample count and coverage ratio.
+- `up_volume` / `down_volume`: 上涨成分和下跌成分对应成交量。
+  EN: Volume associated with advancing and declining constituents.
+
+## 20. 宽度类指标清单
+
+EN: Breadth indicator list.
+
+| Family | Tokens |
+| --- | --- |
+| Advance / decline | `advance_decline_line`, `advance_decline_ratio`, `advance_decline_percent`, `net_advances`, `absolute_breadth_index`, `breadth_thrust` |
+| McClellan | `mcclellan_oscillator`, `mcclellan_summation_index`, `mcclellan_ratio_adjusted_oscillator` |
+| New high / new low | `new_highs`, `new_lows`, `net_new_highs`, `new_high_new_low_ratio`, `high_low_index`, `cumulative_new_highs_new_lows` |
+| Percent participation | `percent_positive_return`, `percent_above_ma`, `percent_above_ema`, `percent_above_threshold`, `percent_near_high`, `percent_near_low` |
+| Volume breadth | `up_down_volume_ratio`, `up_down_volume_line`, `volume_advance_decline_percent`, `arms_index`, `trin`, `volume_breadth_thrust` |
+| Cross-sectional diagnostics | `cross_sectional_dispersion`, `cross_sectional_correlation_proxy`, `equal_weighted_return`, `cap_weighted_breadth`, `breadth_momentum`, `breadth_regime` |
+| Divergence / confirmation | `index_breadth_divergence`, `breadth_confirmation`, `breadth_freeze_pressure` |
+
+## 21. 示例：组合多个宽度 token
+
+EN: Example: compose multiple breadth tokens.
+
+宽度类模块通常需要同一份跨标的行情或聚合宽度序列，因此在 pipeline 中使用 `input_key="initial"`。
+EN: Breadth modules usually share the same cross-sectional market data or aggregate breadth rows, so use `input_key="initial"` in pipelines.
+
+```python
+from quant_strategy_tokenizer.contracts import ModuleResult
+from quant_strategy_tokenizer.pipeline import PipelineStep, run_pipeline
+from quant_strategy_tokenizer.indicators.advance_decline_percent import (
+    AdvanceDeclinePercentParams,
+    AdvanceDeclinePercentRequest,
+    run as run_ad_percent,
+)
+from quant_strategy_tokenizer.indicators.percent_above_ma import (
+    PercentAboveMaParams,
+    PercentAboveMaRequest,
+    run as run_above_ma,
+)
+from quant_strategy_tokenizer.indicators.breadth_regime import (
+    BreadthRegimeParams,
+    BreadthRegimeRequest,
+    run as run_breadth_regime,
+)
+
+steps = [
+    PipelineStep(
+        name="ad_percent",
+        input_key="initial",
+        output_key="ad_percent",
+        take="last_value",
+        fn=lambda data: run_ad_percent(AdvanceDeclinePercentRequest(data=data, params=AdvanceDeclinePercentParams())),
+    ),
+    PipelineStep(
+        name="above_ma",
+        input_key="initial",
+        output_key="above_ma",
+        take="last_value",
+        fn=lambda data: run_above_ma(PercentAboveMaRequest(data=data, params=PercentAboveMaParams())),
+    ),
+    PipelineStep(
+        name="regime",
+        input_key="initial",
+        output_key="breadth_regime",
+        take="breadth_state",
+        fn=lambda data: run_breadth_regime(BreadthRegimeRequest(data=data, params=BreadthRegimeParams())),
+    ),
+    PipelineStep(
+        name="summary",
+        pass_state=True,
+        fn=lambda state: ModuleResult.success(
+            {
+                "ad_percent": state.get("ad_percent"),
+                "above_ma": state.get("above_ma"),
+                "breadth_regime": state.get("breadth_regime"),
+            }
+        ),
+    ),
+]
+
+result = run_pipeline(initial_payload=cross_sectional_rows, steps=steps)
+```
+
+## 22. 示例：调用一个动量指标
 
 EN: Example: call one momentum indicator.
 
@@ -662,7 +781,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 20. 示例：组合多个动量 token
+## 23. 示例：组合多个动量 token
 
 EN: Example: compose multiple momentum tokens.
 
@@ -706,7 +825,7 @@ steps = [
 result = run_pipeline(initial_payload=bars, steps=steps)
 ```
 
-## 21. 示例：调用一个趋势指标
+## 24. 示例：调用一个趋势指标
 
 EN: Example: call one trend indicator.
 
@@ -740,7 +859,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 22. 示例：非标准字段映射
+## 25. 示例：非标准字段映射
 
 EN: Example: nonstandard field mapping.
 
@@ -774,7 +893,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 23. 示例：请求完整序列
+## 26. 示例：请求完整序列
 
 EN: Example: request full series.
 
@@ -805,7 +924,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 24. 示例：组合多个趋势 token
+## 27. 示例：组合多个趋势 token
 
 EN: Example: compose multiple trend tokens.
 
@@ -857,7 +976,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 25. 示例：写入标准报告文件
+## 28. 示例：写入标准报告文件
 
 EN: Example: write standard report files.
 
@@ -895,7 +1014,7 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 26. Agent 选择指南
+## 29. Agent 选择指南
 
 EN: Agent selection guide.
 
@@ -953,7 +1072,22 @@ EN: If the user asks for ranges, consolidation, breakout, retest, or false break
 如果用户说“帮我看缺口、流动性扫点、等高等低或 profile”，使用 `price_gap`, `fair_value_gap`, `liquidity_sweep`, `equal_highs_lows`, `volume_profile`, `point_of_control`, `value_area`；对 `order_block_proxy` 和 profile 模块必须说明它们只是 OHLCV 近似。
 EN: If the user asks for gaps, liquidity sweeps, equal highs/lows, or profile, use `price_gap`, `fair_value_gap`, `liquidity_sweep`, `equal_highs_lows`, `volume_profile`, `point_of_control`, or `value_area`; for `order_block_proxy` and profile modules, state that they are OHLCV approximations.
 
-## 27. 常见坑
+如果用户说“帮我看市场宽度、上涨下跌家数、内部参与度”，使用 `advance_decline_percent`, `advance_decline_line`, `net_advances`, `percent_positive_return`, `breadth_regime`。
+EN: If the user asks for market breadth, advance/decline counts, or internal participation, use `advance_decline_percent`, `advance_decline_line`, `net_advances`, `percent_positive_return`, or `breadth_regime`.
+
+如果用户说“帮我看新高新低或市场领导力”，使用 `new_highs`, `new_lows`, `net_new_highs`, `high_low_index`, `cumulative_new_highs_new_lows`。
+EN: If the user asks for new highs/lows or market leadership, use `new_highs`, `new_lows`, `net_new_highs`, `high_low_index`, or `cumulative_new_highs_new_lows`.
+
+如果用户说“帮我看量能宽度或 TRIN”，使用 `up_down_volume_ratio`, `volume_advance_decline_percent`, `arms_index`, `trin`, `volume_breadth_thrust`；缺少 volume 时不要静默降级。
+EN: If the user asks for volume breadth or TRIN, use `up_down_volume_ratio`, `volume_advance_decline_percent`, `arms_index`, `trin`, or `volume_breadth_thrust`; do not silently downgrade when volume is missing.
+
+如果用户说“帮我看指数上涨但内部变弱、宽度背离或确认”，使用 `index_breadth_divergence`, `breadth_confirmation`，并要求输入包含 `index_close`。
+EN: If the user asks whether an index move is weakening internally, diverging, or confirmed by breadth, use `index_breadth_divergence` or `breadth_confirmation`, and require `index_close`.
+
+如果用户说“帮我看市场冻结压力或系统风险宽度输入”，使用 `breadth_freeze_pressure` 做诊断；真正的 freeze 决策仍使用 `market_freeze.py`。
+EN: If the user asks for market-freeze pressure or system-risk breadth input, use `breadth_freeze_pressure` for diagnostics; actual freeze decisions still belong to `market_freeze.py`.
+
+## 30. 常见坑
 
 EN: Common pitfalls.
 
