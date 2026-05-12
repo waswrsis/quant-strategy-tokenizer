@@ -30,7 +30,7 @@ QST ships with prompt assets specifically designed to help agents analyze and de
 | --- | --- |
 | [`12_strategy_code_decomposition_agent.md`](quant_strategy_tokenizer/agent_prompts/12_strategy_code_decomposition_agent.md) | Teaches an agent how to read a full strategy codebase and split it into reusable strategy tokens. |
 | [`13_strategy_decomposition_task_template.md`](quant_strategy_tokenizer/agent_prompts/13_strategy_decomposition_task_template.md) | Provides a fill-in task template for applying the decomposition workflow to a concrete project. |
-| [`11_agent_project_usage_guide.md`](quant_strategy_tokenizer/agent_prompts/11_agent_project_usage_guide.md) | Shows another agent how to call QST modules, inspect outputs, and compose workflows safely. |
+| [`11_agent_project_usage_guide.md`](quant_strategy_tokenizer/agent_prompts/11_agent_project_usage_guide.md) | Shows another agent how to call QST modules, inspect outputs, compose workflows safely, and use the trend indicator tokens. |
 | `Params / Request / Report / ModuleResult` contracts | Give each extracted token a predictable interface that can be reused across strategies. |
 
 In practice, an agent can use QST in two directions:
@@ -102,7 +102,7 @@ Quant-Strategy-Tokenizer/
     data_schema.py            OHLCV and tabular input validation
     normalization.py          raw input normalization helpers
     row_utils.py              row extraction and typed lookup helpers
-    indicators/               EMA, ATR, VWAP, CHOP, spike, rolling return, MRQ touch
+    indicators/               EMA, ATR, VWAP, CHOP, spike, rolling return, MRQ, trend tokens
     filters/                  blacklist, status, history, cooldown, backoff, VWAP, MRQ
     universe_selector.py      market-neutral symbol selection primitive
     candidate_pool.py         candidate assembly and ranking
@@ -121,21 +121,25 @@ Quant-Strategy-Tokenizer/
     SUBMISSION_NOTES.md
   tests/
     test_core_behaviors.py
+    test_trend_indicators.py
 ```
 
 ## Python Dependency Map
 
-Runtime dependency is intentionally small: **Python 3.10+**, **pandas**, and **numpy**. Everything else is standard library.
+Runtime dependency is intentionally small: **Python 3.10+**, **pandas**, and **numpy**. Everything else is standard library. TA-Lib is supported only as an optional indicator backend.
 
 ```text
 numpy
 pandas
+# Optional:
+TA-Lib
 ```
 
 | Package | Why QST needs it |
 | --- | --- |
 | `pandas` | Normalizes tabular market data and powers indicator/report calculations. |
-| `numpy` | Supports numerical routines used by CHOP, rolling return, and beta-residual modules. |
+| `numpy` | Supports numerical routines used by indicator and feature modules. |
+| `TA-Lib` | Optional backend for users who need parity with TA-Lib trend indicators. Native pandas/numpy implementations remain the default. |
 
 There are no live-exchange dependencies in the package: no `ccxt`, no Binance client, no broker SDK, and no credential handling.
 
@@ -150,7 +154,7 @@ flowchart TD
     Reporting["reporting.py<br/>redacted JSON / JSONL output"]
     DataSchema["data_schema.py<br/>tabular validation"]
 
-    Indicators["indicators/*<br/>ema, atr, vwap, chop, spike, rolling return, beta residual, MRQ touch"]
+    Indicators["indicators/*<br/>ema, atr, vwap, chop, spike, rolling return, beta residual, MRQ touch, trend tokens"]
     Filters["filters/*<br/>blacklist, status, history, cooldown, backoff, VWAP, MRQ"]
 
     Universe["universe_selector.py"]
@@ -297,6 +301,55 @@ if result.ok:
 
 The pipeline layer is a small data bus, not a hidden runner. `input_key` selects data from the bus, `take` selects fields from a module report, `output_key` stores reusable downstream payloads, and `pass_state=True` lets a step combine multiple previous outputs. Data fetching, exchange access, and strategy policy still stay outside the framework.
 
+## Trend Indicator Tokens
+
+QST includes atomic trend indicators under `quant_strategy_tokenizer.indicators`. Each trend token follows the same interface:
+
+```text
+Params / Request / Report / normalize_input(request) / run(request)
+```
+
+Modules accept caller-supplied rows, dictionaries, lists, pandas Series, or pandas DataFrames where practical. They never fetch market data. Output is a `ModuleResult[TrendReport]` with `last_value`, `last_values`, `trend_direction`, `trend_strength`, `signal`, `summary`, `used_fields`, warnings, diagnostics, and optional full series when `DetailLevel.FULL` is requested.
+
+```python
+from quant_strategy_tokenizer.indicators.supertrend import (
+    SupertrendParams,
+    SupertrendRequest,
+    run as run_supertrend,
+)
+
+result = run_supertrend(
+    SupertrendRequest(
+        data=my_ohlc_rows,
+        params=SupertrendParams(atr_window=10, multiplier=3.0),
+    )
+)
+
+if result.ok:
+    print(result.value.trend_direction, result.value.signal)
+else:
+    print(result.failure.kind, result.failure.message)
+```
+
+Backend selection is explicit. `backend="native"` uses pandas/numpy and is the default. `backend="talib"` requires TA-Lib and fails with `unavailable_backend` if TA-Lib is not installed. `backend="auto"` uses TA-Lib only when it is installed and implemented for that token; otherwise it stays on the native implementation.
+
+Install the optional TA-Lib backend only when needed:
+
+```bash
+python -m pip install -e ".[talib]"
+```
+
+| Family | Tokens |
+| --- | --- |
+| Moving averages | `sma`, `wma`, `smma`, `dema`, `tema`, `trima`, `t3`, `hma`, `kama`, `zlema`, `mcginley_dynamic`, `vwma` |
+| Trend/momentum hybrids | `macd`, `ppo`, `apo` |
+| Direction and strength | `adx`, `adxr`, `dmi`, `aroon`, `aroon_oscillator`, `vortex` |
+| Trend stops and channels | `parabolic_sar`, `supertrend`, `donchian_channel`, `keltner_channel`, `chandelier_exit`, `atr_trailing_stop` |
+| Structured trend systems | `ichimoku_cloud`, `alligator`, `ma_cross`, `ma_ribbon`, `gmma` |
+| Linear regression trend | `linear_regression`, `linear_regression_slope`, `linear_regression_angle`, `linear_regression_r2`, `least_squares_moving_average`, `time_series_forecast` |
+| Hilbert / MESA / Ehlers | `mama`, `ht_trendline`, `ht_trendmode`, `ht_sinewave`, `ht_phasor`, `ht_dominant_cycle_period`, `ht_dominant_cycle_phase` |
+| Composite trend scoring | `trend_strength_index`, `chande_trend_meter` |
+
 ## Agent Prompts
 
 QST includes prompts that teach another agent how to use, audit, decompose, and extend strategy modules:
@@ -304,7 +357,7 @@ QST includes prompts that teach another agent how to use, audit, decompose, and 
 | Prompt | Use |
 | --- | --- |
 | `agent_prompts/10_full_agent_prompt.md` | General-purpose quant engineering agent. |
-| `agent_prompts/11_agent_project_usage_guide.md` | Step-by-step QST usage guide with examples. |
+| `agent_prompts/11_agent_project_usage_guide.md` | Step-by-step QST usage guide with trend indicator token examples. |
 | `agent_prompts/12_strategy_code_decomposition_agent.md` | Analyze a full strategy codebase and split it into tokens. |
 | `agent_prompts/13_strategy_decomposition_task_template.md` | Fill-in task template for applying the decomposition workflow. |
 

@@ -34,6 +34,9 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
+[project.optional-dependencies]
+talib = ["TA-Lib"]
+
 [tool.setuptools]
 packages = ["quant_strategy_tokenizer", "quant_strategy_tokenizer.indicators", "quant_strategy_tokenizer.filters"]
 include-package-data = true
