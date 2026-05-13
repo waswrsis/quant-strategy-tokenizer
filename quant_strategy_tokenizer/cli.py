@@ -174,7 +174,7 @@ def compare_cmd(yaml_a: Path, yaml_b: Path) -> None:
     typer.echo(f"  param_hash {'identical' if result.param_equal else 'differs'}")
     if result.param_diffs:
         for diff in result.param_diffs:
-            typer.echo(f"  - {diff.path}: {diff.left} → {diff.right}")
+            typer.echo(f"  - {diff.path}: {diff.left} -> {diff.right}")
     typer.echo("")
     typer.echo("Instance:")
     typer.echo(f"  instance_hash {'identical' if result.instance_equal else 'differs'}")

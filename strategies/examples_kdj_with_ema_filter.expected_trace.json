@@ -1,0 +1,24 @@
+{
+  "strategy_instance_hash": "sha256:1bcc10844c6bc878e382a3b1dc8524780f34c8ac8d2c1ef603e3074fff3c74a3",
+  "must_include_tokens": [
+    "smooth.linear_recursive",
+    "window.max",
+    "window.min",
+    "norm.range_position",
+    "data.shift",
+    "logic.and",
+    "decision.reduce",
+    "risk.position_cap",
+    "plan.order_intent"
+  ],
+  "expected_block": {
+    "token": "risk.position_cap",
+    "reason": "position_cap_exceeded",
+    "severity": "critical"
+  },
+  "expected_output_plan": {
+    "kind": "noop",
+    "blocked": true,
+    "reason": "position_cap_exceeded"
+  }
+}
