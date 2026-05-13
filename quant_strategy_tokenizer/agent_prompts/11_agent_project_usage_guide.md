@@ -135,6 +135,10 @@ EN: Indicator layer.
   EN: Shared normalization, pressure calculation, and report logic for futures/perpetuals, option chains, and aggregate derivatives diagnostics.
 - `indicators/<derivatives_token>.py`: 一个衍生品指标一个独立 token。
   EN: One independent token per derivatives indicator.
+- `indicators/onchain_common.py`: 链上指标共享网络、交易所流、持有人、稳定币、矿工/验证者、费用和 age-bucket 数据的归一化、压力计算和报告逻辑。
+  EN: Shared normalization, pressure calculation, and report logic for network, exchange-flow, holder, stablecoin, miner/validator, fee, and age-bucket on-chain data.
+- `indicators/<onchain_token>.py`: 一个链上指标一个独立 token。
+  EN: One independent token per on-chain indicator.
 
 策略组合层。
 EN: Strategy composition layer.
@@ -1117,7 +1121,101 @@ steps = [
 result = run_pipeline(initial_payload=perp_rows, steps=steps)
 ```
 
-## 32. Agent 选择指南
+## 32. 链上类指标 Token 总览
+EN: On-chain indicator token overview.
+
+链上指标被实现为独立模块。
+EN: On-chain indicators are implemented as independent modules.
+
+每个链上 token 只处理用户传入的数据；它不连接链节点、不读取钱包、不拉取第三方数据、不读账户、不执行交易。
+EN: Every on-chain token processes caller-provided data only; it does not connect to nodes, read wallets, fetch third-party data, read accounts, or execute trades.
+
+公共输出是 `ModuleResult[OnChainReport]`。
+EN: The common output is `ModuleResult[OnChainReport]`.
+
+链上 token 支持三类输入：aggregate network series、UTXO/age-bucket rows、account/token-style rows。
+EN: On-chain tokens support aggregate network series, UTXO/age-bucket rows, and account/token-style rows.
+
+`OnChainReport` 的关键字段如下。
+EN: Key `OnChainReport` fields are listed below.
+
+- `network_activity_state`: 网络活跃状态，例如 `high_activity`, `normal_activity`, `low_activity`, or `unknown`。
+  EN: Network activity state such as `high_activity`, `normal_activity`, `low_activity`, or `unknown`.
+- `flow_state`: 交易所流状态，例如 `exchange_inflow_pressure`, `exchange_outflow_accumulation`, or `neutral`。
+  EN: Exchange-flow state such as `exchange_inflow_pressure`, `exchange_outflow_accumulation`, or `neutral`.
+- `holder_state`: 持有人行为状态，例如 `accumulation`, `distribution`, or `neutral`。
+  EN: Holder behavior state such as `accumulation`, `distribution`, or `neutral`.
+- `valuation_state`: 估值状态，例如 `undervalued`, `fair`, or `overvalued`。
+  EN: Valuation state such as `undervalued`, `fair`, or `overvalued`.
+- `liquidity_state`: 稳定币或流动性状态，例如 `expanding`, `contracting`, or `stable`。
+  EN: Stablecoin or liquidity state such as `expanding`, `contracting`, or `stable`.
+- `miner_validator_state`: 矿工或验证者压力状态，例如 `pressure`, `accumulation`, or `stable`。
+  EN: Miner or validator pressure state such as `pressure`, `accumulation`, or `stable`.
+- `diagnostics`: proxy 模块会明确标注 `proxy=True`。
+  EN: Proxy modules explicitly mark `proxy=True` in diagnostics.
+
+## 33. 链上指标清单
+EN: On-chain indicator list.
+
+| Family | Tokens |
+| --- | --- |
+| Network activity | `active_addresses`, `new_addresses`, `transaction_count`, `transaction_volume`, `transfer_volume_adjusted`, `network_activity_index`, `address_growth_rate`, `transaction_growth_rate` |
+| Valuation / cost basis | `nvt_ratio`, `nvt_signal`, `mvrv_ratio`, `mvrv_zscore`, `realized_price`, `market_realized_gradient`, `supply_in_profit_proxy`, `realized_cap_change` |
+| Exchange flows | `exchange_netflow`, `exchange_inflow_zscore`, `exchange_outflow_zscore`, `exchange_balance_change`, `exchange_reserve_ratio`, `exchange_flow_pressure`, `stablecoin_exchange_balance_change` |
+| Holder behavior | `sopr`, `sopr_zscore`, `holder_age_trend`, `long_term_holder_supply_proxy`, `short_term_holder_supply_proxy`, `hodl_wave_proxy`, `whale_balance_change`, `retail_balance_change`, `whale_retail_divergence` |
+| Liquidity / stablecoin | `stablecoin_supply_change`, `stablecoin_supply_ratio`, `stablecoin_liquidity_index`, `stablecoin_exchange_pressure` |
+| Miner / validator | `miner_reserve_change`, `miner_flow_pressure`, `miner_capitulation_proxy`, `staking_deposit_withdrawal_ratio`, `staking_balance_change`, `validator_exit_pressure` |
+| Fees / usage | `fee_pressure`, `gas_usage_trend`, `gas_price_zscore`, `fee_burn_pressure` |
+| Composite diagnostics | `onchain_risk_regime`, `onchain_liquidity_regime`, `onchain_valuation_regime`, `onchain_accumulation_distribution`, `cycle_pressure_index` |
+
+## 34. 示例：组合多个链上 token
+EN: Example: compose multiple on-chain tokens.
+
+多个链上指标通常需要同一份链上聚合序列或 age-bucket 行，因此在 pipeline 中使用 `input_key="initial"`。
+EN: Multiple on-chain indicators usually need the same aggregate series or age-bucket rows, so use `input_key="initial"` in pipelines.
+
+```python
+from quant_strategy_tokenizer.pipeline import PipelineStep, run_pipeline
+from quant_strategy_tokenizer.indicators.mvrv_zscore import MVRVZScoreRequest, run as run_mvrv
+from quant_strategy_tokenizer.indicators.exchange_netflow import ExchangeNetflowRequest, run as run_netflow
+from quant_strategy_tokenizer.indicators.stablecoin_liquidity_index import StablecoinLiquidityIndexRequest, run as run_stable
+from quant_strategy_tokenizer.indicators.onchain_risk_regime import OnchainRiskRegimeRequest, run as run_risk
+
+steps = [
+    PipelineStep(
+        name="mvrv",
+        input_key="initial",
+        output_key="mvrv_z",
+        take="last_value",
+        fn=lambda data: run_mvrv(MVRVZScoreRequest(data=data)),
+    ),
+    PipelineStep(
+        name="netflow",
+        input_key="initial",
+        output_key="exchange_netflow",
+        take="last_value",
+        fn=lambda data: run_netflow(ExchangeNetflowRequest(data=data)),
+    ),
+    PipelineStep(
+        name="stablecoin",
+        input_key="initial",
+        output_key="stablecoin_liquidity",
+        take="last_value",
+        fn=lambda data: run_stable(StablecoinLiquidityIndexRequest(data=data)),
+    ),
+    PipelineStep(
+        name="risk",
+        input_key="initial",
+        output_key="risk_state",
+        take="risk_state",
+        fn=lambda data: run_risk(OnchainRiskRegimeRequest(data=data)),
+    ),
+]
+
+result = run_pipeline(initial_payload=onchain_rows, steps=steps)
+```
+
+## 35. Agent 选择指南
 
 EN: Agent selection guide.
 
@@ -1199,7 +1297,20 @@ EN: If the user asks for option IV, term structure, skew, put-call activity, or 
 如果用户说“帮我估算 dealer gamma、VRP 或 max pain”，使用 `dealer_gamma_proxy`, `volatility_risk_premium_proxy`, or `max_pain_proxy`，并明确说明这些只是 proxy。
 EN: If the user asks for dealer gamma, VRP, or max pain, use `dealer_gamma_proxy`, `volatility_risk_premium_proxy`, or `max_pain_proxy`, and explicitly state that these are proxies.
 
-## 33. 常见坑
+
+如果用户说“帮我看链上活跃度、地址增长或交易增长”，使用 `active_addresses`, `new_addresses`, `network_activity_index`, `address_growth_rate`, or `transaction_growth_rate`。
+EN: If the user asks for on-chain activity, address growth, or transaction growth, use `active_addresses`, `new_addresses`, `network_activity_index`, `address_growth_rate`, or `transaction_growth_rate`.
+
+如果用户说“帮我看 MVRV、NVT、realized price 或链上估值”，使用 `mvrv_ratio`, `mvrv_zscore`, `nvt_ratio`, `nvt_signal`, `realized_price`, or `onchain_valuation_regime`。
+EN: If the user asks for MVRV, NVT, realized price, or on-chain valuation, use `mvrv_ratio`, `mvrv_zscore`, `nvt_ratio`, `nvt_signal`, `realized_price`, or `onchain_valuation_regime`.
+
+如果用户说“帮我看交易所流入流出、稳定币流动性、矿工或验证者压力”，使用 `exchange_netflow`, `exchange_flow_pressure`, `stablecoin_liquidity_index`, `miner_flow_pressure`, `miner_capitulation_proxy`, or `validator_exit_pressure`。
+EN: If the user asks for exchange flows, stablecoin liquidity, miner pressure, or validator pressure, use `exchange_netflow`, `exchange_flow_pressure`, `stablecoin_liquidity_index`, `miner_flow_pressure`, `miner_capitulation_proxy`, or `validator_exit_pressure`.
+
+如果用户说“帮我看长期持有人、短期持有人、HODL wave 或 whale/retail 分歧”，使用 `long_term_holder_supply_proxy`, `short_term_holder_supply_proxy`, `hodl_wave_proxy`, `whale_retail_divergence`，并明确说明 proxy 语义。
+EN: If the user asks for long-term holders, short-term holders, HODL wave, or whale/retail divergence, use `long_term_holder_supply_proxy`, `short_term_holder_supply_proxy`, `hodl_wave_proxy`, or `whale_retail_divergence`, and explicitly state proxy semantics.
+
+## 36. 常见坑
 
 EN: Common pitfalls.
 

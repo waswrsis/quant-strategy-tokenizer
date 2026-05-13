@@ -102,7 +102,7 @@ Quant-Strategy-Tokenizer/
     data_schema.py            OHLCV and tabular input validation
     normalization.py          raw input normalization helpers
     row_utils.py              row extraction and typed lookup helpers
-    indicators/               EMA, ATR, VWAP, CHOP, spike, rolling return, MRQ, trend, momentum, volatility, volume, structure, breadth, and derivatives tokens
+    indicators/               EMA, ATR, VWAP, CHOP, spike, rolling return, MRQ, trend, momentum, volatility, volume, structure, breadth, derivatives, and on-chain tokens
     filters/                  blacklist, status, history, cooldown, backoff, VWAP, MRQ
     universe_selector.py      market-neutral symbol selection primitive
     candidate_pool.py         candidate assembly and ranking
@@ -128,6 +128,7 @@ Quant-Strategy-Tokenizer/
     test_structure_indicators.py
     test_breadth_indicators.py
     test_derivatives_indicators.py
+    test_onchain_indicators.py
 ```
 
 ## Python Dependency Map
@@ -160,7 +161,7 @@ flowchart TD
     Reporting["reporting.py<br/>redacted JSON / JSONL output"]
     DataSchema["data_schema.py<br/>tabular validation"]
 
-    Indicators["indicators/*<br/>ema, atr, vwap, chop, spike, rolling return, beta residual, MRQ touch, trend, momentum, volatility, volume, structure, breadth, and derivatives tokens"]
+    Indicators["indicators/*<br/>ema, atr, vwap, chop, spike, rolling return, beta residual, MRQ touch, trend, momentum, volatility, volume, structure, breadth, derivatives, and on-chain tokens"]
     Filters["filters/*<br/>blacklist, status, history, cooldown, backoff, VWAP, MRQ"]
 
     Universe["universe_selector.py"]
@@ -586,6 +587,43 @@ else:
 | Greeks exposure proxies | `gamma_exposure`, `delta_exposure`, `vega_exposure`, `theta_exposure`, `dealer_gamma_proxy` |
 | Composite options diagnostics | `options_crowding_index`, `volatility_risk_premium_proxy`, `max_pain_proxy` |
 
+## On-Chain Indicator Tokens
+
+QST includes atomic on-chain indicators for crypto network activity, valuation versus realized cost basis, exchange flows, holder behavior, stablecoin liquidity, miner/validator pressure, fee usage, and composite cycle diagnostics. They follow the same public interface:
+
+```text
+Params / Request / Report / normalize_input(request) / run(request)
+```
+
+They return `ModuleResult[OnChainReport]` with `last_value`, `last_values`, `network_activity_state`, `flow_state`, `holder_state`, `valuation_state`, `liquidity_state`, `miner_validator_state`, `risk_state`, `signal`, `regime`, `normalized_value`, optional full series, field mappings, warnings, and diagnostics.
+
+On-chain tokens support caller-provided aggregate network series, UTXO/age-bucket rows, and account/token-style rows. They do not fetch chain data, connect to nodes, read wallets, or read exchange accounts. Proxy modules such as `supply_in_profit_proxy`, `hodl_wave_proxy`, `miner_capitulation_proxy`, and `validator_exit_pressure` explicitly report proxy diagnostics and do not claim true vendor labels.
+
+```python
+from quant_strategy_tokenizer.indicators.onchain_risk_regime import (
+    OnchainRiskRegimeRequest,
+    run as run_onchain_risk,
+)
+
+result = run_onchain_risk(OnchainRiskRegimeRequest(data=my_onchain_rows))
+
+if result.ok:
+    print(result.value.risk_state, result.value.flow_state)
+else:
+    print(result.failure.kind, result.failure.message)
+```
+
+| Family | Tokens |
+| --- | --- |
+| Network activity | `active_addresses`, `new_addresses`, `transaction_count`, `transaction_volume`, `transfer_volume_adjusted`, `network_activity_index`, `address_growth_rate`, `transaction_growth_rate` |
+| Valuation / cost basis | `nvt_ratio`, `nvt_signal`, `mvrv_ratio`, `mvrv_zscore`, `realized_price`, `market_realized_gradient`, `supply_in_profit_proxy`, `realized_cap_change` |
+| Exchange flows | `exchange_netflow`, `exchange_inflow_zscore`, `exchange_outflow_zscore`, `exchange_balance_change`, `exchange_reserve_ratio`, `exchange_flow_pressure`, `stablecoin_exchange_balance_change` |
+| Holder behavior | `sopr`, `sopr_zscore`, `holder_age_trend`, `long_term_holder_supply_proxy`, `short_term_holder_supply_proxy`, `hodl_wave_proxy`, `whale_balance_change`, `retail_balance_change`, `whale_retail_divergence` |
+| Liquidity / stablecoin | `stablecoin_supply_change`, `stablecoin_supply_ratio`, `stablecoin_liquidity_index`, `stablecoin_exchange_pressure` |
+| Miner / validator | `miner_reserve_change`, `miner_flow_pressure`, `miner_capitulation_proxy`, `staking_deposit_withdrawal_ratio`, `staking_balance_change`, `validator_exit_pressure` |
+| Fees / usage | `fee_pressure`, `gas_usage_trend`, `gas_price_zscore`, `fee_burn_pressure` |
+| Composite diagnostics | `onchain_risk_regime`, `onchain_liquidity_regime`, `onchain_valuation_regime`, `onchain_accumulation_distribution`, `cycle_pressure_index` |
+
 ## Agent Prompts
 
 QST includes prompts that teach another agent how to use, audit, decompose, and extend strategy modules:
@@ -593,7 +631,7 @@ QST includes prompts that teach another agent how to use, audit, decompose, and 
 | Prompt | Use |
 | --- | --- |
 | `agent_prompts/10_full_agent_prompt.md` | General-purpose quant engineering agent. |
-| `agent_prompts/11_agent_project_usage_guide.md` | Step-by-step QST usage guide with trend, momentum, volatility, volume, structure, breadth, and derivatives indicator token examples. |
+| `agent_prompts/11_agent_project_usage_guide.md` | Step-by-step QST usage guide with trend, momentum, volatility, volume, structure, breadth, derivatives, and on-chain indicator token examples. |
 | `agent_prompts/12_strategy_code_decomposition_agent.md` | Analyze a full strategy codebase and split it into tokens. |
 | `agent_prompts/13_strategy_decomposition_task_template.md` | Fill-in task template for applying the decomposition workflow. |
 
