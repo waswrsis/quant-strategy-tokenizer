@@ -35,6 +35,14 @@ class ExecutionResult(BaseModel):
     validation_failures: list[ValidationFailure] = Field(default_factory=list)
 
 
+class UnresolvedReferenceError(KeyError):
+    """Runtime graph input reference could not be resolved."""
+
+
+def _looks_like_graph_ref(value: str) -> bool:
+    return "." in value and not value.startswith("$")
+
+
 def _resolve_external(ref: str, externals: dict[str, Any]) -> Any:
     pieces = ref.removeprefix("$externals.").split(".")
     if not pieces or pieces[0] not in externals:
@@ -56,6 +64,8 @@ def _resolve_value(value: Any, outputs: dict[str, Any], externals: dict[str, Any
             return _resolve_external(value, externals)
         if value in outputs:
             return outputs[value]
+        if _looks_like_graph_ref(value):
+            raise UnresolvedReferenceError(f"Unresolved graph reference: {value!r}")
         return value
     if isinstance(value, list):
         return [_resolve_value(item, outputs, externals) for item in value]
@@ -108,10 +118,10 @@ def execute_strategy(
     trace_path: str | Path | None = None,
     registry: Registry | None = None,
 ) -> ExecutionResult:
-    """Validate, canonicalize, and execute a Strategy IR."""
+    """Canonicalize, validate, and execute a Strategy IR."""
 
-    validation = validate(ir)
     canonical = canonicalize(ir)
+    validation = validate(canonical)
     hashes = compute_hashes(canonical)
     trace = _empty_trace(canonical, hashes.instance_hash)
     if not validation.ok:
@@ -127,10 +137,17 @@ def execute_strategy(
 
     for node in canonical.graph:
         registered = token_registry.get(node.token, node.v)
-        resolved_inputs = _resolve_value(node.inputs, node_outputs, externals)
         try:
+            resolved_inputs = _resolve_value(node.inputs, node_outputs, externals)
             raw_output = registered.executor(**resolved_inputs, **node.params)
             output = normalize_token_output(raw_output)
+        except UnresolvedReferenceError as exc:
+            output = TokenOutput(
+                status="error",
+                error_kind=ErrorKind.missing_input.value,
+                values={},
+                warnings=[str(exc)],
+            )
         except Exception as exc:
             output = TokenOutput(
                 status="error",

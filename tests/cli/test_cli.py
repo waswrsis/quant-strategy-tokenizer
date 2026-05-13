@@ -37,6 +37,30 @@ def test_cli_hash_compare_explain_execute(tmp_path: Path) -> None:
     assert explained.exit_code == 0
     assert "Strategy: kdj_cross_basic" in explained.output
     with runner.isolated_filesystem(temp_dir=tmp_path):
-        executed = runner.invoke(app, ["execute", str(strategy), "--market", str(market)])
+        trace_path = tmp_path / "custom_trace.json"
+        executed = runner.invoke(
+            app,
+            ["execute", str(strategy), "--market", str(market), "--trace-path", str(trace_path)],
+        )
         assert executed.exit_code == 0
-        assert "trace.json" in executed.output
+        assert "custom_trace.json" in executed.output
+        assert trace_path.exists()
+
+
+def test_compare_reports_lookback_param_path(tmp_path: Path) -> None:
+    strategy = ROOT / "strategies" / "kdj_cross_basic.qst.yaml"
+    changed = tmp_path / "kdj_lookback_14.qst.yaml"
+    changed.write_text(
+        strategy.read_text(encoding="utf-8").replace("lookback: 9", "lookback: 14"),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["compare", str(strategy), str(changed)])
+
+    assert result.exit_code == 0
+    assert "graph_hash identical" in result.output
+    assert "param_hash differs" in result.output
+    assert "instance_hash differs" in result.output
+    assert "recipes.kdj.params.lookback" in result.output
+    assert "9" in result.output
+    assert "14" in result.output

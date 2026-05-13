@@ -140,9 +140,19 @@ def compare_cmd(yaml_a: Path, yaml_b: Path) -> None:
     """Compare two strategy YAML files by P0 hash layers."""
 
     result = compare_ir(load_strategy_file(yaml_a), load_strategy_file(yaml_b))
-    typer.echo(f"graph_hash:    {'identical' if result.graph_equal else 'different'}")
-    typer.echo(f"param_hash:    {'identical' if result.param_equal else 'different'}")
-    typer.echo(f"instance_hash: {'identical' if result.instance_equal else 'different'}")
+    typer.echo("== Compare Report ==")
+    typer.echo("")
+    typer.echo("Structure:")
+    typer.echo(f"  graph_hash {'identical' if result.graph_equal else 'different'}")
+    typer.echo("")
+    typer.echo("Parameters:")
+    typer.echo(f"  param_hash {'identical' if result.param_equal else 'differs'}")
+    if result.param_diffs:
+        for diff in result.param_diffs:
+            typer.echo(f"  - {diff.path}: {diff.left} → {diff.right}")
+    typer.echo("")
+    typer.echo("Instance:")
+    typer.echo(f"  instance_hash {'identical' if result.instance_equal else 'differs'}")
 
 
 @app.command("explain")
@@ -163,11 +173,15 @@ def _load_market_csv(path: Path) -> pd.DataFrame:
 
 
 @app.command("execute")
-def execute_cmd(path: Path, market: Annotated[Path, typer.Option("--market")]) -> None:
+def execute_cmd(
+    path: Path,
+    market: Annotated[Path, typer.Option("--market")],
+    trace_path: Annotated[Path, typer.Option("--trace-path")] = Path("trace.json"),
+) -> None:
     """Execute a strategy YAML file against sample market CSV data."""
 
     ir = load_strategy_file(path)
-    result = execute_strategy(ir, {"market": _load_market_csv(market)}, trace_path="trace.json")
+    result = execute_strategy(ir, {"market": _load_market_csv(market)}, trace_path=trace_path)
     if not result.ok:
         typer.echo(result.error or "execution failed", err=True)
         if result.validation_failures:
@@ -175,7 +189,7 @@ def execute_cmd(path: Path, market: Annotated[Path, typer.Option("--market")]) -
                 typer.echo(json.dumps(failure.model_dump(exclude_none=True), ensure_ascii=False), err=True)
             raise typer.Exit(1)
         raise typer.Exit(4)
-    _echo_json({"outputs": result.outputs, "trace": "trace.json"})
+    _echo_json({"outputs": result.outputs, "trace": str(trace_path)})
 
 
 if __name__ == "__main__":
