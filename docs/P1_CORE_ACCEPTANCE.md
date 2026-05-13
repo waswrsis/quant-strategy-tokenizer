@@ -1,7 +1,7 @@
 # P1-Core Acceptance Record
 
 Date: 2026-05-13
-Accepted implementation commit: pending final CI
+Accepted implementation commit: 644751e73ebe45a97022435281d9d497a2f84834
 
 ## Scope
 
@@ -96,15 +96,15 @@ Observed local result:
 
 ## CI
 
-GitHub Actions run: pending final CI
-Result: pending final CI
+GitHub Actions run: https://github.com/waswrsis/Quant-Strategy-Tokenizer/actions/runs/25824730331
+Result: PASS
 
 Jobs:
 
-- lint: pending final CI
-- typecheck: pending final CI
-- test (3.11): pending final CI
-- test (3.12): pending final CI
+- lint: PASS
+- typecheck: PASS
+- test (3.11): PASS
+- test (3.12): PASS
 
 ## Notes
 

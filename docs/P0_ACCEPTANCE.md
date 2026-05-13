@@ -122,7 +122,7 @@ After P1 starts, this file becomes **append-only**. The "Frozen Reference Values
 ## P1-Core Acceptance Candidate
 
 Date: 2026-05-13
-Commit: pending final CI
+Commit: 644751e73ebe45a97022435281d9d497a2f84834
 
 ### P0 Backward Compatibility
 
@@ -161,4 +161,6 @@ Commit: pending final CI
 - `qst promote strategies/examples_kdj_with_ema_filter.qst.yaml --to pretrade --output /tmp/examples_kdj_with_ema_filter.pretrade.qst.yaml`
 - `qst explain-trace /tmp/qst_p1_pretrade_trace.json --level human`
 
-Result: pending final CI
+Result: PASS
+
+CI: https://github.com/waswrsis/Quant-Strategy-Tokenizer/actions/runs/25824730331
