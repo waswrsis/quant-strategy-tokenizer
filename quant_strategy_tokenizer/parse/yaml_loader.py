@@ -39,7 +39,9 @@ def load_strategy(yaml_text: str) -> StrategyIR:
     raw = yaml.safe_load(yaml_text)
     if not isinstance(raw, dict):
         raise TypeError("Strategy YAML must contain a mapping")
-    return StrategyIR.model_validate(_normalize_external_refs(raw))
+    raw_ir = dict(raw)
+    raw_ir.pop("_envelope", None)
+    return StrategyIR.model_validate(_normalize_external_refs(raw_ir))
 
 
 def load_strategy_with_envelope(yaml_text: str) -> tuple[StrategyIR, DeploymentEnvelope]:

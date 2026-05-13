@@ -52,3 +52,28 @@ def missing_input_hint(candidates: list[str]) -> dict[str, Any]:
         "rationale": "candidates are upstream outputs with compatible or nearby type refs",
         "confidence_band": "medium",
     }
+
+
+def missing_risk_path_hint(target_node: str | None = None) -> dict[str, Any]:
+    """Suggest inserting a risk guard before order-intent planning."""
+
+    return {
+        "ops": [
+            {
+                "op": "InsertBefore",
+                "target_node": target_node or "plan.order_intent",
+                "insert_node": {
+                    "id": "risk_$AUTO",
+                    "token": "risk.position_cap",
+                    "v": 1,
+                    "params": {"max_position": 1, "symbol_key": "current_symbol"},
+                    "inputs": {
+                        "decision": "<upstream decision>",
+                        "state": "$externals.state",
+                    },
+                },
+                "rationale": "pretrade profile requires a risk.* ancestor before plan.order_intent",
+            }
+        ],
+        "confidence_band": "medium",
+    }

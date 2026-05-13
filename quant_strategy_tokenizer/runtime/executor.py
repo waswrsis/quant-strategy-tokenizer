@@ -16,6 +16,7 @@ from quant_strategy_tokenizer.core.output import (
     summarize_value,
 )
 from quant_strategy_tokenizer.ir.canonicalize import canonicalize
+from quant_strategy_tokenizer.ir.envelope import ProfileLiteral
 from quant_strategy_tokenizer.ir.hashing import compute_hashes
 from quant_strategy_tokenizer.ir.model import StrategyIR
 from quant_strategy_tokenizer.ir.validate import ValidationFailure, validate
@@ -117,11 +118,12 @@ def execute_strategy(
     *,
     trace_path: str | Path | None = None,
     registry: Registry | None = None,
+    profile: ProfileLiteral = "research",
 ) -> ExecutionResult:
     """Canonicalize, validate, and execute a Strategy IR."""
 
     canonical = canonicalize(ir)
-    validation = validate(canonical)
+    validation = validate(canonical, profile=profile)
     hashes = compute_hashes(canonical)
     trace = _empty_trace(canonical, hashes.instance_hash)
     if not validation.ok:

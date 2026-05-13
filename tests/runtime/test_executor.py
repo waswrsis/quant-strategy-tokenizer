@@ -45,7 +45,7 @@ def test_unresolved_graph_ref_fails_fast(monkeypatch: pytest.MonkeyPatch) -> Non
     canonical.graph[0].inputs["series"] = "missing.value"
     market = load_sample_market(ROOT / "examples" / "sample_market_btc_15m.csv")
 
-    def validation_ok(_ir: object) -> ValidationResult:
+    def validation_ok(_ir: object, **_kwargs: object) -> ValidationResult:
         return ValidationResult()
 
     monkeypatch.setattr(executor, "validate", validation_ok)

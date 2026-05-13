@@ -1,6 +1,15 @@
-"""Agent-facing P0 API."""
+"""Agent-facing API."""
 
-from .api import execute, explain_ir, recipes, validate, vocabulary
+from .api import execute, explain_ir, explain_trace, promote, recipes, validate, vocabulary
 from .discover import discover
 
-__all__ = ["discover", "execute", "explain_ir", "recipes", "validate", "vocabulary"]
+__all__ = [
+    "discover",
+    "execute",
+    "explain_ir",
+    "explain_trace",
+    "promote",
+    "recipes",
+    "validate",
+    "vocabulary",
+]

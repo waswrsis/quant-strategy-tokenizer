@@ -8,18 +8,26 @@ from typing import Annotated, Any
 
 import pandas as pd
 import typer
+import yaml
 
+from quant_strategy_tokenizer.agent.promote import promote as promote_strategy
 from quant_strategy_tokenizer.core.output import jsonable_value
 from quant_strategy_tokenizer.detokenize.explain_emitter import explain_ir as explain_text
+from quant_strategy_tokenizer.detokenize.trace_explainer import explain_trace as explain_trace_text
 from quant_strategy_tokenizer.ir.canonicalize import canonicalize as canonicalize_ir
 from quant_strategy_tokenizer.ir.compare import compare_ir
+from quant_strategy_tokenizer.ir.envelope import ProfileLiteral
 from quant_strategy_tokenizer.ir.hashing import compute_hashes
 from quant_strategy_tokenizer.ir.serialize import to_json
 from quant_strategy_tokenizer.ir.validate import validate as validate_ir
-from quant_strategy_tokenizer.parse.yaml_loader import load_strategy_file
+from quant_strategy_tokenizer.parse.yaml_loader import (
+    load_strategy_file,
+    load_strategy_file_with_envelope,
+)
 from quant_strategy_tokenizer.recipes.compiler import compile_recipe
 from quant_strategy_tokenizer.recipes.registry import get_recipe_registry
 from quant_strategy_tokenizer.runtime.executor import execute_strategy
+from quant_strategy_tokenizer.runtime.trace import Trace
 from quant_strategy_tokenizer.tokens._contract_runner import run_contract
 from quant_strategy_tokenizer.tokens.registry import get_registry
 
@@ -124,7 +132,8 @@ def vocabulary(check: bool = False, markdown: bool = False) -> None:
 def validate_cmd(path: Path) -> None:
     """Validate a strategy YAML file."""
 
-    result = validate_ir(load_strategy_file(path))
+    ir, envelope = load_strategy_file_with_envelope(path)
+    result = validate_ir(ir, profile=envelope.profile)
     if result.ok:
         typer.echo("valid")
         return
@@ -196,8 +205,22 @@ def execute_cmd(
 ) -> None:
     """Execute a strategy YAML file against sample market CSV data."""
 
-    ir = load_strategy_file(path)
-    result = execute_strategy(ir, {"market": _load_market_csv(market)}, trace_path=trace_path)
+    ir, envelope = load_strategy_file_with_envelope(path)
+    result = execute_strategy(
+        ir,
+        {
+            "market": _load_market_csv(market),
+            "state": {
+                "current_symbol": 1.0,
+                "current_notional": 0.0,
+                "elapsed": 0.0,
+                "cooldown_elapsed": 0.0,
+            },
+            "sizing": 1.0,
+        },
+        trace_path=trace_path,
+        profile=envelope.profile,
+    )
     if not result.ok:
         typer.echo(result.error or "execution failed", err=True)
         if result.validation_failures:
@@ -206,6 +229,54 @@ def execute_cmd(
             raise typer.Exit(1)
         raise typer.Exit(4)
     _echo_json({"outputs": result.outputs, "trace": str(trace_path)})
+
+
+def _promoted_path(path: Path, profile: str) -> Path:
+    name = path.name
+    if name.endswith(".qst.yaml"):
+        return path.with_name(name.removesuffix(".qst.yaml") + f".{profile}.qst.yaml")
+    return path.with_name(path.stem + f".{profile}" + path.suffix)
+
+
+@app.command("promote")
+def promote_cmd(
+    path: Path,
+    to_profile: Annotated[ProfileLiteral, typer.Option("--to")],
+    approved_by: Annotated[str | None, typer.Option("--approved-by")] = None,
+    output: Annotated[Path | None, typer.Option("--output")] = None,
+) -> None:
+    """Promote a strategy deployment envelope to a target profile."""
+
+    ir, envelope = load_strategy_file_with_envelope(path)
+    result = promote_strategy(ir, envelope, to_profile, approved_by=approved_by)
+    if not result.ok:
+        typer.echo("promotion_failed", err=True)
+        for failure in result.new_validation_failures:
+            typer.echo(json.dumps(failure.model_dump(exclude_none=True), ensure_ascii=False), err=True)
+        raise typer.Exit(1)
+
+    assert result.new_envelope is not None
+    raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(raw, dict):
+        raise TypeError("Strategy YAML must contain a mapping")
+    raw["_envelope"] = result.new_envelope.model_dump(mode="json", exclude_none=True)
+    target = output or _promoted_path(path, to_profile)
+    target.write_text(yaml.safe_dump(raw, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    _echo_json({"output": str(target), "diff": result.diff_from_previous})
+
+
+@app.command("explain-trace")
+def explain_trace_cmd(
+    trace_path: Path,
+    level: Annotated[str, typer.Option("--level")] = "human",
+) -> None:
+    """Explain a trace JSON file."""
+
+    if level not in {"human", "agent", "raw"}:
+        typer.echo(f"unsupported level: {level}", err=True)
+        raise typer.Exit(2)
+    trace = Trace.model_validate_json(trace_path.read_text(encoding="utf-8"))
+    typer.echo(explain_trace_text(trace, level=level))  # type: ignore[arg-type]
 
 
 if __name__ == "__main__":

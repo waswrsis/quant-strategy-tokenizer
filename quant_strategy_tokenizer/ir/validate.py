@@ -9,9 +9,11 @@ from pydantic import BaseModel, Field
 
 from quant_strategy_tokenizer.core.errors import ErrorKind
 from quant_strategy_tokenizer.ir.canonicalize import _contains_refs
+from quant_strategy_tokenizer.ir.envelope import ProfileLiteral
 from quant_strategy_tokenizer.ir.model import CANONICAL_VERSION, GraphNode, StrategyIR
 from quant_strategy_tokenizer.ir.repair import (
     missing_input_hint,
+    missing_risk_path_hint,
     missing_unknown_handling_hint,
     type_mismatch_hint,
 )
@@ -26,6 +28,7 @@ class ValidationFailure(BaseModel):
     kind: str
     message: str
     node_id: str | None = None
+    severity: str | None = None
     repair_hint: dict[str, Any] | None = None
     details: dict[str, Any] = Field(default_factory=dict)
 
@@ -49,9 +52,19 @@ def _node_refs(value: Any) -> list[str]:
         for item in value:
             refs.extend(_node_refs(item))
     elif isinstance(value, dict):
+        if value.get("kind") in {"accept", "reject", "block", "abstain", "unknown", "error"}:
+            return refs
         for item in value.values():
             refs.extend(_node_refs(item))
     return refs
+
+
+def _node_ref_ids(value: Any) -> list[str]:
+    refs = _node_refs(value)
+    ids: list[str] = []
+    for ref in refs:
+        ids.append(ref.split(".", 1)[0])
+    return ids
 
 
 def _normalize_single_ref(ref: str, output_types: dict[str, str]) -> str:
@@ -358,12 +371,88 @@ def check_unknown_handling_declared(ir: StrategyIR) -> list[ValidationFailure]:
     return failures
 
 
+def _collect_ancestors(node_id: str, ir: StrategyIR) -> set[str]:
+    visited: set[str] = set()
+    queue = [node_id]
+    deps = {node.id: _node_ref_ids(node.inputs) for node in ir.graph}
+    while queue:
+        current = queue.pop(0)
+        for upstream in deps.get(current, []):
+            if upstream not in visited:
+                visited.add(upstream)
+                queue.append(upstream)
+    return visited
+
+
+def check_profile_consistency(ir: StrategyIR, profile: ProfileLiteral) -> list[ValidationFailure]:
+    failures: list[ValidationFailure] = []
+    if profile in {"pretrade", "production_guarded"}:
+        for node in ir.graph:
+            if node.token == "decision.reduce" and node.params.get("unknown_handling") == "treat_as_accept":
+                failures.append(
+                    ValidationFailure(
+                        kind=ErrorKind.profile_violation.value,
+                        message=(
+                            f"decision.reduce at node {node.id!r} cannot use "
+                            f"unknown_handling='treat_as_accept' in {profile} profile"
+                        ),
+                        node_id=node.id,
+                        severity="error",
+                    )
+                )
+    return failures
+
+
+def check_risk_path(ir: StrategyIR, profile: ProfileLiteral) -> list[ValidationFailure]:
+    if profile not in {"pretrade", "production_guarded"}:
+        return []
+
+    failures: list[ValidationFailure] = []
+    nodes_by_id = {node.id: node for node in ir.graph}
+    order_nodes = [node for node in ir.graph if node.token == "plan.order_intent"]
+    if not order_nodes:
+        plan_node = next((node for node in ir.graph if node.token.startswith("plan.")), None)
+        failures.append(
+            ValidationFailure(
+                kind=ErrorKind.missing_risk_path.value,
+                message=f"{profile} profile requires plan.order_intent with a risk.* ancestor",
+                node_id=plan_node.id if plan_node is not None else None,
+                severity="error",
+                repair_hint=missing_risk_path_hint(plan_node.id if plan_node is not None else None),
+            )
+        )
+        return failures
+
+    for node in order_nodes:
+        ancestors = _collect_ancestors(node.id, ir)
+        risk_in_path = any(
+            nodes_by_id[ancestor].token.startswith("risk.")
+            for ancestor in ancestors
+            if ancestor in nodes_by_id
+        )
+        if not risk_in_path:
+            failures.append(
+                ValidationFailure(
+                    kind=ErrorKind.missing_risk_path.value,
+                    message=(
+                        f"plan.order_intent at {node.id!r} has no risk.* "
+                        f"ancestor in {profile} profile"
+                    ),
+                    node_id=node.id,
+                    severity="error",
+                    repair_hint=missing_risk_path_hint(node.id),
+                )
+            )
+    return failures
+
+
 def validate(
     ir: StrategyIR,
     registry: Registry | None = None,
     recipe_registry: RecipeRegistry | None = None,
+    profile: ProfileLiteral = "research",
 ) -> ValidationResult:
-    """Run all P0 validator checks."""
+    """Run validator checks for a Strategy IR under a profile."""
 
     token_registry = registry or get_registry()
     recipes = recipe_registry or get_recipe_registry()
@@ -378,4 +467,6 @@ def validate(
     failures.extend(check_inputs_exist(ir, token_registry, recipes))
     failures.extend(check_basic_types(ir, token_registry, recipes))
     failures.extend(check_unknown_handling_declared(ir))
+    failures.extend(check_profile_consistency(ir, profile))
+    failures.extend(check_risk_path(ir, profile))
     return ValidationResult(failures=failures)
