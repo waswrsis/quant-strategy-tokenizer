@@ -7,6 +7,8 @@ from typing import Any
 
 import yaml
 
+from quant_strategy_tokenizer.ir.envelope import DeploymentEnvelope
+from quant_strategy_tokenizer.ir.hashing import compute_hashes
 from quant_strategy_tokenizer.ir.model import StrategyIR
 
 
@@ -40,7 +42,31 @@ def load_strategy(yaml_text: str) -> StrategyIR:
     return StrategyIR.model_validate(_normalize_external_refs(raw))
 
 
+def load_strategy_with_envelope(yaml_text: str) -> tuple[StrategyIR, DeploymentEnvelope]:
+    """Load Strategy Content IR and a DeploymentEnvelope from YAML text."""
+
+    raw = yaml.safe_load(yaml_text)
+    if not isinstance(raw, dict):
+        raise TypeError("Strategy YAML must contain a mapping")
+    raw_ir = dict(raw)
+    raw_envelope = raw_ir.pop("_envelope", {}) or {}
+    if not isinstance(raw_envelope, dict):
+        raise TypeError("_envelope must contain a mapping")
+    ir = StrategyIR.model_validate(_normalize_external_refs(raw_ir))
+    instance_hash = compute_hashes(ir).instance_hash
+    envelope = DeploymentEnvelope.model_validate(
+        {"strategy_instance_hash": instance_hash, **raw_envelope}
+    )
+    return ir, envelope
+
+
 def load_strategy_file(path: str | Path) -> StrategyIR:
     """Load a Strategy IR file from disk."""
 
     return load_strategy(Path(path).read_text(encoding="utf-8"))
+
+
+def load_strategy_file_with_envelope(path: str | Path) -> tuple[StrategyIR, DeploymentEnvelope]:
+    """Load a Strategy IR file and DeploymentEnvelope from disk."""
+
+    return load_strategy_with_envelope(Path(path).read_text(encoding="utf-8"))

@@ -1,4 +1,4 @@
-"""P0 Decision discriminated union."""
+"""Decision discriminated union."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ class Accept(BaseModel):
 
     kind: Literal["accept"] = "accept"
     reason: str
-    evidence: dict[str, Any] = {}
+    evidence: dict[str, Any] = Field(default_factory=dict)
     source_node: str | None = None
 
 
@@ -21,7 +21,25 @@ class Reject(BaseModel):
 
     kind: Literal["reject"] = "reject"
     reason: str
-    evidence: dict[str, Any] = {}
+    evidence: dict[str, Any] = Field(default_factory=dict)
+    source_node: str | None = None
+
+
+class Block(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    kind: Literal["block"] = "block"
+    reason: str
+    severity: Literal["warning", "critical", "fatal"]
+    evidence: dict[str, Any] = Field(default_factory=dict)
+    source_node: str | None = None
+
+
+class Abstain(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    kind: Literal["abstain"] = "abstain"
+    reason: str
     source_node: str | None = None
 
 
@@ -30,7 +48,8 @@ class Unknown(BaseModel):
 
     kind: Literal["unknown"] = "unknown"
     missing_info_kind: Literal["data_unavailable", "warmup", "dependency_unknown"] = "dependency_unknown"
-    evidence: dict[str, Any] = {}
+    reason: str = ""
+    evidence: dict[str, Any] = Field(default_factory=dict)
     source_node: str | None = None
 
 
@@ -43,12 +62,15 @@ class ErrorDecision(BaseModel):
     source_node: str | None = None
 
 
-Decision = Annotated[Accept | Reject | Unknown | ErrorDecision, Field(discriminator="kind")]
+Decision = Annotated[
+    Accept | Reject | Block | Abstain | Unknown | ErrorDecision,
+    Field(discriminator="kind"),
+]
 decision_adapter: TypeAdapter[Decision] = TypeAdapter(Decision)
 
 
 def parse_decision(value: object) -> Decision:
-    """Validate a Python object as a P0 Decision."""
+    """Validate a Python object as a Decision."""
 
     return decision_adapter.validate_python(value)
 
