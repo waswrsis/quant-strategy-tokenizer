@@ -59,3 +59,55 @@ def compare_gt(a: pd.Series, b: pd.Series) -> TokenOutput:
 )
 def compare_le(a: pd.Series, b: pd.Series) -> TokenOutput:
     return TokenOutput(values={"value": float_series(a) <= float_series(b)})
+
+
+@token(
+    id="compare.ge",
+    layer="computation",
+    category="compare",
+    inputs={"a": "TimeSeries[float]", "b": "TimeSeries[float]"},
+    outputs={"value": "TimeSeries[bool]"},
+    contracts=[
+        {
+            "name": "basic_ge",
+            "inputs": {"a": [1.0, 5.0, 3.0], "b": [4.0, 2.0, 3.0]},
+            "params": {},
+            "expected_output": {"value": [False, True, True]},
+        },
+        {
+            "name": "nan_returns_false",
+            "inputs": {"a": [None], "b": [0.5]},
+            "params": {},
+            "expected_output": {"value": [False]},
+        },
+    ],
+    description="Elementwise greater-than-or-equal comparison.",
+)
+def compare_ge(a: pd.Series, b: pd.Series) -> TokenOutput:
+    return TokenOutput(values={"value": float_series(a) >= float_series(b)})
+
+
+@token(
+    id="compare.lt",
+    layer="computation",
+    category="compare",
+    inputs={"a": "TimeSeries[float]", "b": "TimeSeries[float]"},
+    outputs={"value": "TimeSeries[bool]"},
+    contracts=[
+        {
+            "name": "basic_lt",
+            "inputs": {"a": [1.0, 5.0, 3.0], "b": [4.0, 2.0, 3.0]},
+            "params": {},
+            "expected_output": {"value": [True, False, False]},
+        },
+        {
+            "name": "nan_returns_false",
+            "inputs": {"a": [1.0, None], "b": [0.5, 0.5]},
+            "params": {},
+            "expected_output": {"value": [False, False]},
+        },
+    ],
+    description="Elementwise less-than comparison.",
+)
+def compare_lt(a: pd.Series, b: pd.Series) -> TokenOutput:
+    return TokenOutput(values={"value": float_series(a) < float_series(b)})

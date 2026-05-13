@@ -9,7 +9,7 @@ from quant_strategy_tokenizer.tokens.registry import get_registry
 
 
 def discover() -> dict[str, object]:
-    """Return P0 capability discovery data."""
+    """Return capability discovery data."""
 
     registry = get_registry()
     recipe_registry = get_recipe_registry()
@@ -23,7 +23,7 @@ def discover() -> dict[str, object]:
             "recipes": len(recipe_registry.list_recipes()),
             "reference_strategies": 1,
         },
-        "supported_profiles": ["research"],
+        "supported_profiles": ["research", "paper", "pretrade", "production_guarded"],
         "supported_input_kinds": ["yaml", "json"],
         "supported_detokenize_levels": ["L1"],
         "schemas_url": "/docs/JSON_SCHEMAS/",

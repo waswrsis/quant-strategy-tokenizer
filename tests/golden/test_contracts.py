@@ -30,7 +30,7 @@ def _generate_items() -> list[object]:
 
 def test_registry_not_empty() -> None:
     registry = get_registry()
-    assert len(registry.list_tokens()) == 17
+    assert len(registry.list_tokens()) == 25
     assert registry.is_frozen
 
 

@@ -55,6 +55,7 @@ P1 PRs **must not modify** the following. Any PR touching them is a breaking cha
 - All 4 P0 recipe `(id, version)` pairs remain valid
 - P1 may **add** new versions (e.g. `decision.reduce/v2`) but must not modify `v1`
 - P1 may **add** new tokens / recipes but must not rename or remove P0 entries
+- P1 may add new token definitions in existing P0 token modules when the existing P0 token code paths and behavior contracts remain unchanged
 
 ### Schema Freeze
 
@@ -82,8 +83,9 @@ P1 PRs **must not modify** the following. Any PR touching them is a breaking cha
 
 Before merging any P1 PR, author confirms:
 
-- [ ] No file in `tokens/computation/{data,window,smooth,math,compare,logic,norm}.py` modified
-- [ ] No file in `tokens/infrastructure/{decision,plan}.py` modified (additions OK in new files)
+- [ ] No existing P0 token behavior in `tokens/computation/{data,window,smooth,math,compare,logic,norm}.py` modified
+- [ ] No existing P0 token behavior in `tokens/infrastructure/{decision,plan}.py` modified
+- [ ] P1 token additions in existing modules are append-only and have separate contracts
 - [ ] No JSON in `recipes/indicators/{ewm,rma,kdj}.json` modified
 - [ ] No JSON in `recipes/events/cross_above.json` modified
 - [ ] `ir/canonicalize.py`, `ir/hashing.py` not modified

@@ -1,0 +1,40 @@
+{
+  "recipe": "gate.elapsed_threshold",
+  "version": 1,
+  "params_schema": {
+    "field": {"type": "string", "default": "elapsed"},
+    "threshold": {"type": "number", "default": 0},
+    "default": {"type": "number", "default": 0}
+  },
+  "inputs": {
+    "state": "State"
+  },
+  "outputs": {
+    "value": "elapsed_ge.value"
+  },
+  "graph": [
+    {
+      "id": "elapsed",
+      "token": "state.read_field",
+      "v": 1,
+      "params": {
+        "field": "$params.field",
+        "default": "$params.default"
+      },
+      "inputs": {
+        "state": "$inputs.state"
+      }
+    },
+    {
+      "id": "elapsed_ge",
+      "token": "compare.ge",
+      "v": 1,
+      "params": {},
+      "inputs": {
+        "a": "elapsed.value",
+        "b": "$params.threshold"
+      }
+    }
+  ],
+  "description": "Gate that becomes true when a state elapsed field meets a threshold."
+}

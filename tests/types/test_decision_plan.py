@@ -5,7 +5,7 @@ import pandas as pd
 from quant_strategy_tokenizer.core.output import TokenOutput, jsonable_value, normalize_token_output
 from quant_strategy_tokenizer.types.decision import Abstain, Accept, Block, Reject, parse_decision
 from quant_strategy_tokenizer.types.frame import validate_frame
-from quant_strategy_tokenizer.types.plan import NoopPlan, parse_plan
+from quant_strategy_tokenizer.types.plan import NoopPlan, OrderIntentPlan, parse_plan
 from quant_strategy_tokenizer.types.series import validate_timeseries
 
 
@@ -31,6 +31,22 @@ def test_block_and_abstain_decision_parse() -> None:
 
     abstain = parse_decision({"kind": "abstain", "reason": "rule_not_applicable"})
     assert isinstance(abstain, Abstain)
+
+
+def test_order_intent_plan_parse() -> None:
+    plan = parse_plan(
+        {
+            "kind": "order_intent",
+            "decision": {"kind": "accept", "reason": "entry"},
+            "side": "long",
+            "sizing": 1.25,
+        }
+    )
+
+    assert isinstance(plan, OrderIntentPlan)
+    assert isinstance(plan.decision, Accept)
+    assert plan.side == "long"
+    assert plan.sizing == 1.25
 
 
 def test_validate_series_frame_and_output_jsonable() -> None:

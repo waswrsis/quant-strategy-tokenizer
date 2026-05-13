@@ -111,6 +111,8 @@ def _load_builtin_tokens() -> None:
     from quant_strategy_tokenizer.tokens.infrastructure import (
         decision,  # noqa: F401
         plan,  # noqa: F401
+        risk,  # noqa: F401
+        state,  # noqa: F401
     )
 
     _BUILTINS_LOADED = True

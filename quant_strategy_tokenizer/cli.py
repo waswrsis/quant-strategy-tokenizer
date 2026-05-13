@@ -46,6 +46,22 @@ def _compile_smoke_recipe(recipe_id: str) -> None:
             {},
             {"fast": "$externals.fast", "slow": "$externals.slow"},
         ),
+        "event.threshold_above": (
+            {},
+            {"series": "$externals.series", "threshold": "$externals.threshold"},
+        ),
+        "event.threshold_below": (
+            {},
+            {"series": "$externals.series", "threshold": "$externals.threshold"},
+        ),
+        "gate.elapsed_threshold": (
+            {"field": "elapsed", "threshold": 10, "default": 0},
+            {"state": "$externals.state"},
+        ),
+        "gate.cooldown": (
+            {"field": "cooldown_elapsed", "threshold": 10, "default": 0},
+            {"state": "$externals.state"},
+        ),
     }
     params, inputs = smoke[recipe_id]
     compile_recipe(
@@ -69,11 +85,11 @@ def vocabulary(check: bool = False, markdown: bool = False) -> None:
     recipes = recipe_registry.list_recipes()
 
     if check:
-        if len(tokens) != 17:
-            typer.echo(f"expected 17 tokens, got {len(tokens)}", err=True)
+        if len(tokens) != 25:
+            typer.echo(f"expected 25 tokens, got {len(tokens)}", err=True)
             raise typer.Exit(1)
-        if len(recipes) != 4:
-            typer.echo(f"expected 4 recipes, got {len(recipes)}", err=True)
+        if len(recipes) != 8:
+            typer.echo(f"expected 8 recipes, got {len(recipes)}", err=True)
             raise typer.Exit(1)
         for spec in tokens:
             for contract in spec.behavior_contract:
@@ -83,8 +99,8 @@ def vocabulary(check: bool = False, markdown: bool = False) -> None:
                     raise typer.Exit(1)
         for recipe in recipes:
             _compile_smoke_recipe(recipe.recipe)
-        typer.echo("17 tokens registered, all behavior_contracts pass")
-        typer.echo("4 recipes registered, all compile")
+        typer.echo("25 tokens registered, all behavior_contracts pass")
+        typer.echo("8 recipes registered, all compile")
         return
 
     if markdown:
