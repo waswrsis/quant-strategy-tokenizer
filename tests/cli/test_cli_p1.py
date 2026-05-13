@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -14,11 +15,16 @@ runner = CliRunner()
 def test_cli_promote_success_writes_pretrade_yaml(tmp_path: Path) -> None:
     strategy = tmp_path / "ready.qst.yaml"
     strategy.write_text(P1_PRETRADE_READY_YAML, encoding="utf-8")
-
-    result = runner.invoke(app, ["promote", str(strategy), "--to", "pretrade"])
-
     output = tmp_path / "ready.pretrade.qst.yaml"
+
+    result = runner.invoke(app, ["promote", str(strategy), "--to", "pretrade", "--output", str(output)])
+
     assert result.exit_code == 0
+    payload = json.loads(result.output)
+    assert payload["ok"] is True
+    assert payload["target_profile"] == "pretrade"
+    assert payload["validation_failures"] == []
+    assert payload["output"] == str(output)
     assert output.exists()
     assert "pretrade" in output.read_text(encoding="utf-8")
 
@@ -30,8 +36,23 @@ def test_cli_promote_failure_reports_risk_hint(tmp_path: Path) -> None:
     result = runner.invoke(app, ["promote", str(strategy), "--to", "pretrade"])
 
     assert result.exit_code == 1
-    assert "missing_risk_path" in result.output
+    payload = json.loads(result.output)
+    assert payload["ok"] is False
+    assert payload["validation_failures"][0]["kind"] == "missing_risk_path"
+    assert payload["validation_failures"][0]["repair_hint"]
     assert "risk.position_cap" in result.output
+
+
+def test_cli_validate_profile_override(tmp_path: Path) -> None:
+    strategy = tmp_path / "missing.qst.yaml"
+    strategy.write_text(P1_MISSING_RISK_PATH_YAML, encoding="utf-8")
+
+    research = runner.invoke(app, ["validate", str(strategy), "--profile", "research"])
+    pretrade = runner.invoke(app, ["validate", str(strategy), "--profile", "pretrade"])
+
+    assert research.exit_code == 0
+    assert pretrade.exit_code == 1
+    assert "missing_risk_path" in pretrade.output
 
 
 def test_cli_explain_trace_levels(tmp_path: Path) -> None:

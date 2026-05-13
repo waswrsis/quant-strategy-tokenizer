@@ -28,7 +28,9 @@ This metadata is not part of Strategy Content IR and does not change `graph_hash
 Use `qst promote`:
 
 ```bash
-qst promote strategies/examples_kdj_with_ema_filter.qst.yaml --to pretrade
+qst promote strategies/examples_kdj_with_ema_filter.qst.yaml \
+  --to pretrade \
+  --output /tmp/examples_kdj_with_ema_filter.pretrade.qst.yaml
 ```
 
 Before promoting a strategy that emits `plan.order_intent`, make sure the graph contains an upstream `risk.*` token. P1-core provides `risk.position_cap` and `risk.notional_cap`.

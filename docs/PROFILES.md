@@ -13,10 +13,12 @@ Profiles live in the YAML `_envelope` section. The envelope is parsed with the s
 
 ## Promotion
 
-`qst promote` changes only `_envelope.profile` and envelope metadata:
+`qst promote` validates the target profile and emits a stable JSON result. Add `--output` to write a promoted YAML file that changes only `_envelope.profile` and envelope metadata:
 
 ```bash
-qst promote strategies/examples_kdj_with_ema_filter.qst.yaml --to pretrade
+qst promote strategies/examples_kdj_with_ema_filter.qst.yaml \
+  --to pretrade \
+  --output /tmp/examples_kdj_with_ema_filter.pretrade.qst.yaml
 ```
 
 The Strategy Content IR is preserved. Therefore `graph_hash`, `param_hash`, and `instance_hash` remain unchanged across promotion.

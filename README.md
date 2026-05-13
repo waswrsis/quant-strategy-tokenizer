@@ -15,6 +15,21 @@ The implemented loop covers:
 - L1 explanation, trace explanation, agent API, and CLI
 - profile promotion from `research` to guarded profiles without changing content hashes
 
+## P1-core Status
+
+P0 frozen baseline:
+
+- 17 tokens
+- 4 recipes
+- Frozen hashes and vocabulary triples recorded in `docs/P0_ACCEPTANCE.md`
+
+Current P1-core state:
+
+- 25 tokens
+- 8 recipes
+- P1-core CLI/e2e/docs accepted
+- P1-extended not started
+
 Reference strategy:
 
 ```bash
@@ -25,9 +40,9 @@ python -m quant_strategy_tokenizer.cli execute strategies/kdj_cross_basic.qst.ya
 P1-core reference strategy:
 
 ```bash
-python -m quant_strategy_tokenizer.cli validate strategies/examples_kdj_with_ema_filter.qst.yaml
-python -m quant_strategy_tokenizer.cli promote strategies/examples_kdj_with_ema_filter.qst.yaml --to pretrade
-python -m quant_strategy_tokenizer.cli execute strategies/examples_kdj_with_ema_filter.pretrade.qst.yaml --market examples/sample_market_btc_15m.csv --trace-path /tmp/qst_p1_trace.json
+python -m quant_strategy_tokenizer.cli validate strategies/examples_kdj_with_ema_filter.qst.yaml --profile research
+python -m quant_strategy_tokenizer.cli promote strategies/examples_kdj_with_ema_filter.qst.yaml --to pretrade --output /tmp/examples_kdj_with_ema_filter.pretrade.qst.yaml
+python -m quant_strategy_tokenizer.cli execute /tmp/examples_kdj_with_ema_filter.pretrade.qst.yaml --market examples/sample_market_btc_15m.csv --profile pretrade --trace-path /tmp/qst_p1_trace.json
 python -m quant_strategy_tokenizer.cli explain-trace /tmp/qst_p1_trace.json --level human
 ```
 
@@ -70,20 +85,30 @@ Expected behavior:
 ## P1-Core Verification
 
 ```bash
-qst validate strategies/examples_kdj_with_ema_filter.qst.yaml
-qst promote strategies/examples_kdj_with_ema_filter.qst.yaml --to pretrade
-
-qst validate strategies/examples_kdj_with_ema_filter.pretrade.qst.yaml
-qst execute strategies/examples_kdj_with_ema_filter.pretrade.qst.yaml \
+qst validate strategies/examples_kdj_with_ema_filter.qst.yaml --profile research
+qst execute strategies/examples_kdj_with_ema_filter.qst.yaml \
   --market examples/sample_market_btc_15m.csv \
+  --profile research \
+  --trace-path /tmp/qst_p1_research_trace.json
+
+qst promote strategies/examples_kdj_with_ema_filter.qst.yaml \
+  --to pretrade \
+  --output /tmp/examples_kdj_with_ema_filter.pretrade.qst.yaml
+
+qst validate /tmp/examples_kdj_with_ema_filter.pretrade.qst.yaml --profile pretrade
+qst execute /tmp/examples_kdj_with_ema_filter.pretrade.qst.yaml \
+  --market examples/sample_market_btc_15m.csv \
+  --profile pretrade \
   --trace-path /tmp/qst_p1_trace.json
 
 qst explain-trace /tmp/qst_p1_trace.json --level human
+qst explain-trace /tmp/qst_p1_trace.json --level agent
+qst explain-trace /tmp/qst_p1_trace.json --level raw
 ```
 
 Expected behavior:
 
-- Promotion writes `_envelope.profile: pretrade`.
+- Promotion emits a stable JSON result and writes `_envelope.profile: pretrade` when `--output` is provided.
 - Promotion does not change the Strategy Content IR hashes.
 - Pretrade validation requires a `risk.*` ancestor before `plan.order_intent`.
 - Execution produces a trace containing `decision.reduce/v2`, `risk.position_cap`, and `plan.order_intent`.

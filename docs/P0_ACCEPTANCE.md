@@ -118,3 +118,47 @@ After P1 starts, this file becomes **append-only**. The "Frozen Reference Values
 1. A new section dated and labeled "v0.2 acceptance" (etc.)
 2. The original P0 section preserved verbatim
 3. An ADR documenting why backward compatibility is being broken
+
+## P1-Core Acceptance Candidate
+
+Date: 2026-05-13
+Commit: pending final CI
+
+### P0 Backward Compatibility
+
+- `tests/e2e/test_p0_p1_backward_compat.py`: PASS locally
+- P0 graph_hash / param_hash / instance_hash unchanged: PASS locally
+- P0 frozen token triples remain resolvable: PASS locally
+- P0 frozen recipe pairs remain resolvable: PASS locally
+
+### P1-Core Vocabulary
+
+- Total tokens: 25
+- Total recipes: 8
+- New P1-core tokens:
+  - `decision.reduce/v2`
+  - `decision.map_status`
+  - `risk.position_cap`
+  - `risk.notional_cap`
+  - `state.read_field`
+  - `plan.order_intent`
+  - `compare.ge`
+  - `compare.lt`
+- New P1-core recipes:
+  - `event.threshold_above`
+  - `event.threshold_below`
+  - `gate.elapsed_threshold`
+  - `gate.cooldown`
+
+### P1-Core Local Checks
+
+- `ruff check .`
+- `mypy quant_strategy_tokenizer tests`
+- `mypy --strict quant_strategy_tokenizer`
+- `python -m quant_strategy_tokenizer.lint.stateless quant_strategy_tokenizer`
+- `pytest --cov=quant_strategy_tokenizer --cov-fail-under=80`
+- `qst validate strategies/examples_kdj_with_ema_filter.qst.yaml --profile pretrade`
+- `qst promote strategies/examples_kdj_with_ema_filter.qst.yaml --to pretrade --output /tmp/examples_kdj_with_ema_filter.pretrade.qst.yaml`
+- `qst explain-trace /tmp/qst_p1_pretrade_trace.json --level human`
+
+Result: pending final CI

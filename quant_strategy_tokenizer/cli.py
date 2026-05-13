@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, cast
 
 import pandas as pd
 import typer
@@ -33,9 +33,44 @@ from quant_strategy_tokenizer.tokens.registry import get_registry
 
 app = typer.Typer(no_args_is_help=True)
 
+P0_TOKEN_TRIPLES: tuple[tuple[str, int, int], ...] = (
+    ("data.column", 1, 1),
+    ("data.shift", 1, 1),
+    ("window.max", 1, 1),
+    ("window.min", 1, 1),
+    ("smooth.linear_recursive", 1, 1),
+    ("math.add", 1, 1),
+    ("math.sub", 1, 1),
+    ("math.mul", 1, 1),
+    ("math.div", 1, 1),
+    ("math.linear_combination", 1, 1),
+    ("compare.gt", 1, 1),
+    ("compare.le", 1, 1),
+    ("logic.and", 1, 1),
+    ("norm.range_position", 1, 1),
+    ("decision.lift_bool", 1, 1),
+    ("decision.reduce", 1, 1),
+    ("plan.noop", 1, 1),
+)
+P0_RECIPE_PAIRS: tuple[tuple[str, int], ...] = (
+    ("indicator.ewm", 1),
+    ("indicator.rma", 1),
+    ("indicator.kdj", 1),
+    ("event.cross_above", 1),
+)
+PROFILE_VALUES = {"research", "paper", "pretrade", "production_guarded"}
+
 
 def _echo_json(value: Any) -> None:
     typer.echo(json.dumps(jsonable_value(value), ensure_ascii=False, indent=2, default=str))
+
+
+def _effective_profile(override: str | None, envelope_profile: ProfileLiteral) -> ProfileLiteral:
+    raw_profile = override or envelope_profile
+    if raw_profile not in PROFILE_VALUES:
+        typer.echo(f"unsupported profile: {raw_profile}", err=True)
+        raise typer.Exit(2)
+    return cast(ProfileLiteral, raw_profile)
 
 
 def _compile_smoke_recipe(recipe_id: str) -> None:
@@ -99,6 +134,17 @@ def vocabulary(check: bool = False, markdown: bool = False) -> None:
         if len(recipes) != 8:
             typer.echo(f"expected 8 recipes, got {len(recipes)}", err=True)
             raise typer.Exit(1)
+        for token_id, version, behavior_version in P0_TOKEN_TRIPLES:
+            spec = token_registry.get(token_id, version).spec
+            if spec.behavior_version != behavior_version:
+                typer.echo(
+                    f"P0 token drift: {token_id}/v{version} expected bv{behavior_version}, "
+                    f"got bv{spec.behavior_version}",
+                    err=True,
+                )
+                raise typer.Exit(1)
+        for recipe_id, version in P0_RECIPE_PAIRS:
+            recipe_registry.get(recipe_id, version)
         for spec in tokens:
             for contract in spec.behavior_contract:
                 result = run_contract(token_registry.get(spec.id, spec.version), contract)
@@ -107,6 +153,13 @@ def vocabulary(check: bool = False, markdown: bool = False) -> None:
                     raise typer.Exit(1)
         for recipe in recipes:
             _compile_smoke_recipe(recipe.recipe)
+        typer.echo("P0 frozen baseline:")
+        typer.echo("  tokens: 17")
+        typer.echo("  recipes: 4")
+        typer.echo("  status: preserved")
+        typer.echo("Current vocabulary:")
+        typer.echo("  tokens: 25")
+        typer.echo("  recipes: 8")
         typer.echo("25 tokens registered, all behavior_contracts pass")
         typer.echo("8 recipes registered, all compile")
         return
@@ -129,11 +182,14 @@ def vocabulary(check: bool = False, markdown: bool = False) -> None:
 
 
 @app.command("validate")
-def validate_cmd(path: Path) -> None:
+def validate_cmd(
+    path: Path,
+    profile: Annotated[str | None, typer.Option("--profile")] = None,
+) -> None:
     """Validate a strategy YAML file."""
 
     ir, envelope = load_strategy_file_with_envelope(path)
-    result = validate_ir(ir, profile=envelope.profile)
+    result = validate_ir(ir, profile=_effective_profile(profile, envelope.profile))
     if result.ok:
         typer.echo("valid")
         return
@@ -202,10 +258,12 @@ def execute_cmd(
     path: Path,
     market: Annotated[Path, typer.Option("--market")],
     trace_path: Annotated[Path, typer.Option("--trace-path")] = Path("trace.json"),
+    profile: Annotated[str | None, typer.Option("--profile")] = None,
 ) -> None:
     """Execute a strategy YAML file against sample market CSV data."""
 
     ir, envelope = load_strategy_file_with_envelope(path)
+    execution_profile = _effective_profile(profile, envelope.profile)
     result = execute_strategy(
         ir,
         {
@@ -219,7 +277,7 @@ def execute_cmd(
             "sizing": 1.0,
         },
         trace_path=trace_path,
-        profile=envelope.profile,
+        profile=execution_profile,
     )
     if not result.ok:
         typer.echo(result.error or "execution failed", err=True)
@@ -229,14 +287,6 @@ def execute_cmd(
             raise typer.Exit(1)
         raise typer.Exit(4)
     _echo_json({"outputs": result.outputs, "trace": str(trace_path)})
-
-
-def _promoted_path(path: Path, profile: str) -> Path:
-    name = path.name
-    if name.endswith(".qst.yaml"):
-        return path.with_name(name.removesuffix(".qst.yaml") + f".{profile}.qst.yaml")
-    return path.with_name(path.stem + f".{profile}" + path.suffix)
-
 
 @app.command("promote")
 def promote_cmd(
@@ -250,19 +300,38 @@ def promote_cmd(
     ir, envelope = load_strategy_file_with_envelope(path)
     result = promote_strategy(ir, envelope, to_profile, approved_by=approved_by)
     if not result.ok:
-        typer.echo("promotion_failed", err=True)
-        for failure in result.new_validation_failures:
-            typer.echo(json.dumps(failure.model_dump(exclude_none=True), ensure_ascii=False), err=True)
+        _echo_json(
+            {
+                "ok": False,
+                "target_profile": to_profile,
+                "strategy_instance_hash": envelope.strategy_instance_hash,
+                "new_envelope": None,
+                "validation_failures": [
+                    failure.model_dump(mode="json", exclude_none=True)
+                    for failure in result.new_validation_failures
+                ],
+            }
+        )
         raise typer.Exit(1)
 
     assert result.new_envelope is not None
-    raw = yaml.safe_load(path.read_text(encoding="utf-8"))
-    if not isinstance(raw, dict):
-        raise TypeError("Strategy YAML must contain a mapping")
-    raw["_envelope"] = result.new_envelope.model_dump(mode="json", exclude_none=True)
-    target = output or _promoted_path(path, to_profile)
-    target.write_text(yaml.safe_dump(raw, sort_keys=False, allow_unicode=True), encoding="utf-8")
-    _echo_json({"output": str(target), "diff": result.diff_from_previous})
+    if output is not None:
+        raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+        if not isinstance(raw, dict):
+            raise TypeError("Strategy YAML must contain a mapping")
+        raw["_envelope"] = result.new_envelope.model_dump(mode="json", exclude_none=True)
+        output.write_text(yaml.safe_dump(raw, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    payload = {
+        "ok": True,
+        "target_profile": to_profile,
+        "strategy_instance_hash": result.new_envelope.strategy_instance_hash,
+        "new_envelope": result.new_envelope.model_dump(mode="json", exclude_none=True),
+        "validation_failures": [],
+        "diff": result.diff_from_previous,
+    }
+    if output is not None:
+        payload["output"] = str(output)
+    _echo_json(payload)
 
 
 @app.command("explain-trace")

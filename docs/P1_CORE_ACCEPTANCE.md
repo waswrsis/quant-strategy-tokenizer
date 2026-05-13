@@ -1,11 +1,11 @@
 # P1-Core Acceptance Record
 
 Date: 2026-05-13
-Accepted implementation commit: c1e5988f5c6324eda8a3a7b99a6a3cdb486f0e18
+Accepted implementation commit: pending final CI
 
 ## Scope
 
-P1-core is implemented. P1-extended is not started.
+P1-core library layer is implemented. P1-core CLI/e2e/docs are accepted. P1-extended is not started.
 
 Included:
 
@@ -69,17 +69,21 @@ P1-core additions:
 ```bash
 ruff check .
 mypy quant_strategy_tokenizer tests
+mypy --strict quant_strategy_tokenizer
 python -m quant_strategy_tokenizer.lint.stateless quant_strategy_tokenizer
 pytest --cov=quant_strategy_tokenizer --cov-fail-under=80
 
 qst vocabulary --check
 qst validate strategies/kdj_cross_basic.qst.yaml
 qst hash strategies/kdj_cross_basic.qst.yaml
-qst validate strategies/examples_kdj_with_ema_filter.qst.yaml
-qst promote strategies/examples_kdj_with_ema_filter.qst.yaml --to pretrade
-qst validate strategies/examples_kdj_with_ema_filter.pretrade.qst.yaml
-qst execute strategies/examples_kdj_with_ema_filter.pretrade.qst.yaml --market examples/sample_market_btc_15m.csv --trace-path /tmp/qst_p1_trace.json
+qst validate strategies/examples_kdj_with_ema_filter.qst.yaml --profile research
+qst execute strategies/examples_kdj_with_ema_filter.qst.yaml --market examples/sample_market_btc_15m.csv --profile research --trace-path /tmp/qst_p1_research_trace.json
+qst promote strategies/examples_kdj_with_ema_filter.qst.yaml --to pretrade --output /tmp/examples_kdj_with_ema_filter.pretrade.qst.yaml
+qst validate /tmp/examples_kdj_with_ema_filter.pretrade.qst.yaml --profile pretrade
+qst execute /tmp/examples_kdj_with_ema_filter.pretrade.qst.yaml --market examples/sample_market_btc_15m.csv --profile pretrade --trace-path /tmp/qst_p1_trace.json
 qst explain-trace /tmp/qst_p1_trace.json --level human
+qst explain-trace /tmp/qst_p1_trace.json --level agent
+qst explain-trace /tmp/qst_p1_trace.json --level raw
 ```
 
 Result: PASS
@@ -87,20 +91,20 @@ Result: PASS
 Observed local result:
 
 - `python -m pytest --cov=quant_strategy_tokenizer --cov-fail-under=80`
-- 105 passed
-- Coverage: 85.01%
+- 108 passed
+- Coverage: 85.17%
 
 ## CI
 
-GitHub Actions run: https://github.com/waswrsis/Quant-Strategy-Tokenizer/actions/runs/25823965714
-Result: PASS
+GitHub Actions run: pending final CI
+Result: pending final CI
 
 Jobs:
 
-- lint: PASS
-- typecheck: PASS
-- test (3.11): PASS
-- test (3.12): PASS
+- lint: pending final CI
+- typecheck: pending final CI
+- test (3.11): pending final CI
+- test (3.12): pending final CI
 
 ## Notes
 
