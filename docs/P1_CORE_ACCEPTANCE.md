@@ -1,7 +1,7 @@
 # P1-Core Acceptance Record
 
 Date: 2026-05-13
-Commit: pending final CI
+Accepted implementation commit: c1e5988f5c6324eda8a3a7b99a6a3cdb486f0e18
 
 ## Scope
 
@@ -36,7 +36,7 @@ Required compatibility gate:
 pytest tests/e2e/test_p0_p1_backward_compat.py
 ```
 
-Result: pending final CI
+Result: PASS
 
 ## P1-Core Reference Hashes
 
@@ -82,12 +82,25 @@ qst execute strategies/examples_kdj_with_ema_filter.pretrade.qst.yaml --market e
 qst explain-trace /tmp/qst_p1_trace.json --level human
 ```
 
-Result: pending final CI
+Result: PASS
+
+Observed local result:
+
+- `python -m pytest --cov=quant_strategy_tokenizer --cov-fail-under=80`
+- 105 passed
+- Coverage: 85.01%
 
 ## CI
 
-GitHub Actions run: pending final CI
-Result: pending final CI
+GitHub Actions run: https://github.com/waswrsis/Quant-Strategy-Tokenizer/actions/runs/25823965714
+Result: PASS
+
+Jobs:
+
+- lint: PASS
+- typecheck: PASS
+- test (3.11): PASS
+- test (3.12): PASS
 
 ## Notes
 
