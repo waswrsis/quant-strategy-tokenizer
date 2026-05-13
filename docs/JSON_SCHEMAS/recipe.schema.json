@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qst.local/schema/recipe.schema.json",
+  "title": "QST RecipeSpec",
+  "type": "object",
+  "required": ["recipe", "version", "inputs", "outputs", "graph"],
+  "properties": {
+    "recipe": {"type": "string"},
+    "version": {"type": "integer"},
+    "params_schema": {"type": "object"},
+    "inputs": {"type": "object"},
+    "outputs": {"type": "object"},
+    "graph": {"type": "array"}
+  },
+  "additionalProperties": false
+}

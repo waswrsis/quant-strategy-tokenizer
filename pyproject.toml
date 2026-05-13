@@ -1,0 +1,72 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "quant-strategy-tokenizer"
+version = "0.1.0"
+description = "Decompose quant trading strategies into reusable computation tokens"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [{name = "Austin"}]
+dependencies = [
+    "pydantic>=2.5",
+    "pyyaml>=6.0",
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "typer>=0.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "hypothesis>=6.90",
+    "mypy>=1.7",
+    "ruff>=0.1",
+]
+
+[project.scripts]
+qst = "quant_strategy_tokenizer.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["quant_strategy_tokenizer"]
+
+[tool.hatch.build]
+include = [
+    "quant_strategy_tokenizer/**/*.py",
+    "quant_strategy_tokenizer/**/*.json",
+    "quant_strategy_tokenizer/py.typed",
+]
+
+[tool.mypy]
+strict = true
+python_version = "3.11"
+files = ["quant_strategy_tokenizer", "tests"]
+ignore_missing_imports = true
+warn_unused_ignores = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "B", "A", "S", "PYI", "RUF", "UP"]
+ignore = ["A002", "E501", "S101", "S105", "S603", "S607"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "golden: token behavior_contract tests",
+    "e2e: end-to-end pipeline tests",
+]
+
+[tool.coverage.run]
+source = ["quant_strategy_tokenizer"]
+omit = [
+    "quant_strategy_tokenizer/cli.py",
+]

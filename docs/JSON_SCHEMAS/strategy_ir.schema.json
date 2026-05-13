@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qst.local/schema/strategy_ir.schema.json",
+  "title": "QST Strategy Content IR",
+  "type": "object",
+  "required": ["ir_version", "canonical_version", "strategy", "strategy_version", "form", "externals", "graph", "outputs"],
+  "properties": {
+    "ir_version": {"const": "qst-ir/0.3"},
+    "canonical_version": {"const": "qst-canonical/0.1"},
+    "strategy": {"type": "string"},
+    "strategy_version": {"type": "integer"},
+    "form": {"enum": ["surface", "canonical"]},
+    "externals": {"type": "object"},
+    "recipes": {"type": "array"},
+    "graph": {"type": "array"},
+    "outputs": {"type": "object"}
+  },
+  "additionalProperties": false
+}

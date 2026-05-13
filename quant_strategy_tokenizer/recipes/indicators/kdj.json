@@ -1,0 +1,76 @@
+{
+  "recipe": "indicator.kdj",
+  "version": 1,
+  "params_schema": {
+    "lookback": {"type": "integer", "minimum": 1},
+    "k_alpha": {"type": "number", "minimum": 0, "maximum": 1},
+    "d_alpha": {"type": "number", "minimum": 0, "maximum": 1},
+    "init": {
+      "oneOf": [
+        {"type": "number"},
+        {"type": "string", "enum": ["first_value"]}
+      ],
+      "default": 50
+    }
+  },
+  "inputs": {
+    "high": "TimeSeries[float]",
+    "low": "TimeSeries[float]",
+    "close": "TimeSeries[float]"
+  },
+  "outputs": {
+    "k": "k.value",
+    "d": "d.value",
+    "j": "j.value"
+  },
+  "graph": [
+    {
+      "id": "hh",
+      "token": "window.max",
+      "v": 1,
+      "params": {"window": "$params.lookback"},
+      "inputs": {"series": "$inputs.high"}
+    },
+    {
+      "id": "ll",
+      "token": "window.min",
+      "v": 1,
+      "params": {"window": "$params.lookback"},
+      "inputs": {"series": "$inputs.low"}
+    },
+    {
+      "id": "rsv",
+      "token": "norm.range_position",
+      "v": 1,
+      "params": {"scale": 100, "zero_range_policy": "unknown"},
+      "inputs": {"value": "$inputs.close", "low": "ll.value", "high": "hh.value"}
+    },
+    {
+      "id": "k",
+      "recipe": "indicator.rma",
+      "v": 1,
+      "params": {"alpha": "$params.k_alpha", "init": "$params.init"},
+      "inputs": {"series": "rsv.value"}
+    },
+    {
+      "id": "d",
+      "recipe": "indicator.rma",
+      "v": 1,
+      "params": {"alpha": "$params.d_alpha", "init": "$params.init"},
+      "inputs": {"series": "k.value"}
+    },
+    {
+      "id": "j",
+      "token": "math.linear_combination",
+      "v": 1,
+      "params": {
+        "terms": [
+          {"input": "k", "weight": 3},
+          {"input": "d", "weight": -2}
+        ]
+      },
+      "inputs": {"k": "k.value", "d": "d.value"}
+    }
+  ],
+  "description": "KDJ indicator with K and D implemented through indicator.rma."
+}

@@ -1,0 +1,50 @@
+{
+  "recipe": "event.cross_above",
+  "version": 1,
+  "params_schema": {},
+  "inputs": {
+    "fast": "TimeSeries[float]",
+    "slow": "TimeSeries[float]"
+  },
+  "outputs": {
+    "cross": "and.value"
+  },
+  "graph": [
+    {
+      "id": "prev_fast",
+      "token": "data.shift",
+      "v": 1,
+      "params": {"periods": 1},
+      "inputs": {"series": "$inputs.fast"}
+    },
+    {
+      "id": "prev_slow",
+      "token": "data.shift",
+      "v": 1,
+      "params": {"periods": 1},
+      "inputs": {"series": "$inputs.slow"}
+    },
+    {
+      "id": "now_gt",
+      "token": "compare.gt",
+      "v": 1,
+      "params": {},
+      "inputs": {"a": "$inputs.fast", "b": "$inputs.slow"}
+    },
+    {
+      "id": "prev_le",
+      "token": "compare.le",
+      "v": 1,
+      "params": {},
+      "inputs": {"a": "prev_fast.value", "b": "prev_slow.value"}
+    },
+    {
+      "id": "and",
+      "token": "logic.and",
+      "v": 1,
+      "params": {},
+      "inputs": {"a": "now_gt.value", "b": "prev_le.value"}
+    }
+  ],
+  "description": "Boolean event where fast crosses above slow."
+}
