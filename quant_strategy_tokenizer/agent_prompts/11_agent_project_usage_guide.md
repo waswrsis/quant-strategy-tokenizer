@@ -131,6 +131,10 @@ EN: Indicator layer.
   EN: Shared normalization, market-internal participation calculation, and report logic for breadth indicators from panels, wide matrices, or aggregate rows.
 - `indicators/<breadth_token>.py`: 一个宽度指标一个独立 token。
   EN: One independent token per breadth indicator.
+- `indicators/derivatives_common.py`: 衍生品指标共享期货/永续、期权链和聚合诊断序列的归一化、压力计算和报告逻辑。
+  EN: Shared normalization, pressure calculation, and report logic for futures/perpetuals, option chains, and aggregate derivatives diagnostics.
+- `indicators/<derivatives_token>.py`: 一个衍生品指标一个独立 token。
+  EN: One independent token per derivatives indicator.
 
 策略组合层。
 EN: Strategy composition layer.
@@ -1014,7 +1018,106 @@ else:
     print(result.failure.kind, result.failure.message)
 ```
 
-## 29. Agent 选择指南
+## 29. 衍生品类指标 Token 总览
+EN: Derivatives indicator token overview.
+
+衍生品指标被实现为独立模块。
+EN: Derivatives indicators are implemented as independent modules.
+
+每个衍生品 token 只处理用户传入的数据；它不拉取 funding、OI、清算、期权链或账户数据。
+EN: Every derivatives token processes caller-provided data only; it does not fetch funding, OI, liquidation, option-chain, or account data.
+
+公共输出是 `ModuleResult[DerivativesReport]`。
+EN: The common output is `ModuleResult[DerivativesReport]`.
+
+衍生品 token 支持三类输入：期货/永续单合约时间序列、期权链 long rows、用户已聚合的衍生品诊断序列。
+EN: Derivatives tokens support futures/perpetual time series, option-chain long rows, and user-aggregated derivatives diagnostic rows.
+
+`DerivativesReport` 的关键字段如下。
+EN: Key `DerivativesReport` fields are listed below.
+
+- `derivative_direction`: 衍生品指标方向，例如 `bullish`, `bearish`, `expanding`, `contracting`, `neutral`, or `unknown`。
+  EN: Derivatives direction label such as `bullish`, `bearish`, `expanding`, `contracting`, `neutral`, or `unknown`.
+- `risk_state`: 风险状态，例如 `low`, `normal`, `high`, `extreme`, or `unknown`。
+  EN: Risk state such as `low`, `normal`, `high`, `extreme`, or `unknown`.
+- `crowding_state`: 拥挤状态，例如 `long_crowded`, `short_crowded`, `balanced`, or `unknown`。
+  EN: Crowding state such as `long_crowded`, `short_crowded`, `balanced`, or `unknown`.
+- `term_structure_state`: 期限结构状态，例如 `contango`, `backwardation`, `normal`, `inverted`, or `unknown`。
+  EN: Term-structure state such as `contango`, `backwardation`, `normal`, `inverted`, or `unknown`.
+- `leverage_pressure`, `funding_pressure`, `oi_pressure`, `liquidation_pressure`: 杠杆、资金费率、持仓和清算压力诊断。
+  EN: Leverage, funding, open-interest, and liquidation pressure diagnostics.
+- `skew_state`: 期权偏斜状态，例如 `put_skew`, `call_skew`, or `flat`。
+  EN: Options skew state such as `put_skew`, `call_skew`, or `flat`.
+- `series` / `series_by_name`: 仅在 `DetailLevel.FULL` 或更高时返回完整序列。
+  EN: Full series output, returned only at `DetailLevel.FULL` or above.
+- `diagnostics`: proxy 模块会明确标注 `proxy=True`。
+  EN: Proxy modules explicitly mark `proxy=True` in diagnostics.
+
+## 30. 衍生品指标清单
+EN: Derivatives indicator list.
+
+| Family | Tokens |
+| --- | --- |
+| Funding | `funding_rate`, `funding_rate_zscore`, `funding_momentum`, `funding_regime`, `funding_crowding_score` |
+| Open interest | `open_interest_change`, `open_interest_roc`, `open_interest_zscore`, `price_oi_divergence`, `oi_volume_ratio` |
+| Basis / premium | `basis_rate`, `basis_zscore`, `basis_momentum`, `premium_index`, `mark_index_deviation`, `perp_spot_deviation` |
+| Positioning / flow | `long_short_ratio`, `long_short_ratio_zscore`, `taker_buy_sell_ratio`, `taker_flow_imbalance`, `leverage_pressure_index` |
+| Liquidation | `liquidation_imbalance`, `liquidation_pressure`, `long_liquidation_ratio`, `short_liquidation_ratio`, `liquidation_cascade_risk` |
+| Composite futures diagnostics | `derivatives_crowding_index`, `perp_risk_regime`, `futures_curve_pressure` |
+| IV level / term structure | `implied_volatility`, `iv_rank`, `iv_percentile`, `iv_term_structure`, `front_back_iv_spread` |
+| Skew / smile | `put_call_iv_skew`, `risk_reversal`, `butterfly_skew`, `smile_curvature`, `atm_iv_skew` |
+| Put-call / activity | `put_call_volume_ratio`, `put_call_open_interest_ratio`, `option_volume_oi_ratio` |
+| Greeks exposure proxies | `gamma_exposure`, `delta_exposure`, `vega_exposure`, `theta_exposure`, `dealer_gamma_proxy` |
+| Composite options diagnostics | `options_crowding_index`, `volatility_risk_premium_proxy`, `max_pain_proxy` |
+
+## 31. 示例：组合多个衍生品 token
+EN: Example: compose multiple derivatives tokens.
+
+多个衍生品指标通常需要同一份期货/永续序列或期权链，因此在 pipeline 中使用 `input_key="initial"`。
+EN: Multiple derivatives indicators usually need the same futures/perpetual series or option chain, so use `input_key="initial"` in pipelines.
+
+```python
+from quant_strategy_tokenizer.pipeline import PipelineStep, run_pipeline
+from quant_strategy_tokenizer.indicators.funding_rate_zscore import FundingRateZScoreRequest, run as run_funding
+from quant_strategy_tokenizer.indicators.open_interest_change import OpenInterestChangeRequest, run as run_oi
+from quant_strategy_tokenizer.indicators.basis_rate import BasisRateRequest, run as run_basis
+from quant_strategy_tokenizer.indicators.derivatives_crowding_index import DerivativesCrowdingIndexRequest, run as run_crowding
+
+steps = [
+    PipelineStep(
+        name="funding",
+        input_key="initial",
+        output_key="funding_z",
+        take="last_value",
+        fn=lambda data: run_funding(FundingRateZScoreRequest(data=data)),
+    ),
+    PipelineStep(
+        name="oi",
+        input_key="initial",
+        output_key="oi_change",
+        take="last_value",
+        fn=lambda data: run_oi(OpenInterestChangeRequest(data=data)),
+    ),
+    PipelineStep(
+        name="basis",
+        input_key="initial",
+        output_key="basis_rate",
+        take="last_value",
+        fn=lambda data: run_basis(BasisRateRequest(data=data)),
+    ),
+    PipelineStep(
+        name="crowding",
+        input_key="initial",
+        output_key="risk_state",
+        take="risk_state",
+        fn=lambda data: run_crowding(DerivativesCrowdingIndexRequest(data=data)),
+    ),
+]
+
+result = run_pipeline(initial_payload=perp_rows, steps=steps)
+```
+
+## 32. Agent 选择指南
 
 EN: Agent selection guide.
 
@@ -1087,7 +1190,16 @@ EN: If the user asks whether an index move is weakening internally, diverging, o
 如果用户说“帮我看市场冻结压力或系统风险宽度输入”，使用 `breadth_freeze_pressure` 做诊断；真正的 freeze 决策仍使用 `market_freeze.py`。
 EN: If the user asks for market-freeze pressure or system-risk breadth input, use `breadth_freeze_pressure` for diagnostics; actual freeze decisions still belong to `market_freeze.py`.
 
-## 30. 常见坑
+如果用户说“帮我看资金费率、OI、期现价差、永续拥挤或清算压力”，使用 `funding_rate_zscore`, `open_interest_change`, `basis_rate`, `derivatives_crowding_index`, `liquidation_pressure`, or `perp_risk_regime`。
+EN: If the user asks for funding, OI, basis, perpetual crowding, or liquidation pressure, use `funding_rate_zscore`, `open_interest_change`, `basis_rate`, `derivatives_crowding_index`, `liquidation_pressure`, or `perp_risk_regime`.
+
+如果用户说“帮我看期权 IV、期限结构、偏斜、put-call 或 Greeks 暴露”，使用 `implied_volatility`, `iv_rank`, `iv_term_structure`, `put_call_iv_skew`, `put_call_volume_ratio`, `gamma_exposure`, or `options_crowding_index`。
+EN: If the user asks for option IV, term structure, skew, put-call activity, or Greeks exposure, use `implied_volatility`, `iv_rank`, `iv_term_structure`, `put_call_iv_skew`, `put_call_volume_ratio`, `gamma_exposure`, or `options_crowding_index`.
+
+如果用户说“帮我估算 dealer gamma、VRP 或 max pain”，使用 `dealer_gamma_proxy`, `volatility_risk_premium_proxy`, or `max_pain_proxy`，并明确说明这些只是 proxy。
+EN: If the user asks for dealer gamma, VRP, or max pain, use `dealer_gamma_proxy`, `volatility_risk_premium_proxy`, or `max_pain_proxy`, and explicitly state that these are proxies.
+
+## 33. 常见坑
 
 EN: Common pitfalls.
 

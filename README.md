@@ -102,7 +102,7 @@ Quant-Strategy-Tokenizer/
     data_schema.py            OHLCV and tabular input validation
     normalization.py          raw input normalization helpers
     row_utils.py              row extraction and typed lookup helpers
-    indicators/               EMA, ATR, VWAP, CHOP, spike, rolling return, MRQ, trend, momentum, volatility, volume, structure, and breadth tokens
+    indicators/               EMA, ATR, VWAP, CHOP, spike, rolling return, MRQ, trend, momentum, volatility, volume, structure, breadth, and derivatives tokens
     filters/                  blacklist, status, history, cooldown, backoff, VWAP, MRQ
     universe_selector.py      market-neutral symbol selection primitive
     candidate_pool.py         candidate assembly and ranking
@@ -127,6 +127,7 @@ Quant-Strategy-Tokenizer/
     test_volume_indicators.py
     test_structure_indicators.py
     test_breadth_indicators.py
+    test_derivatives_indicators.py
 ```
 
 ## Python Dependency Map
@@ -159,7 +160,7 @@ flowchart TD
     Reporting["reporting.py<br/>redacted JSON / JSONL output"]
     DataSchema["data_schema.py<br/>tabular validation"]
 
-    Indicators["indicators/*<br/>ema, atr, vwap, chop, spike, rolling return, beta residual, MRQ touch, trend, momentum, volatility, volume, structure, and breadth tokens"]
+    Indicators["indicators/*<br/>ema, atr, vwap, chop, spike, rolling return, beta residual, MRQ touch, trend, momentum, volatility, volume, structure, breadth, and derivatives tokens"]
     Filters["filters/*<br/>blacklist, status, history, cooldown, backoff, VWAP, MRQ"]
 
     Universe["universe_selector.py"]
@@ -545,6 +546,46 @@ else:
 | Cross-sectional diagnostics | `cross_sectional_dispersion`, `cross_sectional_correlation_proxy`, `equal_weighted_return`, `cap_weighted_breadth`, `breadth_momentum`, `breadth_regime` |
 | Divergence / confirmation | `index_breadth_divergence`, `breadth_confirmation`, `breadth_freeze_pressure` |
 
+## Derivatives Indicator Tokens
+
+QST includes atomic derivatives indicators for futures/perpetual funding, open interest, basis, premium, positioning, liquidation pressure, option IV, skew, put-call activity, Greeks exposure proxies, and composite crowding diagnostics. They follow the same public interface:
+
+```text
+Params / Request / Report / normalize_input(request) / run(request)
+```
+
+They return `ModuleResult[DerivativesReport]` with `last_value`, `last_values`, `derivative_direction`, `risk_state`, `crowding_state`, `term_structure_state`, leverage/funding/OI/liquidation pressure fields, skew diagnostics, `signal`, `regime`, `normalized_value`, optional full series, field mappings, warnings, and diagnostics.
+
+Derivatives tokens support caller-provided futures/perpetual time series, option-chain long rows, and externally aggregated diagnostics. They do not download funding, OI, liquidation, IV, or Greeks data. Proxy modules such as `dealer_gamma_proxy`, `volatility_risk_premium_proxy`, and `max_pain_proxy` explicitly report proxy diagnostics and do not claim true dealer inventory or model fair value.
+
+```python
+from quant_strategy_tokenizer.indicators.derivatives_crowding_index import (
+    DerivativesCrowdingIndexRequest,
+    run as run_derivatives_crowding,
+)
+
+result = run_derivatives_crowding(DerivativesCrowdingIndexRequest(data=my_perp_rows))
+
+if result.ok:
+    print(result.value.risk_state, result.value.leverage_pressure)
+else:
+    print(result.failure.kind, result.failure.message)
+```
+
+| Family | Tokens |
+| --- | --- |
+| Funding | `funding_rate`, `funding_rate_zscore`, `funding_momentum`, `funding_regime`, `funding_crowding_score` |
+| Open interest | `open_interest_change`, `open_interest_roc`, `open_interest_zscore`, `price_oi_divergence`, `oi_volume_ratio` |
+| Basis / premium | `basis_rate`, `basis_zscore`, `basis_momentum`, `premium_index`, `mark_index_deviation`, `perp_spot_deviation` |
+| Positioning / flow | `long_short_ratio`, `long_short_ratio_zscore`, `taker_buy_sell_ratio`, `taker_flow_imbalance`, `leverage_pressure_index` |
+| Liquidation | `liquidation_imbalance`, `liquidation_pressure`, `long_liquidation_ratio`, `short_liquidation_ratio`, `liquidation_cascade_risk` |
+| Composite futures diagnostics | `derivatives_crowding_index`, `perp_risk_regime`, `futures_curve_pressure` |
+| IV level / term structure | `implied_volatility`, `iv_rank`, `iv_percentile`, `iv_term_structure`, `front_back_iv_spread` |
+| Skew / smile | `put_call_iv_skew`, `risk_reversal`, `butterfly_skew`, `smile_curvature`, `atm_iv_skew` |
+| Put-call / activity | `put_call_volume_ratio`, `put_call_open_interest_ratio`, `option_volume_oi_ratio` |
+| Greeks exposure proxies | `gamma_exposure`, `delta_exposure`, `vega_exposure`, `theta_exposure`, `dealer_gamma_proxy` |
+| Composite options diagnostics | `options_crowding_index`, `volatility_risk_premium_proxy`, `max_pain_proxy` |
+
 ## Agent Prompts
 
 QST includes prompts that teach another agent how to use, audit, decompose, and extend strategy modules:
@@ -552,7 +593,7 @@ QST includes prompts that teach another agent how to use, audit, decompose, and 
 | Prompt | Use |
 | --- | --- |
 | `agent_prompts/10_full_agent_prompt.md` | General-purpose quant engineering agent. |
-| `agent_prompts/11_agent_project_usage_guide.md` | Step-by-step QST usage guide with trend, momentum, volatility, volume, structure, and breadth indicator token examples. |
+| `agent_prompts/11_agent_project_usage_guide.md` | Step-by-step QST usage guide with trend, momentum, volatility, volume, structure, breadth, and derivatives indicator token examples. |
 | `agent_prompts/12_strategy_code_decomposition_agent.md` | Analyze a full strategy codebase and split it into tokens. |
 | `agent_prompts/13_strategy_decomposition_task_template.md` | Fill-in task template for applying the decomposition workflow. |
 
