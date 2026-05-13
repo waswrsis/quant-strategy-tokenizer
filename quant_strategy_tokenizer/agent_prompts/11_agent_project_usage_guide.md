@@ -139,6 +139,10 @@ EN: Indicator layer.
   EN: Shared normalization, pressure calculation, and report logic for network, exchange-flow, holder, stablecoin, miner/validator, fee, and age-bucket on-chain data.
 - `indicators/<onchain_token>.py`: 一个链上指标一个独立 token。
   EN: One independent token per on-chain indicator.
+- `indicators/sentiment_common.py`: 情绪指标共享 survey、social、news、search、flow、crowding、analyst、insider 和 risk-appetite 数据的归一化、压力计算和报告逻辑。
+  EN: Shared normalization, pressure calculation, and report logic for survey, social, news, search, flow, crowding, analyst, insider, and risk-appetite sentiment data.
+- `indicators/<sentiment_token>.py`: 一个情绪指标一个独立 token。
+  EN: One independent token per sentiment indicator.
 
 策略组合层。
 EN: Strategy composition layer.
@@ -1215,7 +1219,99 @@ steps = [
 result = run_pipeline(initial_payload=onchain_rows, steps=steps)
 ```
 
-## 35. Agent 选择指南
+## 35. 情绪类指标 Token 总览
+EN: Sentiment indicator token overview.
+
+情绪指标被实现为独立模块。
+EN: Sentiment indicators are implemented as independent modules.
+
+每个情绪 token 只处理用户传入的数据；它不拉取社交媒体、新闻、搜索、调查、券商或账户数据。
+EN: Every sentiment token processes caller-provided data only; it does not fetch social media, news, search, survey, broker, or account data.
+
+公共输出是 `ModuleResult[SentimentReport]`。
+EN: The common output is `ModuleResult[SentimentReport]`.
+
+情绪 token 支持 aggregate rows 或带 `source` 字段的 multi-source rows。
+EN: Sentiment tokens support aggregate rows or multi-source rows with a `source` field.
+
+`SentimentReport` 的关键字段如下。
+EN: Key `SentimentReport` fields are listed below.
+
+- `sentiment_direction`: 情绪方向，例如 `bullish`, `bearish`, `neutral`, or `unknown`。
+  EN: Sentiment direction such as `bullish`, `bearish`, `neutral`, or `unknown`.
+- `sentiment_state`: 情绪状态，例如 `euphoric`, `optimistic`, `neutral`, `pessimistic`, or `panic`。
+  EN: Sentiment state such as `euphoric`, `optimistic`, `neutral`, `pessimistic`, or `panic`.
+- `attention_state`: 注意力状态，例如 `high_attention`, `normal_attention`, or `low_attention`。
+  EN: Attention state such as `high_attention`, `normal_attention`, or `low_attention`.
+- `crowding_state`: 拥挤状态，例如 `crowded`, `balanced`, or `uncrowded`。
+  EN: Crowding state such as `crowded`, `balanced`, or `uncrowded`.
+- `fear_greed_state`: 恐惧贪婪状态，例如 `fear`, `neutral`, or `greed`。
+  EN: Fear-greed state such as `fear`, `neutral`, or `greed`.
+- `contrarian_state`: 反向信号状态，例如 `contrarian_bullish`, `contrarian_bearish`, or `none`。
+  EN: Contrarian state such as `contrarian_bullish`, `contrarian_bearish`, or `none`.
+- `diagnostics`: proxy 模块会明确标注 `proxy=True`。
+  EN: Proxy modules explicitly mark `proxy=True` in diagnostics.
+
+## 36. 情绪指标清单
+EN: Sentiment indicator list.
+
+| Family | Tokens |
+| --- | --- |
+| Survey sentiment | `sentiment_score`, `sentiment_zscore`, `sentiment_momentum`, `bullish_percent`, `bearish_percent`, `bull_bear_spread`, `bull_bear_ratio`, `survey_sentiment_index` |
+| Social / news / search | `social_volume`, `social_sentiment_score`, `social_sentiment_zscore`, `news_sentiment_score`, `news_sentiment_zscore`, `positive_negative_mention_ratio`, `mention_volume_zscore`, `search_interest_zscore`, `attention_momentum`, `hype_pressure_index` |
+| Fear / greed / risk appetite | `fear_greed_index`, `fear_greed_zscore`, `risk_appetite_index`, `risk_aversion_zscore`, `volatility_fear_proxy`, `safe_haven_flow_pressure` |
+| Flows / crowding | `fund_flow`, `fund_flow_zscore`, `etf_flow_zscore`, `short_interest_ratio`, `short_interest_zscore`, `borrow_rate_pressure`, `margin_long_short_ratio`, `margin_crowding_score`, `put_call_sentiment`, `option_skew_sentiment` |
+| Analyst / insider / policy | `analyst_revision_balance`, `analyst_upgrade_downgrade_ratio`, `rating_score`, `insider_buy_sell_ratio`, `insider_flow_pressure`, `policy_uncertainty_zscore` |
+| Composite sentiment diagnostics | `sentiment_regime`, `sentiment_extreme_index`, `contrarian_sentiment_signal`, `consensus_crowding_index`, `attention_adjusted_sentiment`, `sentiment_flow_confirmation` |
+
+## 37. 示例：组合多个情绪 token
+EN: Example: compose multiple sentiment tokens.
+
+多个情绪指标通常需要同一份情绪聚合序列或 multi-source rows，因此在 pipeline 中使用 `input_key="initial"`。
+EN: Multiple sentiment indicators usually need the same aggregate sentiment rows or multi-source rows, so use `input_key="initial"` in pipelines.
+
+```python
+from quant_strategy_tokenizer.pipeline import PipelineStep, run_pipeline
+from quant_strategy_tokenizer.indicators.fear_greed_zscore import FearGreedZScoreRequest, run as run_fear_greed
+from quant_strategy_tokenizer.indicators.fund_flow_zscore import FundFlowZScoreRequest, run as run_fund_flow
+from quant_strategy_tokenizer.indicators.attention_adjusted_sentiment import AttentionAdjustedSentimentRequest, run as run_adjusted
+from quant_strategy_tokenizer.indicators.sentiment_regime import SentimentRegimeRequest, run as run_regime
+
+steps = [
+    PipelineStep(
+        name="fear_greed",
+        input_key="initial",
+        output_key="fear_greed_z",
+        take="last_value",
+        fn=lambda data: run_fear_greed(FearGreedZScoreRequest(data=data)),
+    ),
+    PipelineStep(
+        name="flow",
+        input_key="initial",
+        output_key="fund_flow_z",
+        take="last_value",
+        fn=lambda data: run_fund_flow(FundFlowZScoreRequest(data=data)),
+    ),
+    PipelineStep(
+        name="adjusted",
+        input_key="initial",
+        output_key="attention_adjusted",
+        take="last_value",
+        fn=lambda data: run_adjusted(AttentionAdjustedSentimentRequest(data=data)),
+    ),
+    PipelineStep(
+        name="regime",
+        input_key="initial",
+        output_key="sentiment_state",
+        take="sentiment_state",
+        fn=lambda data: run_regime(SentimentRegimeRequest(data=data)),
+    ),
+]
+
+result = run_pipeline(initial_payload=sentiment_rows, steps=steps)
+```
+
+## 38. Agent 选择指南
 
 EN: Agent selection guide.
 
@@ -1310,7 +1406,20 @@ EN: If the user asks for exchange flows, stablecoin liquidity, miner pressure, o
 如果用户说“帮我看长期持有人、短期持有人、HODL wave 或 whale/retail 分歧”，使用 `long_term_holder_supply_proxy`, `short_term_holder_supply_proxy`, `hodl_wave_proxy`, `whale_retail_divergence`，并明确说明 proxy 语义。
 EN: If the user asks for long-term holders, short-term holders, HODL wave, or whale/retail divergence, use `long_term_holder_supply_proxy`, `short_term_holder_supply_proxy`, `hodl_wave_proxy`, or `whale_retail_divergence`, and explicitly state proxy semantics.
 
-## 36. 常见坑
+
+如果用户说“帮我看市场情绪、调查多空、社交或新闻情绪”，使用 `sentiment_score`, `bull_bear_spread`, `survey_sentiment_index`, `social_sentiment_score`, `news_sentiment_score`, or `sentiment_regime`。
+EN: If the user asks for market sentiment, survey bull/bear balance, social sentiment, or news sentiment, use `sentiment_score`, `bull_bear_spread`, `survey_sentiment_index`, `social_sentiment_score`, `news_sentiment_score`, or `sentiment_regime`.
+
+如果用户说“帮我看注意力、热度、搜索、hype 或拥挤”，使用 `mention_volume_zscore`, `search_interest_zscore`, `attention_momentum`, `hype_pressure_index`, or `consensus_crowding_index`。
+EN: If the user asks for attention, heat, search interest, hype, or crowding, use `mention_volume_zscore`, `search_interest_zscore`, `attention_momentum`, `hype_pressure_index`, or `consensus_crowding_index`.
+
+如果用户说“帮我看恐惧贪婪、风险偏好、避险或反向情绪”，使用 `fear_greed_index`, `fear_greed_zscore`, `risk_appetite_index`, `risk_aversion_zscore`, `safe_haven_flow_pressure`, or `contrarian_sentiment_signal`。
+EN: If the user asks for fear-greed, risk appetite, safe-haven pressure, or contrarian sentiment, use `fear_greed_index`, `fear_greed_zscore`, `risk_appetite_index`, `risk_aversion_zscore`, `safe_haven_flow_pressure`, or `contrarian_sentiment_signal`.
+
+如果用户说“帮我看资金流、做空拥挤、保证金、分析师或内部人情绪”，使用 `fund_flow_zscore`, `etf_flow_zscore`, `short_interest_zscore`, `borrow_rate_pressure`, `margin_crowding_score`, `analyst_revision_balance`, or `insider_flow_pressure`。
+EN: If the user asks for fund flows, short crowding, margin sentiment, analyst revisions, or insider sentiment, use `fund_flow_zscore`, `etf_flow_zscore`, `short_interest_zscore`, `borrow_rate_pressure`, `margin_crowding_score`, `analyst_revision_balance`, or `insider_flow_pressure`.
+
+## 39. 常见坑
 
 EN: Common pitfalls.
 

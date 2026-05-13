@@ -102,7 +102,7 @@ Quant-Strategy-Tokenizer/
     data_schema.py            OHLCV and tabular input validation
     normalization.py          raw input normalization helpers
     row_utils.py              row extraction and typed lookup helpers
-    indicators/               EMA, ATR, VWAP, CHOP, spike, rolling return, MRQ, trend, momentum, volatility, volume, structure, breadth, derivatives, and on-chain tokens
+    indicators/               EMA, ATR, VWAP, CHOP, spike, rolling return, MRQ, trend, momentum, volatility, volume, structure, breadth, derivatives, on-chain, and sentiment tokens
     filters/                  blacklist, status, history, cooldown, backoff, VWAP, MRQ
     universe_selector.py      market-neutral symbol selection primitive
     candidate_pool.py         candidate assembly and ranking
@@ -129,6 +129,7 @@ Quant-Strategy-Tokenizer/
     test_breadth_indicators.py
     test_derivatives_indicators.py
     test_onchain_indicators.py
+    test_sentiment_indicators.py
 ```
 
 ## Python Dependency Map
@@ -161,7 +162,7 @@ flowchart TD
     Reporting["reporting.py<br/>redacted JSON / JSONL output"]
     DataSchema["data_schema.py<br/>tabular validation"]
 
-    Indicators["indicators/*<br/>ema, atr, vwap, chop, spike, rolling return, beta residual, MRQ touch, trend, momentum, volatility, volume, structure, breadth, derivatives, and on-chain tokens"]
+    Indicators["indicators/*<br/>ema, atr, vwap, chop, spike, rolling return, beta residual, MRQ touch, trend, momentum, volatility, volume, structure, breadth, derivatives, on-chain, and sentiment tokens"]
     Filters["filters/*<br/>blacklist, status, history, cooldown, backoff, VWAP, MRQ"]
 
     Universe["universe_selector.py"]
@@ -624,6 +625,41 @@ else:
 | Fees / usage | `fee_pressure`, `gas_usage_trend`, `gas_price_zscore`, `fee_burn_pressure` |
 | Composite diagnostics | `onchain_risk_regime`, `onchain_liquidity_regime`, `onchain_valuation_regime`, `onchain_accumulation_distribution`, `cycle_pressure_index` |
 
+## Sentiment Indicator Tokens
+
+QST includes atomic sentiment indicators for surveys, social/news/search attention, fear-greed, risk appetite, fund and ETF flows, short-side crowding, margin balances, analyst revisions, insider flows, policy uncertainty, and composite sentiment regimes. They follow the same public interface:
+
+```text
+Params / Request / Report / normalize_input(request) / run(request)
+```
+
+They return `ModuleResult[SentimentReport]` with `last_value`, `last_values`, `sentiment_direction`, `sentiment_state`, `attention_state`, `crowding_state`, `fear_greed_state`, `flow_state`, `contrarian_state`, `risk_state`, `signal`, `regime`, `normalized_value`, optional full series, field mappings, warnings, and diagnostics.
+
+Sentiment tokens support caller-provided aggregate rows or multi-source rows. They do not fetch social media, news, search, survey, broker, or account data. Proxy modules such as `volatility_fear_proxy`, `hype_pressure_index`, `contrarian_sentiment_signal`, and `consensus_crowding_index` explicitly report proxy diagnostics and do not claim observed investor intent.
+
+```python
+from quant_strategy_tokenizer.indicators.sentiment_regime import (
+    SentimentRegimeRequest,
+    run as run_sentiment_regime,
+)
+
+result = run_sentiment_regime(SentimentRegimeRequest(data=my_sentiment_rows))
+
+if result.ok:
+    print(result.value.sentiment_state, result.value.crowding_state)
+else:
+    print(result.failure.kind, result.failure.message)
+```
+
+| Family | Tokens |
+| --- | --- |
+| Survey sentiment | `sentiment_score`, `sentiment_zscore`, `sentiment_momentum`, `bullish_percent`, `bearish_percent`, `bull_bear_spread`, `bull_bear_ratio`, `survey_sentiment_index` |
+| Social / news / search | `social_volume`, `social_sentiment_score`, `social_sentiment_zscore`, `news_sentiment_score`, `news_sentiment_zscore`, `positive_negative_mention_ratio`, `mention_volume_zscore`, `search_interest_zscore`, `attention_momentum`, `hype_pressure_index` |
+| Fear / greed / risk appetite | `fear_greed_index`, `fear_greed_zscore`, `risk_appetite_index`, `risk_aversion_zscore`, `volatility_fear_proxy`, `safe_haven_flow_pressure` |
+| Flows / crowding | `fund_flow`, `fund_flow_zscore`, `etf_flow_zscore`, `short_interest_ratio`, `short_interest_zscore`, `borrow_rate_pressure`, `margin_long_short_ratio`, `margin_crowding_score`, `put_call_sentiment`, `option_skew_sentiment` |
+| Analyst / insider / policy | `analyst_revision_balance`, `analyst_upgrade_downgrade_ratio`, `rating_score`, `insider_buy_sell_ratio`, `insider_flow_pressure`, `policy_uncertainty_zscore` |
+| Composite sentiment diagnostics | `sentiment_regime`, `sentiment_extreme_index`, `contrarian_sentiment_signal`, `consensus_crowding_index`, `attention_adjusted_sentiment`, `sentiment_flow_confirmation` |
+
 ## Agent Prompts
 
 QST includes prompts that teach another agent how to use, audit, decompose, and extend strategy modules:
@@ -631,7 +667,7 @@ QST includes prompts that teach another agent how to use, audit, decompose, and 
 | Prompt | Use |
 | --- | --- |
 | `agent_prompts/10_full_agent_prompt.md` | General-purpose quant engineering agent. |
-| `agent_prompts/11_agent_project_usage_guide.md` | Step-by-step QST usage guide with trend, momentum, volatility, volume, structure, breadth, derivatives, and on-chain indicator token examples. |
+| `agent_prompts/11_agent_project_usage_guide.md` | Step-by-step QST usage guide with trend, momentum, volatility, volume, structure, breadth, derivatives, on-chain, and sentiment indicator token examples. |
 | `agent_prompts/12_strategy_code_decomposition_agent.md` | Analyze a full strategy codebase and split it into tokens. |
 | `agent_prompts/13_strategy_decomposition_task_template.md` | Fill-in task template for applying the decomposition workflow. |
 
