@@ -2,7 +2,7 @@
 
 Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core and P2-core construction stages.
 
-The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, and implements P2a-0/P2a-1 provenance metadata, P2a-2 deterministic recipe generation, P2a-3 composition validation, P2b-0 mutation, and P2c-core execution-plan CSE. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, advanced mutation, or kernel substitution.
+The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, and implements P2a-0/P2a-1 provenance metadata, P2a-2 deterministic recipe generation, P2a-3 composition validation, P2b mutation, and P2c-core execution-plan CSE. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, or kernel substitution.
 
 The implemented loop covers:
 
@@ -15,7 +15,7 @@ The implemented loop covers:
 - L1 explanation, trace explanation, agent API, and CLI
 - profile promotion from `research` to guarded profiles without changing content hashes
 - purity and temporal safety validation
-- `indicator.ewm` provenance tags, TagSpec verification, basic mutation, and execution-plan CSE
+- `indicator.ewm` provenance tags, TagSpec verification, mutation, and execution-plan CSE
 - deterministic recipe expansion for `signals.dual_ema_cross/v1`
 - empirical composition validation for `indicator.ewm/v1`
 
@@ -33,6 +33,7 @@ The implemented loop covers:
 | P2a-2 | accepted |
 | P2a-3 | accepted |
 | P2b-0 | accepted |
+| P2b-1 | accepted |
 | P2c-core | accepted |
 | P2c-extended | not started |
 
@@ -62,12 +63,22 @@ The implemented loop covers:
 - Full empirical verification for `indicator.ewm/v1`
 - No new primitive token, kernel, mutation op, or fully verified `signals.dual_ema_cross` TagSpec
 
+## Current P2b Mutation Layer
+
+- `qst diff`
+- `qst mutate`
+- `ChangeParam`
+- `InsertBefore`
+- `ReplaceToken`
+- `InlineRecipe`
+- before/after hash reports for every mutation
+- type-compatible token replacement and recipe output-preserving inlining
+
 ## Not In Accepted P0/P1/P2-Core
 
 The following are intentionally not part of the accepted P0/P1/P2-core baseline:
 
 - advanced recipe library beyond `signals.dual_ema_cross/v1`
-- advanced mutation (`ReplaceToken`, `InlineRecipe`)
 - kernel substitution
 - FSM
 - expanded indicator library
