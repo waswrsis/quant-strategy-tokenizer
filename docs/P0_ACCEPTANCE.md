@@ -168,7 +168,7 @@ CI: https://github.com/waswrsis/Quant-Strategy-Tokenizer/actions/runs/2582473033
 ## P0 Baseline After P1-core Acceptance
 
 Date: 2026-05-14
-Commit: pending final CI
+Commit: 55c4ecd591bfd487226ca8ff41db9d5ac5b385bf
 
 P0 frozen baseline remains unchanged:
 
@@ -179,11 +179,13 @@ P0 frozen baseline remains unchanged:
 - graph_hash baseline: unchanged
 - param_hash baseline: unchanged
 - instance_hash baseline: unchanged
-- P0 backward compatibility: PASS locally
+- P0 backward compatibility: PASS
 
 Current project state:
 
 - P1-core: accepted
-- P1-extended-a: completed locally, pending final CI
+- P1-extended-a: completed
 - P1-extended-b: deferred
 - P2: not started
+
+CI: https://github.com/waswrsis/Quant-Strategy-Tokenizer/actions/runs/25859822444

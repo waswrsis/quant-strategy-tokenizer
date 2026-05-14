@@ -124,10 +124,11 @@ P1-extended-a added:
 
 P0 / P1-core compatibility:
 
-- PASS locally
+- PASS
 
 P1-extended-a CI:
 
-- pending final CI
+- https://github.com/waswrsis/Quant-Strategy-Tokenizer/actions/runs/25859822444
+- Result: PASS
 
 P1-extended-b and P2 remain deferred.
