@@ -67,6 +67,7 @@ def _load_builtin_recipes() -> None:
         files("quant_strategy_tokenizer.recipes.indicators"),
         files("quant_strategy_tokenizer.recipes.events"),
         files("quant_strategy_tokenizer.recipes.gates"),
+        files("quant_strategy_tokenizer.recipes.algorithms"),
     ]
 
     for recipe_dir in recipe_dirs:

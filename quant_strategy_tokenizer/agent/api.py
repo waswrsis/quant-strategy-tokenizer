@@ -6,6 +6,7 @@ from typing import Any
 
 from quant_strategy_tokenizer.agent.promote import PromoteResult
 from quant_strategy_tokenizer.agent.promote import promote as _promote
+from quant_strategy_tokenizer.composition import expand_builtin_recipe
 from quant_strategy_tokenizer.detokenize.explain_emitter import explain_ir as _explain_ir
 from quant_strategy_tokenizer.detokenize.trace_explainer import explain_trace as _explain_trace
 from quant_strategy_tokenizer.ir.envelope import DeploymentEnvelope, ProfileLiteral
@@ -21,6 +22,7 @@ from quant_strategy_tokenizer.mutation import (
 from quant_strategy_tokenizer.provenance.registry import get_tagspec_registry
 from quant_strategy_tokenizer.provenance.spec import TagSpec
 from quant_strategy_tokenizer.recipes.registry import get_recipe_registry
+from quant_strategy_tokenizer.recipes.schema import RecipeSpec
 from quant_strategy_tokenizer.runtime.executor import ExecutionResult, execute_strategy
 from quant_strategy_tokenizer.runtime.trace import Trace
 from quant_strategy_tokenizer.tokens.registry import get_registry
@@ -48,6 +50,12 @@ def tagspec_get(semantic_id: str, version: int = 1) -> TagSpec | None:
         return get_tagspec_registry().get(semantic_id, version)
     except KeyError:
         return None
+
+
+def recipe_expand(semantic_id: str, params: dict[str, Any] | None = None, version: int = 1) -> RecipeSpec:
+    """Expand a built-in P2a-2 recipe generator."""
+
+    return expand_builtin_recipe(semantic_id, params or {}, version=version)
 
 
 def diff(strategy_a: StrategyIR | dict[str, Any], strategy_b: StrategyIR | dict[str, Any]) -> dict[str, Any]:

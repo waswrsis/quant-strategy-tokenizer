@@ -37,6 +37,7 @@ packages = ["quant_strategy_tokenizer"]
 include = [
     "quant_strategy_tokenizer/**/*.py",
     "quant_strategy_tokenizer/**/*.json",
+    "quant_strategy_tokenizer/**/*.yaml",
     "quant_strategy_tokenizer/py.typed",
 ]
 

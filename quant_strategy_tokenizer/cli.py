@@ -11,6 +11,7 @@ import typer
 import yaml
 
 from quant_strategy_tokenizer.agent.promote import promote as promote_strategy
+from quant_strategy_tokenizer.composition import expand_builtin_recipe
 from quant_strategy_tokenizer.core.output import jsonable_value
 from quant_strategy_tokenizer.detokenize.explain_emitter import explain_ir as explain_text
 from quant_strategy_tokenizer.detokenize.trace_explainer import explain_trace as explain_trace_text
@@ -38,7 +39,9 @@ from quant_strategy_tokenizer.tokens.registry import get_registry
 
 app = typer.Typer(no_args_is_help=True)
 tag_app = typer.Typer(no_args_is_help=True)
+recipe_app = typer.Typer(no_args_is_help=True)
 app.add_typer(tag_app, name="tag")
+app.add_typer(recipe_app, name="recipe")
 
 P0_TOKEN_TRIPLES: tuple[tuple[str, int, int], ...] = (
     ("data.column", 1, 1),
@@ -112,6 +115,10 @@ def _compile_smoke_recipe(recipe_id: str) -> None:
             {"field": "cooldown_elapsed", "threshold": 10, "default": 0},
             {"state": "$externals.state"},
         ),
+        "signals.dual_ema_cross": (
+            {"fast_span": 9, "slow_span": 21, "init": "first_value"},
+            {"series": "$externals.series"},
+        ),
     }
     params, inputs = smoke[recipe_id]
     compile_recipe(
@@ -138,8 +145,8 @@ def vocabulary(check: bool = False, markdown: bool = False) -> None:
         if len(tokens) != 25:
             typer.echo(f"expected 25 tokens, got {len(tokens)}", err=True)
             raise typer.Exit(1)
-        if len(recipes) != 8:
-            typer.echo(f"expected 8 recipes, got {len(recipes)}", err=True)
+        if len(recipes) != 9:
+            typer.echo(f"expected 9 recipes, got {len(recipes)}", err=True)
             raise typer.Exit(1)
         for token_id, version, behavior_version in P0_TOKEN_TRIPLES:
             spec = token_registry.get(token_id, version).spec
@@ -166,9 +173,9 @@ def vocabulary(check: bool = False, markdown: bool = False) -> None:
         typer.echo("  status: preserved")
         typer.echo("Current vocabulary:")
         typer.echo("  tokens: 25")
-        typer.echo("  recipes: 8")
+        typer.echo("  recipes: 9")
         typer.echo("25 tokens registered, all behavior_contracts pass")
-        typer.echo("8 recipes registered, all compile")
+        typer.echo("9 recipes registered, all compile")
         return
 
     if markdown:
@@ -471,6 +478,40 @@ def tag_verify_cmd(tag_path: Path) -> None:
     _echo_json(payload)
     if not spec.verification.minimally_attached:
         raise typer.Exit(1)
+
+
+@recipe_app.command("expand")
+def recipe_expand_cmd(
+    semantic_id: str,
+    params_json: Annotated[str, typer.Option("--params")] = "{}",
+    output: Annotated[Path, typer.Option("--output")] = Path("recipe.json"),
+) -> None:
+    """Expand a P2a-2 recipe generator to a concrete recipe YAML or JSON file."""
+
+    try:
+        raw_params = json.loads(params_json)
+        if not isinstance(raw_params, dict):
+            raise TypeError("--params must decode to a JSON object")
+        recipe = expand_builtin_recipe(semantic_id, raw_params)
+    except Exception as exc:
+        _echo_json({"ok": False, "semantic_id": semantic_id, "error": str(exc)})
+        raise typer.Exit(1) from None
+
+    payload = recipe.model_dump(mode="json")
+    if output.suffix.lower() in {".yaml", ".yml"}:
+        output.write_text(yaml.safe_dump(payload, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    else:
+        output.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    _echo_json(
+        {
+            "ok": True,
+            "semantic_id": semantic_id,
+            "version": recipe.version,
+            "output": str(output),
+            "node_count": len(recipe.graph),
+            "recipe_id": recipe.recipe,
+        }
+    )
 
 
 if __name__ == "__main__":

@@ -1,0 +1,63 @@
+{
+  "recipe": "signals.dual_ema_cross",
+  "version": 1,
+  "params_schema": {
+    "fast_span": {"type": "integer", "minimum": 1, "default": 9},
+    "slow_span": {"type": "integer", "minimum": 1, "default": 21},
+    "init": {
+      "oneOf": [
+        {"type": "number"},
+        {"type": "string", "enum": ["first_value"]}
+      ],
+      "default": "first_value"
+    }
+  },
+  "inputs": {
+    "series": "TimeSeries[float]"
+  },
+  "outputs": {
+    "fast": "fast_ema.value",
+    "slow": "slow_ema.value",
+    "cross": "cross.cross"
+  },
+  "graph": [
+    {
+      "id": "fast_ema",
+      "recipe": "indicator.ewm",
+      "version": 1,
+      "params": {
+        "span": "$params.fast_span",
+        "init": "$params.init"
+      },
+      "inputs": {
+        "series": "$inputs.series"
+      },
+      "role": "fast_ema"
+    },
+    {
+      "id": "slow_ema",
+      "recipe": "indicator.ewm",
+      "version": 1,
+      "params": {
+        "span": "$params.slow_span",
+        "init": "$params.init"
+      },
+      "inputs": {
+        "series": "$inputs.series"
+      },
+      "role": "slow_ema"
+    },
+    {
+      "id": "cross",
+      "recipe": "event.cross_above",
+      "version": 1,
+      "params": {},
+      "inputs": {
+        "fast": "fast_ema.value",
+        "slow": "slow_ema.value"
+      },
+      "role": "cross"
+    }
+  ],
+  "description": "Dual EMA cross event generated from the P2a-2 deterministic DSL."
+}

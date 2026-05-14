@@ -11,7 +11,7 @@ from quant_strategy_tokenizer.tokens.registry import get_registry
 def test_recipe_registry_loads_and_freezes() -> None:
     registry = get_recipe_registry()
     assert registry.is_frozen
-    assert len(registry.list_recipes()) == 8
+    assert len(registry.list_recipes()) == 9
 
 
 def test_kdj_recipe_compiles_nested_rma() -> None:

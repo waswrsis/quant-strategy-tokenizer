@@ -14,7 +14,7 @@ def test_cli_vocabulary_check() -> None:
     result = runner.invoke(app, ["vocabulary", "--check"])
     assert result.exit_code == 0
     assert "25 tokens" in result.output
-    assert "8 recipes" in result.output
+    assert "9 recipes" in result.output
 
 
 def test_cli_validate_and_broken_hint() -> None:
