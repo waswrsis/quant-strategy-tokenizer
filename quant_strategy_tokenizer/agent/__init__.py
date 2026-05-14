@@ -10,6 +10,7 @@ from .api import (
     recipe_expand,
     recipes,
     tagspec_get,
+    tagspec_verify,
     validate,
     vocabulary,
 )
@@ -26,6 +27,7 @@ __all__ = [
     "recipe_expand",
     "recipes",
     "tagspec_get",
+    "tagspec_verify",
     "validate",
     "vocabulary",
 ]

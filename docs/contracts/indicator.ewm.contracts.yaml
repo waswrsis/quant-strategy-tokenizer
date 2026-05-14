@@ -1,0 +1,36 @@
+recipe: indicator.ewm
+version: 1
+cases:
+  - name: first_value_span_3
+    params:
+      span: 3
+      init: first_value
+    inputs:
+      series: [1.0, 2.0, 3.0]
+    expected_outputs:
+      value: [1.0, 1.5, 2.25]
+    tolerance:
+      kind: absolute
+      epsilon: 1.0e-9
+  - name: span_1_identity
+    params:
+      span: 1
+      init: first_value
+    inputs:
+      series: [1.0, 4.0, 2.0]
+    expected_outputs:
+      value: [1.0, 4.0, 2.0]
+    tolerance:
+      kind: absolute
+      epsilon: 1.0e-9
+  - name: numeric_init_with_nan
+    params:
+      span: 3
+      init: 4.0
+    inputs:
+      series: [null, 10.0]
+    expected_outputs:
+      value: [4.0, 7.0]
+    tolerance:
+      kind: absolute
+      epsilon: 1.0e-9

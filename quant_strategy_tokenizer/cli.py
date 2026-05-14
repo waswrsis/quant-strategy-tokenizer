@@ -11,7 +11,7 @@ import typer
 import yaml
 
 from quant_strategy_tokenizer.agent.promote import promote as promote_strategy
-from quant_strategy_tokenizer.composition import expand_builtin_recipe
+from quant_strategy_tokenizer.composition import expand_builtin_recipe, upgrade_verification
 from quant_strategy_tokenizer.core.output import jsonable_value
 from quant_strategy_tokenizer.detokenize.explain_emitter import explain_ir as explain_text
 from quant_strategy_tokenizer.detokenize.trace_explainer import explain_trace as explain_trace_text
@@ -463,12 +463,21 @@ def explain_trace_cmd(
 
 
 @tag_app.command("verify")
-def tag_verify_cmd(tag_path: Path) -> None:
-    """Verify a TagSpec YAML file at P2a-1 attachment level."""
+def tag_verify_cmd(
+    tag_path: Path,
+    level: Annotated[str, typer.Option("--level")] = "attachment",
+) -> None:
+    """Verify a TagSpec YAML file."""
 
+    if level not in {"attachment", "full"}:
+        typer.echo(f"unsupported verification level: {level}", err=True)
+        raise typer.Exit(2)
     spec = load_tagspec_file(tag_path)
+    if level == "full":
+        spec = upgrade_verification(spec)
     payload = {
         "ok": spec.verification.minimally_attached,
+        "level": level,
         "semantic_id": spec.semantic_id,
         "version": spec.version,
         "verification": spec.verification.model_dump(mode="json"),
@@ -476,7 +485,9 @@ def tag_verify_cmd(tag_path: Path) -> None:
         "fully_verified": spec.verification.fully_verified,
     }
     _echo_json(payload)
-    if not spec.verification.minimally_attached:
+    if (level == "attachment" and not spec.verification.minimally_attached) or (
+        level == "full" and not spec.verification.fully_verified
+    ):
         raise typer.Exit(1)
 
 

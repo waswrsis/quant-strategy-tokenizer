@@ -37,8 +37,8 @@ def _repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
-def load_tagspec_file(path: Path) -> TagSpec:
-    raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+def load_tagspec_file(path: str | Path) -> TagSpec:
+    raw = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
     if not isinstance(raw, dict):
         raise TypeError("TagSpec YAML must contain a mapping")
     return verify_tag_spec(TagSpec.model_validate(raw))
