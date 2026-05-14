@@ -20,11 +20,14 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+parquet = ["pyarrow>=14"]
+pandas = ["pandas>=2"]
 dev = [
     "pytest>=7.4",
     "pytest-cov>=4.1",
     "hypothesis>=6.90",
     "jsonschema>=4",
+    "pyarrow>=14",
     "mypy>=1.7",
     "ruff>=0.1",
 ]
