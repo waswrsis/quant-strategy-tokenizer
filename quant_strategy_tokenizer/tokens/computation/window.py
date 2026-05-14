@@ -22,6 +22,12 @@ def _window_output(series: pd.Series, window: int, op: str) -> tuple[pd.Series, 
     inputs={"series": "TimeSeries[float]"},
     outputs={"value": "TimeSeries[float]"},
     params_schema={"window": {"type": "integer", "minimum": 1}},
+    temporal={
+        "uses_future_data": False,
+        "window_mode": "trailing",
+        "output_available_at": "end_of_window",
+        "max_lookback": None,
+    },
     contracts=[
         {
             "name": "rolling_max_3",
@@ -53,6 +59,12 @@ def window_max(series: pd.Series, window: int) -> TokenOutput:
     inputs={"series": "TimeSeries[float]"},
     outputs={"value": "TimeSeries[float]"},
     params_schema={"window": {"type": "integer", "minimum": 1}},
+    temporal={
+        "uses_future_data": False,
+        "window_mode": "trailing",
+        "output_available_at": "end_of_window",
+        "max_lookback": None,
+    },
     contracts=[
         {
             "name": "rolling_min_3",

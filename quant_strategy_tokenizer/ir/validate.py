@@ -5,10 +5,8 @@ from __future__ import annotations
 from collections import Counter
 from typing import Any
 
-from pydantic import BaseModel, Field
-
 from quant_strategy_tokenizer.core.errors import ErrorKind
-from quant_strategy_tokenizer.ir.canonicalize import _contains_refs
+from quant_strategy_tokenizer.ir.canonicalize import _contains_refs, canonicalize
 from quant_strategy_tokenizer.ir.envelope import ProfileLiteral
 from quant_strategy_tokenizer.ir.model import CANONICAL_VERSION, GraphNode, StrategyIR
 from quant_strategy_tokenizer.ir.repair import (
@@ -17,30 +15,14 @@ from quant_strategy_tokenizer.ir.repair import (
     missing_unknown_handling_hint,
     type_mismatch_hint,
 )
+from quant_strategy_tokenizer.ir.validation_result import ValidationFailure, ValidationResult
+from quant_strategy_tokenizer.ir.validators.purity import validate_purity
+from quant_strategy_tokenizer.ir.validators.temporal import validate_temporal
 from quant_strategy_tokenizer.recipes.compiler import CycleError, MaxDepthError, compile_recipe
 from quant_strategy_tokenizer.recipes.registry import RecipeRegistry, get_recipe_registry
 from quant_strategy_tokenizer.tokens.registry import Registry, get_registry
 
-
-class ValidationFailure(BaseModel):
-    """One validator failure."""
-
-    kind: str
-    message: str
-    node_id: str | None = None
-    severity: str | None = None
-    repair_hint: dict[str, Any] | None = None
-    details: dict[str, Any] = Field(default_factory=dict)
-
-
-class ValidationResult(BaseModel):
-    """Aggregate validator result."""
-
-    failures: list[ValidationFailure] = Field(default_factory=list)
-
-    @property
-    def ok(self) -> bool:
-        return not self.failures
+__all__ = ["ValidationFailure", "ValidationResult", "validate"]
 
 
 def _node_refs(value: Any) -> list[str]:
@@ -457,6 +439,7 @@ def validate(
     token_registry = registry or get_registry()
     recipes = recipe_registry or get_recipe_registry()
     failures: list[ValidationFailure] = []
+    warnings: list[ValidationFailure] = []
     failures.extend(check_canonical_version_supported(ir))
     failures.extend(check_unique_node_ids(ir))
     failures.extend(check_tokens_exist(ir, token_registry))
@@ -469,4 +452,12 @@ def validate(
     failures.extend(check_unknown_handling_declared(ir))
     failures.extend(check_profile_consistency(ir, profile))
     failures.extend(check_risk_path(ir, profile))
-    return ValidationResult(failures=failures)
+
+    if not failures:
+        policy_ir = ir if ir.form == "canonical" else canonicalize(ir, registry=token_registry, recipe_registry=recipes)
+        failures.extend(validate_purity(policy_ir, profile, token_registry))
+        temporal_failures, temporal_warnings = validate_temporal(policy_ir, profile, token_registry)
+        failures.extend(temporal_failures)
+        warnings.extend(temporal_warnings)
+
+    return ValidationResult(failures=failures, warnings=warnings)

@@ -2,7 +2,7 @@
 
 Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the P1-core extension from `QST_P1_CONSTRUCTION_MANUAL_v1.2.md`.
 
-The current implementation keeps the P0 baseline frozen and adds the P1-core envelope, profile, risk, and order-intent workflow. It does not include P1-extended FSM, TA indicator expansion, max-loss risk controls, or purity/temporal validator work.
+The current implementation keeps the P0 baseline frozen, accepts P1-core, and adds P1-extended-a purity and temporal safety validators. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, or any P2 composition work.
 
 The implemented loop covers:
 
@@ -14,21 +14,49 @@ The implemented loop covers:
 - local execution with trace output
 - L1 explanation, trace explanation, agent API, and CLI
 - profile promotion from `research` to guarded profiles without changing content hashes
+- purity and temporal safety validation before P2
 
-## P1-core Status
+## Project Status
 
-P0 frozen baseline:
+| Layer | Status |
+|---|---|
+| P0 | frozen |
+| P0.1 | hardened |
+| P1-core | accepted |
+| P1-extended-a | completed |
+| P1-extended-b | deferred |
+| P2 | not started |
+
+## Frozen P0 Baseline
 
 - 17 tokens
 - 4 recipes
+- `qst-ir/0.3`
+- `qst-canonical/0.1`
 - Frozen hashes and vocabulary triples recorded in `docs/P0_ACCEPTANCE.md`
 
-Current P1-core state:
+## Current P1-Core Vocabulary
 
 - 25 tokens
 - 8 recipes
-- P1-core CLI/e2e/docs accepted
-- P1-extended not started
+- risk path
+- promote
+- order_intent
+- explain-trace
+
+## Not In P0/P1-Core/P1-Extended-A
+
+The following are intentionally not part of the accepted P0/P1 baseline:
+
+- provenance tags
+- TagSpec
+- recipe generator
+- CSE
+- kernel substitution
+- FSM
+- expanded indicator library
+- RL / HFT
+- plugin / MCP
 
 Reference strategy:
 

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from quant_strategy_tokenizer.agent.promote import promote
 from quant_strategy_tokenizer.ir.canonicalize import canonicalize
 from quant_strategy_tokenizer.ir.envelope import DeploymentEnvelope
@@ -7,6 +9,12 @@ from quant_strategy_tokenizer.ir.hashing import compute_hashes
 from quant_strategy_tokenizer.ir.serialize import to_json
 from quant_strategy_tokenizer.parse.yaml_loader import load_strategy
 from tests.ir.p1_fixtures import P1_MISSING_RISK_PATH_YAML, P1_PRETRADE_READY_YAML
+from tests.ir.validator_helpers import (
+    empty_recipe_registry,
+    make_policy_registry,
+    make_pretrade_ir,
+    make_token,
+)
 
 
 def _envelope_for(ir_hash: str, profile: str = "research") -> DeploymentEnvelope:
@@ -61,3 +69,39 @@ def test_promote_fails_without_risk_path() -> None:
     assert not result.ok
     assert result.new_envelope is None
     assert any(failure.kind == "missing_risk_path" for failure in result.new_validation_failures)
+
+
+def test_promote_rejects_future_data_strategy(monkeypatch: pytest.MonkeyPatch) -> None:
+    registry = make_policy_registry(
+        make_token(
+            "test.signal",
+            temporal={
+                "uses_future_data": True,
+                "window_mode": "trailing",
+                "output_available_at": "same_bar_close",
+                "max_lookback": None,
+            },
+        )
+    )
+    monkeypatch.setattr("quant_strategy_tokenizer.ir.validate.get_registry", lambda: registry)
+    monkeypatch.setattr("quant_strategy_tokenizer.ir.validate.get_recipe_registry", empty_recipe_registry)
+    ir = make_pretrade_ir()
+    envelope = _envelope_for("sha256:" + "0" * 64)
+
+    result = promote(ir, envelope, "pretrade")
+
+    assert not result.ok
+    assert any(failure.kind == "future_data_violation" for failure in result.new_validation_failures)
+
+
+def test_promote_rejects_external_read_strategy(monkeypatch: pytest.MonkeyPatch) -> None:
+    registry = make_policy_registry(make_token("test.signal", purity="external_read"))
+    monkeypatch.setattr("quant_strategy_tokenizer.ir.validate.get_registry", lambda: registry)
+    monkeypatch.setattr("quant_strategy_tokenizer.ir.validate.get_recipe_registry", empty_recipe_registry)
+    ir = make_pretrade_ir()
+    envelope = _envelope_for("sha256:" + "0" * 64)
+
+    result = promote(ir, envelope, "pretrade")
+
+    assert not result.ok
+    assert any(failure.kind == "purity_violation" for failure in result.new_validation_failures)

@@ -13,5 +13,9 @@ This document lists stable validation and runtime error kinds used by P0 and P1-
 | `executor_exception` | runtime | A token executor raised an exception. | Inspect the trace node warning or exception text. |
 | `missing_risk_path` | validation | A guarded profile has `plan.order_intent` without an upstream `risk.*` token. | Insert `risk.position_cap` or `risk.notional_cap` before `plan.order_intent`. |
 | `profile_violation` | validation | The strategy envelope/profile is inconsistent with P1-core rules. | Adjust `_envelope.profile` or strategy wiring. |
+| `purity_violation` | validation | A token has purity above the active profile policy. | Change profile or replace the token with a safer equivalent. |
+| `future_data_violation` | validation | A strict profile uses token metadata marked as future-data dependent. | Replace with a trailing-window token. |
+| `unsafe_temporal_window` | validation | A strict profile uses centered, full-sample, mixed, or unknown temporal window metadata. | Use a trailing window or change to research/paper. |
+| `future_data_warning` | validation warning | Research/paper profile sees future-data metadata. | Keep only for research or replace before promotion. |
 
 P1-core keeps P0 repair hints compatible. In particular, `strategies/broken_no_lift.qst.yaml` must continue to produce a `type_mismatch` failure with a repair hint suggesting `decision.lift_bool`.

@@ -48,6 +48,12 @@ def data_column(frame: pd.DataFrame, column: str) -> TokenOutput:
     inputs={"series": "TimeSeries[float]"},
     outputs={"value": "TimeSeries[float]"},
     params_schema={"periods": {"type": "integer", "default": 1}},
+    temporal={
+        "uses_future_data": False,
+        "window_mode": "trailing",
+        "output_available_at": "same_bar_close",
+        "max_lookback": None,
+    },
     contracts=[
         {
             "name": "shift_by_1",

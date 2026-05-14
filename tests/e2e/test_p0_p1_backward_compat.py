@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
+from typer.testing import CliRunner
+
+from quant_strategy_tokenizer.cli import app
 from quant_strategy_tokenizer.ir.hashing import compute_hashes
 from quant_strategy_tokenizer.ir.validate import validate
 from quant_strategy_tokenizer.parse.yaml_loader import load_strategy_file
@@ -9,6 +13,9 @@ from quant_strategy_tokenizer.recipes.registry import get_recipe_registry
 from quant_strategy_tokenizer.tokens.registry import get_registry
 
 ROOT = Path(__file__).resolve().parents[2]
+STRATEGY = ROOT / "strategies" / "kdj_cross_basic.qst.yaml"
+MARKET = ROOT / "examples" / "sample_market_btc_15m.csv"
+runner = CliRunner()
 
 EXPECTED_GRAPH_HASH = "sha256:2b84dcdcebf5af4d2bab65c872745b1d9ec872d181f69944e7ad3d9371d65947"
 EXPECTED_PARAM_HASH = "sha256:3b5e14a46a17204bb5b771d339f4fc660f1e059755c0184a17f13312fb471c28"
@@ -43,7 +50,7 @@ P0_RECIPE_PAIRS = [
 
 
 def test_kdj_p0_hashes_unchanged_under_p1() -> None:
-    ir = load_strategy_file(ROOT / "strategies" / "kdj_cross_basic.qst.yaml")
+    ir = load_strategy_file(STRATEGY)
 
     hashes = compute_hashes(ir)
 
@@ -80,3 +87,66 @@ def test_p0_vocabulary_triples_still_resolve() -> None:
         recipe = recipe_registry.get(recipe_id, version)
         assert recipe.recipe == recipe_id
         assert recipe.version == version
+
+
+def test_p0_cli_commands_remain_compatible(tmp_path: Path) -> None:
+    trace_path = tmp_path / "trace.json"
+    lookback_14 = tmp_path / "kdj_lookback_14.qst.yaml"
+    lookback_14.write_text(
+        STRATEGY.read_text(encoding="utf-8").replace("lookback: 9", "lookback: 14"),
+        encoding="utf-8",
+    )
+
+    command_cases = [
+        ["vocabulary", "--check"],
+        ["validate", str(STRATEGY)],
+        ["canonicalize", str(STRATEGY)],
+        ["hash", str(STRATEGY)],
+        ["explain", str(STRATEGY), "--level", "L1"],
+        [
+            "execute",
+            str(STRATEGY),
+            "--market",
+            str(MARKET),
+            "--trace-path",
+            str(trace_path),
+        ],
+        ["compare", str(STRATEGY), str(lookback_14)],
+    ]
+
+    outputs = []
+    for args in command_cases:
+        result = runner.invoke(app, args)
+        assert result.exit_code == 0, result.output
+        outputs.append(result.output)
+
+    assert "P0 frozen baseline:" in outputs[0]
+    assert "valid" in outputs[1]
+    assert '"form": "canonical"' in outputs[2]
+    assert EXPECTED_INSTANCE_HASH in outputs[3]
+    assert "kdj_cross_basic" in outputs[4]
+    assert trace_path.exists()
+    assert "recipes.kdj.params.lookback" in outputs[6]
+
+
+def test_p1_core_features_do_not_change_p0_execution(tmp_path: Path) -> None:
+    trace_path = tmp_path / "trace.json"
+
+    result = runner.invoke(
+        app,
+        [
+            "execute",
+            str(STRATEGY),
+            "--market",
+            str(MARKET),
+            "--profile",
+            "research",
+            "--trace-path",
+            str(trace_path),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["outputs"]["plan"]["kind"] == "noop"
+    assert payload["outputs"]["plan"]["reason"] == "p0_no_order_intent"

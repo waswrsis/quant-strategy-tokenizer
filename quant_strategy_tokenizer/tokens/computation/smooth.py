@@ -26,6 +26,12 @@ from quant_strategy_tokenizer.tokens.registry import token
             "default": "first_value",
         },
     },
+    temporal={
+        "uses_future_data": False,
+        "window_mode": "trailing",
+        "output_available_at": "same_bar_close",
+        "max_lookback": None,
+    },
     contracts=[
         {
             "name": "first_value_init",

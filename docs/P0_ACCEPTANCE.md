@@ -164,3 +164,26 @@ Commit: 644751e73ebe45a97022435281d9d497a2f84834
 Result: PASS
 
 CI: https://github.com/waswrsis/Quant-Strategy-Tokenizer/actions/runs/25824730331
+
+## P0 Baseline After P1-core Acceptance
+
+Date: 2026-05-14
+Commit: pending final CI
+
+P0 frozen baseline remains unchanged:
+
+- P0 token count: 17
+- P0 recipe count: 4
+- IR version: qst-ir/0.3
+- canonical version: qst-canonical/0.1
+- graph_hash baseline: unchanged
+- param_hash baseline: unchanged
+- instance_hash baseline: unchanged
+- P0 backward compatibility: PASS locally
+
+Current project state:
+
+- P1-core: accepted
+- P1-extended-a: completed locally, pending final CI
+- P1-extended-b: deferred
+- P2: not started

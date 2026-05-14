@@ -192,6 +192,11 @@ def validate_cmd(
     result = validate_ir(ir, profile=_effective_profile(profile, envelope.profile))
     if result.ok:
         typer.echo("valid")
+        for warning in result.warnings:
+            typer.echo(
+                json.dumps(warning.model_dump(exclude_none=True), ensure_ascii=False),
+                err=True,
+            )
         return
     typer.echo("INVALID", err=True)
     for failure in result.failures:

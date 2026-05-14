@@ -12,12 +12,13 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Literal
 
-from .spec import TokenSpec
+from .spec import TemporalSpec, TokenSpec
 
 DEFAULT_TEMPORAL: dict[str, Any] = {
     "uses_future_data": False,
-    "output_available_at": "bar_close",
-    "warmup_behavior": "instant",
+    "window_mode": "none",
+    "output_available_at": "same_bar_close",
+    "max_lookback": None,
 }
 DEFAULT_FAILURE_POLICY: dict[str, Any] = {
     "on_missing_input": "error",
@@ -178,7 +179,7 @@ def token(
             inputs=inputs,
             outputs=outputs,
             params_schema=params_schema or {},
-            temporal=temporal or DEFAULT_TEMPORAL,
+            temporal=TemporalSpec.model_validate(temporal or DEFAULT_TEMPORAL),
             failure_policy=failure_policy or DEFAULT_FAILURE_POLICY,
             behavior_contract=contracts or [],
             usage_examples=usage_examples or [],

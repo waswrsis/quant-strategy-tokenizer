@@ -5,7 +5,7 @@ Accepted implementation commit: 644751e73ebe45a97022435281d9d497a2f84834
 
 ## Scope
 
-P1-core library layer is implemented. P1-core CLI/e2e/docs are accepted. P1-extended is not started.
+P1-core library layer is implemented. P1-core CLI/e2e/docs are accepted. P1-extended-a was added afterward as a pre-P2 validator hardening step. P1-extended-b is not started.
 
 Included:
 
@@ -22,7 +22,6 @@ Excluded:
 - FSM/state transition engine
 - TA indicator expansion beyond P1-core
 - `max_loss`
-- Purity and temporal validator expansion
 - Plugin registry
 - MCP adapter
 
@@ -91,8 +90,8 @@ Result: PASS
 Observed local result:
 
 - `python -m pytest --cov=quant_strategy_tokenizer --cov-fail-under=80`
-- 108 passed
-- Coverage: 85.17%
+- 133 passed
+- Coverage: 85.77%
 
 ## CI
 
@@ -111,3 +110,24 @@ Jobs:
 - `canonical_version` remains `qst-canonical/0.1`.
 - `ir_version` remains `qst-ir/0.3`.
 - P1-core promotion changes only the deployment envelope.
+
+## After P1-Extended-A
+
+P1-core remains accepted.
+
+P1-extended-a added:
+
+- purity validator
+- temporal safety validator
+- research/paper temporal warnings
+- pretrade/production_guarded purity and temporal failures
+
+P0 / P1-core compatibility:
+
+- PASS locally
+
+P1-extended-a CI:
+
+- pending final CI
+
+P1-extended-b and P2 remain deferred.
