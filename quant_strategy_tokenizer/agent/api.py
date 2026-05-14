@@ -12,6 +12,12 @@ from quant_strategy_tokenizer.ir.envelope import DeploymentEnvelope, ProfileLite
 from quant_strategy_tokenizer.ir.model import StrategyIR
 from quant_strategy_tokenizer.ir.validate import ValidationResult
 from quant_strategy_tokenizer.ir.validate import validate as _validate
+from quant_strategy_tokenizer.mutation import (
+    MutationResult,
+    diff_strategies,
+    mutate_strategy,
+    parse_mutation_op,
+)
 from quant_strategy_tokenizer.provenance.registry import get_tagspec_registry
 from quant_strategy_tokenizer.provenance.spec import TagSpec
 from quant_strategy_tokenizer.recipes.registry import get_recipe_registry
@@ -42,6 +48,22 @@ def tagspec_get(semantic_id: str, version: int = 1) -> TagSpec | None:
         return get_tagspec_registry().get(semantic_id, version)
     except KeyError:
         return None
+
+
+def diff(strategy_a: StrategyIR | dict[str, Any], strategy_b: StrategyIR | dict[str, Any]) -> dict[str, Any]:
+    """Return a P2b-0 diff report for two strategies."""
+
+    left = strategy_a if isinstance(strategy_a, StrategyIR) else StrategyIR.model_validate(strategy_a)
+    right = strategy_b if isinstance(strategy_b, StrategyIR) else StrategyIR.model_validate(strategy_b)
+    return diff_strategies(left, right).model_dump(mode="json")
+
+
+def mutate(ir: StrategyIR | dict[str, Any], op: dict[str, Any]) -> MutationResult:
+    """Apply one P2b-0 mutation op."""
+
+    parsed_ir = ir if isinstance(ir, StrategyIR) else StrategyIR.model_validate(ir)
+    parsed_op = parse_mutation_op(op)
+    return mutate_strategy(parsed_ir, parsed_op)
 
 
 def validate(ir: StrategyIR | dict[str, Any], profile: ProfileLiteral = "research") -> ValidationResult:

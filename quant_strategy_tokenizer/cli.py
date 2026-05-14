@@ -18,8 +18,10 @@ from quant_strategy_tokenizer.ir.canonicalize import canonicalize as canonicaliz
 from quant_strategy_tokenizer.ir.compare import compare_ir
 from quant_strategy_tokenizer.ir.envelope import ProfileLiteral
 from quant_strategy_tokenizer.ir.hashing import compute_hashes
-from quant_strategy_tokenizer.ir.serialize import to_json
+from quant_strategy_tokenizer.ir.serialize import to_json, to_plain
 from quant_strategy_tokenizer.ir.validate import validate as validate_ir
+from quant_strategy_tokenizer.mutation import diff_strategies, mutate_strategy, parse_mutation_op
+from quant_strategy_tokenizer.mutation.repair import mutation_from_repair_hint
 from quant_strategy_tokenizer.parse.yaml_loader import (
     load_strategy_file,
     load_strategy_file_with_envelope,
@@ -242,6 +244,71 @@ def compare_cmd(yaml_a: Path, yaml_b: Path) -> None:
     typer.echo("")
     typer.echo("Instance:")
     typer.echo(f"  instance_hash {'identical' if result.instance_equal else 'differs'}")
+
+
+@app.command("diff")
+def diff_cmd(yaml_a: Path, yaml_b: Path) -> None:
+    """Print a P2b-0 JSON diff report for two strategy YAML files."""
+
+    result = diff_strategies(load_strategy_file(yaml_a), load_strategy_file(yaml_b))
+    _echo_json(result.model_dump(mode="json"))
+
+
+def _load_json_path(path: Path) -> dict[str, Any]:
+    raw = json.loads(path.read_text(encoding="utf-8-sig"))
+    if not isinstance(raw, dict):
+        raise TypeError(f"{path} must contain a JSON object")
+    return raw
+
+
+def _parse_mutation_input(
+    op_json: str | None,
+    op_file: Path | None,
+    repair_hint: Path | None,
+) -> Any:
+    inputs = [item is not None for item in (op_json, op_file, repair_hint)]
+    if sum(inputs) != 1:
+        typer.echo("provide exactly one of --op, --op-file, or --repair-hint", err=True)
+        raise typer.Exit(2)
+    if op_json is not None:
+        raw = json.loads(op_json)
+        if not isinstance(raw, dict):
+            raise TypeError("--op must decode to a JSON object")
+        return parse_mutation_op(raw)
+    if op_file is not None:
+        return parse_mutation_op(_load_json_path(op_file))
+    assert repair_hint is not None
+    return mutation_from_repair_hint(_load_json_path(repair_hint))
+
+
+@app.command("mutate")
+def mutate_cmd(
+    path: Path,
+    op_json: Annotated[str | None, typer.Option("--op")] = None,
+    op_file: Annotated[Path | None, typer.Option("--op-file")] = None,
+    repair_hint: Annotated[Path | None, typer.Option("--repair-hint")] = None,
+    output: Annotated[Path | None, typer.Option("--output")] = None,
+) -> None:
+    """Apply one P2b-0 mutation operation to a strategy YAML file."""
+
+    op = _parse_mutation_input(op_json, op_file, repair_hint)
+    result = mutate_strategy(load_strategy_file(path), op)
+    if not result.ok:
+        _echo_json(result.model_dump(mode="json", exclude={"ir"}))
+        raise typer.Exit(1)
+
+    assert result.ir is not None
+    if output is not None:
+        output.write_text(
+            yaml.safe_dump(to_plain(result.ir), sort_keys=False, allow_unicode=True),
+            encoding="utf-8",
+        )
+    payload = result.model_dump(mode="json", exclude={"ir"})
+    if output is not None:
+        payload["output"] = str(output)
+    else:
+        payload["ir"] = to_plain(result.ir)
+    _echo_json(payload)
 
 
 @app.command("explain")

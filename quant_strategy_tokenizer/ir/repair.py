@@ -62,6 +62,7 @@ def missing_risk_path_hint(target_node: str | None = None) -> dict[str, Any]:
             {
                 "op": "InsertBefore",
                 "target_node": target_node or "plan.order_intent",
+                "target_input_name": "decision",
                 "insert_node": {
                     "id": "risk_$AUTO",
                     "token": "risk.position_cap",
