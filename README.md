@@ -1,8 +1,8 @@
 # Quant Strategy Tokenizer
 
-Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, and P3a-0 lock-gate construction stages.
+Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, and P3 construction stages.
 
-The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, implements P2a-0/P2a-1 provenance metadata, P2a-2 deterministic recipe generation, P2a-3 composition validation, P2b mutation, P2c-core execution-plan CSE, an opt-in P2c-extended kernel substitution spike, the P3a-0 deterministic lock hard gate, and the P3a-1 directory package format. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, a production kernel framework, P3 search, or P3 fork lineage.
+The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, implements P2a-0/P2a-1 provenance metadata, P2a-2 deterministic recipe generation, P2a-3 composition validation, P2b mutation, P2c-core execution-plan CSE, an opt-in P2c-extended kernel substitution spike, the P3a-0 deterministic lock hard gate, the P3a-1 directory package format, P3b-0 registry search, and P3b-1 fork lineage. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, a production kernel framework, P4+ full-text package search, or numerical equivalence verification.
 
 The implemented loop covers:
 
@@ -20,6 +20,8 @@ The implemented loop covers:
 - empirical composition validation for `indicator.ewm/v1`
 - deterministic `qst.lock` generation and structural verification
 - directory-based `.qstpkg` packages with package/unpack/verify
+- on-demand token/recipe/TagSpec search from public registries
+- `qst fork` lineage metadata with `qst-ir/0.3.1`
 
 ## Project Status
 
@@ -40,7 +42,8 @@ The implemented loop covers:
 | P2c-extended | accepted |
 | P3a-0 lock gate | accepted |
 | P3a-1 package | accepted |
-| P3b search/fork | not started |
+| P3b-0 search | accepted |
+| P3b-1 fork lineage | accepted |
 
 ## Frozen P0 Baseline
 
@@ -144,12 +147,12 @@ The following are intentionally not part of the accepted P0/P1/P2-core baseline:
 
 - advanced recipe library beyond `signals.dual_ema_cross/v1`
 - production kernel framework beyond the `indicator.ewm/v1` opt-in spike
+- persistent package search indexes
+- P4+ full-text or cross-package search
 - FSM
 - expanded indicator library
 - RL / HFT
 - plugin / MCP
-- P3 search index
-- P3 fork lineage
 
 Reference strategy:
 
@@ -305,5 +308,30 @@ Expected behavior:
 - Packages without `expected_trace.json` verify at `STRUCTURAL` level.
 - Packages with `expected_trace.json` verify at `SEMANTIC_TRACE` level when both full and semantic trace hashes match.
 - `SEMANTIC_TRACE` still does not prove numerical output equivalence.
+
+## P3b Search And Fork Verification
+
+```bash
+qst search token --output-type "TimeSeries[float]"
+qst search recipe --uses-token smooth.linear_recursive --limit 20
+qst search tagspec --fully-verified
+
+qst fork strategies/kdj_cross_basic.qst.yaml \
+  --new-id kdj_variant \
+  --out /tmp/kdj_variant.qst.yaml
+
+qst hash strategies/kdj_cross_basic.qst.yaml
+qst hash /tmp/kdj_variant.qst.yaml
+```
+
+Expected behavior:
+
+- Search scans public token, recipe, and TagSpec registries in memory.
+- Search does not write a persistent index file.
+- `qst search tagspec --fully-verified` returns the verified `indicator.ewm/v1` TagSpec.
+- `qst fork` is the only command that emits `qst-ir/0.3.1`.
+- Forked strategies include inert `derived_from` metadata.
+- Existing commands preserve `qst-ir/0.3`.
+- Three-layer hashes and execution fingerprints ignore `derived_from`.
 
 The project experience from the previous repository history is preserved in [docs/PROJECT_EXPERIENCE.md](docs/PROJECT_EXPERIENCE.md), with its supporting asset at [docs/assets/performance-90d.png](docs/assets/performance-90d.png).
