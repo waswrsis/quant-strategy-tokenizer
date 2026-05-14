@@ -12,6 +12,8 @@ from quant_strategy_tokenizer.ir.envelope import DeploymentEnvelope, ProfileLite
 from quant_strategy_tokenizer.ir.model import StrategyIR
 from quant_strategy_tokenizer.ir.validate import ValidationResult
 from quant_strategy_tokenizer.ir.validate import validate as _validate
+from quant_strategy_tokenizer.provenance.registry import get_tagspec_registry
+from quant_strategy_tokenizer.provenance.spec import TagSpec
 from quant_strategy_tokenizer.recipes.registry import get_recipe_registry
 from quant_strategy_tokenizer.runtime.executor import ExecutionResult, execute_strategy
 from quant_strategy_tokenizer.runtime.trace import Trace
@@ -31,6 +33,15 @@ def recipes(category: str | None = None) -> list[dict[str, Any]]:
 
     registry = get_recipe_registry()
     return [spec.model_dump(mode="json") for spec in registry.list_recipes(category=category)]
+
+
+def tagspec_get(semantic_id: str, version: int = 1) -> TagSpec | None:
+    """Return a TagSpec by semantic id and version."""
+
+    try:
+        return get_tagspec_registry().get(semantic_id, version)
+    except KeyError:
+        return None
 
 
 def validate(ir: StrategyIR | dict[str, Any], profile: ProfileLiteral = "research") -> ValidationResult:

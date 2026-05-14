@@ -1,6 +1,15 @@
 """Agent-facing API."""
 
-from .api import execute, explain_ir, explain_trace, promote, recipes, validate, vocabulary
+from .api import (
+    execute,
+    explain_ir,
+    explain_trace,
+    promote,
+    recipes,
+    tagspec_get,
+    validate,
+    vocabulary,
+)
 from .discover import discover
 
 __all__ = [
@@ -10,6 +19,7 @@ __all__ = [
     "explain_trace",
     "promote",
     "recipes",
+    "tagspec_get",
     "validate",
     "vocabulary",
 ]

@@ -24,6 +24,7 @@ from quant_strategy_tokenizer.parse.yaml_loader import (
     load_strategy_file,
     load_strategy_file_with_envelope,
 )
+from quant_strategy_tokenizer.provenance.registry import load_tagspec_file
 from quant_strategy_tokenizer.recipes.compiler import compile_recipe
 from quant_strategy_tokenizer.recipes.registry import get_recipe_registry
 from quant_strategy_tokenizer.runtime.executor import execute_strategy
@@ -32,6 +33,8 @@ from quant_strategy_tokenizer.tokens._contract_runner import run_contract
 from quant_strategy_tokenizer.tokens.registry import get_registry
 
 app = typer.Typer(no_args_is_help=True)
+tag_app = typer.Typer(no_args_is_help=True)
+app.add_typer(tag_app, name="tag")
 
 P0_TOKEN_TRIPLES: tuple[tuple[str, int, int], ...] = (
     ("data.column", 1, 1),
@@ -351,6 +354,24 @@ def explain_trace_cmd(
         raise typer.Exit(2)
     trace = Trace.model_validate_json(trace_path.read_text(encoding="utf-8"))
     typer.echo(explain_trace_text(trace, level=level))  # type: ignore[arg-type]
+
+
+@tag_app.command("verify")
+def tag_verify_cmd(tag_path: Path) -> None:
+    """Verify a TagSpec YAML file at P2a-1 attachment level."""
+
+    spec = load_tagspec_file(tag_path)
+    payload = {
+        "ok": spec.verification.minimally_attached,
+        "semantic_id": spec.semantic_id,
+        "version": spec.version,
+        "verification": spec.verification.model_dump(mode="json"),
+        "minimally_attached": spec.verification.minimally_attached,
+        "fully_verified": spec.verification.fully_verified,
+    }
+    _echo_json(payload)
+    if not spec.verification.minimally_attached:
+        raise typer.Exit(1)
 
 
 if __name__ == "__main__":

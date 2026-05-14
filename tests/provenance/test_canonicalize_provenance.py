@@ -29,7 +29,7 @@ def test_indicator_ewm_expansion_carries_provenance_through_rename_and_sort() ->
     assert tag.params["span"] == 9
     assert tag.params["init"] == "first_value"
     assert tag.role == "ewm"
-    assert tag.tag_attached_by == "recipe_compiler"
+    assert tag.tag_attached_by.type == "recipe_compiler"
 
 
 def test_non_ewm_recipes_do_not_get_p2a0_provenance() -> None:

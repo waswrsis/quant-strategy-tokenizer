@@ -1,5 +1,6 @@
-"""P2a-0 provenance primitives."""
+"""Provenance primitives."""
 
-from .tag import ProvenanceTag
+from .spec import TagSpec, VerificationStatus
+from .tag import ProvenanceTag, TagAttachedBy
 
-__all__ = ["ProvenanceTag"]
+__all__ = ["ProvenanceTag", "TagAttachedBy", "TagSpec", "VerificationStatus"]
