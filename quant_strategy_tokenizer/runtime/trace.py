@@ -23,6 +23,9 @@ class TraceNode(BaseModel):
     warnings: list[str] = Field(default_factory=list)
     unknown_reason: str | None = None
     error_kind: str | None = None
+    cache_hit: bool = False
+    reused_from: str | None = None
+    fingerprint: str | None = None
 
 
 class Trace(BaseModel):

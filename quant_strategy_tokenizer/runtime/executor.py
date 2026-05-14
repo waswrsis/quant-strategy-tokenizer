@@ -15,6 +15,7 @@ from quant_strategy_tokenizer.core.output import (
     normalize_token_output,
     summarize_value,
 )
+from quant_strategy_tokenizer.execution.plan import make_execution_plan
 from quant_strategy_tokenizer.ir.canonicalize import canonicalize
 from quant_strategy_tokenizer.ir.envelope import ProfileLiteral
 from quant_strategy_tokenizer.ir.hashing import compute_hashes
@@ -92,6 +93,9 @@ def _add_trace_node(
     token_version: int,
     behavior_version: int,
     output: TokenOutput,
+    cache_hit: bool = False,
+    reused_from: str | None = None,
+    fingerprint: str | None = None,
 ) -> None:
     trace.nodes.append(
         TraceNode(
@@ -104,6 +108,9 @@ def _add_trace_node(
             warnings=output.warnings,
             unknown_reason=output.unknown_reason,
             error_kind=output.error_kind,
+            cache_hit=cache_hit,
+            reused_from=reused_from,
+            fingerprint=fingerprint,
         )
     )
     if output.status == "unknown":
@@ -136,30 +143,40 @@ def execute_strategy(
 
     token_registry = registry or get_registry()
     node_outputs: dict[str, Any] = {}
+    output_by_node: dict[str, TokenOutput] = {}
+    node_by_id = {node.id: node for node in canonical.graph}
+    plan = make_execution_plan(canonical, registry=token_registry)
 
-    for node in canonical.graph:
+    for plan_node in plan.nodes:
+        node = node_by_id[plan_node.node_id]
         registered = token_registry.get(node.token, node.v)
-        try:
-            resolved_inputs = _resolve_value(node.inputs, node_outputs, externals)
-            raw_output = registered.executor(**resolved_inputs, **node.params)
-            output = normalize_token_output(raw_output)
-        except UnresolvedReferenceError as exc:
-            output = TokenOutput(
-                status="error",
-                error_kind=ErrorKind.missing_input.value,
-                values={},
-                warnings=[str(exc)],
-            )
-        except Exception as exc:
-            output = TokenOutput(
-                status="error",
-                error_kind=ErrorKind.executor_exception.value,
-                values={},
-                warnings=[f"{type(exc).__name__}: {exc}"],
-            )
+
+        if plan_node.action == "reuse":
+            assert plan_node.reused_from is not None
+            output = output_by_node[plan_node.reused_from]
+        else:
+            try:
+                resolved_inputs = _resolve_value(node.inputs, node_outputs, externals)
+                raw_output = registered.executor(**resolved_inputs, **node.params)
+                output = normalize_token_output(raw_output)
+            except UnresolvedReferenceError as exc:
+                output = TokenOutput(
+                    status="error",
+                    error_kind=ErrorKind.missing_input.value,
+                    values={},
+                    warnings=[str(exc)],
+                )
+            except Exception as exc:
+                output = TokenOutput(
+                    status="error",
+                    error_kind=ErrorKind.executor_exception.value,
+                    values={},
+                    warnings=[f"{type(exc).__name__}: {exc}"],
+                )
 
         for port, value in output.values.items():
             node_outputs[f"{node.id}.{port}"] = value
+        output_by_node[node.id] = output
 
         _add_trace_node(
             trace,
@@ -168,6 +185,9 @@ def execute_strategy(
             token_version=node.v,
             behavior_version=registered.spec.behavior_version,
             output=output,
+            cache_hit=plan_node.action == "reuse",
+            reused_from=plan_node.reused_from,
+            fingerprint=plan_node.fingerprint,
         )
 
         if output.status == "error":

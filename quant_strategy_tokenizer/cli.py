@@ -14,6 +14,8 @@ from quant_strategy_tokenizer.agent.promote import promote as promote_strategy
 from quant_strategy_tokenizer.core.output import jsonable_value
 from quant_strategy_tokenizer.detokenize.explain_emitter import explain_ir as explain_text
 from quant_strategy_tokenizer.detokenize.trace_explainer import explain_trace as explain_trace_text
+from quant_strategy_tokenizer.execution.fingerprint import compute_all_fingerprints
+from quant_strategy_tokenizer.execution.plan import make_execution_plan
 from quant_strategy_tokenizer.ir.canonicalize import canonicalize as canonicalize_ir
 from quant_strategy_tokenizer.ir.compare import compare_ir
 from quant_strategy_tokenizer.ir.envelope import ProfileLiteral
@@ -316,6 +318,36 @@ def explain_cmd(path: Path, level: str = "L1") -> None:
     """Print a human-readable strategy explanation."""
 
     typer.echo(explain_text(load_strategy_file(path), level=level))
+
+
+@app.command("fingerprint")
+def fingerprint_cmd(path: Path) -> None:
+    """Print P2c-core Merkle fingerprints and execution plan debug data."""
+
+    ir = load_strategy_file(path)
+    canonical = canonicalize_ir(ir)
+    hashes = compute_hashes(canonical)
+    fingerprints = compute_all_fingerprints(canonical.graph)
+    plan = make_execution_plan(canonical)
+    _echo_json(
+        {
+            "hashes": hashes.as_dict(),
+            "fingerprints": [
+                {"node_id": node.id, "fingerprint": fingerprints[node.id]}
+                for node in canonical.graph
+            ],
+            "plan": [node.model_dump(mode="json", exclude_none=True) for node in plan.nodes],
+            "reuse_pairs": [
+                {
+                    "node_id": node.node_id,
+                    "reused_from": node.reused_from,
+                    "fingerprint": node.fingerprint,
+                }
+                for node in plan.nodes
+                if node.action == "reuse"
+            ],
+        }
+    )
 
 
 def _load_market_csv(path: Path) -> pd.DataFrame:

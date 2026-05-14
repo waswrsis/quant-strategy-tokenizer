@@ -1,0 +1,53 @@
+ir_version: qst-ir/0.3
+canonical_version: qst-canonical/0.1
+strategy: uses_cse_duplicate_chain
+strategy_version: 1
+form: surface
+
+externals:
+  market:
+    type: Frame
+    required: true
+
+graph:
+  - id: close_a
+    token: data.column
+    v: 1
+    params:
+      column: close
+    inputs:
+      frame: market
+
+  - id: max_a
+    token: window.max
+    v: 1
+    params:
+      window: 3
+    inputs:
+      series: close_a.value
+
+  - id: close_b
+    token: data.column
+    v: 1
+    params:
+      column: close
+    inputs:
+      frame: market
+
+  - id: max_b
+    token: window.max
+    v: 1
+    params:
+      window: 3
+    inputs:
+      series: close_b.value
+
+  - id: sum
+    token: math.add
+    v: 1
+    inputs:
+      a: max_a.value
+      b: max_b.value
+
+outputs:
+  value: sum.value
