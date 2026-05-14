@@ -8,8 +8,8 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 P3A0_LIMITATION_NOTE = (
-    "P3a-0 performs structural lock verification only; numerical output "
-    "equivalence is not asserted."
+    "P3 verify checks structural and trace-semantic artifacts only; numerical "
+    "output equivalence is not asserted."
 )
 
 
@@ -44,5 +44,14 @@ class VerifyResult(BaseModel):
     failures: list[VerifyFailure] = Field(default_factory=list)
 
     @classmethod
-    def from_failures(cls, failures: list[VerifyFailure]) -> VerifyResult:
-        return cls(ok=not failures, failures=failures)
+    def from_failures(
+        cls,
+        failures: list[VerifyFailure],
+        *,
+        verification_level: VerificationLevel = VerificationLevel.STRUCTURAL,
+    ) -> VerifyResult:
+        return cls(
+            ok=not failures,
+            verification_level=verification_level,
+            failures=failures,
+        )

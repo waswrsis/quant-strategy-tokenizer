@@ -26,6 +26,11 @@ from quant_strategy_tokenizer.ir.serialize import to_json, to_plain
 from quant_strategy_tokenizer.ir.validate import validate as validate_ir
 from quant_strategy_tokenizer.mutation import diff_strategies, mutate_strategy, parse_mutation_op
 from quant_strategy_tokenizer.mutation.repair import mutation_from_repair_hint
+from quant_strategy_tokenizer.package import (
+    package_strategy,
+    unpack_package,
+    verify_package,
+)
 from quant_strategy_tokenizer.parse.yaml_loader import (
     load_strategy_file,
     load_strategy_file_with_envelope,
@@ -275,23 +280,85 @@ def lock_cmd(
     )
 
 
+@app.command("package")
+def package_cmd(
+    path: Path,
+    output: Annotated[Path, typer.Option("--output")],
+    market: Annotated[Path | None, typer.Option("--market")] = None,
+    expected_trace: Annotated[Path | None, typer.Option("--expected-trace")] = None,
+) -> None:
+    """Build a P3a-1 directory-based .qstpkg package."""
+
+    try:
+        result = package_strategy(
+            path,
+            output,
+            market_path=market,
+            expected_trace_path=expected_trace,
+        )
+    except Exception as exc:
+        _echo_json({"ok": False, "error": f"{type(exc).__name__}: {exc}"})
+        raise typer.Exit(1) from None
+    _echo_json(
+        {
+            "ok": True,
+            "package": str(result.package_dir),
+            "package_version": result.manifest.package_version,
+            "strategy": result.manifest.strategy.model_dump(mode="json"),
+            "files": len(result.manifest.files),
+            "verification_level": (
+                "SEMANTIC_TRACE"
+                if result.fixtures_manifest.expected_trace_path is not None
+                else "STRUCTURAL"
+            ),
+        }
+    )
+
+
+@app.command("unpack")
+def unpack_cmd(pkg_dir: Path, output: Annotated[Path, typer.Option("--output")]) -> None:
+    """Unpack a P3a-1 .qstpkg directory to another directory."""
+
+    try:
+        unpacked = unpack_package(pkg_dir, output)
+    except Exception as exc:
+        _echo_json({"ok": False, "error": f"{type(exc).__name__}: {exc}"})
+        raise typer.Exit(1) from None
+    _echo_json(
+        {
+            "ok": True,
+            "package": str(pkg_dir),
+            "output": str(output),
+            "package_version": unpacked.manifest.package_version,
+            "strategy": unpacked.manifest.strategy.model_dump(mode="json"),
+            "files": len(unpacked.manifest.files),
+        }
+    )
+
+
 @app.command("verify")
 def verify_cmd(
     path: Path,
-    lock_path: Annotated[Path, typer.Option("--lock")],
+    lock_path: Annotated[Path | None, typer.Option("--lock")] = None,
     canonical_path: Annotated[Path | None, typer.Option("--canonical")] = None,
     market: Annotated[Path | None, typer.Option("--market")] = None,
     expected_trace: Annotated[Path | None, typer.Option("--expected-trace")] = None,
 ) -> None:
-    """Verify a strategy against a P3a-0 qst.lock."""
+    """Verify a strategy+lock pair or a P3a-1 .qstpkg directory."""
 
-    result = verify_lock(
-        load_strategy_file(path),
-        read_lock(lock_path),
-        canonical_ir=read_canonical_ir(canonical_path) if canonical_path is not None else None,
-        market_path=market,
-        expected_trace_path=expected_trace,
-    )
+    if path.is_dir() and (path / "qst.lock").exists():
+        result = verify_package(path)
+    elif lock_path is not None:
+        result = verify_lock(
+            load_strategy_file(path),
+            read_lock(lock_path),
+            canonical_ir=read_canonical_ir(canonical_path) if canonical_path is not None else None,
+            market_path=market,
+            expected_trace_path=expected_trace,
+        )
+    else:
+        _echo_json({"ok": False, "error": "provide a .qstpkg directory or --lock"})
+        raise typer.Exit(2)
     _echo_json(result.model_dump(mode="json", exclude_none=True))
     if not result.ok:
         raise typer.Exit(1)

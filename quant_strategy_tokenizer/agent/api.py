@@ -24,11 +24,32 @@ from quant_strategy_tokenizer.mutation import (
     mutate_strategy,
     parse_mutation_op,
 )
+from quant_strategy_tokenizer.package import (
+    PackageBuildResult,
+    UnpackedPackage,
+)
+from quant_strategy_tokenizer.package import (
+    package_strategy as _package_strategy,
+)
+from quant_strategy_tokenizer.package import (
+    unpack_package as _unpack_package,
+)
+from quant_strategy_tokenizer.package import (
+    verify_package as _verify_package,
+)
 from quant_strategy_tokenizer.provenance.registry import get_tagspec_registry
 from quant_strategy_tokenizer.provenance.spec import TagSpec
-from quant_strategy_tokenizer.qst_lock import BuiltLock, LockFile, VerifyResult
-from quant_strategy_tokenizer.qst_lock import build_lock as _build_lock
-from quant_strategy_tokenizer.qst_lock import verify_lock as _verify_lock
+from quant_strategy_tokenizer.qst_lock import (
+    BuiltLock,
+    LockFile,
+    VerifyResult,
+)
+from quant_strategy_tokenizer.qst_lock import (
+    build_lock as _build_lock,
+)
+from quant_strategy_tokenizer.qst_lock import (
+    verify_lock as _verify_lock,
+)
 from quant_strategy_tokenizer.recipes.registry import get_recipe_registry
 from quant_strategy_tokenizer.recipes.schema import RecipeSpec
 from quant_strategy_tokenizer.runtime.executor import ExecutionResult, execute_strategy
@@ -150,6 +171,34 @@ def verify(
             else StrategyIR.model_validate(canonical_ir)
         )
     return _verify_lock(parsed_ir, parsed_lock, canonical_ir=parsed_canonical)
+
+
+def package(
+    strategy_path: str,
+    output_dir: str,
+    market_path: str | None = None,
+    expected_trace_path: str | None = None,
+) -> PackageBuildResult:
+    """Build a P3a-1 qstpkg package."""
+
+    return _package_strategy(
+        strategy_path,
+        output_dir,
+        market_path=market_path,
+        expected_trace_path=expected_trace_path,
+    )
+
+
+def unpack(package_dir: str, output_dir: str) -> UnpackedPackage:
+    """Unpack a P3a-1 qstpkg package."""
+
+    return _unpack_package(package_dir, output_dir)
+
+
+def verify_package(package_dir: str) -> VerifyResult:
+    """Verify a P3a-1 qstpkg package."""
+
+    return _verify_package(package_dir)
 
 
 def validate(ir: StrategyIR | dict[str, Any], profile: ProfileLiteral = "research") -> ValidationResult:

@@ -41,3 +41,29 @@ def test_p3a0_commands_do_not_auto_upgrade_ir_version(tmp_path: Path) -> None:
     assert source.read_text(encoding="utf-8") == before
     assert read_lock(lock_path).ir_version == "qst-ir/0.3"
     assert "qst-ir/0.3.1" not in canonical_path.read_text(encoding="utf-8")
+
+
+def test_p3a1_package_commands_do_not_auto_upgrade_ir_version(tmp_path: Path) -> None:
+    source = tmp_path / "strategy.qst.yaml"
+    source.write_text(STRATEGY.read_text(encoding="utf-8"), encoding="utf-8")
+    before = source.read_text(encoding="utf-8")
+    package_dir = tmp_path / "strategy.qstpkg"
+    unpacked_dir = tmp_path / "unpacked"
+
+    packaged = runner.invoke(app, ["package", str(source), "--output", str(package_dir)])
+    assert packaged.exit_code == 0, packaged.output
+
+    verified = runner.invoke(app, ["verify", str(package_dir)])
+    assert verified.exit_code == 0, verified.output
+
+    unpacked = runner.invoke(app, ["unpack", str(package_dir), "--output", str(unpacked_dir)])
+    assert unpacked.exit_code == 0, unpacked.output
+
+    assert source.read_text(encoding="utf-8") == before
+    assert read_lock(package_dir / "qst.lock").ir_version == "qst-ir/0.3"
+    assert "qst-ir/0.3.1" not in (package_dir / "strategies" / "canonical.json").read_text(
+        encoding="utf-8"
+    )
+    assert "qst-ir/0.3.1" not in (
+        unpacked_dir / "strategies" / "source.qst.yaml"
+    ).read_text(encoding="utf-8")

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qst.local/schemas/qst_package_manifest.schema.json",
+  "title": "QST P3a-1 Package Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "package_version",
+    "qst_version",
+    "strategy",
+    "fixtures_manifest_path",
+    "files",
+    "tagspec_paths",
+    "recipe_paths"
+  ],
+  "properties": {
+    "package_version": {"const": "qstpkg/0.1"},
+    "qst_version": {"type": "string"},
+    "strategy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "source_path", "canonical_path", "lock_path"],
+      "properties": {
+        "name": {"type": "string"},
+        "version": {"type": "integer"},
+        "source_path": {"type": "string"},
+        "canonical_path": {"type": "string"},
+        "lock_path": {"type": "string"}
+      }
+    },
+    "fixtures_manifest_path": {"type": "string"},
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"type": "string"},
+          "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "tagspec_paths": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "recipe_paths": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  }
+}
