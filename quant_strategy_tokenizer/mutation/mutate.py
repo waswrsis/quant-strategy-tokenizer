@@ -8,7 +8,15 @@ from pydantic import BaseModel, ConfigDict
 
 from quant_strategy_tokenizer.ir.hashing import compute_hashes
 from quant_strategy_tokenizer.ir.model import ExternalSpec, GraphNode, RecipeInstance, StrategyIR
-from quant_strategy_tokenizer.mutation.ops import ChangeParam, InsertBefore, MutationOp
+from quant_strategy_tokenizer.mutation.ops import (
+    ChangeParam,
+    InlineRecipe,
+    InsertBefore,
+    MutationOp,
+    ReplaceToken,
+)
+from quant_strategy_tokenizer.recipes.compiler import PrimitiveNode, compile_recipe
+from quant_strategy_tokenizer.recipes.registry import RecipeRegistry, get_recipe_registry
 from quant_strategy_tokenizer.tokens.registry import Registry, get_registry
 
 
@@ -41,6 +49,65 @@ def _find_recipe_instance(recipes: list[RecipeInstance], node_id: str) -> tuple[
         if recipe.id == node_id:
             return index, recipe
     raise MutationError(f"Recipe instance {node_id!r} not found")
+
+
+def _rewrite_refs(value: Any, refs: dict[str, str]) -> Any:
+    if isinstance(value, str):
+        return refs.get(value, value)
+    if isinstance(value, list):
+        return [_rewrite_refs(item, refs) for item in value]
+    if isinstance(value, dict):
+        return {key: _rewrite_refs(item, refs) for key, item in value.items()}
+    return value
+
+
+def _collect_used_ports(value: Any, node_id: str, output_ports: set[str]) -> set[str]:
+    used: set[str] = set()
+    if isinstance(value, str):
+        if len(output_ports) == 1 and value == node_id:
+            used.add(next(iter(output_ports)))
+        elif value.startswith(f"{node_id}."):
+            port = value.removeprefix(f"{node_id}.")
+            if port in output_ports:
+                used.add(port)
+        return used
+    if isinstance(value, list):
+        for item in value:
+            used.update(_collect_used_ports(item, node_id, output_ports))
+    if isinstance(value, dict):
+        for item in value.values():
+            used.update(_collect_used_ports(item, node_id, output_ports))
+    return used
+
+
+def _used_output_ports(ir: StrategyIR, node: GraphNode, registry: Registry) -> set[str]:
+    output_ports = set(registry.get(node.token, node.v).spec.outputs)
+    used: set[str] = set()
+    candidates = [recipe.inputs for recipe in ir.recipes]
+    candidates.extend(other.inputs for other in ir.graph)
+    candidates.append(ir.outputs)
+    for candidate in candidates:
+        used.update(_collect_used_ports(candidate, node.id, output_ports))
+    return used
+
+
+def _required_params(params_schema: dict[str, Any]) -> set[str]:
+    required: set[str] = set()
+    for name, schema in params_schema.items():
+        if not isinstance(schema, dict) or "default" not in schema:
+            required.add(name)
+    return required
+
+
+def _graph_node_from_primitive(node: PrimitiveNode) -> GraphNode:
+    return GraphNode(
+        id=node.id,
+        token=node.token,
+        v=node.version,
+        params=node.params,
+        inputs=node.inputs,
+        provenance=node.provenance,
+    )
 
 
 def _apply_change_param(ir: StrategyIR, op: ChangeParam) -> StrategyIR:
@@ -140,11 +207,131 @@ def _apply_insert_before(
     return ir.model_copy(update={"graph": graph, "externals": externals}, deep=True)
 
 
-def _apply_op(ir: StrategyIR, op: MutationOp, registry: Registry) -> StrategyIR:
+def _apply_replace_token(
+    ir: StrategyIR,
+    op: ReplaceToken,
+    registry: Registry,
+) -> StrategyIR:
+    index, node = _find_graph_node(ir.graph, op.node_id)
+    old_spec = registry.get(node.token, node.v).spec
+    new_spec = registry.get(op.new_token, op.new_version).spec
+
+    for port in _used_output_ports(ir, node, registry):
+        if port not in new_spec.outputs:
+            raise MutationError(
+                f"replacement token {op.new_token}/v{op.new_version} missing used output port {port!r}"
+            )
+        if new_spec.outputs[port] != old_spec.outputs[port]:
+            raise MutationError(
+                f"replacement output {port!r} type mismatch: "
+                f"{old_spec.outputs[port]} -> {new_spec.outputs[port]}"
+            )
+
+    new_inputs: dict[str, Any] = {}
+    for new_port, expected_type in new_spec.inputs.items():
+        old_port = op.input_mapping.get(new_port, new_port)
+        if old_port not in node.inputs:
+            raise MutationError(
+                f"replacement input {new_port!r} maps to missing old input {old_port!r}"
+            )
+        if old_port in old_spec.inputs and old_spec.inputs[old_port] != expected_type:
+            raise MutationError(
+                f"replacement input {new_port!r} type mismatch: "
+                f"{old_spec.inputs[old_port]} -> {expected_type}"
+            )
+        new_inputs[new_port] = node.inputs[old_port]
+
+    new_params = {
+        key: value
+        for key, value in node.params.items()
+        if key in new_spec.params_schema
+    }
+    new_params.update(op.new_params)
+    missing_params = _required_params(new_spec.params_schema) - set(new_params)
+    if missing_params:
+        raise MutationError(
+            f"replacement token {op.new_token}/v{op.new_version} missing params {sorted(missing_params)}"
+        )
+
+    graph = list(ir.graph)
+    graph[index] = GraphNode(
+        id=node.id,
+        token=op.new_token,
+        v=op.new_version,
+        params=new_params,
+        inputs=new_inputs,
+    )
+    return ir.model_copy(update={"graph": graph}, deep=True)
+
+
+def _apply_inline_recipe(
+    ir: StrategyIR,
+    op: InlineRecipe,
+    registry: Registry,
+    recipe_registry: RecipeRegistry,
+) -> StrategyIR:
+    recipe_index, recipe = _find_recipe_instance(ir.recipes, op.recipe_id)
+    compiled = compile_recipe(
+        recipe_id=recipe.recipe,
+        recipe_version=recipe.version,
+        instance_params=recipe.params,
+        instance_inputs=recipe.inputs,
+        instance_id=recipe.id,
+        registry=registry,
+        recipe_registry=recipe_registry,
+    )
+    existing_ids = {node.id for node in ir.graph}
+    existing_ids.update(item.id for item in ir.recipes if item.id != recipe.id)
+    new_nodes = [_graph_node_from_primitive(node) for node in compiled.nodes]
+    duplicate_ids = existing_ids & {node.id for node in new_nodes}
+    if duplicate_ids:
+        raise MutationError(f"inlined recipe would create duplicate ids {sorted(duplicate_ids)}")
+
+    ref_rewrites = {
+        f"{recipe.id}.{port}": output_ref.to_ref()
+        for port, output_ref in compiled.outputs.items()
+    }
+    if len(compiled.outputs) == 1:
+        ref_rewrites[recipe.id] = next(iter(compiled.outputs.values())).to_ref()
+
+    recipes = list(ir.recipes)
+    recipes.pop(recipe_index)
+    recipes = [
+        item.model_copy(update={"inputs": _rewrite_refs(item.inputs, ref_rewrites)})
+        for item in recipes
+    ]
+    graph = [
+        node.model_copy(update={"inputs": _rewrite_refs(node.inputs, ref_rewrites)})
+        for node in ir.graph
+    ]
+    outputs = {
+        port: _rewrite_refs(target, ref_rewrites)
+        for port, target in ir.outputs.items()
+    }
+    return ir.model_copy(
+        update={
+            "recipes": recipes,
+            "graph": [*new_nodes, *graph],
+            "outputs": outputs,
+        },
+        deep=True,
+    )
+
+
+def _apply_op(
+    ir: StrategyIR,
+    op: MutationOp,
+    registry: Registry,
+    recipe_registry: RecipeRegistry,
+) -> StrategyIR:
     if isinstance(op, ChangeParam):
         return _apply_change_param(ir, op)
     if isinstance(op, InsertBefore):
         return _apply_insert_before(ir, op, registry)
+    if isinstance(op, ReplaceToken):
+        return _apply_replace_token(ir, op, registry)
+    if isinstance(op, InlineRecipe):
+        return _apply_inline_recipe(ir, op, registry, recipe_registry)
     raise AssertionError(f"Unsupported mutation op: {op!r}")
 
 
@@ -153,13 +340,15 @@ def mutate_strategy(
     op: MutationOp,
     *,
     registry: Registry | None = None,
+    recipe_registry: RecipeRegistry | None = None,
 ) -> MutationResult:
-    """Apply one P2b-0 mutation op."""
+    """Apply one P2b mutation op."""
 
     token_registry = registry or get_registry()
+    recipes = recipe_registry or get_recipe_registry()
     before = compute_hashes(ir).as_dict()
     try:
-        mutated = _apply_op(ir, op, token_registry)
+        mutated = _apply_op(ir, op, token_registry, recipes)
     except MutationError as exc:
         return MutationResult(
             ok=False,

@@ -52,3 +52,102 @@ def test_qst_mutate_applies_repair_hint_and_writes_yaml(tmp_path: Path) -> None:
     assert output.exists()
     repaired = load_strategy_file(output)
     assert validate(repaired, profile="pretrade").ok
+
+
+def test_qst_mutate_replace_token_json(tmp_path: Path) -> None:
+    strategy = tmp_path / "replace.qst.yaml"
+    strategy.write_text(
+        """
+ir_version: qst-ir/0.3
+canonical_version: qst-canonical/0.1
+strategy: replace_cli
+strategy_version: 1
+form: surface
+externals:
+  market:
+    type: Frame
+    required: true
+recipes: []
+graph:
+  - id: close
+    token: data.column
+    v: 1
+    params: {column: close}
+    inputs: {frame: market}
+  - id: open
+    token: data.column
+    v: 1
+    params: {column: open}
+    inputs: {frame: market}
+  - id: signal
+    token: compare.gt
+    v: 1
+    params: {}
+    inputs: {a: close.value, b: open.value}
+outputs:
+  signal: signal.value
+""",
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "mutate",
+            str(strategy),
+            "--op",
+            '{"kind":"replace_token","node_id":"signal","new_token":"compare.ge"}',
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["ok"] is True
+    assert payload["ir"]["graph"][2]["token"] == "compare.ge"
+
+
+def test_qst_mutate_inline_recipe_writes_yaml(tmp_path: Path) -> None:
+    strategy = tmp_path / "inline.qst.yaml"
+    output = tmp_path / "inlined.qst.yaml"
+    strategy.write_text(
+        """
+ir_version: qst-ir/0.3
+canonical_version: qst-canonical/0.1
+strategy: inline_cli
+strategy_version: 1
+form: surface
+externals:
+  market:
+    type: Frame[OHLCV]
+    required: true
+recipes:
+  - id: ema
+    recipe: indicator.ewm
+    version: 1
+    params: {span: 3}
+    inputs: {series: market.close}
+graph: []
+outputs:
+  value: ema.value
+""",
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "mutate",
+            str(strategy),
+            "--op",
+            '{"kind":"inline_recipe","recipe_id":"ema"}',
+            "--output",
+            str(output),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert output.exists()
+    inlined = load_strategy_file(output)
+    assert inlined.recipes == []
+    assert inlined.graph[0].id == "ema.ewm"
+    assert inlined.outputs["value"] == "ema.ewm.value"

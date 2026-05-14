@@ -29,7 +29,32 @@ class InsertBefore(BaseModel):
     kind: Literal["insert_before"] = "insert_before"
 
 
-MutationOp = Annotated[ChangeParam | InsertBefore, Field(discriminator="kind")]
+class ReplaceToken(BaseModel):
+    """Replace one graph node token with a type-compatible token."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    node_id: str
+    new_token: str
+    new_version: int = 1
+    new_params: dict[str, Any] = Field(default_factory=dict)
+    input_mapping: dict[str, str] = Field(default_factory=dict)
+    kind: Literal["replace_token"] = "replace_token"
+
+
+class InlineRecipe(BaseModel):
+    """Inline one surface recipe instance into primitive graph nodes."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    recipe_id: str
+    kind: Literal["inline_recipe"] = "inline_recipe"
+
+
+MutationOp = Annotated[
+    ChangeParam | InsertBefore | ReplaceToken | InlineRecipe,
+    Field(discriminator="kind"),
+]
 _OP_ADAPTER: TypeAdapter[MutationOp] = TypeAdapter(MutationOp)
 
 

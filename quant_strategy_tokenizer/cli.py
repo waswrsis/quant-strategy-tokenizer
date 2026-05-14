@@ -298,7 +298,7 @@ def mutate_cmd(
     repair_hint: Annotated[Path | None, typer.Option("--repair-hint")] = None,
     output: Annotated[Path | None, typer.Option("--output")] = None,
 ) -> None:
-    """Apply one P2b-0 mutation operation to a strategy YAML file."""
+    """Apply one P2b mutation operation to a strategy YAML file."""
 
     op = _parse_mutation_input(op_json, op_file, repair_hint)
     result = mutate_strategy(load_strategy_file(path), op)
