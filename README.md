@@ -2,7 +2,7 @@
 
 Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core and P2-core construction stages.
 
-The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, and implements P2a-0/P2a-1 provenance metadata, P2a-2 deterministic recipe generation, P2a-3 composition validation, P2b mutation, and P2c-core execution-plan CSE. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, or kernel substitution.
+The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, and implements P2a-0/P2a-1 provenance metadata, P2a-2 deterministic recipe generation, P2a-3 composition validation, P2b mutation, P2c-core execution-plan CSE, and an opt-in P2c-extended kernel substitution spike. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, or a production kernel framework.
 
 The implemented loop covers:
 
@@ -15,7 +15,7 @@ The implemented loop covers:
 - L1 explanation, trace explanation, agent API, and CLI
 - profile promotion from `research` to guarded profiles without changing content hashes
 - purity and temporal safety validation
-- `indicator.ewm` provenance tags, TagSpec verification, mutation, and execution-plan CSE
+- `indicator.ewm` provenance tags, TagSpec verification, mutation, execution-plan CSE, and opt-in kernel substitution
 - deterministic recipe expansion for `signals.dual_ema_cross/v1`
 - empirical composition validation for `indicator.ewm/v1`
 
@@ -35,7 +35,7 @@ The implemented loop covers:
 | P2b-0 | accepted |
 | P2b-1 | accepted |
 | P2c-core | accepted |
-| P2c-extended | not started |
+| P2c-extended | accepted |
 
 ## Frozen P0 Baseline
 
@@ -74,12 +74,20 @@ The implemented loop covers:
 - before/after hash reports for every mutation
 - type-compatible token replacement and recipe output-preserving inlining
 
+## Current P2c-Extended Kernel Spike
+
+- `qst kernel plan`
+- opt-in execution flag: `qst execute --kernel-substitution`
+- one spike kernel binding: `indicator.ewm/v1`
+- fully verified TagSpec and `allowed_kernels` gate required
+- kernel substitution stays out of canonical IR, three-layer hashes, and fingerprint material
+
 ## Not In Accepted P0/P1/P2-Core
 
 The following are intentionally not part of the accepted P0/P1/P2-core baseline:
 
 - advanced recipe library beyond `signals.dual_ema_cross/v1`
-- kernel substitution
+- production kernel framework beyond the `indicator.ewm/v1` opt-in spike
 - FSM
 - expanded indicator library
 - RL / HFT
@@ -180,6 +188,12 @@ qst execute strategies/uses_cse_duplicate_chain.qst.yaml \
   --market examples/sample_market_btc_15m.csv \
   --trace-path /tmp/qst_cse_trace.json
 qst explain-trace /tmp/qst_cse_trace.json --level raw
+qst kernel plan strategies/uses_ewm_with_provenance.qst.yaml
+qst execute strategies/uses_ewm_with_provenance.qst.yaml \
+  --market examples/sample_market_btc_15m.csv \
+  --kernel-substitution \
+  --trace-path /tmp/qst_kernel_trace.json
+qst explain-trace /tmp/qst_kernel_trace.json --level raw
 ```
 
 Expected behavior:
@@ -190,5 +204,7 @@ Expected behavior:
 - `qst fingerprint` reports `fp_sha256:*` fingerprints and reuse pairs.
 - The CSE strategy trace contains `cache_hit: true` nodes with `reused_from` and `fingerprint`.
 - P2c-core CSE happens only in the execution plan layer; canonical IR and P0/P1 hashes remain unchanged.
+- `qst kernel plan` reports one eligible `indicator.ewm/v1` kernel for the EWM provenance strategy.
+- Opt-in kernel execution writes trace evidence with `kernel_substituted: true`; default execution does not substitute.
 
 The project experience from the previous repository history is preserved in [docs/PROJECT_EXPERIENCE.md](docs/PROJECT_EXPERIENCE.md), with its supporting asset at [docs/assets/performance-90d.png](docs/assets/performance-90d.png).
