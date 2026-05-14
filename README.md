@@ -1,8 +1,8 @@
 # Quant Strategy Tokenizer
 
-Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the P1-core extension from `QST_P1_CONSTRUCTION_MANUAL_v1.2.md`.
+Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core and P2-core construction stages.
 
-The current implementation keeps the P0 baseline frozen, accepts P1-core, and adds P1-extended-a purity and temporal safety validators. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, or any P2 composition work.
+The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, and implements P2a-0/P2a-1 provenance metadata plus P2b-0 mutation and P2c-core execution-plan CSE. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, recipe generation, advanced mutation, or kernel substitution.
 
 The implemented loop covers:
 
@@ -14,7 +14,8 @@ The implemented loop covers:
 - local execution with trace output
 - L1 explanation, trace explanation, agent API, and CLI
 - profile promotion from `research` to guarded profiles without changing content hashes
-- purity and temporal safety validation before P2
+- purity and temporal safety validation
+- `indicator.ewm` provenance tags, TagSpec verification, basic mutation, and execution-plan CSE
 
 ## Project Status
 
@@ -25,7 +26,11 @@ The implemented loop covers:
 | P1-core | accepted |
 | P1-extended-a | completed |
 | P1-extended-b | deferred |
-| P2 | not started |
+| P2a-0 | accepted |
+| P2a-1 | accepted |
+| P2b-0 | accepted |
+| P2c-core | accepted |
+| P2c-extended | not started |
 
 ## Frozen P0 Baseline
 
@@ -44,14 +49,12 @@ The implemented loop covers:
 - order_intent
 - explain-trace
 
-## Not In P0/P1-Core/P1-Extended-A
+## Not In Accepted P0/P1/P2-Core
 
-The following are intentionally not part of the accepted P0/P1 baseline:
+The following are intentionally not part of the accepted P0/P1/P2-core baseline:
 
-- provenance tags
-- TagSpec
 - recipe generator
-- CSE
+- advanced mutation (`ReplaceToken`, `InlineRecipe`)
 - kernel substitution
 - FSM
 - expanded indicator library
@@ -140,5 +143,24 @@ Expected behavior:
 - Promotion does not change the Strategy Content IR hashes.
 - Pretrade validation requires a `risk.*` ancestor before `plan.order_intent`.
 - Execution produces a trace containing `decision.reduce/v2`, `risk.position_cap`, and `plan.order_intent`.
+
+## P2-Core Verification
+
+```bash
+qst tag verify docs/tagspecs/indicator.ewm.tagspec.yaml
+qst diff strategies/kdj_cross_basic.qst.yaml strategies/kdj_cross_basic.qst.yaml
+qst fingerprint strategies/uses_cse_duplicate_chain.qst.yaml
+qst execute strategies/uses_cse_duplicate_chain.qst.yaml \
+  --market examples/sample_market_btc_15m.csv \
+  --trace-path /tmp/qst_cse_trace.json
+qst explain-trace /tmp/qst_cse_trace.json --level raw
+```
+
+Expected behavior:
+
+- `qst tag verify` reports `minimally_attached: true`.
+- `qst fingerprint` reports `fp_sha256:*` fingerprints and reuse pairs.
+- The CSE strategy trace contains `cache_hit: true` nodes with `reused_from` and `fingerprint`.
+- P2c-core CSE happens only in the execution plan layer; canonical IR and P0/P1 hashes remain unchanged.
 
 The project experience from the previous repository history is preserved in [docs/PROJECT_EXPERIENCE.md](docs/PROJECT_EXPERIENCE.md), with its supporting asset at [docs/assets/performance-90d.png](docs/assets/performance-90d.png).
