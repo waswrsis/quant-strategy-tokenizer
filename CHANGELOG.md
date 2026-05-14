@@ -1,5 +1,12 @@
 # Changelog
 
+## P4-core Acceptance
+
+- Recorded P4-core acceptance and final code audit for the accepted P4a/P4b stages.
+- Defined P4-core as the artifact, frame, qstpkg artifact, port, signal extraction, mock adapter, and P4b CLI layer.
+- Confirmed P0/P1/P2/P3 hash preservation, vocabulary preservation, local final gate, and mock adapter CLI evidence.
+- Kept P4c real adapter repositories, P4d semantic detokenize, production integrations, MCP, and numerical equivalence proof out of scope.
+
 ## P4b-1 Mock Adapters + CLI
 
 - Added built-in mock adapters for CSV market data, Parquet market data, backtests, execution, and experiment tracking.

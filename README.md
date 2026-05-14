@@ -1,8 +1,8 @@
 # Quant Strategy Tokenizer
 
-Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, and P3 construction stages.
+Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, P3, and P4-core construction stages.
 
-The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, implements P2a-0/P2a-1 provenance metadata, P2a-2 deterministic recipe generation, P2a-3 composition validation, P2b mutation, P2c-core execution-plan CSE, an opt-in P2c-extended kernel substitution spike, the P3a-0 deterministic lock hard gate, the P3a-1 directory package format, P3b-0 registry search, and P3b-1 fork lineage. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, a production kernel framework, P4+ full-text package search, or numerical equivalence verification.
+The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, implements P2a-0/P2a-1 provenance metadata, P2a-2 deterministic recipe generation, P2a-3 composition validation, P2b mutation, P2c-core execution-plan CSE, an opt-in P2c-extended kernel substitution spike, the P3a-0 deterministic lock hard gate, the P3a-1 directory package format, P3b-0 registry search, P3b-1 fork lineage, and P4-core artifacts, frames, qstpkg artifact extension, ports, signal extraction, mock adapters, and P4b CLI. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, a production kernel framework, P4c real adapter repositories, P4d semantic detokenize, P4+ full-text package search, or numerical equivalence verification.
 
 The implemented loop covers:
 
@@ -22,6 +22,10 @@ The implemented loop covers:
 - directory-based `.qstpkg` packages with package/unpack/verify
 - on-demand token/recipe/TagSpec search from public registries
 - `qst fork` lineage metadata with `qst-ir/0.3.1`
+- P4 artifact schemas, artifact identity, and strict DecimalString values
+- QST frame models with JSON, CSV, pandas, Arrow, and Parquet I/O
+- qstpkg artifact references and artifact verification
+- Universal Port protocols, `execute_to_signals()`, local mock adapters, and P4b CLI
 
 ## Project Status
 
@@ -44,6 +48,13 @@ The implemented loop covers:
 | P3a-1 package | accepted |
 | P3b-0 search | accepted |
 | P3b-1 fork lineage | accepted |
+| P4a-0 artifact gate | accepted |
+| P4a-1 frames | accepted |
+| P4a-2 qstpkg artifacts | accepted |
+| P4b-0 ports | accepted |
+| P4b-1 mock adapters | accepted |
+| P4c real adapters | external repos / not started |
+| P4d semantic detokenize | not started |
 
 ## Frozen P0 Baseline
 
@@ -121,6 +132,22 @@ P3a-1 is accepted as a directory-based portable artifact layer:
 - optional fixture hashes for `market.csv` and `expected_trace.json`
 - `SEMANTIC_TRACE` verification level when expected trace fixtures are present
 
+## P4-Core Definition
+
+P4-core is the accepted universal artifact, frame, package-artifact, port, and mock-adapter layer. It is additive over P0/P1/P2/P3 and does not change Strategy Content IR canonicalization, three-layer hashes, `qst.lock`, mutation, search, fork, CSE, kernel substitution, or `qst execute`.
+
+P4-core includes:
+
+| Area | Accepted capabilities |
+|---|---|
+| P4a artifacts | `QSTArtifact`, artifact identity, strict `DecimalString`, `ExecutionReport`, `BacktestEvidence`, `PortfolioSnapshot`, `AdapterManifest`, draft 2020-12 schemas |
+| P4a frames | `MarketFrame`, `SignalFrame`, `FeatureFrame`, `TraceLog`, stable frame hashes, JSON/CSV/pandas/Arrow/Parquet round trips, strict multi-symbol MarketFrame alignment |
+| P4a qstpkg artifacts | additive `.qstpkg` artifact references, `qst pkg add-artifact`, `qst pkg verify-artifacts`, automatic artifact verification in `qst verify <pkg_dir>` |
+| P4b ports | Universal Port protocols, `SignalExtractionPolicy`, `execute_to_signals()`, local adapter discovery foundation |
+| P4b mock adapters and CLI | five local mock adapters, `qst adapter`, `qst load market`, `qst backtest`, `qst submit-plan`, `qst poll-execution`, `qst track` |
+
+P4-core does not include P4c real adapters, production broker or exchange integration, MCP, P4d semantic detokenize, or numerical equivalence proof. Real adapters belong in independent `qst-adapter-*` repositories.
+
 ## Current P2a Composition Layer
 
 - Current total vocabulary: 25 tokens, 9 recipes
@@ -141,14 +168,18 @@ P3a-1 is accepted as a directory-based portable artifact layer:
 - before/after hash reports for every mutation
 - type-compatible token replacement and recipe output-preserving inlining
 
-## Not In Accepted P0/P1/P2-Core
+## Not In Accepted P0/P1/P2/P3/P4-Core
 
-The following are intentionally not part of the accepted P0/P1/P2-core baseline:
+The following are intentionally not part of the accepted P0/P1/P2/P3/P4-core baseline:
 
 - advanced recipe library beyond `signals.dual_ema_cross/v1`
 - production kernel framework beyond the `indicator.ewm/v1` opt-in spike
 - persistent package search indexes
 - P4+ full-text or cross-package search
+- P4c real adapter repositories inside `qst-core`
+- P4d semantic detokenize
+- production broker, exchange, vectorbt, qlib, mlflow, or backtrader integrations
+- numerical equivalence proof
 - FSM
 - expanded indicator library
 - RL / HFT
@@ -333,5 +364,46 @@ Expected behavior:
 - Forked strategies include inert `derived_from` metadata.
 - Existing commands preserve `qst-ir/0.3`.
 - Three-layer hashes and execution fingerprints ignore `derived_from`.
+
+## P4-Core Verification
+
+```bash
+qst adapter list
+qst adapter verify mock-execution
+
+qst load market \
+  --source /tmp/qst_market_frame.csv \
+  --symbols BTC/USDT \
+  --output /tmp/qst_market_frame.json
+
+qst backtest strategies/uses_ewm_with_provenance.qst.yaml \
+  --adapter mock \
+  --market /tmp/qst_market_frame.json \
+  --output /tmp/qst_mock_backtest.qstpkg
+
+qst verify /tmp/qst_mock_backtest.qstpkg
+
+qst submit-plan /tmp/qst_plan.json \
+  --adapter mock-execution \
+  --confirm \
+  --output /tmp/qst_execution_report.json
+
+qst poll-execution mock-execution-report-id \
+  --adapter mock-execution \
+  --output /tmp/qst_execution_poll.json
+
+qst track /tmp/qst_mock_backtest.qstpkg \
+  --adapter mock-experiment \
+  --run-name p4-core-smoke
+```
+
+Expected behavior:
+
+- `qst adapter list` reports `mock-backtest`, `mock-csv-market`, `mock-execution`, `mock-experiment`, and `mock-parquet-market`.
+- `qst adapter verify mock-execution` reports `execution=true`.
+- `qst load market` writes canonical `MarketFrame` JSON.
+- `qst backtest` builds a `.qstpkg` and inserts `BacktestEvidence` through the P4a-2 artifact extension.
+- `qst verify <pkg_dir>` validates package artifacts in addition to P3 lock/package checks.
+- `qst submit-plan`, `qst poll-execution`, and `qst track` use local mock adapters only and do not access external networks.
 
 The project experience from the previous repository history is preserved in [docs/PROJECT_EXPERIENCE.md](docs/PROJECT_EXPERIENCE.md), with its supporting asset at [docs/assets/performance-90d.png](docs/assets/performance-90d.png).
