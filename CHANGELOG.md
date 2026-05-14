@@ -1,5 +1,12 @@
 # Changelog
 
+## P4b-0 Port Protocols + SignalExtractionPolicy
+
+- Added Universal Port protocols for market data, features, backtests, execution, experiments, package storage, and future RL adapters.
+- Added deterministic `execute_to_signals()` support for Decision, Plan, bool TimeSeries, and score TimeSeries outputs.
+- Added local entry-point adapter discovery foundation without remote or network lookup.
+- Kept mock adapters, adapter CLI commands, `qst execute` behavior changes, and concrete external integrations out of scope.
+
 ## P4a-2 qstpkg Artifacts Extension
 
 - Added optional artifact references to `.qstpkg` manifests while preserving legacy P3 package verification.

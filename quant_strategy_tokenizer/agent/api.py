@@ -15,6 +15,7 @@ from quant_strategy_tokenizer.detokenize.trace_explainer import explain_trace as
 from quant_strategy_tokenizer.execution.fingerprint import compute_all_fingerprints
 from quant_strategy_tokenizer.execution.kernel import KernelPlanReport, make_kernel_plan_report
 from quant_strategy_tokenizer.execution.plan import make_execution_plan
+from quant_strategy_tokenizer.frames import MarketFrame, SignalFrame
 from quant_strategy_tokenizer.ir.canonicalize import canonicalize
 from quant_strategy_tokenizer.ir.envelope import DeploymentEnvelope, ProfileLiteral
 from quant_strategy_tokenizer.ir.hashing import compute_hashes
@@ -60,6 +61,12 @@ from quant_strategy_tokenizer.qst_lock import (
 from quant_strategy_tokenizer.recipes.registry import get_recipe_registry
 from quant_strategy_tokenizer.recipes.schema import RecipeSpec
 from quant_strategy_tokenizer.runtime.executor import ExecutionResult, execute_strategy
+from quant_strategy_tokenizer.runtime.signal_extraction import (
+    SignalExtractionPolicy,
+)
+from quant_strategy_tokenizer.runtime.signal_extraction import (
+    execute_to_signals as _execute_to_signals,
+)
 from quant_strategy_tokenizer.runtime.trace import Trace
 from quant_strategy_tokenizer.tokens.registry import get_registry
 
@@ -216,6 +223,31 @@ def add_artifact_to_package(
     """Add one P4 artifact JSON file to a qstpkg package."""
 
     return _add_artifact_to_package(package_dir, artifact_json, dest_path=dest_path)
+
+
+def execute_to_signals(
+    ir: StrategyIR | dict[str, Any],
+    market: MarketFrame | dict[str, Any],
+    policy: SignalExtractionPolicy | dict[str, Any] | None = None,
+    externals: dict[str, Any] | None = None,
+) -> SignalFrame:
+    """Execute a strategy and extract a P4 SignalFrame."""
+
+    parsed_ir = ir if isinstance(ir, StrategyIR) else StrategyIR.model_validate(ir)
+    parsed_market = market if isinstance(market, MarketFrame) else MarketFrame.model_validate(market)
+    parsed_policy = None
+    if policy is not None:
+        parsed_policy = (
+            policy
+            if isinstance(policy, SignalExtractionPolicy)
+            else SignalExtractionPolicy.model_validate(policy)
+        )
+    return _execute_to_signals(
+        parsed_ir,
+        parsed_market,
+        policy=parsed_policy,
+        externals=externals,
+    )
 
 
 def search(

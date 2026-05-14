@@ -36,7 +36,7 @@ def discover() -> dict[str, object]:
                 "kernel_plan",
             ],
             "p3": ["lock", "verify", "package", "unpack", "verify_package", "search", "fork"],
-            "p4": ["add_artifact_to_package", "verify_package"],
+            "p4": ["add_artifact_to_package", "verify_package", "execute_to_signals"],
         },
         "cli_commands": {
             "p0": ["vocabulary", "validate", "canonicalize", "hash", "compare", "explain", "execute"],
