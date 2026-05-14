@@ -11,6 +11,7 @@ import typer
 import yaml
 
 from quant_strategy_tokenizer.agent.promote import promote as promote_strategy
+from quant_strategy_tokenizer.agent.search import search as search_index
 from quant_strategy_tokenizer.composition import expand_builtin_recipe, upgrade_verification
 from quant_strategy_tokenizer.core.output import jsonable_value
 from quant_strategy_tokenizer.detokenize.explain_emitter import explain_ir as explain_text
@@ -362,6 +363,43 @@ def verify_cmd(
     _echo_json(result.model_dump(mode="json", exclude_none=True))
     if not result.ok:
         raise typer.Exit(1)
+
+
+@app.command("search")
+def search_cmd(
+    kind: str,
+    domain: Annotated[str | None, typer.Option("--domain")] = None,
+    output_type: Annotated[str | None, typer.Option("--output-type")] = None,
+    input_type: Annotated[list[str] | None, typer.Option("--input-type")] = None,
+    state_tag: Annotated[str | None, typer.Option("--state-tag")] = None,
+    profile_allowed: Annotated[str | None, typer.Option("--profile-allowed")] = None,
+    uses_token: Annotated[str | None, typer.Option("--uses-token")] = None,
+    fully_verified: Annotated[bool, typer.Option("--fully-verified")] = False,
+    lifecycle: Annotated[list[str] | None, typer.Option("--lifecycle")] = None,
+    limit: Annotated[int, typer.Option("--limit")] = 100,
+) -> None:
+    """Search token, recipe, or TagSpec metadata."""
+
+    if kind not in {"token", "recipe", "tagspec"}:
+        typer.echo(f"unsupported search kind: {kind}", err=True)
+        raise typer.Exit(2)
+    try:
+        results = search_index(
+            kind,  # type: ignore[arg-type]
+            domain=domain,
+            output_type=output_type,
+            input_types=input_type,
+            state_tag=state_tag,
+            profile_allowed=profile_allowed,
+            uses_token=uses_token,
+            fully_verified_only=fully_verified,
+            lifecycle=lifecycle,
+            limit=limit,
+        )
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(2) from None
+    _echo_json([result.model_dump(mode="json") for result in results])
 
 
 @app.command("compare")

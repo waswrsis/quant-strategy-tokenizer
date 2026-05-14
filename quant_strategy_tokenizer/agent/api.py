@@ -6,6 +6,8 @@ from typing import Any
 
 from quant_strategy_tokenizer.agent.promote import PromoteResult
 from quant_strategy_tokenizer.agent.promote import promote as _promote
+from quant_strategy_tokenizer.agent.search import SearchResult
+from quant_strategy_tokenizer.agent.search import search as _search
 from quant_strategy_tokenizer.composition import expand_builtin_recipe, upgrade_verification
 from quant_strategy_tokenizer.detokenize.explain_emitter import explain_ir as _explain_ir
 from quant_strategy_tokenizer.detokenize.trace_explainer import explain_trace as _explain_trace
@@ -199,6 +201,37 @@ def verify_package(package_dir: str) -> VerifyResult:
     """Verify a P3a-1 qstpkg package."""
 
     return _verify_package(package_dir)
+
+
+def search(
+    kind: str,
+    *,
+    domain: str | None = None,
+    output_type: str | None = None,
+    input_types: list[str] | None = None,
+    state_tag: str | None = None,
+    profile_allowed: str | None = None,
+    uses_token: str | None = None,
+    fully_verified_only: bool = False,
+    lifecycle: list[str] | None = None,
+    limit: int = 100,
+) -> list[SearchResult]:
+    """Search P3 IndexRecord metadata."""
+
+    if kind not in {"token", "recipe", "tagspec"}:
+        raise ValueError(f"Unsupported search kind: {kind}")
+    return _search(
+        kind,  # type: ignore[arg-type]
+        domain=domain,
+        output_type=output_type,
+        input_types=input_types,
+        state_tag=state_tag,
+        profile_allowed=profile_allowed,
+        uses_token=uses_token,
+        fully_verified_only=fully_verified_only,
+        lifecycle=lifecycle,
+        limit=limit,
+    )
 
 
 def validate(ir: StrategyIR | dict[str, Any], profile: ProfileLiteral = "research") -> ValidationResult:
