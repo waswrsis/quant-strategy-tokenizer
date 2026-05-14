@@ -9,9 +9,12 @@ from quant_strategy_tokenizer.agent.promote import promote as _promote
 from quant_strategy_tokenizer.composition import expand_builtin_recipe, upgrade_verification
 from quant_strategy_tokenizer.detokenize.explain_emitter import explain_ir as _explain_ir
 from quant_strategy_tokenizer.detokenize.trace_explainer import explain_trace as _explain_trace
+from quant_strategy_tokenizer.execution.fingerprint import compute_all_fingerprints
 from quant_strategy_tokenizer.execution.kernel import KernelPlanReport, make_kernel_plan_report
+from quant_strategy_tokenizer.execution.plan import make_execution_plan
 from quant_strategy_tokenizer.ir.canonicalize import canonicalize
 from quant_strategy_tokenizer.ir.envelope import DeploymentEnvelope, ProfileLiteral
+from quant_strategy_tokenizer.ir.hashing import compute_hashes
 from quant_strategy_tokenizer.ir.model import StrategyIR
 from quant_strategy_tokenizer.ir.validate import ValidationResult
 from quant_strategy_tokenizer.ir.validate import validate as _validate
@@ -82,11 +85,38 @@ def diff(strategy_a: StrategyIR | dict[str, Any], strategy_b: StrategyIR | dict[
 
 
 def mutate(ir: StrategyIR | dict[str, Any], op: dict[str, Any]) -> MutationResult:
-    """Apply one P2b-0 mutation op."""
+    """Apply one P2b mutation op."""
 
     parsed_ir = ir if isinstance(ir, StrategyIR) else StrategyIR.model_validate(ir)
     parsed_op = parse_mutation_op(op)
     return mutate_strategy(parsed_ir, parsed_op)
+
+
+def fingerprint(ir: StrategyIR | dict[str, Any]) -> dict[str, Any]:
+    """Return P2c-core Merkle fingerprints and execution-plan debug data."""
+
+    parsed = ir if isinstance(ir, StrategyIR) else StrategyIR.model_validate(ir)
+    canonical = canonicalize(parsed)
+    hashes = compute_hashes(canonical)
+    fingerprints = compute_all_fingerprints(canonical.graph)
+    plan = make_execution_plan(canonical)
+    return {
+        "hashes": hashes.as_dict(),
+        "fingerprints": [
+            {"node_id": node.id, "fingerprint": fingerprints[node.id]}
+            for node in canonical.graph
+        ],
+        "plan": [node.model_dump(mode="json", exclude_none=True) for node in plan.nodes],
+        "reuse_pairs": [
+            {
+                "node_id": node.node_id,
+                "reused_from": node.reused_from,
+                "fingerprint": node.fingerprint,
+            }
+            for node in plan.nodes
+            if node.action == "reuse"
+        ],
+    }
 
 
 def validate(ir: StrategyIR | dict[str, Any], profile: ProfileLiteral = "research") -> ValidationResult:

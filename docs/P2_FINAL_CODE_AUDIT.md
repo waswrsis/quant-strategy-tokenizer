@@ -47,7 +47,7 @@ PASS. No blocking issue found in the accepted P2 implementation.
 - P0 CLI commands remain compatible.
 - P1 CLI/API additions remain compatible.
 - P2 CLI additions are additive: `tag verify`, `recipe expand`, `diff`, `mutate`, `fingerprint`, `kernel plan`.
-- `agent.kernel_plan()` is additive.
+- P2 agent additions are additive: `tagspec_get`, `tagspec_verify`, `recipe_expand`, `diff`, `mutate`, `fingerprint`, `kernel_plan`.
 - `agent.execute(..., kernel_substitution=False)` preserves the default execution path.
 
 ## Test And CI Evidence

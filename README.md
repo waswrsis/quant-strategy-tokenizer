@@ -1,6 +1,6 @@
 # Quant Strategy Tokenizer
 
-Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core and P2-core construction stages.
+Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core and P2 construction stages.
 
 The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, and implements P2a-0/P2a-1 provenance metadata, P2a-2 deterministic recipe generation, P2a-3 composition validation, P2b mutation, P2c-core execution-plan CSE, and an opt-in P2c-extended kernel substitution spike. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, or a production kernel framework.
 
@@ -12,7 +12,7 @@ The implemented loop covers:
 - `_envelope` parsing outside Strategy Content IR
 - canonicalization, three-layer hashing, validation, and repair hints
 - local execution with trace output
-- L1 explanation, trace explanation, agent API, and CLI
+- L1 explanation, trace explanation, versioned agent API, and CLI
 - profile promotion from `research` to guarded profiles without changing content hashes
 - purity and temporal safety validation
 - `indicator.ewm` provenance tags, TagSpec verification, mutation, execution-plan CSE, and opt-in kernel substitution
@@ -45,14 +45,47 @@ The implemented loop covers:
 - `qst-canonical/0.1`
 - Frozen hashes and vocabulary triples recorded in `docs/P0_ACCEPTANCE.md`
 
-## Current P1-Core Vocabulary
+## P1-Core Definition
+
+P1-core is the accepted guarded-execution layer on top of the frozen P0 Strategy Content IR.
+
+It includes:
 
 - 25 tokens
 - 8 recipes
-- risk path
-- promote
-- order_intent
-- explain-trace
+- Decision six-variant model
+- deployment envelope and profile promotion
+- risk path validator
+- `plan.order_intent`
+- `qst promote`
+- `qst explain-trace`
+
+P1-core does not alter P0 canonicalization or the frozen P0 hash baseline.
+
+## P2-Core Definition
+
+P2-core is the accepted semantic tooling and execution-planning layer on top of P0/P1. It keeps canonical Strategy Content IR and P0/P1 three-layer hashes stable.
+
+P2-core includes:
+
+| Area | Accepted capabilities |
+|---|---|
+| P2a semantic provenance and composition | `indicator.ewm/v1` provenance, TagSpec attachment/full verification, deterministic recipe generator DSL, `signals.dual_ema_cross/v1`, recipe contract/fuzzing/metamorphic verification |
+| P2b mutation | `qst diff`, `qst mutate`, `ChangeParam`, `InsertBefore`, `ReplaceToken`, `InlineRecipe`, before/after hash reports |
+| P2c execution planning | Merkle fingerprints, execution-plan CSE, runtime cache trace evidence, `qst fingerprint` |
+
+P2-core does not include default kernel substitution, production kernel scheduling, plugin/MCP integration, FSM, expanded TA indicator libraries, RL, or HFT execution.
+
+## P2c-Extended Spike
+
+P2c-extended is accepted as an opt-in spike adjacent to P2-core:
+
+- `qst kernel plan`
+- `qst execute --kernel-substitution`
+- one kernel binding for `indicator.ewm/v1`
+- fully verified TagSpec and `allowed_kernels` gate required
+- no default runtime substitution
+- no canonical IR, hash, or fingerprint-material change
 
 ## Current P2a Composition Layer
 
@@ -61,7 +94,7 @@ The implemented loop covers:
 - Built-in algorithm recipe: `signals.dual_ema_cross/v1`
 - CLI expansion: `qst recipe expand`
 - Full empirical verification for `indicator.ewm/v1`
-- No new primitive token, kernel, mutation op, or fully verified `signals.dual_ema_cross` TagSpec
+- No new primitive token, mutation op, or fully verified `signals.dual_ema_cross` TagSpec
 
 ## Current P2b Mutation Layer
 
@@ -73,14 +106,6 @@ The implemented loop covers:
 - `InlineRecipe`
 - before/after hash reports for every mutation
 - type-compatible token replacement and recipe output-preserving inlining
-
-## Current P2c-Extended Kernel Spike
-
-- `qst kernel plan`
-- opt-in execution flag: `qst execute --kernel-substitution`
-- one spike kernel binding: `indicator.ewm/v1`
-- fully verified TagSpec and `allowed_kernels` gate required
-- kernel substitution stays out of canonical IR, three-layer hashes, and fingerprint material
 
 ## Not In Accepted P0/P1/P2-Core
 
