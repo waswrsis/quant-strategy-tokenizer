@@ -1,6 +1,7 @@
 """Agent-facing API."""
 
 from .api import (
+    add_artifact_to_package,
     diff,
     execute,
     explain_ir,
@@ -26,6 +27,7 @@ from .api import (
 from .discover import discover
 
 __all__ = [
+    "add_artifact_to_package",
     "diff",
     "discover",
     "execute",

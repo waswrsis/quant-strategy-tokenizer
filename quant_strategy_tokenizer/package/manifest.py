@@ -7,6 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from quant_strategy_tokenizer.artifacts.safety import POSIXRelativePath
 from quant_strategy_tokenizer.qst_lock.schema import HashString
 
 
@@ -15,8 +16,53 @@ class PackageFile(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    path: str
+    path: POSIXRelativePath
     sha256: HashString
+
+
+class PackageArtifactFile(BaseModel):
+    """One package-internal P4 artifact file reference."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    path: POSIXRelativePath
+    hash: HashString
+
+
+class PackageBacktestArtifacts(BaseModel):
+    """Backtest artifact entries inside a qstpkg."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    evidence: POSIXRelativePath | None = None
+    files: list[PackageArtifactFile] = Field(default_factory=list)
+
+
+class PackageExecutionArtifacts(BaseModel):
+    """Execution artifact entries inside a qstpkg."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    reports: list[POSIXRelativePath] = Field(default_factory=list)
+    raw_payloads: list[PackageArtifactFile] = Field(default_factory=list)
+
+
+class PackagePortfolioArtifacts(BaseModel):
+    """Portfolio artifact entries inside a qstpkg."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    snapshots: list[POSIXRelativePath] = Field(default_factory=list)
+
+
+class PackageArtifacts(BaseModel):
+    """Optional P4 additive artifact section for qstpkg manifests."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    backtest: PackageBacktestArtifacts = Field(default_factory=PackageBacktestArtifacts)
+    execution: PackageExecutionArtifacts = Field(default_factory=PackageExecutionArtifacts)
+    portfolio: PackagePortfolioArtifacts = Field(default_factory=PackagePortfolioArtifacts)
 
 
 class PackageStrategyManifest(BaseModel):
@@ -43,6 +89,7 @@ class PackageManifest(BaseModel):
     files: list[PackageFile] = Field(default_factory=list)
     tagspec_paths: list[str] = Field(default_factory=list)
     recipe_paths: list[str] = Field(default_factory=list)
+    artifacts: PackageArtifacts | None = None
 
 
 class FixturesManifest(BaseModel):

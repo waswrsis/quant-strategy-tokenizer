@@ -1,5 +1,12 @@
 # Changelog
 
+## P4a-2 qstpkg Artifacts Extension
+
+- Added optional artifact references to `.qstpkg` manifests while preserving legacy P3 package verification.
+- Added package helpers and `qst pkg` commands for adding and verifying P4 artifact JSON files.
+- Extended package verification to check artifact paths, package file hashes, raw payload references, and backtest artifact refs.
+- Kept P3 `qst.lock`, strategy hashes, runtime execution, mutation, search, fork, CSE, and kernel behavior unchanged.
+
 ## P4a-1c Multi-Symbol Strict Alignment
 
 - Added strict multi-symbol timestamp grid validation for `MarketFrame` OHLCV bars.

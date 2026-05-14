@@ -28,8 +28,12 @@ from quant_strategy_tokenizer.mutation import (
     parse_mutation_op,
 )
 from quant_strategy_tokenizer.package import (
+    AddArtifactResult,
     PackageBuildResult,
     UnpackedPackage,
+)
+from quant_strategy_tokenizer.package import (
+    add_artifact_to_package as _add_artifact_to_package,
 )
 from quant_strategy_tokenizer.package import (
     package_strategy as _package_strategy,
@@ -202,6 +206,16 @@ def verify_package(package_dir: str) -> VerifyResult:
     """Verify a P3a-1 qstpkg package."""
 
     return _verify_package(package_dir)
+
+
+def add_artifact_to_package(
+    package_dir: str,
+    artifact_json: str,
+    dest_path: str | None = None,
+) -> AddArtifactResult:
+    """Add one P4 artifact JSON file to a qstpkg package."""
+
+    return _add_artifact_to_package(package_dir, artifact_json, dest_path=dest_path)
 
 
 def search(

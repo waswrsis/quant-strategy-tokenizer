@@ -5,6 +5,15 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from pydantic import BaseModel
+
+from quant_strategy_tokenizer.artifacts.backtest_evidence import (
+    ArtifactRef,
+    BacktestEvidence,
+)
+from quant_strategy_tokenizer.artifacts.base import QSTArtifact
+from quant_strategy_tokenizer.artifacts.execution_report import ExecutionReport
+from quant_strategy_tokenizer.artifacts.portfolio_snapshot import PortfolioSnapshot
 from quant_strategy_tokenizer.package.manifest import PackageFile, UnpackedPackage
 from quant_strategy_tokenizer.package.paths import safe_join
 from quant_strategy_tokenizer.package.reader import read_package
@@ -40,6 +49,10 @@ def _file_hash(path: Path) -> str:
     return sha256_bytes(path.read_bytes())
 
 
+def _manifest_file_by_path(package: UnpackedPackage) -> dict[str, PackageFile]:
+    return {entry.path: entry for entry in package.manifest.files}
+
+
 def _check_manifest_file(package: UnpackedPackage, entry: PackageFile) -> VerifyFailure | None:
     path = safe_join(package.root, entry.path)
     if not path.exists():
@@ -60,6 +73,198 @@ def _check_manifest_file(package: UnpackedPackage, entry: PackageFile) -> Verify
             actual=actual,
         )
     return None
+
+
+def _check_artifact_file_by_hash(
+    package: UnpackedPackage,
+    *,
+    path: str,
+    expected_hash: str,
+    missing_kind: str = "artifact_file_missing",
+    mismatch_kind: str = "artifact_file_hash_mismatch",
+) -> list[VerifyFailure]:
+    try:
+        resolved = safe_join(package.root, path)
+    except ValueError as exc:
+        return [
+            _failure(
+                "artifact_path_unsafe",
+                str(exc),
+                path=path,
+            )
+        ]
+    if not resolved.exists():
+        return [
+            _failure(
+                missing_kind,
+                f"Artifact file is missing: {path}",
+                path=path,
+                expected=expected_hash,
+                actual=None,
+            )
+        ]
+    actual = _file_hash(resolved)
+    if actual != expected_hash:
+        return [
+            _failure(
+                mismatch_kind,
+                f"Artifact file hash mismatch: {path}",
+                path=path,
+                expected=expected_hash,
+                actual=actual,
+            )
+        ]
+    return []
+
+
+def _check_manifest_tracked_artifact(
+    package: UnpackedPackage,
+    manifest_files: dict[str, PackageFile],
+    path: str,
+) -> list[VerifyFailure]:
+    entry = manifest_files.get(path)
+    if entry is None:
+        return [
+            _failure(
+                "artifact_file_untracked",
+                f"Artifact file is not tracked in package manifest files: {path}",
+                path=path,
+            )
+        ]
+    return _check_artifact_file_by_hash(
+        package,
+        path=entry.path,
+        expected_hash=entry.sha256,
+    )
+
+
+def _load_artifact_model(path: Path, model: type[BaseModel]) -> BaseModel:
+    loaded = json.loads(path.read_text(encoding="utf-8-sig"))
+    if not isinstance(loaded, dict):
+        raise TypeError(f"Artifact JSON must be an object: {path}")
+    return model.model_validate(loaded)
+
+
+def _check_artifact_ref(package: UnpackedPackage, ref: ArtifactRef) -> list[VerifyFailure]:
+    return _check_artifact_file_by_hash(
+        package,
+        path=ref.path,
+        expected_hash=ref.hash,
+        missing_kind="artifact_ref_missing",
+        mismatch_kind="artifact_ref_hash_mismatch",
+    )
+
+
+def _check_raw_payload(package: UnpackedPackage, artifact: QSTArtifact, artifact_path: str) -> list[VerifyFailure]:
+    if artifact.raw_payload_ref is None:
+        return []
+    if artifact.raw_payload_hash is None:
+        return [
+            _failure(
+                "artifact_raw_payload_hash_missing",
+                f"Artifact raw_payload_ref has no raw_payload_hash: {artifact_path}",
+                path=artifact_path,
+            )
+        ]
+    return _check_artifact_file_by_hash(
+        package,
+        path=artifact.raw_payload_ref,
+        expected_hash=artifact.raw_payload_hash,
+        missing_kind="artifact_raw_payload_missing",
+        mismatch_kind="artifact_raw_payload_hash_mismatch",
+    )
+
+
+def _check_execution_report(package: UnpackedPackage, report_path: str) -> list[VerifyFailure]:
+    try:
+        resolved = safe_join(package.root, report_path)
+        report = _load_artifact_model(resolved, ExecutionReport)
+    except Exception as exc:
+        return [
+            _failure(
+                "artifact_json_invalid",
+                f"Could not read execution report artifact: {type(exc).__name__}: {exc}",
+                path=report_path,
+            )
+        ]
+    assert isinstance(report, ExecutionReport)
+    return _check_raw_payload(package, report, report_path)
+
+
+def _check_portfolio_snapshot(package: UnpackedPackage, snapshot_path: str) -> list[VerifyFailure]:
+    try:
+        resolved = safe_join(package.root, snapshot_path)
+        snapshot = _load_artifact_model(resolved, PortfolioSnapshot)
+    except Exception as exc:
+        return [
+            _failure(
+                "artifact_json_invalid",
+                f"Could not read portfolio snapshot artifact: {type(exc).__name__}: {exc}",
+                path=snapshot_path,
+            )
+        ]
+    assert isinstance(snapshot, PortfolioSnapshot)
+    return _check_raw_payload(package, snapshot, snapshot_path)
+
+
+def _check_backtest_evidence(package: UnpackedPackage, evidence_path: str) -> list[VerifyFailure]:
+    try:
+        resolved = safe_join(package.root, evidence_path)
+        evidence = _load_artifact_model(resolved, BacktestEvidence)
+    except Exception as exc:
+        return [
+            _failure(
+                "artifact_json_invalid",
+                f"Could not read backtest evidence artifact: {type(exc).__name__}: {exc}",
+                path=evidence_path,
+            )
+        ]
+    assert isinstance(evidence, BacktestEvidence)
+    failures = _check_raw_payload(package, evidence, evidence_path)
+    if evidence.equity_curve is not None:
+        failures.extend(_check_artifact_ref(package, evidence.equity_curve))
+    for ref in [*evidence.execution_reports, *evidence.portfolio_snapshots]:
+        failures.extend(_check_artifact_ref(package, ref))
+    return failures
+
+
+def _check_artifacts(package: UnpackedPackage) -> list[VerifyFailure]:
+    artifacts = package.manifest.artifacts
+    if artifacts is None:
+        return []
+
+    failures: list[VerifyFailure] = []
+    manifest_files = _manifest_file_by_path(package)
+
+    if artifacts.backtest.evidence is not None:
+        failures.extend(_check_manifest_tracked_artifact(package, manifest_files, artifacts.backtest.evidence))
+        failures.extend(_check_backtest_evidence(package, artifacts.backtest.evidence))
+    for artifact_file in artifacts.backtest.files:
+        failures.extend(
+            _check_artifact_file_by_hash(
+                package,
+                path=artifact_file.path,
+                expected_hash=artifact_file.hash,
+            )
+        )
+
+    for report_path in artifacts.execution.reports:
+        failures.extend(_check_manifest_tracked_artifact(package, manifest_files, report_path))
+        failures.extend(_check_execution_report(package, report_path))
+    for raw_payload in artifacts.execution.raw_payloads:
+        failures.extend(
+            _check_artifact_file_by_hash(
+                package,
+                path=raw_payload.path,
+                expected_hash=raw_payload.hash,
+            )
+        )
+
+    for snapshot_path in artifacts.portfolio.snapshots:
+        failures.extend(_check_manifest_tracked_artifact(package, manifest_files, snapshot_path))
+        failures.extend(_check_portfolio_snapshot(package, snapshot_path))
+
+    return failures
 
 
 def _check_fixture_manifest_consistency(package: UnpackedPackage) -> list[VerifyFailure]:
@@ -181,6 +386,7 @@ def verify_package(package_dir: str | Path) -> VerifyResult:
             failures.append(failure)
 
     failures.extend(_check_fixture_manifest_consistency(package))
+    failures.extend(_check_artifacts(package))
 
     can_verify_lock = package.source_path.exists() and package.canonical_path.exists() and package.lock_path.exists()
     if can_verify_lock:

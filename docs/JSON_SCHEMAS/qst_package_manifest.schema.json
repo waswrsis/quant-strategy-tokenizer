@@ -48,6 +48,78 @@
     "recipe_paths": {
       "type": "array",
       "items": {"type": "string"}
+    },
+    "artifacts": {
+      "anyOf": [
+        {"$ref": "#/$defs/PackageArtifacts"},
+        {"type": "null"}
+      ]
+    }
+  },
+  "$defs": {
+    "Sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "POSIXRelativePath": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*\\.\\.)(?!.*\\\\)[A-Za-z0-9._\\-/]+$"
+    },
+    "ArtifactFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "hash"],
+      "properties": {
+        "path": {"$ref": "#/$defs/POSIXRelativePath"},
+        "hash": {"$ref": "#/$defs/Sha256"}
+      }
+    },
+    "PackageArtifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["backtest", "execution", "portfolio"],
+      "properties": {
+        "backtest": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["files"],
+          "properties": {
+            "evidence": {
+              "anyOf": [
+                {"$ref": "#/$defs/POSIXRelativePath"},
+                {"type": "null"}
+              ]
+            },
+            "files": {
+              "type": "array",
+              "items": {"$ref": "#/$defs/ArtifactFile"}
+            }
+          }
+        },
+        "execution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reports", "raw_payloads"],
+          "properties": {
+            "reports": {
+              "type": "array",
+              "items": {"$ref": "#/$defs/POSIXRelativePath"}
+            },
+            "raw_payloads": {
+              "type": "array",
+              "items": {"$ref": "#/$defs/ArtifactFile"}
+            }
+          }
+        },
+        "portfolio": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["snapshots"],
+          "properties": {
+            "snapshots": {
+              "type": "array",
+              "items": {"$ref": "#/$defs/POSIXRelativePath"}
+            }
+          }
+        }
+      }
     }
   }
 }

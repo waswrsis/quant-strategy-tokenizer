@@ -29,6 +29,7 @@ from quant_strategy_tokenizer.ir.validate import validate as validate_ir
 from quant_strategy_tokenizer.mutation import diff_strategies, mutate_strategy, parse_mutation_op
 from quant_strategy_tokenizer.mutation.repair import mutation_from_repair_hint
 from quant_strategy_tokenizer.package import (
+    add_artifact_to_package,
     package_strategy,
     unpack_package,
     verify_package,
@@ -56,9 +57,11 @@ app = typer.Typer(no_args_is_help=True)
 tag_app = typer.Typer(no_args_is_help=True)
 recipe_app = typer.Typer(no_args_is_help=True)
 kernel_app = typer.Typer(no_args_is_help=True)
+pkg_app = typer.Typer(no_args_is_help=True)
 app.add_typer(tag_app, name="tag")
 app.add_typer(recipe_app, name="recipe")
 app.add_typer(kernel_app, name="kernel")
+app.add_typer(pkg_app, name="pkg")
 
 P0_TOKEN_TRIPLES: tuple[tuple[str, int, int], ...] = (
     ("data.column", 1, 1),
@@ -336,6 +339,40 @@ def unpack_cmd(pkg_dir: Path, output: Annotated[Path, typer.Option("--output")])
             "files": len(unpacked.manifest.files),
         }
     )
+
+
+@pkg_app.command("add-artifact")
+def pkg_add_artifact_cmd(
+    pkg_dir: Path,
+    artifact_json: Path,
+    dest: Annotated[str | None, typer.Option("--dest")] = None,
+) -> None:
+    """Add one P4 artifact JSON file to a qstpkg directory."""
+
+    try:
+        result = add_artifact_to_package(pkg_dir, artifact_json, dest_path=dest)
+    except Exception as exc:
+        _echo_json({"ok": False, "error": f"{type(exc).__name__}: {exc}"})
+        raise typer.Exit(1) from None
+    _echo_json(
+        {
+            "ok": True,
+            "package": str(result.package_dir),
+            "artifact_path": result.artifact_path,
+            "artifact_version": result.artifact_version,
+            "files": len(result.manifest.files),
+        }
+    )
+
+
+@pkg_app.command("verify-artifacts")
+def pkg_verify_artifacts_cmd(pkg_dir: Path) -> None:
+    """Verify qstpkg contents including optional P4 artifacts."""
+
+    result = verify_package(pkg_dir)
+    _echo_json(result.model_dump(mode="json", exclude_none=True))
+    if not result.ok:
+        raise typer.Exit(1)
 
 
 @app.command("verify")
