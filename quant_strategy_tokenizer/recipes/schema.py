@@ -19,6 +19,7 @@ class RecipeNode(BaseModel):
     version: int | None = None
     params: dict[str, Any] = Field(default_factory=dict)
     inputs: dict[str, Any] = Field(default_factory=dict)
+    role: str | None = None
 
     @model_validator(mode="after")
     def _exactly_one_kind(self) -> RecipeNode:

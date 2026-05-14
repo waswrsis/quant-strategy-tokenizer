@@ -6,6 +6,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from quant_strategy_tokenizer.provenance import ProvenanceTag
+
 IR_VERSION = "qst-ir/0.3"
 CANONICAL_VERSION = "qst-canonical/0.1"
 
@@ -25,6 +27,7 @@ class GraphNode(BaseModel):
     v: int = 1
     params: dict[str, Any] = Field(default_factory=dict)
     inputs: dict[str, Any] = Field(default_factory=dict)
+    provenance: list[ProvenanceTag] = Field(default_factory=list)
 
 
 class RecipeInstance(BaseModel):

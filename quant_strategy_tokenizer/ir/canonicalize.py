@@ -104,6 +104,7 @@ def _primitive_from_graph_node(node: GraphNode) -> PrimitiveNode:
         version=node.v,
         params=node.params,
         inputs=node.inputs,
+        provenance=node.provenance,
     )
 
 
@@ -159,6 +160,7 @@ def _finalize_node(node: PrimitiveNode, rename: dict[str, str]) -> GraphNode:
         v=node.version,
         params=_canonical_value(node.params),
         inputs=_canonical_value(_rewrite_refs(node.inputs, rename)),
+        provenance=node.provenance,
     )
 
 
@@ -201,6 +203,7 @@ def canonicalize(
             version=node.version,
             params=node.params,
             inputs=_resolve_refs(node.inputs, resolver),
+            provenance=node.provenance,
         )
         for node in direct_nodes
     ]

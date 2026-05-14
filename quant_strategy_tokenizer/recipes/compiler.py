@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import ast
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 from typing import Any
 
+from quant_strategy_tokenizer.provenance import ProvenanceTag
 from quant_strategy_tokenizer.recipes.registry import RecipeRegistry, get_recipe_registry
 from quant_strategy_tokenizer.recipes.schema import RecipeNode, RecipeSpec
 from quant_strategy_tokenizer.tokens.registry import Registry, get_registry
@@ -42,6 +43,7 @@ class PrimitiveNode:
     version: int
     params: dict[str, Any]
     inputs: dict[str, Any]
+    provenance: list[ProvenanceTag] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -166,6 +168,8 @@ def _register_local_outputs(
 def _compile_token_node(
     node: RecipeNode,
     *,
+    recipe_id: str,
+    recipe_version: int,
     instance_id: str,
     params: dict[str, Any],
     instance_inputs: dict[str, Any],
@@ -184,6 +188,19 @@ def _compile_token_node(
         params=resolved_params,
         inputs=resolved_inputs,
     )
+    if recipe_id == "indicator.ewm":
+        primitive = replace(
+            primitive,
+            provenance=[
+                ProvenanceTag(
+                    semantic_id=recipe_id,
+                    version=recipe_version,
+                    params=params,
+                    role=node.role or node.id,
+                    tag_attached_by="recipe_compiler",
+                )
+            ],
+        )
     outputs = {
         port: OutputRef(node_id=primitive_id, port=port)
         for port in registered.spec.outputs
@@ -224,6 +241,8 @@ def compile_recipe(
         if node.token is not None:
             primitive, node_outputs = _compile_token_node(
                 node,
+                recipe_id=recipe_id,
+                recipe_version=recipe_version,
                 instance_id=instance_id,
                 params=params,
                 instance_inputs=instance_inputs,
