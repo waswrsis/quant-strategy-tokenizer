@@ -1,5 +1,11 @@
 # Changelog
 
+## P4b-1 Mock Adapters + CLI
+
+- Added built-in mock adapters for CSV market data, Parquet market data, backtests, execution, and experiment tracking.
+- Added P4b CLI commands for adapter discovery, market loading, mock backtesting, mock execution submit/poll, and mock experiment tracking.
+- Kept `qst execute`, canonical strategy hashes, lock/package versions, real external adapters, and semantic detokenize out of scope.
+
 ## P4b-0 Port Protocols + SignalExtractionPolicy
 
 - Added Universal Port protocols for market data, features, backtests, execution, experiments, package storage, and future RL adapters.

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import tempfile
 from pathlib import Path
 from typing import Annotated, Any, cast
 
@@ -10,9 +11,11 @@ import pandas as pd
 import typer
 import yaml
 
+from quant_strategy_tokenizer.adapters import discover_adapters, get_adapter
 from quant_strategy_tokenizer.agent.fork import fork as fork_strategy
 from quant_strategy_tokenizer.agent.promote import promote as promote_strategy
 from quant_strategy_tokenizer.agent.search import search as search_index
+from quant_strategy_tokenizer.canonical_json import stable_json_bytes
 from quant_strategy_tokenizer.composition import expand_builtin_recipe, upgrade_verification
 from quant_strategy_tokenizer.core.output import jsonable_value
 from quant_strategy_tokenizer.detokenize.explain_emitter import explain_ir as explain_text
@@ -20,6 +23,10 @@ from quant_strategy_tokenizer.detokenize.trace_explainer import explain_trace as
 from quant_strategy_tokenizer.execution.fingerprint import compute_all_fingerprints
 from quant_strategy_tokenizer.execution.kernel import make_kernel_plan_report
 from quant_strategy_tokenizer.execution.plan import make_execution_plan
+from quant_strategy_tokenizer.frames import MarketFrame, compute_frame_hash
+from quant_strategy_tokenizer.frames.io.csv_io import read_csv_frame
+from quant_strategy_tokenizer.frames.io.json_io import Frame, read_json_frame, write_json_frame
+from quant_strategy_tokenizer.frames.io.parquet_io import read_parquet_frame
 from quant_strategy_tokenizer.ir.canonicalize import canonicalize as canonicalize_ir
 from quant_strategy_tokenizer.ir.compare import compare_ir
 from quant_strategy_tokenizer.ir.envelope import ProfileLiteral
@@ -38,6 +45,16 @@ from quant_strategy_tokenizer.parse.yaml_loader import (
     load_strategy_file,
     load_strategy_file_with_envelope,
 )
+from quant_strategy_tokenizer.ports import (
+    BacktestConfig,
+    BacktestPort,
+    ExecutionPort,
+    ExperimentPort,
+    ExperimentRunConfig,
+    MarketDataPort,
+    MarketLoadRequest,
+    run_strategy_backtest,
+)
 from quant_strategy_tokenizer.provenance.registry import load_tagspec_file
 from quant_strategy_tokenizer.qst_lock import build_lock, verify_lock
 from quant_strategy_tokenizer.qst_lock.io import (
@@ -52,16 +69,21 @@ from quant_strategy_tokenizer.runtime.executor import execute_strategy
 from quant_strategy_tokenizer.runtime.trace import Trace
 from quant_strategy_tokenizer.tokens._contract_runner import run_contract
 from quant_strategy_tokenizer.tokens.registry import get_registry
+from quant_strategy_tokenizer.types.plan import parse_plan
 
 app = typer.Typer(no_args_is_help=True)
 tag_app = typer.Typer(no_args_is_help=True)
 recipe_app = typer.Typer(no_args_is_help=True)
 kernel_app = typer.Typer(no_args_is_help=True)
 pkg_app = typer.Typer(no_args_is_help=True)
+load_app = typer.Typer(no_args_is_help=True)
+adapter_app = typer.Typer(no_args_is_help=True)
 app.add_typer(tag_app, name="tag")
 app.add_typer(recipe_app, name="recipe")
 app.add_typer(kernel_app, name="kernel")
 app.add_typer(pkg_app, name="pkg")
+app.add_typer(load_app, name="load")
+app.add_typer(adapter_app, name="adapter")
 
 P0_TOKEN_TRIPLES: tuple[tuple[str, int, int], ...] = (
     ("data.column", 1, 1),
@@ -93,6 +115,83 @@ PROFILE_VALUES = {"research", "paper", "pretrade", "production_guarded"}
 
 def _echo_json(value: Any) -> None:
     typer.echo(json.dumps(jsonable_value(value), ensure_ascii=False, indent=2, default=str))
+
+
+def _write_canonical_json(path: Path, value: Any) -> None:
+    path.write_bytes(stable_json_bytes(jsonable_value(value)))
+
+
+def _ensure_market_frame(frame: Frame) -> MarketFrame:
+    if not isinstance(frame, MarketFrame):
+        raise TypeError(f"Expected qst-market-frame/1, got {frame.frame_version!r}")
+    return frame
+
+
+def _market_with_hash(frame: MarketFrame) -> MarketFrame:
+    return frame.model_copy(update={"frame_hash": compute_frame_hash(frame)})
+
+
+def _read_market_frame(path: Path) -> MarketFrame:
+    suffix = path.suffix.lower()
+    if suffix == ".json":
+        return _ensure_market_frame(read_json_frame(path))
+    if suffix == ".csv":
+        return _ensure_market_frame(read_csv_frame(path, "qst-market-frame/1"))
+    if suffix in {".parquet", ".pq"}:
+        return _ensure_market_frame(read_parquet_frame(path, "qst-market-frame/1"))
+    raise ValueError(f"Unsupported market frame file suffix: {path.suffix!r}")
+
+
+def _market_adapter_id(source: Path, adapter: str) -> str:
+    if adapter != "auto":
+        return adapter
+    suffix = source.suffix.lower()
+    if suffix == ".csv":
+        return "mock-csv-market"
+    if suffix in {".parquet", ".pq"}:
+        return "mock-parquet-market"
+    raise ValueError("auto market adapter supports only .csv, .parquet, or .pq sources")
+
+
+def _load_market_adapter(adapter_id: str) -> MarketDataPort:
+    adapter = get_adapter(adapter_id)
+    if not isinstance(adapter, MarketDataPort):
+        raise TypeError(f"Adapter {adapter_id!r} does not implement MarketDataPort")
+    return adapter
+
+
+def _load_backtest_adapter(adapter_id: str) -> BacktestPort:
+    resolved = "mock-backtest" if adapter_id == "mock" else adapter_id
+    adapter = get_adapter(resolved)
+    if not isinstance(adapter, BacktestPort):
+        raise TypeError(f"Adapter {resolved!r} does not implement BacktestPort")
+    return adapter
+
+
+def _load_execution_adapter(adapter_id: str) -> ExecutionPort:
+    adapter = get_adapter(adapter_id)
+    if not isinstance(adapter, ExecutionPort):
+        raise TypeError(f"Adapter {adapter_id!r} does not implement ExecutionPort")
+    return adapter
+
+
+def _load_experiment_adapter(adapter_id: str) -> ExperimentPort:
+    adapter = get_adapter(adapter_id)
+    if not isinstance(adapter, ExperimentPort):
+        raise TypeError(f"Adapter {adapter_id!r} does not implement ExperimentPort")
+    return adapter
+
+
+def _parse_tags(items: list[str] | None) -> dict[str, str]:
+    tags: dict[str, str] = {}
+    for item in items or []:
+        if "=" not in item:
+            raise ValueError(f"Tag {item!r} must use key=value format")
+        key, value = item.split("=", 1)
+        if not key:
+            raise ValueError("Tag key cannot be empty")
+        tags[key] = value
+    return tags
 
 
 def _effective_profile(override: str | None, envelope_profile: ProfileLiteral) -> ProfileLiteral:
@@ -401,6 +500,182 @@ def verify_cmd(
     _echo_json(result.model_dump(mode="json", exclude_none=True))
     if not result.ok:
         raise typer.Exit(1)
+
+
+@load_app.command("market")
+def load_market_cmd(
+    source: Annotated[Path, typer.Option("--source")],
+    output: Annotated[Path, typer.Option("--output")],
+    symbols: Annotated[list[str] | None, typer.Option("--symbols")] = None,
+    adapter: Annotated[str, typer.Option("--adapter")] = "auto",
+) -> None:
+    """Load a P4 MarketFrame through a local market adapter."""
+
+    try:
+        adapter_id = _market_adapter_id(source, adapter)
+        market_adapter = _load_market_adapter(adapter_id)
+        frame = _market_with_hash(
+            market_adapter.load_market(
+                MarketLoadRequest(source=str(source), symbols=symbols or [])
+            )
+        )
+        write_json_frame(frame, output)
+    except Exception as exc:
+        _echo_json({"ok": False, "error": f"{type(exc).__name__}: {exc}"})
+        raise typer.Exit(1) from None
+    _echo_json(
+        {
+            "ok": True,
+            "adapter": adapter_id,
+            "output": str(output),
+            "frame_version": frame.frame_version,
+            "frame_hash": frame.frame_hash,
+            "symbols": frame.symbols,
+            "bars": len(frame.bars),
+        }
+    )
+
+
+@app.command("backtest")
+def backtest_cmd(
+    strategy: Path,
+    adapter: Annotated[str, typer.Option("--adapter")] = "mock",
+    market: Annotated[Path, typer.Option("--market")] = Path("market.json"),
+    output: Annotated[Path, typer.Option("--output")] = Path("result.qstpkg"),
+) -> None:
+    """Run a strategy through signal extraction and a mock backtest adapter."""
+
+    try:
+        ir = load_strategy_file(strategy)
+        market_frame = _read_market_frame(market)
+        hashes = compute_hashes(ir)
+        evidence = run_strategy_backtest(
+            ir,
+            market_frame,
+            BacktestConfig(metadata={"strategy_instance_hash": hashes.instance_hash}),
+            adapter=_load_backtest_adapter(adapter),
+        )
+        package_strategy(strategy, output)
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            evidence_path = Path(tmp_dir) / "backtest_evidence.json"
+            _write_canonical_json(evidence_path, evidence.model_dump(mode="json"))
+            add_artifact_to_package(output, evidence_path)
+        verification = verify_package(output)
+    except Exception as exc:
+        _echo_json({"ok": False, "error": f"{type(exc).__name__}: {exc}"})
+        raise typer.Exit(1) from None
+    _echo_json(
+        {
+            "ok": True,
+            "adapter": "mock-backtest" if adapter == "mock" else adapter,
+            "package": str(output),
+            "backtest_artifact_id": evidence.artifact_id,
+            "strategy_instance_hash": hashes.instance_hash,
+            "verification_ok": verification.ok,
+        }
+    )
+
+
+@app.command("submit-plan")
+def submit_plan_cmd(
+    plan_json: Path,
+    adapter: Annotated[str, typer.Option("--adapter")] = "mock-execution",
+    confirm: Annotated[bool, typer.Option("--confirm")] = False,
+    client_order_id: Annotated[str | None, typer.Option("--client-order-id")] = None,
+    output: Annotated[Path | None, typer.Option("--output")] = None,
+) -> None:
+    """Submit a venue-neutral plan through a local execution adapter."""
+
+    try:
+        plan = parse_plan(_load_json_path(plan_json))
+        report = _load_execution_adapter(adapter).submit_plan(
+            plan,
+            confirm=confirm,
+            client_order_id=client_order_id,
+        )
+        if output is not None:
+            _write_canonical_json(output, report.model_dump(mode="json"))
+    except Exception as exc:
+        _echo_json({"ok": False, "error": f"{type(exc).__name__}: {exc}"})
+        raise typer.Exit(1) from None
+    payload = {"ok": True, "adapter": adapter, "report": report.model_dump(mode="json")}
+    if output is not None:
+        payload["output"] = str(output)
+    _echo_json(payload)
+
+
+@app.command("poll-execution")
+def poll_execution_cmd(
+    execution_report_id: str,
+    adapter: Annotated[str, typer.Option("--adapter")] = "mock-execution",
+    output: Annotated[Path | None, typer.Option("--output")] = None,
+) -> None:
+    """Poll a mock execution report by id."""
+
+    try:
+        report = _load_execution_adapter(adapter).poll_report(execution_report_id)
+        if output is not None:
+            _write_canonical_json(output, report.model_dump(mode="json"))
+    except Exception as exc:
+        _echo_json({"ok": False, "error": f"{type(exc).__name__}: {exc}"})
+        raise typer.Exit(1) from None
+    payload = {"ok": True, "adapter": adapter, "report": report.model_dump(mode="json")}
+    if output is not None:
+        payload["output"] = str(output)
+    _echo_json(payload)
+
+
+@app.command("track")
+def track_cmd(
+    pkg_dir: Path,
+    adapter: Annotated[str, typer.Option("--adapter")] = "mock-experiment",
+    run_name: Annotated[str, typer.Option("--run-name")] = "run",
+    tag: Annotated[list[str] | None, typer.Option("--tag")] = None,
+) -> None:
+    """Track a qstpkg through a local experiment adapter."""
+
+    try:
+        ref = _load_experiment_adapter(adapter).track_package(
+            pkg_dir,
+            ExperimentRunConfig(run_name=run_name, tags=_parse_tags(tag)),
+        )
+    except Exception as exc:
+        _echo_json({"ok": False, "error": f"{type(exc).__name__}: {exc}"})
+        raise typer.Exit(1) from None
+    _echo_json({"ok": True, "adapter": adapter, "artifact_ref": ref.model_dump(mode="json")})
+
+
+@adapter_app.command("list")
+def adapter_list_cmd() -> None:
+    """List locally discoverable QST adapters."""
+
+    _echo_json([descriptor.model_dump(mode="json") for descriptor in discover_adapters()])
+
+
+@adapter_app.command("verify")
+def adapter_verify_cmd(adapter_id: str) -> None:
+    """Load one adapter and report implemented P4 port protocols."""
+
+    try:
+        adapter = get_adapter(adapter_id)
+        identity = adapter.get_identity()
+    except Exception as exc:
+        _echo_json({"ok": False, "adapter_id": adapter_id, "error": f"{type(exc).__name__}: {exc}"})
+        raise typer.Exit(1) from None
+    capabilities = {
+        "market_data": isinstance(adapter, MarketDataPort),
+        "backtest": isinstance(adapter, BacktestPort),
+        "execution": isinstance(adapter, ExecutionPort),
+        "experiment": isinstance(adapter, ExperimentPort),
+    }
+    _echo_json(
+        {
+            "ok": any(capabilities.values()),
+            "adapter_id": adapter_id,
+            "identity": identity.model_dump(mode="json"),
+            "capabilities": capabilities,
+        }
+    )
 
 
 @app.command("search")

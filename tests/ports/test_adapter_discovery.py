@@ -38,10 +38,14 @@ def test_adapter_discovery_uses_local_entry_points_only(monkeypatch: pytest.Monk
     monkeypatch.setattr(discovery.metadata, "entry_points", _fake_entry_points)
 
     descriptors = discover_adapters()
+    ids = [descriptor.adapter_id for descriptor in descriptors]
 
-    assert [descriptor.adapter_id for descriptor in descriptors] == ["alpha", "zeta"]
-    assert descriptors[0].module == "tests.ports.test_adapter_discovery"
-    assert descriptors[0].object_ref == "adapter_factory"
+    assert ids == sorted(ids)
+    assert "alpha" in ids
+    assert "zeta" in ids
+    alpha = next(descriptor for descriptor in descriptors if descriptor.adapter_id == "alpha")
+    assert alpha.module == "tests.ports.test_adapter_discovery"
+    assert alpha.object_ref == "adapter_factory"
 
 
 def test_get_adapter_loads_local_entry_point_factory(monkeypatch: pytest.MonkeyPatch) -> None:
