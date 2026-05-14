@@ -15,6 +15,7 @@ dependencies = [
     "pyyaml>=6.0",
     "numpy>=1.24",
     "pandas>=2.0",
+    "packaging>=23",
     "typer>=0.9",
 ]
 
@@ -23,6 +24,7 @@ dev = [
     "pytest>=7.4",
     "pytest-cov>=4.1",
     "hypothesis>=6.90",
+    "jsonschema>=4",
     "mypy>=1.7",
     "ruff>=0.1",
 ]
