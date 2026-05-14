@@ -2,12 +2,12 @@
 
 Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core and P2-core construction stages.
 
-The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, and implements P2a-0/P2a-1 provenance metadata plus P2b-0 mutation and P2c-core execution-plan CSE. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, recipe generation, advanced mutation, or kernel substitution.
+The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, and implements P2a-0/P2a-1 provenance metadata, P2a-2 deterministic recipe generation, P2b-0 mutation, and P2c-core execution-plan CSE. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, advanced mutation, composition validation, or kernel substitution.
 
 The implemented loop covers:
 
 - 25 built-in tokens with behavior contracts
-- 8 built-in JSON recipes
+- 9 built-in JSON recipes
 - Strategy Content IR loading from YAML
 - `_envelope` parsing outside Strategy Content IR
 - canonicalization, three-layer hashing, validation, and repair hints
@@ -16,6 +16,7 @@ The implemented loop covers:
 - profile promotion from `research` to guarded profiles without changing content hashes
 - purity and temporal safety validation
 - `indicator.ewm` provenance tags, TagSpec verification, basic mutation, and execution-plan CSE
+- deterministic recipe expansion for `signals.dual_ema_cross/v1`
 
 ## Project Status
 
@@ -28,6 +29,7 @@ The implemented loop covers:
 | P1-extended-b | deferred |
 | P2a-0 | accepted |
 | P2a-1 | accepted |
+| P2a-2 | accepted |
 | P2b-0 | accepted |
 | P2c-core | accepted |
 | P2c-extended | not started |
@@ -49,11 +51,20 @@ The implemented loop covers:
 - order_intent
 - explain-trace
 
+## Current P2a-2 Recipe Generator
+
+- Current total vocabulary: 25 tokens, 9 recipes
+- Deterministic YAML generator DSL
+- Built-in algorithm recipe: `signals.dual_ema_cross/v1`
+- CLI expansion: `qst recipe expand`
+- No new primitive token, kernel, mutation op, or TagSpec verification upgrade
+
 ## Not In Accepted P0/P1/P2-Core
 
 The following are intentionally not part of the accepted P0/P1/P2-core baseline:
 
-- recipe generator
+- P2a-3 composition validation
+- advanced recipe library beyond `signals.dual_ema_cross/v1`
 - advanced mutation (`ReplaceToken`, `InlineRecipe`)
 - kernel substitution
 - FSM
@@ -106,7 +117,7 @@ qst compare strategies/kdj_cross_basic.qst.yaml /tmp/kdj_lookback_14.yaml
 
 Expected behavior:
 
-- `qst vocabulary --check` reports 25 tokens and 8 recipes, while P0 frozen triples remain resolvable.
+- `qst vocabulary --check` reports 25 tokens and 9 recipes, while P0 frozen triples remain resolvable.
 - `qst validate` exits 0 for the P0 reference strategy.
 - `qst hash` prints `graph_hash`, `param_hash`, and `instance_hash`.
 - `qst execute` writes the requested trace file.
@@ -148,6 +159,7 @@ Expected behavior:
 
 ```bash
 qst tag verify docs/tagspecs/indicator.ewm.tagspec.yaml
+qst recipe expand signals.dual_ema_cross --params '{"fast_span":9,"slow_span":21}' --output /tmp/dual_ema_cross.json
 qst diff strategies/kdj_cross_basic.qst.yaml strategies/kdj_cross_basic.qst.yaml
 qst fingerprint strategies/uses_cse_duplicate_chain.qst.yaml
 qst execute strategies/uses_cse_duplicate_chain.qst.yaml \
@@ -159,6 +171,7 @@ qst explain-trace /tmp/qst_cse_trace.json --level raw
 Expected behavior:
 
 - `qst tag verify` reports `minimally_attached: true`.
+- `qst recipe expand` writes a deterministic `signals.dual_ema_cross/v1` recipe using only `indicator.ewm` and `event.cross_above`.
 - `qst fingerprint` reports `fp_sha256:*` fingerprints and reuse pairs.
 - The CSE strategy trace contains `cache_hit: true` nodes with `reused_from` and `fingerprint`.
 - P2c-core CSE happens only in the execution plan layer; canonical IR and P0/P1 hashes remain unchanged.

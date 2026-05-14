@@ -55,6 +55,12 @@ This taxonomy records the frozen P0 vocabulary and the accepted P1-core addition
 | `gate.elapsed_threshold` | 1 | derived_from_graph | inherits_graph | inherits_graph | inherits_graph | not_declared | all | P1-core accepted |
 | `gate.cooldown` | 1 | derived_from_graph | inherits_graph | inherits_graph | inherits_graph | not_declared | all | P1-core accepted |
 
+## P2a-2 Algorithm Recipes
+
+| id | version | purity | uses_future_data | window_mode | output_available_at | max_lookback | profile_allowed | status |
+|---|---:|---|---|---|---|---|---|---|
+| `signals.dual_ema_cross` | 1 | derived_from_graph | inherits_graph | inherits_graph | inherits_graph | not_declared | all | P2a-2 accepted |
+
 ## Profile Policy
 
 | Profile | Max purity | Future data | Unsafe window modes |
