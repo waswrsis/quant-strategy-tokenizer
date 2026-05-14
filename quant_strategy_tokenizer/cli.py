@@ -31,6 +31,13 @@ from quant_strategy_tokenizer.parse.yaml_loader import (
     load_strategy_file_with_envelope,
 )
 from quant_strategy_tokenizer.provenance.registry import load_tagspec_file
+from quant_strategy_tokenizer.qst_lock import build_lock, verify_lock
+from quant_strategy_tokenizer.qst_lock.io import (
+    read_canonical_ir,
+    read_lock,
+    write_canonical_ir,
+    write_lock,
+)
 from quant_strategy_tokenizer.recipes.compiler import compile_recipe
 from quant_strategy_tokenizer.recipes.registry import get_recipe_registry
 from quant_strategy_tokenizer.runtime.executor import execute_strategy
@@ -236,6 +243,58 @@ def hash_cmd(path: Path) -> None:
     typer.echo(f"graph_hash:    {hashes.graph_hash}")
     typer.echo(f"param_hash:    {hashes.param_hash}")
     typer.echo(f"instance_hash: {hashes.instance_hash}")
+
+
+@app.command("lock")
+def lock_cmd(
+    path: Path,
+    output: Annotated[Path, typer.Option("--output")] = Path("qst.lock"),
+    canonical_output: Annotated[Path | None, typer.Option("--canonical-output")] = None,
+    market: Annotated[Path | None, typer.Option("--market")] = None,
+    expected_trace: Annotated[Path | None, typer.Option("--expected-trace")] = None,
+) -> None:
+    """Build a deterministic P3a-0 qst.lock for a strategy."""
+
+    built = build_lock(
+        load_strategy_file(path),
+        market_path=market,
+        expected_trace_path=expected_trace,
+    )
+    write_lock(built.lock, output)
+    if canonical_output is not None:
+        write_canonical_ir(built.canonical_ir, canonical_output)
+    _echo_json(
+        {
+            "ok": True,
+            "lock": str(output),
+            "canonical": str(canonical_output) if canonical_output is not None else None,
+            "strategy_hashes": built.lock.strategy_hashes.model_dump(mode="json"),
+            "canonical_ir_hash": built.lock.canonical_ir_hash,
+            "verification_level": "STRUCTURAL",
+        }
+    )
+
+
+@app.command("verify")
+def verify_cmd(
+    path: Path,
+    lock_path: Annotated[Path, typer.Option("--lock")],
+    canonical_path: Annotated[Path | None, typer.Option("--canonical")] = None,
+    market: Annotated[Path | None, typer.Option("--market")] = None,
+    expected_trace: Annotated[Path | None, typer.Option("--expected-trace")] = None,
+) -> None:
+    """Verify a strategy against a P3a-0 qst.lock."""
+
+    result = verify_lock(
+        load_strategy_file(path),
+        read_lock(lock_path),
+        canonical_ir=read_canonical_ir(canonical_path) if canonical_path is not None else None,
+        market_path=market,
+        expected_trace_path=expected_trace,
+    )
+    _echo_json(result.model_dump(mode="json", exclude_none=True))
+    if not result.ok:
+        raise typer.Exit(1)
 
 
 @app.command("compare")

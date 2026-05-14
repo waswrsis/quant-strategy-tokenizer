@@ -7,6 +7,7 @@ from .api import (
     explain_trace,
     fingerprint,
     kernel_plan,
+    lock,
     mutate,
     promote,
     recipe_expand,
@@ -14,6 +15,7 @@ from .api import (
     tagspec_get,
     tagspec_verify,
     validate,
+    verify,
     vocabulary,
 )
 from .discover import discover
@@ -26,6 +28,7 @@ __all__ = [
     "explain_trace",
     "fingerprint",
     "kernel_plan",
+    "lock",
     "mutate",
     "promote",
     "recipe_expand",
@@ -33,5 +36,6 @@ __all__ = [
     "tagspec_get",
     "tagspec_verify",
     "validate",
+    "verify",
     "vocabulary",
 ]

@@ -1,8 +1,8 @@
 # Quant Strategy Tokenizer
 
-Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core and P2 construction stages.
+Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, and P3a-0 lock-gate construction stages.
 
-The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, and implements P2a-0/P2a-1 provenance metadata, P2a-2 deterministic recipe generation, P2a-3 composition validation, P2b mutation, P2c-core execution-plan CSE, and an opt-in P2c-extended kernel substitution spike. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, or a production kernel framework.
+The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, implements P2a-0/P2a-1 provenance metadata, P2a-2 deterministic recipe generation, P2a-3 composition validation, P2b mutation, P2c-core execution-plan CSE, an opt-in P2c-extended kernel substitution spike, and the P3a-0 deterministic lock hard gate. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, a production kernel framework, P3 package artifacts, P3 search, or P3 fork lineage.
 
 The implemented loop covers:
 
@@ -18,6 +18,7 @@ The implemented loop covers:
 - `indicator.ewm` provenance tags, TagSpec verification, mutation, execution-plan CSE, and opt-in kernel substitution
 - deterministic recipe expansion for `signals.dual_ema_cross/v1`
 - empirical composition validation for `indicator.ewm/v1`
+- deterministic `qst.lock` generation and structural verification
 
 ## Project Status
 
@@ -36,6 +37,9 @@ The implemented loop covers:
 | P2b-1 | accepted |
 | P2c-core | accepted |
 | P2c-extended | accepted |
+| P3a-0 lock gate | accepted |
+| P3a-1 package | not started |
+| P3b search/fork | not started |
 
 ## Frozen P0 Baseline
 
@@ -87,6 +91,18 @@ P2c-extended is accepted as an opt-in spike adjacent to P2-core:
 - no default runtime substitution
 - no canonical IR, hash, or fingerprint-material change
 
+## P3a-0 Lock Gate
+
+P3a-0 is accepted as the deterministic lock hard gate before any P3 package, search, or fork work:
+
+- `qst lock`
+- `qst verify`
+- canonical JSON `qst.lock`
+- structured `VerifyResult`
+- strict QST version policy only
+- no automatic `qst-ir/0.3` to `0.3.1` rewrite
+- structural verification only, not numerical output equivalence
+
 ## Current P2a Composition Layer
 
 - Current total vocabulary: 25 tokens, 9 recipes
@@ -117,6 +133,9 @@ The following are intentionally not part of the accepted P0/P1/P2-core baseline:
 - expanded indicator library
 - RL / HFT
 - plugin / MCP
+- P3 package format
+- P3 search index
+- P3 fork lineage
 
 Reference strategy:
 
@@ -231,5 +250,25 @@ Expected behavior:
 - P2c-core CSE happens only in the execution plan layer; canonical IR and P0/P1 hashes remain unchanged.
 - `qst kernel plan` reports one eligible `indicator.ewm/v1` kernel for the EWM provenance strategy.
 - Opt-in kernel execution writes trace evidence with `kernel_substituted: true`; default execution does not substitute.
+
+## P3a-0 Lock Verification
+
+```bash
+qst lock strategies/uses_ewm_with_provenance.qst.yaml \
+  --output /tmp/qst.lock \
+  --canonical-output /tmp/qst.canonical.json
+
+qst verify strategies/uses_ewm_with_provenance.qst.yaml \
+  --lock /tmp/qst.lock \
+  --canonical /tmp/qst.canonical.json
+```
+
+Expected behavior:
+
+- `qst.lock` is canonical JSON, not YAML.
+- Re-running `qst lock` on the same inputs yields byte-identical lock output.
+- `qst verify` returns structured JSON with `ok`, `verification_level`, `limitation_note`, and `failures`.
+- P3a-0 verification reports `STRUCTURAL` and does not claim numerical output equivalence.
+- `qst_version_policy=same_minor` is rejected with `qst_version_policy_unsupported`.
 
 The project experience from the previous repository history is preserved in [docs/PROJECT_EXPERIENCE.md](docs/PROJECT_EXPERIENCE.md), with its supporting asset at [docs/assets/performance-90d.png](docs/assets/performance-90d.png).

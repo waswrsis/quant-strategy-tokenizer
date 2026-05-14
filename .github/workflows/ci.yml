@@ -40,4 +40,5 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: pip install -e ".[dev]"
       - run: python -m pytest tests/e2e/test_p0_p1_backward_compat.py -v
+      - run: python -m pytest tests/qst_lock tests/e2e/test_p3a0_lock_spike.py tests/e2e/test_no_auto_ir_upgrade.py -v
       - run: pytest --cov=quant_strategy_tokenizer --cov-fail-under=80

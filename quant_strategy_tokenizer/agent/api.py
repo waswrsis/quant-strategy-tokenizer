@@ -26,6 +26,9 @@ from quant_strategy_tokenizer.mutation import (
 )
 from quant_strategy_tokenizer.provenance.registry import get_tagspec_registry
 from quant_strategy_tokenizer.provenance.spec import TagSpec
+from quant_strategy_tokenizer.qst_lock import BuiltLock, LockFile, VerifyResult
+from quant_strategy_tokenizer.qst_lock import build_lock as _build_lock
+from quant_strategy_tokenizer.qst_lock import verify_lock as _verify_lock
 from quant_strategy_tokenizer.recipes.registry import get_recipe_registry
 from quant_strategy_tokenizer.recipes.schema import RecipeSpec
 from quant_strategy_tokenizer.runtime.executor import ExecutionResult, execute_strategy
@@ -117,6 +120,36 @@ def fingerprint(ir: StrategyIR | dict[str, Any]) -> dict[str, Any]:
             if node.action == "reuse"
         ],
     }
+
+
+def lock(ir: StrategyIR | dict[str, Any]) -> BuiltLock:
+    """Build a P3a-0 deterministic qst.lock for a Strategy IR."""
+
+    parsed = ir if isinstance(ir, StrategyIR) else StrategyIR.model_validate(ir)
+    return _build_lock(parsed)
+
+
+def verify(
+    ir: StrategyIR | dict[str, Any],
+    lock_file: LockFile | dict[str, Any],
+    canonical_ir: StrategyIR | dict[str, Any] | None = None,
+) -> VerifyResult:
+    """Verify a Strategy IR against a P3a-0 qst.lock."""
+
+    parsed_ir = ir if isinstance(ir, StrategyIR) else StrategyIR.model_validate(ir)
+    parsed_lock = (
+        lock_file
+        if isinstance(lock_file, LockFile)
+        else LockFile.model_validate(lock_file)
+    )
+    parsed_canonical = None
+    if canonical_ir is not None:
+        parsed_canonical = (
+            canonical_ir
+            if isinstance(canonical_ir, StrategyIR)
+            else StrategyIR.model_validate(canonical_ir)
+        )
+    return _verify_lock(parsed_ir, parsed_lock, canonical_ir=parsed_canonical)
 
 
 def validate(ir: StrategyIR | dict[str, Any], profile: ProfileLiteral = "research") -> ValidationResult:
