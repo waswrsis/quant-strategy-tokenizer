@@ -24,7 +24,7 @@
     "lock_version": {"const": "qst-lock/0.1"},
     "qst_version": {"type": "string"},
     "qst_version_policy": {"type": "string", "enum": ["strict", "same_minor"]},
-    "ir_version": {"const": "qst-ir/0.3"},
+    "ir_version": {"enum": ["qst-ir/0.3", "qst-ir/0.3.1"]},
     "canonical_version": {"const": "qst-canonical/0.1"},
     "strategy": {"type": "string"},
     "strategy_version": {"type": "integer"},

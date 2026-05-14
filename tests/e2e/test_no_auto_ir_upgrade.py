@@ -67,3 +67,15 @@ def test_p3a1_package_commands_do_not_auto_upgrade_ir_version(tmp_path: Path) ->
     assert "qst-ir/0.3.1" not in (
         unpacked_dir / "strategies" / "source.qst.yaml"
     ).read_text(encoding="utf-8")
+
+
+def test_qst_fork_is_only_p3_command_that_outputs_031(tmp_path: Path) -> None:
+    output = tmp_path / "forked.qst.yaml"
+
+    forked = runner.invoke(
+        app,
+        ["fork", str(STRATEGY), "--new-id", "ewm_variant", "--out", str(output)],
+    )
+
+    assert forked.exit_code == 0, forked.output
+    assert "qst-ir/0.3.1" in output.read_text(encoding="utf-8")

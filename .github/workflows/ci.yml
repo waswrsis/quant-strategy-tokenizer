@@ -43,4 +43,5 @@ jobs:
       - run: python -m pytest tests/qst_lock tests/e2e/test_p3a0_lock_spike.py tests/e2e/test_no_auto_ir_upgrade.py -v
       - run: python -m pytest tests/package tests/e2e/test_p3a1_package_roundtrip.py -v
       - run: python -m pytest tests/agent tests/e2e/test_p3b0_search.py -v
+      - run: python -m pytest tests/e2e/test_p3b1_fork.py tests/ir/test_derived_from.py tests/mutation/test_lineage_chain.py -v
       - run: pytest --cov=quant_strategy_tokenizer --cov-fail-under=80

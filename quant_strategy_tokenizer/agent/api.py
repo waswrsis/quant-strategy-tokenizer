@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from quant_strategy_tokenizer.agent.fork import fork as _fork
 from quant_strategy_tokenizer.agent.promote import PromoteResult
 from quant_strategy_tokenizer.agent.promote import promote as _promote
 from quant_strategy_tokenizer.agent.search import SearchResult
@@ -231,6 +232,22 @@ def search(
         fully_verified_only=fully_verified_only,
         lifecycle=lifecycle,
         limit=limit,
+    )
+
+
+def fork(
+    parent: StrategyIR | str,
+    new_id: str,
+    parent_package: str | None = None,
+    parent_package_version: str | None = None,
+) -> StrategyIR:
+    """Fork a strategy with P3b-1 derived_from lineage."""
+
+    return _fork(
+        parent,
+        new_id,
+        parent_package=parent_package,
+        parent_package_version=parent_package_version,
     )
 
 

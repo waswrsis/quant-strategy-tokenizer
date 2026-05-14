@@ -10,6 +10,7 @@ import pandas as pd
 import typer
 import yaml
 
+from quant_strategy_tokenizer.agent.fork import fork as fork_strategy
 from quant_strategy_tokenizer.agent.promote import promote as promote_strategy
 from quant_strategy_tokenizer.agent.search import search as search_index
 from quant_strategy_tokenizer.composition import expand_builtin_recipe, upgrade_verification
@@ -485,6 +486,53 @@ def mutate_cmd(
     else:
         payload["ir"] = to_plain(result.ir)
     _echo_json(payload)
+
+
+def _package_version_from_manifest(parent_package: Path | None) -> str | None:
+    if parent_package is None:
+        return None
+    manifest_path = parent_package / "manifest.yaml"
+    if not manifest_path.exists():
+        return None
+    raw = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    if not isinstance(raw, dict):
+        return None
+    package_version = raw.get("package_version")
+    return package_version if isinstance(package_version, str) else None
+
+
+@app.command("fork")
+def fork_cmd(
+    parent: Path,
+    new_id: Annotated[str, typer.Option("--new-id")],
+    out: Annotated[Path, typer.Option("--out")],
+    parent_package: Annotated[Path | None, typer.Option("--parent-package")] = None,
+) -> None:
+    """Fork a strategy. This is the only CLI path that emits qst-ir/0.3.1."""
+
+    forked = fork_strategy(
+        parent,
+        new_id,
+        parent_package=str(parent_package) if parent_package is not None else None,
+        parent_package_version=_package_version_from_manifest(parent_package),
+    )
+    out.write_text(
+        yaml.safe_dump(to_plain(forked), sort_keys=False, allow_unicode=True),
+        encoding="utf-8",
+    )
+    _echo_json(
+        {
+            "ok": True,
+            "output": str(out),
+            "ir_version": forked.ir_version,
+            "strategy": forked.strategy,
+            "derived_from": (
+                forked.derived_from.model_dump(mode="json")
+                if forked.derived_from is not None
+                else None
+            ),
+        }
+    )
 
 
 @app.command("explain")

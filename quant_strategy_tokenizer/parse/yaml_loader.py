@@ -24,7 +24,10 @@ def _normalize_external_refs(raw: dict[str, Any]) -> dict[str, Any]:
         if isinstance(value, list):
             return [normalize(item) for item in value]
         if isinstance(value, dict):
-            return {key: normalize(item) for key, item in value.items()}
+            return {
+                key: item if key == "derived_from" else normalize(item)
+                for key, item in value.items()
+            }
         return value
 
     normalized = normalize(raw)

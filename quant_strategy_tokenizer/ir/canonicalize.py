@@ -235,4 +235,5 @@ def canonicalize(
         recipes=[],
         graph=final_nodes,
         outputs=final_outputs,
+        derived_from=ir.derived_from,
     )

@@ -5,7 +5,7 @@
   "type": "object",
   "required": ["ir_version", "canonical_version", "strategy", "strategy_version", "form", "externals", "graph", "outputs"],
   "properties": {
-    "ir_version": {"const": "qst-ir/0.3"},
+    "ir_version": {"enum": ["qst-ir/0.3", "qst-ir/0.3.1"]},
     "canonical_version": {"const": "qst-canonical/0.1"},
     "strategy": {"type": "string"},
     "strategy_version": {"type": "integer"},
@@ -13,7 +13,19 @@
     "externals": {"type": "object"},
     "recipes": {"type": "array"},
     "graph": {"type": "array"},
-    "outputs": {"type": "object"}
+    "outputs": {"type": "object"},
+    "derived_from": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["parent_instance_hash"],
+      "properties": {
+        "parent_instance_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "parent_strategy": {"type": "string"},
+        "parent_package": {"type": "string"},
+        "parent_package_version": {"type": "string"},
+        "mutation_chain": {"type": "array", "items": {"type": "object"}}
+      }
+    }
   },
   "additionalProperties": false
 }

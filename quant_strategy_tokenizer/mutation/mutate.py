@@ -335,6 +335,20 @@ def _apply_op(
     raise AssertionError(f"Unsupported mutation op: {op!r}")
 
 
+def _append_lineage_op(ir: StrategyIR, op: MutationOp) -> StrategyIR:
+    if ir.derived_from is None:
+        return ir
+    derived_from = ir.derived_from.model_copy(
+        update={
+            "mutation_chain": [
+                *ir.derived_from.mutation_chain,
+                op.model_dump(mode="json"),
+            ]
+        }
+    )
+    return ir.model_copy(update={"derived_from": derived_from}, deep=True)
+
+
 def mutate_strategy(
     ir: StrategyIR,
     op: MutationOp,
@@ -348,7 +362,7 @@ def mutate_strategy(
     recipes = recipe_registry or get_recipe_registry()
     before = compute_hashes(ir).as_dict()
     try:
-        mutated = _apply_op(ir, op, token_registry, recipes)
+        mutated = _append_lineage_op(_apply_op(ir, op, token_registry, recipes), op)
     except MutationError as exc:
         return MutationResult(
             ok=False,
