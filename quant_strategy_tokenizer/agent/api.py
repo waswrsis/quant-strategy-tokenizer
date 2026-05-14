@@ -9,6 +9,8 @@ from quant_strategy_tokenizer.agent.promote import promote as _promote
 from quant_strategy_tokenizer.composition import expand_builtin_recipe, upgrade_verification
 from quant_strategy_tokenizer.detokenize.explain_emitter import explain_ir as _explain_ir
 from quant_strategy_tokenizer.detokenize.trace_explainer import explain_trace as _explain_trace
+from quant_strategy_tokenizer.execution.kernel import KernelPlanReport, make_kernel_plan_report
+from quant_strategy_tokenizer.ir.canonicalize import canonicalize
 from quant_strategy_tokenizer.ir.envelope import DeploymentEnvelope, ProfileLiteral
 from quant_strategy_tokenizer.ir.model import StrategyIR
 from quant_strategy_tokenizer.ir.validate import ValidationResult
@@ -98,11 +100,24 @@ def execute(
     ir: StrategyIR | dict[str, Any],
     externals: dict[str, Any],
     profile: ProfileLiteral = "research",
+    kernel_substitution: bool = False,
 ) -> ExecutionResult:
     """Execute a Strategy IR against externals."""
 
     parsed = ir if isinstance(ir, StrategyIR) else StrategyIR.model_validate(ir)
-    return execute_strategy(parsed, externals, profile=profile)
+    return execute_strategy(
+        parsed,
+        externals,
+        profile=profile,
+        kernel_substitution=kernel_substitution,
+    )
+
+
+def kernel_plan(ir: StrategyIR | dict[str, Any]) -> KernelPlanReport:
+    """Return opt-in P2c-extended kernel substitution eligibility."""
+
+    parsed = ir if isinstance(ir, StrategyIR) else StrategyIR.model_validate(ir)
+    return make_kernel_plan_report(canonicalize(parsed))
 
 
 def explain_ir(ir: StrategyIR | dict[str, Any], level: str = "L1") -> str:

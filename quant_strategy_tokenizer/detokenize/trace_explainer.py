@@ -33,6 +33,9 @@ def explain_trace(trace: Trace, level: TraceExplainLevel = "human") -> str:
                     "cache_hit": node.cache_hit,
                     "reused_from": node.reused_from,
                     "fingerprint": node.fingerprint,
+                    "kernel_substituted": node.kernel_substituted,
+                    "kernel_id": node.kernel_id,
+                    "semantic_id": node.semantic_id,
                 }
                 for node in trace.nodes
             ],

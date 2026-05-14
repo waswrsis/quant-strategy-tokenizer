@@ -21,6 +21,13 @@ metamorphic_properties:
   - constant_fixed_point
   - affine_shift
   - prefix_stability
-allowed_kernels: []
+allowed_kernels:
+  - kernel_id: builtin.indicator_ewm_v1_fastpath
+    semantic_id: indicator.ewm
+    version: 1
+    runtime: python
+    target_token: smooth.linear_recursive
+    status: spike
+    description: P2c-extended opt-in spike kernel for indicator.ewm/v1.
 lifecycle: experimental
 owner: qst-core

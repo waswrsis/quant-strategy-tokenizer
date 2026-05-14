@@ -16,6 +16,7 @@ from quant_strategy_tokenizer.core.output import jsonable_value
 from quant_strategy_tokenizer.detokenize.explain_emitter import explain_ir as explain_text
 from quant_strategy_tokenizer.detokenize.trace_explainer import explain_trace as explain_trace_text
 from quant_strategy_tokenizer.execution.fingerprint import compute_all_fingerprints
+from quant_strategy_tokenizer.execution.kernel import make_kernel_plan_report
 from quant_strategy_tokenizer.execution.plan import make_execution_plan
 from quant_strategy_tokenizer.ir.canonicalize import canonicalize as canonicalize_ir
 from quant_strategy_tokenizer.ir.compare import compare_ir
@@ -40,8 +41,10 @@ from quant_strategy_tokenizer.tokens.registry import get_registry
 app = typer.Typer(no_args_is_help=True)
 tag_app = typer.Typer(no_args_is_help=True)
 recipe_app = typer.Typer(no_args_is_help=True)
+kernel_app = typer.Typer(no_args_is_help=True)
 app.add_typer(tag_app, name="tag")
 app.add_typer(recipe_app, name="recipe")
+app.add_typer(kernel_app, name="kernel")
 
 P0_TOKEN_TRIPLES: tuple[tuple[str, int, int], ...] = (
     ("data.column", 1, 1),
@@ -373,6 +376,7 @@ def execute_cmd(
     market: Annotated[Path, typer.Option("--market")],
     trace_path: Annotated[Path, typer.Option("--trace-path")] = Path("trace.json"),
     profile: Annotated[str | None, typer.Option("--profile")] = None,
+    kernel_substitution: Annotated[bool, typer.Option("--kernel-substitution")] = False,
 ) -> None:
     """Execute a strategy YAML file against sample market CSV data."""
 
@@ -392,6 +396,7 @@ def execute_cmd(
         },
         trace_path=trace_path,
         profile=execution_profile,
+        kernel_substitution=kernel_substitution,
     )
     if not result.ok:
         typer.echo(result.error or "execution failed", err=True)
@@ -523,6 +528,14 @@ def recipe_expand_cmd(
             "recipe_id": recipe.recipe,
         }
     )
+
+
+@kernel_app.command("plan")
+def kernel_plan_cmd(path: Path) -> None:
+    """Print P2c-extended opt-in kernel substitution eligibility."""
+
+    canonical = canonicalize_ir(load_strategy_file(path))
+    _echo_json(make_kernel_plan_report(canonical).model_dump(mode="json"))
 
 
 if __name__ == "__main__":

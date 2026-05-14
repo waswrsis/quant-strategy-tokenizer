@@ -26,6 +26,9 @@ class TraceNode(BaseModel):
     cache_hit: bool = False
     reused_from: str | None = None
     fingerprint: str | None = None
+    kernel_substituted: bool = False
+    kernel_id: str | None = None
+    semantic_id: str | None = None
 
 
 class Trace(BaseModel):

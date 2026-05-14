@@ -15,6 +15,10 @@ from quant_strategy_tokenizer.core.output import (
     normalize_token_output,
     summarize_value,
 )
+from quant_strategy_tokenizer.execution.kernel import (
+    get_kernel_registry,
+    kernel_eligibility_for_node,
+)
 from quant_strategy_tokenizer.execution.plan import make_execution_plan
 from quant_strategy_tokenizer.ir.canonicalize import canonicalize
 from quant_strategy_tokenizer.ir.envelope import ProfileLiteral
@@ -96,6 +100,9 @@ def _add_trace_node(
     cache_hit: bool = False,
     reused_from: str | None = None,
     fingerprint: str | None = None,
+    kernel_substituted: bool = False,
+    kernel_id: str | None = None,
+    semantic_id: str | None = None,
 ) -> None:
     trace.nodes.append(
         TraceNode(
@@ -111,6 +118,9 @@ def _add_trace_node(
             cache_hit=cache_hit,
             reused_from=reused_from,
             fingerprint=fingerprint,
+            kernel_substituted=kernel_substituted,
+            kernel_id=kernel_id,
+            semantic_id=semantic_id,
         )
     )
     if output.status == "unknown":
@@ -126,6 +136,7 @@ def execute_strategy(
     trace_path: str | Path | None = None,
     registry: Registry | None = None,
     profile: ProfileLiteral = "research",
+    kernel_substitution: bool = False,
 ) -> ExecutionResult:
     """Canonicalize, validate, and execute a Strategy IR."""
 
@@ -146,10 +157,14 @@ def execute_strategy(
     output_by_node: dict[str, TokenOutput] = {}
     node_by_id = {node.id: node for node in canonical.graph}
     plan = make_execution_plan(canonical, registry=token_registry)
+    kernel_registry = get_kernel_registry()
 
     for plan_node in plan.nodes:
         node = node_by_id[plan_node.node_id]
         registered = token_registry.get(node.token, node.v)
+        kernel_substituted = False
+        kernel_id: str | None = None
+        semantic_id: str | None = None
 
         if plan_node.action == "reuse":
             assert plan_node.reused_from is not None
@@ -157,8 +172,20 @@ def execute_strategy(
         else:
             try:
                 resolved_inputs = _resolve_value(node.inputs, node_outputs, externals)
-                raw_output = registered.executor(**resolved_inputs, **node.params)
-                output = normalize_token_output(raw_output)
+                if kernel_substitution:
+                    eligibility = kernel_eligibility_for_node(node, kernel_registry=kernel_registry)
+                    if eligibility.eligible and eligibility.kernel_id is not None:
+                        kernel = kernel_registry.get(eligibility.kernel_id)
+                        output = kernel.executor(resolved_inputs, node.params, node.provenance[0])
+                        kernel_substituted = True
+                        kernel_id = eligibility.kernel_id
+                        semantic_id = eligibility.semantic_id
+                    else:
+                        raw_output = registered.executor(**resolved_inputs, **node.params)
+                        output = normalize_token_output(raw_output)
+                else:
+                    raw_output = registered.executor(**resolved_inputs, **node.params)
+                    output = normalize_token_output(raw_output)
             except UnresolvedReferenceError as exc:
                 output = TokenOutput(
                     status="error",
@@ -188,6 +215,9 @@ def execute_strategy(
             cache_hit=plan_node.action == "reuse",
             reused_from=plan_node.reused_from,
             fingerprint=plan_node.fingerprint,
+            kernel_substituted=kernel_substituted,
+            kernel_id=kernel_id,
+            semantic_id=semantic_id,
         )
 
         if output.status == "error":

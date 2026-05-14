@@ -64,7 +64,27 @@
     },
     "allowed_kernels": {
       "type": "array",
-      "items": {"type": "object"}
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kernel_id",
+          "semantic_id",
+          "version",
+          "runtime",
+          "target_token",
+          "status"
+        ],
+        "properties": {
+          "kernel_id": {"type": "string"},
+          "semantic_id": {"type": "string"},
+          "version": {"type": "integer", "minimum": 1},
+          "runtime": {"type": "string", "enum": ["python"]},
+          "target_token": {"type": "string"},
+          "status": {"type": "string", "enum": ["spike"]},
+          "description": {"type": "string"}
+        }
+      }
     },
     "lifecycle": {
       "type": "string",
