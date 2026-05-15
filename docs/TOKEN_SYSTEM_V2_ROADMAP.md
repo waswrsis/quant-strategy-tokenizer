@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 
-Status: WP0-WP7 accepted under the v1.0.3 standard. WP7 adds v0.4 Decision Algebra metadata and deterministic reference semantics.
+Status: WP0-WP8a accepted under the v1.0.3 standard. WP8a adds the Panel Detail Design Gate schemas and design record.
 
 ## Direction
 
@@ -30,10 +30,11 @@ Legacy versions remain loadable and verifiable, but new authoring moves to `qst-
 | WP6b | State FSM | accepted |
 | WP6c | State Recipes + PV-A | accepted |
 | WP7 | Decision Algebra | accepted |
-| WP8a | Panel Type Layer | not started |
-| WP8b | Panel Operators | not started |
-| WP8c | Weight Operators | not started |
-| WP8d | Panel Recipes + PV-B | not started |
+| WP8a | Panel Detail Design Gate | accepted |
+| WP8b | Panel Type Layer | not started |
+| WP8c | Panel Operators | not started |
+| WP8d | Weight Operators | not started |
+| WP8e | Panel Recipes + PV-B | not started |
 | WP9 | Custom Token Runtime + PV-D | not started |
 | WP10 | Migration Tooling | not started |
 | Final | Token System v2 acceptance | not started |
@@ -193,13 +194,31 @@ WP7 adds v0.4 Decision Algebra metadata and deterministic reference semantics:
 
 WP7 does not add legacy runtime execution, legacy token registration, strategy mutation, CLI migration tooling, Panel behavior, custom token runtime, or v0.4 CLI authoring.
 
+## WP8a Accepted Scope
+
+WP8a freezes the Panel layer detail design before any Panel behavior is enabled:
+
+- `docs/PANEL_LAYER_DESIGN_V04.md` records PanelRepresentation, UniverseMask, MissingPolicy, GroupSpec, SelectionPanel / WeightPanel boundaries, single-factor residualize, Panel temporal joins, and Panel / State boundaries.
+- Draft JSON Schemas cover `qst-panel-representation/0.4`, `qst-panel-universe-mask/0.4`, `qst-panel-missing-policy/0.4`, `qst-panel-group-spec/0.4`, `qst-panel-selection-weight/0.4`, and `qst-panel-temporal-state/0.4`.
+- `sparse_logical` is a Panel representation, not a MissingPolicy.
+- `UniverseMask=false` means out of universe, not missing data.
+- MissingPolicy applies only when `UniverseMask=true` and a value is absent; the default is `error_on_missing`.
+- `dynamic_mapping` GroupSpec is deferred and rejected by the WP8a schema.
+- `SelectionPanel` and `WeightPanel` remain distinct wire concepts; weight normalization belongs to WP8d.
+- `panel.residualize/v1` is single-factor only: `Panel[float] + TimeSeries[float] -> Panel[float]`.
+- Panel temporal joins use the declared input port-temporal join formula.
+- `Panel[State]` is shell-only; `state.fsm` does not auto-broadcast per symbol.
+- The WP2 `TypeSpec` Panel shell field set is frozen and unchanged.
+
+WP8a does not enable the `panel` capability, modify `TypeSpec`, add Panel TokenSpecs or TokenPacks, add Panel operators, add Panel recipes, add runtime execution, add migration tooling, or add v0.4 CLI authoring.
+
 ## P-Validate Gates
 
 | Gate | Owning WP | Purpose |
 |---|---|---|
 | PV-C | WP3 | Temporal safety strategy |
 | PV-A | WP6c | State-heavy strategy |
-| PV-B | WP8d | Panel / cross-sectional strategy |
+| PV-B | WP8e | Panel / cross-sectional strategy |
 | PV-D | WP9 | Custom token strategy |
 
 If a P-Validate gate fails, the owning work package fails.

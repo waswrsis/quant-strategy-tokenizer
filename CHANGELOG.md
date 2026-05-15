@@ -1,5 +1,13 @@
 # Changelog
 
+## Token System v2 WP8a Panel Detail Design Gate
+
+- Added `docs/PANEL_LAYER_DESIGN_V04.md` to freeze sparse logical Panel representation, UniverseMask, MissingPolicy, GroupSpec, SelectionPanel / WeightPanel boundaries, single-factor residualize, Panel temporal joins, and Panel / State constraints.
+- Added WP8a draft JSON Schemas for Panel representation, universe masks, missing policy, group specs, selection/weight panels, and temporal/state boundaries.
+- Added schema hash evidence and design-gate tests proving the WP2 Panel TypeSpec shell field set is unchanged and the `panel` capability remains rejected.
+- Corrected the Token System v2 roadmap naming so WP8a is the Panel Detail Design Gate and WP8b begins the Panel Type Layer.
+- Kept Panel operators, Panel TokenSpecs, TokenPacks, runtime execution, migration tooling, custom token runtime, and v0.4 CLI authoring out of scope.
+
 ## Token System v2 WP7 Decision Algebra
 
 - Added v0.4 `decision_v2` models for `DecisionV2`, true monoids, fold policies, aggregators, and structured combine results.
