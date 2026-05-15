@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 
-Status: WP0-WP6b accepted under the v1.0.3 standard. WP6b adds closed-set FSM reference semantics, transition tracing, replay checks, and TokenPack metadata.
+Status: WP0-WP6c accepted under the v1.0.3 standard. WP6c completes PV-A state-heavy reference cases with deterministic expected traces and hashes.
 
 ## Direction
 
@@ -28,7 +28,7 @@ Legacy versions remain loadable and verifiable, but new authoring moves to `qst-
 | WP5b | Lock + Package Integration | accepted |
 | WP6a | State Basic | accepted |
 | WP6b | State FSM | accepted |
-| WP6c | State Recipes + PV-A | not started |
+| WP6c | State Recipes + PV-A | accepted |
 | WP7 | Decision Algebra | not started |
 | WP8a | Panel Type Layer | not started |
 | WP8b | Panel Operators | not started |
@@ -167,6 +167,18 @@ WP6b adds deterministic closed-set FSM semantics for v0.4 metadata and tests:
 - JSON schema for `qst-state-fsm/0.4`.
 
 WP6b does not add state recipes, PV-A artifacts, legacy runtime execution, migration tooling, Panel behavior, custom token runtime, or v0.4 CLI authoring.
+
+## WP6c Accepted Scope
+
+WP6c adds the PV-A state-heavy reference gate:
+
+- Five v0.4 reference strategies: cooldown, market freeze, circuit breaker, observe period, and minimal slot budget.
+- Deterministic fixture JSON under `fixtures/v04/p_validate/state`.
+- Expected diagnostics and state trace artifacts with `expected_artifact_hash_v2()` evidence.
+- A minimal `state_v2` PV-A runner that dispatches to WP6a/WP6b reference helpers and emits deterministic artifacts.
+- Replay checks for FSM-backed PV-A cases.
+
+WP6c does not add legacy recipes, v0.4 runtime execution, Decision Algebra, Panel behavior, custom token runtime, migration tooling, or v0.4 CLI authoring.
 
 ## P-Validate Gates
 

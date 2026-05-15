@@ -1,5 +1,13 @@
 # Changelog
 
+## Token System v2 WP6c State Recipes + PV-A
+
+- Added PV-A state-heavy v0.4 reference strategies for cooldown, market freeze, circuit breaker, observe period, and minimal slot budget cases.
+- Added deterministic state fixtures plus expected diagnostics and trace artifacts with expected artifact hashes.
+- Added a minimal PV-A runner that uses WP6a/WP6b reference helpers and emits deterministic trace artifacts.
+- Added PV-A e2e coverage for artifact matching, hash verification, case outcomes, and FSM replay checks.
+- Kept legacy recipes, v0.4 runtime execution, Decision Algebra, Panel behavior, custom token runtime, migration tooling, and v0.4 CLI authoring out of scope.
+
 ## Token System v2 WP6b State FSM
 
 - Added `state_v2.FSMDefinition` and `FSMTransition` with closed state/event set validation.
