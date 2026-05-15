@@ -1,6 +1,6 @@
 # Quant Strategy Tokenizer
 
-Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, P3, and P4-core construction stages. Token System v2 WP0-WP10 are accepted under the v1.0.3 construction standard, with security and semantic cleanup applied before final acceptance.
+Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, P3, P4-core, and Token System v2 construction stages. Project-wide acceptance is recorded in `QST_PROJECT_ACCEPTANCE.md`; Token System v2 WP0-WP10 are accepted under the v1.0.3 construction standard, with security and semantic cleanup applied before final acceptance.
 
 The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, implements P2a-0/P2a-1 provenance metadata, P2a-2 deterministic recipe generation, P2a-3 composition validation, P2b mutation, P2c-core execution-plan CSE, an opt-in P2c-extended kernel substitution spike, the P3a-0 deterministic lock hard gate, the P3a-1 directory package format, P3b-0 registry search, P3b-1 fork lineage, and P4-core artifacts, frames, qstpkg artifact extension, ports, signal extraction, mock adapters, and P4b CLI. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, a production kernel framework, P4c real adapter repositories, P4d semantic detokenize, P4+ full-text package search, or numerical equivalence verification.
 
@@ -36,6 +36,7 @@ The implemented loop covers:
 - PV-B Panel reference strategies with deterministic expected traces and hashes
 - Token System v2 custom token runtime boundaries with PV-D Kalman reference artifacts
 - Token System v2 legacy-to-v0.4 migration tooling for strategies and qstpkg snapshots
+- project-wide acceptance evidence for hash stability, security boundaries, known limitations, and Token System v2 final status
 
 ## Project Status
 
@@ -83,6 +84,7 @@ The implemented loop covers:
 | Token System v2 WP8e PV-B Panel Reference Strategies | accepted under v1.0.3 |
 | Token System v2 WP9 Custom Token Runtime + PV-D | accepted under v1.0.3 |
 | Token System v2 WP10 Migration Tooling | accepted under v1.0.3 |
+| Project-wide acceptance | accepted |
 
 ## Frozen P0 Baseline
 
@@ -225,7 +227,7 @@ WP9 is accepted as the Custom Token Runtime + PV-D stage. It separates integrity
 
 WP10 is accepted as the Migration Tooling stage. It adds `qst migrate-ir` and `qst migrate-package` for moving legacy `qst-ir/0.3` / `0.3.1` artifacts into `qst-ir/0.4` snapshots with source instance hash lineage and a target core registry hash. Migration creates a new v0.4 identity and does not assert semantic or numerical equivalence.
 
-The authoritative roadmap is [docs/TOKEN_SYSTEM_V2_ROADMAP.md](docs/TOKEN_SYSTEM_V2_ROADMAP.md).
+The authoritative roadmap is [docs/TOKEN_SYSTEM_V2_ROADMAP.md](docs/TOKEN_SYSTEM_V2_ROADMAP.md). The project-wide acceptance record is [QST_PROJECT_ACCEPTANCE.md](QST_PROJECT_ACCEPTANCE.md), with Token System v2 final acceptance in [TOKEN_SYSTEM_V2_ACCEPTANCE.md](TOKEN_SYSTEM_V2_ACCEPTANCE.md).
 
 ## Current P2a Composition Layer
 

@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 
-Status: WP0-WP10 accepted under the v1.0.3 standard. Security and semantic cleanup blockers have been fixed before final acceptance.
+Status: WP0-WP10 and final Token System v2 acceptance are accepted under the v1.0.3 standard. Security and semantic cleanup blockers have been fixed before final acceptance.
 
 ## Direction
 
@@ -37,7 +37,9 @@ Legacy versions remain loadable and verifiable, but new authoring moves to `qst-
 | WP8e | PV-B Panel Reference Strategies | accepted |
 | WP9 | Custom Token Runtime + PV-D | accepted |
 | WP10 | Migration Tooling | accepted |
-| Final | Token System v2 acceptance | not started |
+| Final | Token System v2 acceptance | accepted |
+
+Final acceptance is recorded in `TOKEN_SYSTEM_V2_ACCEPTANCE.md`. Project-wide acceptance is recorded in `QST_PROJECT_ACCEPTANCE.md`.
 
 ## WP0 Decisions
 

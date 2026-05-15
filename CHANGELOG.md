@@ -1,5 +1,12 @@
 # Changelog
 
+## QST Project-Wide Acceptance
+
+- Recorded project-wide acceptance for P0-P4 accepted foundations and Token System v2 WP0-WP10.
+- Added final acceptance artifacts for project status, Token System v2 status, hash stability, security boundaries, and known limitations.
+- Marked Token System v2 final acceptance as accepted in the roadmap and README.
+- This is a documentation/evidence/status update only; no runtime, token, schema, hash, adapter, or trust semantics changed after the code freeze baseline.
+
 ## Token System v2 Follow-Up Cleanup
 
 - Made WP9 `ExecutionGrant` issuance deterministic and time-bound with an explicit UTC issuance timestamp and a default 15-minute TTL.
