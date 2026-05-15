@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 
-Status: WP0-WP3 accepted under the v1.0.3 standard. WP3 adds PortTemporalSpec rule resolution and PV-C static validation artifacts.
+Status: WP0-WP4 accepted under the v1.0.3 standard. WP4 adds NumericPolicy and TokenEvolutionPolicy hash material.
 
 ## Direction
 
@@ -23,7 +23,7 @@ Legacy versions remain loadable and verifiable, but new authoring moves to `qst-
 | WP1 | qst-ir/0.4 shell + canonical/hash framework | accepted |
 | WP2 | Structured TypeSpec + PortSpec | accepted |
 | WP3 | PortTemporalSpec + PV-C | accepted |
-| WP4 | NumericPolicy + TokenEvolutionPolicy | not started |
+| WP4 | NumericPolicy + TokenEvolutionPolicy | accepted |
 | WP5 | TokenSpec v2 + Registry + TokenPack | not started |
 | WP6a | State Basic | not started |
 | WP6b | State FSM | not started |
@@ -99,6 +99,20 @@ WP3 adds static temporal safety validation for `qst-ir/0.4` shell documents:
 - PV-C strategies, expected diagnostics, expected validation traces, and `expected_artifact_hash_v2()` evidence.
 
 WP3 does not add WP4 numeric policy, WP5 TokenSpec v2 registry, token packs, migration tooling, runtime execution, custom token runtime, or v0.4 CLI authoring.
+
+## WP4 Accepted Scope
+
+WP4 adds behavior-policy material required before TokenSpec v2 registry work:
+
+- `quant_strategy_tokenizer.numeric_v2.NumericPolicy` with explicit representation, determinism level, reduction order, `NaN` policy, and infinity policy.
+- Numeric policy risk classification where unknown or platform-dependent numeric behavior is high risk.
+- `quant_strategy_tokenizer.token_evolution_v2.TokenEvolutionPolicy` and `TokenLifecycleStatus`.
+- WP4 behavior material helper requiring `numeric_policy` and including lifecycle status in `behavior_hash_v2()` material.
+- Profile policy decisions for numeric-policy risk and lifecycle states.
+- JSON schemas for NumericPolicy and TokenEvolutionPolicy.
+- `docs/TOKEN_EVOLUTION_POLICY.md` as the accepted evolution policy record.
+
+WP4 does not add WP5 TokenSpec v2 registry, token packs, registry resolution, recipe migration, runtime execution, custom token runtime, Panel behavior, or v0.4 CLI authoring.
 
 ## P-Validate Gates
 

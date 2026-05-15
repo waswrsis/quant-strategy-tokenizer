@@ -1,5 +1,14 @@
 # Changelog
 
+## Token System v2 WP4 NumericPolicy + TokenEvolutionPolicy
+
+- Added `numeric_v2.NumericPolicy` with explicit representation, determinism, reduction, `NaN`, and infinity policy fields.
+- Added `token_evolution_v2.TokenEvolutionPolicy` and lifecycle status material.
+- Added WP4 behavior hash material requiring `numeric_policy` and including lifecycle status.
+- Extended `profile_v2` with numeric-policy risk decisions.
+- Added NumericPolicy / TokenEvolutionPolicy JSON schemas and `docs/TOKEN_EVOLUTION_POLICY.md`.
+- Kept WP5 TokenSpec v2 registry, token packs, migration tooling, runtime execution, custom token runtime, Panel behavior, and v0.4 CLI authoring out of scope.
+
 ## Token System v2 WP3 PortTemporalSpec + PV-C
 
 - Added `TemporalRule` declarations for v0.4 output ports and deterministic rule resolution.

@@ -6,6 +6,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
+from quant_strategy_tokenizer.numeric_v2 import NumericPolicy
+
 PROFILE_POLICY_SCHEMA_VERSION: Literal["qst-profile-policy/0.4"] = "qst-profile-policy/0.4"
 
 ProfileName = Literal["research", "paper", "pretrade", "production_guarded"]
@@ -76,6 +78,35 @@ class ProfilePolicy(BaseModel):
         if self.allow_unknown_numeric:
             return _decision("warning", "unknown_numeric_warning", "Unknown numeric behavior is research-only.")
         return _decision("error", "unknown_numeric_rejected", "Unknown numeric behavior is not allowed.")
+
+    def decide_numeric_policy(self, numeric_policy: NumericPolicy) -> ProfileDecision:
+        """Decide whether a declared numeric policy is acceptable for this profile."""
+
+        if numeric_policy.risk_level == "low":
+            return _decision("allow", "numeric_policy_low_risk", "Numeric policy is low risk.")
+        if numeric_policy.risk_level == "medium":
+            if self.profile in {"research", "paper"}:
+                return _decision(
+                    "warning",
+                    "numeric_policy_medium_risk",
+                    "Numeric policy is engine-dependent.",
+                )
+            return _decision(
+                "error",
+                "numeric_policy_medium_risk_rejected",
+                "Engine-dependent numeric policy is not allowed.",
+            )
+        if self.allow_unknown_numeric:
+            return _decision(
+                "warning",
+                "numeric_policy_high_risk",
+                "Unknown or platform-dependent numeric policy is research-only.",
+            )
+        return _decision(
+            "error",
+            "numeric_policy_high_risk_rejected",
+            "Unknown or platform-dependent numeric policy is not allowed.",
+        )
 
     def decide_lifecycle(self, lifecycle: LifecycleState) -> ProfileDecision:
         """Decide whether a token lifecycle state is acceptable."""

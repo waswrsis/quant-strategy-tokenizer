@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import cast
 
+from quant_strategy_tokenizer.numeric_v2 import NumericPolicy, semantic_float64_policy
 from quant_strategy_tokenizer.profile_v2 import PROFILE_POLICY_SCHEMA_VERSION, get_profile_policy
 from quant_strategy_tokenizer.profile_v2.policy import ProfileName
 
@@ -36,5 +37,20 @@ def test_unknown_numeric_lifecycle_and_capability_policy() -> None:
     assert policy.decide_unknown_numeric(unknown_numeric=True).action == "error"
     assert policy.decide_lifecycle("deprecated").action == "warning"
     assert policy.decide_lifecycle("known_bug").action == "error"
+    assert policy.decide_lifecycle("blocked").action == "error"
     assert policy.decide_capability("core").action == "allow"
     assert policy.decide_capability("panel").action == "error"
+
+
+def test_numeric_policy_profile_decision() -> None:
+    unknown_policy = NumericPolicy(
+        representation="unknown",
+        deterministic_level="unknown",
+        reduction_order="unknown",
+        nan_policy="unknown",
+        inf_policy="unknown",
+    )
+
+    assert get_profile_policy("research").decide_numeric_policy(semantic_float64_policy()).action == "allow"
+    assert get_profile_policy("research").decide_numeric_policy(unknown_policy).action == "warning"
+    assert get_profile_policy("pretrade").decide_numeric_policy(unknown_policy).action == "error"

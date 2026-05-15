@@ -1,6 +1,6 @@
 # Quant Strategy Tokenizer
 
-Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, P3, and P4-core construction stages. Token System v2 WP0-WP2 are accepted under the v1.0.3 construction standard.
+Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, P3, and P4-core construction stages. Token System v2 WP0-WP4 are accepted under the v1.0.3 construction standard.
 
 The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, implements P2a-0/P2a-1 provenance metadata, P2a-2 deterministic recipe generation, P2a-3 composition validation, P2b mutation, P2c-core execution-plan CSE, an opt-in P2c-extended kernel substitution spike, the P3a-0 deterministic lock hard gate, the P3a-1 directory package format, P3b-0 registry search, P3b-1 fork lineage, and P4-core artifacts, frames, qstpkg artifact extension, ports, signal extraction, mock adapters, and P4b CLI. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, a production kernel framework, P4c real adapter repositories, P4d semantic detokenize, P4+ full-text package search, or numerical equivalence verification.
 
@@ -59,6 +59,7 @@ The implemented loop covers:
 | Token System v2 WP1 qst-ir/0.4 shell | accepted under v1.0.3 |
 | Token System v2 WP2 TypeSpec + PortSpec | accepted under v1.0.3 |
 | Token System v2 WP3 PortTemporalSpec + PV-C | accepted under v1.0.3 |
+| Token System v2 WP4 NumericPolicy + TokenEvolutionPolicy | accepted under v1.0.3 |
 
 ## Frozen P0 Baseline
 
@@ -171,7 +172,9 @@ WP1 is accepted and adds the independent `qst-ir/0.4` shell, `qst-canonical/0.4`
 
 WP2 is accepted and adds structured `TypeSpec`, `ValueType`, `IntrinsicTemporalSpec`, `PortSignature`, `InputSpec`, `OutputSpec`, Panel shell fields, `StrategyIRV04.capabilities`, canonical `NodeV04.token_ref`, and token-ref-aware signature hashing.
 
-WP3 is accepted and adds `TemporalRule`, v0.4 static temporal validation, and PV-C expected diagnostics/traces. It does not add WP4 numeric policy, TokenSpec v2 registry, token packs, migration tooling, runtime execution, Panel behavior, custom token runtime, or v0.4 CLI authoring.
+WP3 is accepted and adds `TemporalRule`, v0.4 static temporal validation, and PV-C expected diagnostics/traces.
+
+WP4 is accepted and adds `NumericPolicy`, `TokenEvolutionPolicy`, lifecycle status hash material, numeric risk profile decisions, behavior-hash material helpers, and `docs/TOKEN_EVOLUTION_POLICY.md`. It does not add WP5 TokenSpec v2 registry, token packs, migration tooling, runtime execution, Panel behavior, custom token runtime, or v0.4 CLI authoring.
 
 The authoritative roadmap is [docs/TOKEN_SYSTEM_V2_ROADMAP.md](docs/TOKEN_SYSTEM_V2_ROADMAP.md).
 
