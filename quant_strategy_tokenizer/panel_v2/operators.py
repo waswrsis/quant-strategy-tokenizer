@@ -95,7 +95,10 @@ class PanelValue(BaseModel):
             if key in seen:
                 raise ValueError(f"Duplicate Panel row for timestamp/symbol {key!r}")
             seen.add(key)
-        return {"rows": tuple(sorted(rows, key=lambda row: (row.timestamp, row.symbol)))}
+        return {
+            **value,
+            "rows": tuple(sorted(rows, key=lambda row: (row.timestamp, row.symbol))),
+        }
 
 
 class SelectionPoint(BaseModel):
@@ -175,7 +178,10 @@ class WeightPanelValue(BaseModel):
             if key in seen:
                 raise ValueError(f"Duplicate WeightPanel row for timestamp/symbol {key!r}")
             seen.add(key)
-        return {"rows": tuple(sorted(rows, key=lambda row: (row.timestamp, row.symbol)))}
+        return {
+            **value,
+            "rows": tuple(sorted(rows, key=lambda row: (row.timestamp, row.symbol))),
+        }
 
 
 class PanelOperatorResult(BaseModel):

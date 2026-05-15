@@ -1,5 +1,13 @@
 # Changelog
 
+## Token System v2 WP8e PV-B Panel Reference Strategies
+
+- Added PV-B v0.4 Panel reference strategies for top/bottom market-neutral selection and BTC residual mean reversion.
+- Added deterministic Panel fixtures plus expected diagnostics and trace artifacts with `expected_artifact_hash_v2()` evidence.
+- Added a minimal PV-B runner that validates `qst-ir/0.4` before composing accepted WP8b/WP8c/WP8d reference helpers.
+- Fixed WeightPanel canonical row sorting so `weight_kind` and `normalized` survive model construction.
+- Kept `panel_recipes`, recipe TokenSpecs/TokenPacks, legacy recipe registry entries, runtime execution, migration tooling, adapters, WP9, WP10, and v0.4 CLI authoring out of scope.
+
 ## Token System v2 WP8d Weight Operators
 
 - Added deterministic WeightPanel reference helpers for `weight.normalize_gross`, `weight.cap_per_symbol`, and `weight.market_neutral`.

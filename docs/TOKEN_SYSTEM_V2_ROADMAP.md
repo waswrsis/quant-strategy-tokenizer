@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 
-Status: WP0-WP8d accepted under the v1.0.3 standard. WP8d adds WeightPanel normalization / constraint reference semantics and `panel_weights` TokenPack metadata.
+Status: WP0-WP8e accepted under the v1.0.3 standard. WP8e adds PV-B Panel reference strategies and deterministic expected artifacts.
 
 ## Direction
 
@@ -34,7 +34,7 @@ Legacy versions remain loadable and verifiable, but new authoring moves to `qst-
 | WP8b | Panel Type Layer | accepted |
 | WP8c | Panel Operators | accepted |
 | WP8d | Weight Operators | accepted |
-| WP8e | Panel Recipes + PV-B | not started |
+| WP8e | PV-B Panel Reference Strategies | accepted |
 | WP9 | Custom Token Runtime + PV-D | not started |
 | WP10 | Migration Tooling | not started |
 | Final | Token System v2 acceptance | not started |
@@ -260,6 +260,20 @@ WP8d enables deterministic WeightPanel normalization and constraint reference se
 - `qst-tokenpack-panel-weights/0.1.0` records TokenSpecV2 metadata for the WP8d weight operators.
 
 WP8d does not solve simultaneous gross/cap constraints, create orders, create execution reports, add risk controls, add portfolio optimizers, add Panel recipes, add adapters, add migration tooling, add legacy runtime execution, or add v0.4 CLI authoring.
+
+## WP8e Accepted Scope
+
+WP8e completes the PV-B Panel / cross-sectional dogfooding gate without enabling Panel recipe capability:
+
+- Two v0.4 reference strategies are accepted: `panel_top_bottom_market_neutral` and `panel_btc_residual_meanrev`.
+- Deterministic fixtures live under `fixtures/v04/p_validate/panel`.
+- Expected diagnostics and trace artifacts live under `expected_diagnostics/v04/p_validate/panel` and `expected_traces/v04/p_validate/panel`.
+- PV-B traces compose accepted WP8b/WP8c/WP8d helpers only: Panel type metadata, Panel operators, selection-to-weights, and WeightPanel operators.
+- `panel_top_bottom_market_neutral` uses top-k long plus bottom-k short selection before market-neutral normalization, avoiding all-long zero-gross degeneration.
+- `panel_btc_residual_meanrev` treats BTC as an external factor and excludes BTC from the tradable selection universe unless explicitly marked tradable.
+- Expected artifacts include empty diagnostics files and hash `payload_without_hash` with no wall-clock timestamp.
+
+WP8e does not enable `panel_recipes`, add Panel recipe TokenSpecs or TokenPacks, add a legacy recipe registry entry, add runtime execution, add adapters, add migration tooling, or add v0.4 CLI authoring.
 
 ## P-Validate Gates
 

@@ -154,6 +154,8 @@ def test_normalize_gross_canonicalizes_params_and_handles_zero_gross() -> None:
         ("ETH/USDT", "0.2"),
         ("SOL/USDT", "-0.2"),
     ]
+    assert normalized.weights.weight_kind == "normalized"
+    assert normalized.weights.normalized is True
     assert zero_keep.weights.rows[0].weight == "0"
     assert not zero_error.diagnostics.ok
     assert zero_error.diagnostics.errors[0].code == "QST_V2_WEIGHT_ZERO_GROSS"
