@@ -54,6 +54,12 @@
         {"$ref": "#/$defs/PackageArtifacts"},
         {"type": "null"}
       ]
+    },
+    "token_packs": {
+      "anyOf": [
+        {"$ref": "#/$defs/TokenPacks"},
+        {"type": "null"}
+      ]
     }
   },
   "$defs": {
@@ -118,6 +124,38 @@
               "items": {"$ref": "#/$defs/POSIXRelativePath"}
             }
           }
+        }
+      }
+    },
+    "TokenPackEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pack_id",
+        "version",
+        "token_pack_hash",
+        "embedded",
+        "contains_executable_code"
+      ],
+      "properties": {
+        "pack_id": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1},
+        "token_pack_hash": {"$ref": "#/$defs/Sha256"},
+        "embedded": {"type": "boolean"},
+        "contains_executable_code": {"type": "boolean"}
+      }
+    },
+    "TokenPacks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["embedded_policy", "packs"],
+      "properties": {
+        "embedded_policy": {
+          "enum": ["none", "spec_only", "spec_and_source"]
+        },
+        "packs": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/TokenPackEntry"}
         }
       }
     }

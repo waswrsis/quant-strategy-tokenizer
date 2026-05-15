@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 
-Status: WP0-WP5 accepted under the v1.0.3 standard. WP5 adds TokenSpec v2, TokenPack, and deterministic registry validation.
+Status: WP0-WP5b accepted under the v1.0.3 standard. WP5b adds TokenSpec / TokenPack lock and qstpkg propagation metadata.
 
 ## Direction
 
@@ -25,6 +25,7 @@ Legacy versions remain loadable and verifiable, but new authoring moves to `qst-
 | WP3 | PortTemporalSpec + PV-C | accepted |
 | WP4 | NumericPolicy + TokenEvolutionPolicy | accepted |
 | WP5 | TokenSpec v2 + Registry + TokenPack | accepted |
+| WP5b | Lock + Package Integration | accepted |
 | WP6a | State Basic | not started |
 | WP6b | State FSM | not started |
 | WP6c | State Recipes + PV-A | not started |
@@ -126,6 +127,19 @@ WP5 adds portable v0.4 token metadata and deterministic registry validation:
 - JSON schemas for TokenSpec v2 and TokenPack v2.
 
 WP5 does not add WP5b lock/qstpkg propagation, custom token execution, runtime integration, migration tooling, Panel behavior, or v0.4 CLI authoring.
+
+## WP5b Accepted Scope
+
+WP5b makes TokenSpec / TokenPack metadata portable through future v0.4 locks and existing qstpkg manifests without executing custom token code:
+
+- `TokenLockEntryV04` records canonical `TokenRefV04`, TokenSpec hash, TokenPack hash, implementation-ref hash, runtime-environment hash, origin tier, attestation kind, and risk level.
+- `TokenPackLockDependencyV04` records TokenPack dependency identity for `qst-lock/0.4`.
+- Deterministic lock verification reports missing TokenPack, TokenPack hash mismatch, TokenSpec hash mismatch, implementation-ref hash mismatch, and runtime-environment hash mismatch diagnostics.
+- `PackageManifest.token_packs` additively records `embedded_policy` and TokenPack references while keeping old qstpkg manifests valid.
+- qstpkg TokenPack verification checks referenced pack availability and hash equality without importing or executing embedded source.
+- JSON schemas for `qst_lock_0_4` and `qst_package_manifest` include the additive TokenPack propagation fields.
+
+WP5b does not add custom token execution, source-tree packaging layout, WP6 state, migration tooling, runtime integration, Panel behavior, v0.4 CLI authoring, or legacy qst.lock behavior changes.
 
 ## P-Validate Gates
 

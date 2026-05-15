@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from quant_strategy_tokenizer.artifacts.safety import POSIXRelativePath
 from quant_strategy_tokenizer.qst_lock.schema import HashString
+from quant_strategy_tokenizer.tokens_v2.package_policy import TokenPacksPackageSectionV04
 
 
 class PackageFile(BaseModel):
@@ -90,6 +91,7 @@ class PackageManifest(BaseModel):
     tagspec_paths: list[str] = Field(default_factory=list)
     recipe_paths: list[str] = Field(default_factory=list)
     artifacts: PackageArtifacts | None = None
+    token_packs: TokenPacksPackageSectionV04 | None = None
 
 
 class FixturesManifest(BaseModel):

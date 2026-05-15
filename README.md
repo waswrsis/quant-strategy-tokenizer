@@ -1,6 +1,6 @@
 # Quant Strategy Tokenizer
 
-Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, P3, and P4-core construction stages. Token System v2 WP0-WP5 are accepted under the v1.0.3 construction standard.
+Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, P3, and P4-core construction stages. Token System v2 WP0-WP5b are accepted under the v1.0.3 construction standard.
 
 The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, implements P2a-0/P2a-1 provenance metadata, P2a-2 deterministic recipe generation, P2a-3 composition validation, P2b mutation, P2c-core execution-plan CSE, an opt-in P2c-extended kernel substitution spike, the P3a-0 deterministic lock hard gate, the P3a-1 directory package format, P3b-0 registry search, P3b-1 fork lineage, and P4-core artifacts, frames, qstpkg artifact extension, ports, signal extraction, mock adapters, and P4b CLI. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, a production kernel framework, P4c real adapter repositories, P4d semantic detokenize, P4+ full-text package search, or numerical equivalence verification.
 
@@ -61,6 +61,7 @@ The implemented loop covers:
 | Token System v2 WP3 PortTemporalSpec + PV-C | accepted under v1.0.3 |
 | Token System v2 WP4 NumericPolicy + TokenEvolutionPolicy | accepted under v1.0.3 |
 | Token System v2 WP5 TokenSpec v2 + Registry + TokenPack | accepted under v1.0.3 |
+| Token System v2 WP5b Lock + Package Integration | accepted under v1.0.3 |
 
 ## Frozen P0 Baseline
 
@@ -177,7 +178,9 @@ WP3 is accepted and adds `TemporalRule`, v0.4 static temporal validation, and PV
 
 WP4 is accepted and adds `NumericPolicy`, `TokenEvolutionPolicy`, lifecycle status hash material, numeric risk profile decisions, behavior-hash material helpers, and `docs/TOKEN_EVOLUTION_POLICY.md`. It does not add WP5 TokenSpec v2 registry, token packs, migration tooling, runtime execution, Panel behavior, custom token runtime, or v0.4 CLI authoring.
 
-WP5 is accepted and adds `TokenSpecV2`, `TokenPackManifestV2`, deterministic TokenPack dependency validation, `TokenRegistryV2`, typed TokenSpec/TokenPack hash helpers, and JSON schemas. It does not add WP5b lock/qstpkg propagation, custom token execution, migration tooling, runtime integration, Panel behavior, or v0.4 CLI authoring.
+WP5 is accepted and adds `TokenSpecV2`, `TokenPackManifestV2`, deterministic TokenPack dependency validation, `TokenRegistryV2`, typed TokenSpec/TokenPack hash helpers, and JSON schemas.
+
+WP5b is accepted and adds future `qst-lock/0.4` token hash entries, TokenPack dependency lock entries, qstpkg `token_packs` manifest metadata, and deterministic missing-pack/hash-mismatch diagnostics. It verifies metadata only and never executes embedded source. It does not add custom token execution, source-tree packaging layout, migration tooling, runtime integration, Panel behavior, or v0.4 CLI authoring.
 
 The authoritative roadmap is [docs/TOKEN_SYSTEM_V2_ROADMAP.md](docs/TOKEN_SYSTEM_V2_ROADMAP.md).
 

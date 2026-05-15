@@ -1,5 +1,13 @@
 # Changelog
 
+## Token System v2 WP5b Lock + Package Integration
+
+- Added v0.4 TokenSpec / TokenPack lock snapshot models for token hashes, pack hashes, implementation-reference hashes, runtime-environment hashes, origin, attestation, and risk metadata.
+- Added deterministic metadata-only verification diagnostics for missing TokenPacks, TokenPack hash mismatch, TokenSpec hash mismatch, implementation-ref hash mismatch, and runtime-environment hash mismatch.
+- Added additive qstpkg `token_packs` manifest metadata with `none`, `spec_only`, and `spec_and_source` embedding policies.
+- Extended `qst_lock_0_4` and `qst_package_manifest` JSON schemas with TokenPack propagation fields while keeping legacy qstpkg manifests valid.
+- Kept custom token execution, source-tree packaging layout, migration tooling, runtime integration, Panel behavior, and v0.4 CLI authoring out of scope.
+
 ## Token System v2 WP5 TokenSpec v2 + Registry + TokenPack
 
 - Added `tokens_v2.TokenSpecV2` with canonical token refs, v2 port signatures, numeric policy, lifecycle, origin, attestation, and canonical metadata refs.

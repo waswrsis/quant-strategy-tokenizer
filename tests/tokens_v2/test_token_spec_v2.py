@@ -17,6 +17,9 @@ def make_spec(
     numeric_policy: NumericPolicy | None = None,
     lifecycle: TokenLifecycleStatus | None = None,
     attestation_kind: str = "none",
+    implementation_ref: dict[str, object] | None = None,
+    runtime_environment_ref: dict[str, object] | None = None,
+    risk: dict[str, object] | None = None,
 ) -> TokenSpecV2:
     return TokenSpecV2(
         token_id=f"{namespace}.{name}",
@@ -34,6 +37,9 @@ def make_spec(
         outputs={"y": {"type": "TimeSeries[float]"}},
         numeric_policy=numeric_policy or semantic_float64_policy(),
         lifecycle=lifecycle or TokenLifecycleStatus(),
+        implementation_ref=implementation_ref,
+        runtime_environment_ref=runtime_environment_ref,
+        risk=risk or {},
     )
 
 

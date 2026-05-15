@@ -1,9 +1,24 @@
 """Token System v2 TokenSpec, TokenPack, and registry models."""
 
+from quant_strategy_tokenizer.tokens_v2.lock import (
+    TokenLockEntryV04,
+    TokenLockSnapshotV04,
+    TokenPackLockDependencyV04,
+    token_lock_entry_from_spec,
+    token_pack_lock_dependency_from_pack,
+    verify_token_lock_snapshot,
+)
 from quant_strategy_tokenizer.tokens_v2.pack import (
     TOKEN_PACK_SCHEMA_VERSION,
     TokenPackDependency,
     TokenPackManifestV2,
+)
+from quant_strategy_tokenizer.tokens_v2.package_policy import (
+    TokenPackPackageEntryV04,
+    TokenPacksPackageSectionV04,
+    token_pack_package_entry_from_pack,
+    token_pack_package_section_from_packs,
+    verify_token_pack_package_section,
 )
 from quant_strategy_tokenizer.tokens_v2.registry import (
     RegistryTokenRecord,
@@ -24,10 +39,21 @@ __all__ = [
     "AttestationKind",
     "OriginTier",
     "RegistryTokenRecord",
+    "TokenLockEntryV04",
+    "TokenLockSnapshotV04",
     "TokenPackDependency",
     "TokenPackDependencyResolution",
+    "TokenPackLockDependencyV04",
     "TokenPackManifestV2",
+    "TokenPackPackageEntryV04",
+    "TokenPacksPackageSectionV04",
     "TokenRegistryV2",
     "TokenSpecV2",
+    "token_lock_entry_from_spec",
+    "token_pack_lock_dependency_from_pack",
+    "token_pack_package_entry_from_pack",
+    "token_pack_package_section_from_packs",
     "validate_token_pack_dependencies",
+    "verify_token_lock_snapshot",
+    "verify_token_pack_package_section",
 ]
