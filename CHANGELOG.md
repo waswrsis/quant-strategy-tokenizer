@@ -1,5 +1,13 @@
 # Changelog
 
+## Token System v2 WP1 qst-ir/0.4 Shell + Hash Framework
+
+- Added the independent `qst-ir/0.4` shell and `qst-canonical/0.4` canonical byte surface.
+- Added the hash v2 framework for graph, param, instance, signature, behavior, token spec, token pack, implementation ref, and audit chain hashes.
+- Added read-only legacy loaders for `qst-ir/0.3`, `qst-ir/0.3.1`, and P3 `qst.lock`.
+- Added minimal JSON schemas for `qst_ir_0_4` and `qst_lock_0_4`.
+- Kept current CLI behavior, legacy strategy hashes, TokenSpec v2, migration tooling, and custom token runtime out of scope.
+
 ## Token System v2 WP0 ADR Gate
 
 - Added ADRs for the `qst-ir/0.4` transition, custom token runtime trust model, and Token System v2 P-Validate cases.

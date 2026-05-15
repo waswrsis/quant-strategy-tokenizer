@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 
-Status: WP0 ADR Gate accepted. WP1 has not started.
+Status: WP0 ADR Gate accepted. WP1 qst-ir/0.4 shell + hash framework accepted.
 
 ## Direction
 
@@ -20,7 +20,7 @@ Legacy versions remain loadable and verifiable, but new authoring moves to `qst-
 | WP | Name | Status |
 |---|---|---|
 | WP0 | ADR Gate | accepted |
-| WP1 | qst-ir/0.4 shell + canonical/hash framework | not started |
+| WP1 | qst-ir/0.4 shell + canonical/hash framework | accepted |
 | WP2 | Structured TypeSpec + PortSpec | not started |
 | WP3 | PortTemporalSpec + PV-C | not started |
 | WP4 | NumericPolicy + TokenEvolutionPolicy | not started |
@@ -52,6 +52,18 @@ Locked decisions:
 - Legacy IR is not a target for new token, recipe, adapter, mutation, or fork output once v2 migration is active.
 - Custom token runtime v0.1 has no sandbox.
 - P-Validate gates are embedded in their owning work packages.
+
+## WP1 Accepted Scope
+
+WP1 adds the minimal Token System v2 kernel shell without changing accepted legacy behavior:
+
+- `quant_strategy_tokenizer.ir_v04` with `StrategyIRV04`, fixed `qst-ir/0.4`, and fixed `qst-canonical/0.4`.
+- Independent `canonicalize_v04()` and `canonical_bytes_v04()` using public canonical JSON bytes.
+- `quant_strategy_tokenizer.hash_v2` with graph, param, instance, signature, behavior, token spec, token pack, implementation ref, and audit chain hash functions.
+- Read-only legacy loaders for `qst-ir/0.3`, `qst-ir/0.3.1`, and P3 `qst.lock`.
+- Minimal JSON schemas for `qst_ir_0_4` and `qst_lock_0_4`.
+
+WP1 does not add TypeSpec, PortSpec, TokenSpec v2, token pack loading, custom token runtime, migration tooling, or v0.4 CLI authoring.
 
 ## P-Validate Gates
 

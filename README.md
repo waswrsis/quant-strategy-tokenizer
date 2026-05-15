@@ -1,6 +1,6 @@
 # Quant Strategy Tokenizer
 
-Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, P3, and P4-core construction stages. Token System v2 has entered WP0 ADR Gate.
+Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, P3, and P4-core construction stages. Token System v2 has entered the qst-ir/0.4 shell stage.
 
 The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, implements P2a-0/P2a-1 provenance metadata, P2a-2 deterministic recipe generation, P2a-3 composition validation, P2b mutation, P2c-core execution-plan CSE, an opt-in P2c-extended kernel substitution spike, the P3a-0 deterministic lock hard gate, the P3a-1 directory package format, P3b-0 registry search, P3b-1 fork lineage, and P4-core artifacts, frames, qstpkg artifact extension, ports, signal extraction, mock adapters, and P4b CLI. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, a production kernel framework, P4c real adapter repositories, P4d semantic detokenize, P4+ full-text package search, or numerical equivalence verification.
 
@@ -56,7 +56,7 @@ The implemented loop covers:
 | P4c real adapters | external repos / not started |
 | P4d semantic detokenize | not started |
 | Token System v2 WP0 ADR Gate | accepted |
-| Token System v2 WP1 qst-ir/0.4 shell | not started |
+| Token System v2 WP1 qst-ir/0.4 shell | accepted |
 
 ## Frozen P0 Baseline
 
@@ -163,6 +163,8 @@ WP0 ADR Gate is accepted and records:
 - Legacy IR as invalid for new token, recipe, adapter, mutation, or fork output once v2 migration is active.
 - No sandbox for custom `python_entrypoint` tokens in v0.1.
 - Embedded P-Validate gates for temporal safety, state, panel, and custom token work.
+
+WP1 is accepted and adds the independent `qst-ir/0.4` shell, `qst-canonical/0.4` canonical bytes, hash v2 framework, and read-only legacy boundary loaders. It does not add TypeSpec, PortSpec, TokenSpec v2, token packs, migration tooling, custom token runtime, or v0.4 CLI authoring.
 
 The authoritative roadmap is [docs/TOKEN_SYSTEM_V2_ROADMAP.md](docs/TOKEN_SYSTEM_V2_ROADMAP.md).
 
