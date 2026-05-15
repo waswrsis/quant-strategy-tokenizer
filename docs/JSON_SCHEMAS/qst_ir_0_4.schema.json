@@ -13,7 +13,17 @@
       "type": "array",
       "contains": {"const": "core"},
       "uniqueItems": true,
-      "items": {"enum": ["core", "panel", "custom_token_runtime"]}
+      "items": {
+        "enum": [
+          "core",
+          "panel",
+          "panel_type",
+          "panel_ops",
+          "panel_weights",
+          "panel_recipes",
+          "custom_token_runtime"
+        ]
+      }
     },
     "strategy": {
       "type": "object",

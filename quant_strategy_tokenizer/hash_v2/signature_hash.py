@@ -7,6 +7,7 @@ from typing import Any
 
 from quant_strategy_tokenizer.hash_v2.common import hash_v2_payload
 from quant_strategy_tokenizer.ir_v04.schema import TokenRefV04
+from quant_strategy_tokenizer.panel_v2 import PanelTypeLayerSpec, parse_panel_type_by_output
 from quant_strategy_tokenizer.ports_v2 import PortSignature
 
 
@@ -26,6 +27,29 @@ def signature_hash_for_ports_v2(
     parsed = signature if isinstance(signature, PortSignature) else PortSignature.model_validate(signature)
     payload: dict[str, Any] = {
         "signature": parsed.model_dump(mode="json", exclude_none=True),
+    }
+    if token_ref is not None:
+        parsed_ref = token_ref if isinstance(token_ref, TokenRefV04) else TokenRefV04.model_validate(token_ref)
+        payload["token_ref"] = parsed_ref.model_dump(mode="json")
+    return signature_hash_v2(payload)
+
+
+def signature_hash_for_panel_ports_v2(
+    signature: PortSignature | Mapping[str, Any],
+    panel_type_by_output: Mapping[str, PanelTypeLayerSpec | Mapping[str, Any]],
+    *,
+    token_ref: TokenRefV04 | Mapping[str, Any] | None = None,
+) -> str:
+    """Hash structured PortSignature material plus semantic Panel metadata."""
+
+    parsed = signature if isinstance(signature, PortSignature) else PortSignature.model_validate(signature)
+    parsed_panel = parse_panel_type_by_output(dict(panel_type_by_output))
+    payload: dict[str, Any] = {
+        "signature": parsed.model_dump(mode="json", exclude_none=True),
+        "panel_type_by_output": {
+            output_name: spec.model_dump(mode="json", exclude_none=True)
+            for output_name, spec in sorted(parsed_panel.items())
+        },
     }
     if token_ref is not None:
         parsed_ref = token_ref if isinstance(token_ref, TokenRefV04) else TokenRefV04.model_validate(token_ref)

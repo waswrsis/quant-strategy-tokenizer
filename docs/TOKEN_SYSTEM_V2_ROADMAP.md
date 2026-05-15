@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 
-Status: WP0-WP8a accepted under the v1.0.3 standard. WP8a adds the Panel Detail Design Gate schemas and design record.
+Status: WP0-WP8b accepted under the v1.0.3 standard. WP8b adds the Panel Type Layer and `panel_type` capability validation.
 
 ## Direction
 
@@ -31,7 +31,7 @@ Legacy versions remain loadable and verifiable, but new authoring moves to `qst-
 | WP6c | State Recipes + PV-A | accepted |
 | WP7 | Decision Algebra | accepted |
 | WP8a | Panel Detail Design Gate | accepted |
-| WP8b | Panel Type Layer | not started |
+| WP8b | Panel Type Layer | accepted |
 | WP8c | Panel Operators | not started |
 | WP8d | Weight Operators | not started |
 | WP8e | Panel Recipes + PV-B | not started |
@@ -211,6 +211,23 @@ WP8a freezes the Panel layer detail design before any Panel behavior is enabled:
 - The WP2 `TypeSpec` Panel shell field set is frozen and unchanged.
 
 WP8a does not enable the `panel` capability, modify `TypeSpec`, add Panel TokenSpecs or TokenPacks, add Panel operators, add Panel recipes, add runtime execution, add migration tooling, or add v0.4 CLI authoring.
+
+## WP8b Accepted Scope
+
+WP8b enables Panel type-layer validation without enabling Panel operators:
+
+- `docs/ADR/2026-05-15_qst_panel_capability_schema_correction.md` records the schema correction that adds granular Panel capabilities.
+- `panel_type` is accepted by `validate_ir_v04()`.
+- The old umbrella `panel` capability remains parseable but is rejected.
+- `panel_ops`, `panel_weights`, `panel_recipes`, and `custom_token_runtime` remain rejected.
+- `quant_strategy_tokenizer.panel_v2` adds models for PanelRepresentation, UniverseMask, PanelMissingPolicy, GroupSpec, SelectionPanelType, WeightPanelType, and PanelTypeLayerSpec.
+- Panel semantic metadata must be output-scoped under `node.metadata.panel_type_by_output`.
+- `metadata.panel_type` is rejected as an unsafe non-output-scoped location.
+- Panel type-layer metadata enters Panel signature hash material through `signature_hash_for_panel_ports_v2()`.
+- `state.fsm` does not auto-broadcast over Panel inputs.
+- `qst_typespec_0_4.schema.json`, the TypeSpec field set, TypeSpec enum/defaults, and non-panel signature hashes remain unchanged.
+
+WP8b does not add Panel TokenSpecs, Panel TokenPacks, Panel operators, weight operators, Panel recipes, runtime execution, migration tooling, or v0.4 CLI authoring.
 
 ## P-Validate Gates
 

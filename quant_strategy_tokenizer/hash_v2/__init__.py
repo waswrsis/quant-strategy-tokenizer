@@ -14,6 +14,7 @@ from quant_strategy_tokenizer.hash_v2.instance_hash import compute_hashes_v2, in
 from quant_strategy_tokenizer.hash_v2.param_hash import param_hash_v2
 from quant_strategy_tokenizer.hash_v2.runtime_environment_hash import runtime_environment_hash_v2
 from quant_strategy_tokenizer.hash_v2.signature_hash import (
+    signature_hash_for_panel_ports_v2,
     signature_hash_for_ports_v2,
     signature_hash_v2,
 )
@@ -41,6 +42,7 @@ __all__ = [
     "instance_hash_v2",
     "param_hash_v2",
     "runtime_environment_hash_v2",
+    "signature_hash_for_panel_ports_v2",
     "signature_hash_for_ports_v2",
     "signature_hash_v2",
     "token_pack_hash_for_pack_v2",

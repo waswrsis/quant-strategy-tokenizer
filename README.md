@@ -1,6 +1,6 @@
 # Quant Strategy Tokenizer
 
-Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, P3, and P4-core construction stages. Token System v2 WP0-WP8a are accepted under the v1.0.3 construction standard.
+Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, P3, and P4-core construction stages. Token System v2 WP0-WP8b are accepted under the v1.0.3 construction standard.
 
 The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, implements P2a-0/P2a-1 provenance metadata, P2a-2 deterministic recipe generation, P2a-3 composition validation, P2b mutation, P2c-core execution-plan CSE, an opt-in P2c-extended kernel substitution spike, the P3a-0 deterministic lock hard gate, the P3a-1 directory package format, P3b-0 registry search, P3b-1 fork lineage, and P4-core artifacts, frames, qstpkg artifact extension, ports, signal extraction, mock adapters, and P4b CLI. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, a production kernel framework, P4c real adapter repositories, P4d semantic detokenize, P4+ full-text package search, or numerical equivalence verification.
 
@@ -30,6 +30,7 @@ The implemented loop covers:
 - PV-A state-heavy reference cases with deterministic expected traces and hashes
 - Token System v2 Decision Algebra reference semantics and TokenPack metadata
 - Token System v2 Panel detail design gate schemas and design record
+- Token System v2 Panel type-layer validation with `panel_type` capability
 
 ## Project Status
 
@@ -71,7 +72,7 @@ The implemented loop covers:
 | Token System v2 WP6c State Recipes + PV-A | accepted under v1.0.3 |
 | Token System v2 WP7 Decision Algebra | accepted under v1.0.3 |
 | Token System v2 WP8a Panel Detail Design Gate | accepted under v1.0.3 |
-| Token System v2 WP8b Panel Type Layer | not started |
+| Token System v2 WP8b Panel Type Layer | accepted under v1.0.3 |
 | Token System v2 WP8c Panel Operators | not started |
 | Token System v2 WP8d Weight Operators | not started |
 | Token System v2 WP8e Panel Recipes + PV-B | not started |
@@ -204,6 +205,8 @@ WP6c is accepted and adds PV-A state-heavy reference strategy artifacts, determi
 WP7 is accepted and adds v0.4 Decision Algebra models, true monoids, fold policies, aggregators, legacy reduce migration classification, and the `qst-tokenpack-decision-algebra/0.1.0` metadata pack. It does not add legacy runtime execution, legacy token registration, strategy mutation, Panel behavior, custom token runtime, migration tooling, or v0.4 CLI authoring.
 
 WP8a is accepted as the Panel Detail Design Gate. It adds draft schemas and the design record for sparse logical Panel representation, UniverseMask, MissingPolicy, GroupSpec, SelectionPanel / WeightPanel boundaries, single-factor residualize, Panel temporal joins, and Panel / State constraints. It does not alter `TypeSpec`, enable the `panel` capability, add Panel operators, add Panel TokenSpecs or TokenPacks, or introduce v0.4 runtime execution.
+
+WP8b is accepted as the Panel Type Layer. It adds a schema correction ADR for granular Panel capabilities, accepts `panel_type`, rejects the old umbrella `panel` and later Panel capabilities, adds `panel_v2` type-layer models, validates output-scoped `metadata.panel_type_by_output`, and makes Panel type metadata signature-hash-bearing. It does not alter `TypeSpec`, enable Panel operators, add Panel TokenSpecs or TokenPacks, or introduce runtime execution.
 
 The authoritative roadmap is [docs/TOKEN_SYSTEM_V2_ROADMAP.md](docs/TOKEN_SYSTEM_V2_ROADMAP.md).
 

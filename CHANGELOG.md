@@ -1,5 +1,13 @@
 # Changelog
 
+## Token System v2 WP8b Panel Type Layer
+
+- Added a schema correction ADR for granular Panel capabilities and accepted `panel_type` while keeping `panel`, `panel_ops`, `panel_weights`, and `panel_recipes` rejected.
+- Added `panel_v2` type-layer models for PanelRepresentation, UniverseMask, MissingPolicy, GroupSpec, SelectionPanelType, WeightPanelType, and output-scoped PanelTypeLayerSpec.
+- Added v0.4 validation for `metadata.panel_type_by_output`, Panel output capability requirements, Panel operator gates, and Panel state auto-broadcast rejection.
+- Added `signature_hash_for_panel_ports_v2()` so Panel type-layer metadata is semantic hash material while non-panel signature hashes remain stable.
+- Kept TypeSpec shape/defaults/schema, Panel operators, Weight operators, Panel recipes, TokenSpecs, TokenPacks, runtime execution, migration tooling, and v0.4 CLI authoring out of scope.
+
 ## Token System v2 WP8a Panel Detail Design Gate
 
 - Added `docs/PANEL_LAYER_DESIGN_V04.md` to freeze sparse logical Panel representation, UniverseMask, MissingPolicy, GroupSpec, SelectionPanel / WeightPanel boundaries, single-factor residualize, Panel temporal joins, and Panel / State constraints.
