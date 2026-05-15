@@ -8,6 +8,12 @@ from quant_strategy_tokenizer.ports_v2.port_spec import (
     PortSignature,
     PortTemporalSpec,
     TemporalRequirement,
+    TemporalRule,
+)
+from quant_strategy_tokenizer.ports_v2.temporal import (
+    TemporalRuleResolutionError,
+    resolve_temporal_rule,
+    temporal_is_later,
 )
 
 __all__ = [
@@ -18,4 +24,8 @@ __all__ = [
     "PortSignature",
     "PortTemporalSpec",
     "TemporalRequirement",
+    "TemporalRule",
+    "TemporalRuleResolutionError",
+    "resolve_temporal_rule",
+    "temporal_is_later",
 ]

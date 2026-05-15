@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 
-Status: v1.0.3 compliance retrofit accepted for WP0-WP2. WP0 ADR Gate, WP1 qst-ir/0.4 shell + hash/profile/validation framework, and WP2 Structured TypeSpec + PortSpec are accepted under the v1.0.3 standard.
+Status: WP0-WP3 accepted under the v1.0.3 standard. WP3 adds PortTemporalSpec rule resolution and PV-C static validation artifacts.
 
 ## Direction
 
@@ -22,7 +22,7 @@ Legacy versions remain loadable and verifiable, but new authoring moves to `qst-
 | WP0 | ADR Gate | accepted |
 | WP1 | qst-ir/0.4 shell + canonical/hash framework | accepted |
 | WP2 | Structured TypeSpec + PortSpec | accepted |
-| WP3 | PortTemporalSpec + PV-C | not started |
+| WP3 | PortTemporalSpec + PV-C | accepted |
 | WP4 | NumericPolicy + TokenEvolutionPolicy | not started |
 | WP5 | TokenSpec v2 + Registry + TokenPack | not started |
 | WP6a | State Basic | not started |
@@ -88,6 +88,17 @@ WP2 adds the structured type and port contract layer used by future TokenSpec v2
 - `qst_ir_0_4` schema support for structured node signatures.
 
 WP2 does not add WP3 temporal rule resolution, TokenSpec v2 registry, token packs, migration tooling, runtime execution, Panel behavior, custom token runtime, or v0.4 CLI authoring.
+
+## WP3 Accepted Scope
+
+WP3 adds static temporal safety validation for `qst-ir/0.4` shell documents:
+
+- `TemporalRule` declarations on `OutputSpec`.
+- Rule resolution for constant values, input inheritance, param-derived min history, input joins, predicate branches, trailing-window history, and centered-window unsafe future declarations.
+- `validate_temporal_v04()` and `trace_temporal_validation_v04()` using `validation_v2` diagnostics.
+- PV-C strategies, expected diagnostics, expected validation traces, and `expected_artifact_hash_v2()` evidence.
+
+WP3 does not add WP4 numeric policy, WP5 TokenSpec v2 registry, token packs, migration tooling, runtime execution, custom token runtime, or v0.4 CLI authoring.
 
 ## P-Validate Gates
 

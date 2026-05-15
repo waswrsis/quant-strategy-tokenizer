@@ -34,7 +34,8 @@
       "properties": {
         "schema_version": {"const": "qst-portspec/0.4"},
         "type": {"$ref": "qst_typespec_0_4.schema.json"},
-        "port_temporal": {"$ref": "#/$defs/port_temporal"}
+        "port_temporal": {"$ref": "#/$defs/port_temporal"},
+        "temporal_rule": {"$ref": "qst_port_temporal_rule_0_4.schema.json"}
       }
     },
     "available_at": {

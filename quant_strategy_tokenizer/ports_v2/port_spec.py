@@ -10,6 +10,18 @@ from quant_strategy_tokenizer.types_v2 import AvailableAt, TypeSpec, parse_type_
 
 PORT_SPEC_SCHEMA_VERSION: Literal["qst-portspec/0.4"] = "qst-portspec/0.4"
 PORT_TEMPORAL_SCHEMA_VERSION: Literal["qst-port-temporal/0.4"] = "qst-port-temporal/0.4"
+TemporalRuleKind = Literal[
+    "constant",
+    "inherit_from_input",
+    "param_value",
+    "param_max_floor",
+    "param_plus_constant",
+    "max_inputs",
+    "param_predicate",
+    "window_min_history",
+    "centered_window_unsafe",
+]
+TemporalField = Literal["available_at", "latency_bars", "min_history_bars", "unsafe_future"]
 
 
 class TemporalRequirement(BaseModel):
@@ -37,6 +49,25 @@ class PortTemporalSpec(BaseModel):
     unsafe_future: bool = False
 
 
+class TemporalRule(BaseModel):
+    """Declarative temporal rule shell for WP3 resolution."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schema_version: Literal["qst-port-temporal/0.4"] = PORT_TEMPORAL_SCHEMA_VERSION
+    kind: TemporalRuleKind
+    value: PortTemporalSpec | None = None
+    input: str | None = None
+    inputs: list[str] | None = None
+    param: str | None = None
+    field: TemporalField | None = None
+    floor: int | None = None
+    constant: int | None = None
+    equals: Any | None = None
+    when_true: PortTemporalSpec | None = None
+    when_false: PortTemporalSpec | None = None
+
+
 class InputSpec(BaseModel):
     """Input port contract."""
 
@@ -60,6 +91,7 @@ class OutputSpec(BaseModel):
     schema_version: Literal["qst-portspec/0.4"] = PORT_SPEC_SCHEMA_VERSION
     type: TypeSpec
     port_temporal: PortTemporalSpec | None = None
+    temporal_rule: TemporalRule | None = None
 
     @field_validator("type", mode="before")
     @classmethod

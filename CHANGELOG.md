@@ -1,5 +1,12 @@
 # Changelog
 
+## Token System v2 WP3 PortTemporalSpec + PV-C
+
+- Added `TemporalRule` declarations for v0.4 output ports and deterministic rule resolution.
+- Added v0.4 static temporal validation with `validation_v2` diagnostics for unsafe future, unmet temporal requirements, unresolved rules, and temporal conflicts.
+- Added PV-C v0.4 strategies, expected diagnostics, expected validation traces, and `expected_artifact_hash_v2()` evidence.
+- Kept WP4 numeric policy, WP5 TokenSpec v2 registry, token packs, migration tooling, runtime execution, custom token runtime, and v0.4 CLI authoring out of scope.
+
 ## Token System v2 v1.0.3 WP0-WP2 Compliance Retrofit
 
 - Added the remaining v1.0.3 ADRs for Panel layer design, hash stability milestones, and TokenPack propagation/package policy.

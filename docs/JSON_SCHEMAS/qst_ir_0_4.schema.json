@@ -135,7 +135,41 @@
       "properties": {
         "schema_version": {"const": "qst-portspec/0.4"},
         "type": {"$ref": "#/$defs/type_spec"},
-        "port_temporal": {"$ref": "#/$defs/port_temporal"}
+        "port_temporal": {"$ref": "#/$defs/port_temporal"},
+        "temporal_rule": {"$ref": "#/$defs/temporal_rule"}
+      }
+    },
+    "temporal_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "kind"],
+      "properties": {
+        "schema_version": {"const": "qst-port-temporal/0.4"},
+        "kind": {
+          "enum": [
+            "constant",
+            "inherit_from_input",
+            "param_value",
+            "param_max_floor",
+            "param_plus_constant",
+            "max_inputs",
+            "param_predicate",
+            "window_min_history",
+            "centered_window_unsafe"
+          ]
+        },
+        "value": {"$ref": "#/$defs/port_temporal"},
+        "input": {"type": "string"},
+        "inputs": {"type": "array", "items": {"type": "string"}},
+        "param": {"type": "string"},
+        "field": {
+          "enum": ["available_at", "latency_bars", "min_history_bars", "unsafe_future"]
+        },
+        "floor": {"type": "integer"},
+        "constant": {"type": "integer"},
+        "equals": {},
+        "when_true": {"$ref": "#/$defs/port_temporal"},
+        "when_false": {"$ref": "#/$defs/port_temporal"}
       }
     },
     "port_signature": {

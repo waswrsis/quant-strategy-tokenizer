@@ -58,6 +58,7 @@ The implemented loop covers:
 | Token System v2 WP0 ADR Gate | accepted under v1.0.3 |
 | Token System v2 WP1 qst-ir/0.4 shell | accepted under v1.0.3 |
 | Token System v2 WP2 TypeSpec + PortSpec | accepted under v1.0.3 |
+| Token System v2 WP3 PortTemporalSpec + PV-C | accepted under v1.0.3 |
 
 ## Frozen P0 Baseline
 
@@ -168,7 +169,9 @@ The v1.0.3 construction standard supersedes the earlier Token System v2 WP0-WP2 
 
 WP1 is accepted and adds the independent `qst-ir/0.4` shell, `qst-canonical/0.4` canonical bytes, hash v2 framework, `validation_v2`, `profile_v2`, explicit schema-version shell material, and read-only legacy boundary loaders.
 
-WP2 is accepted and adds structured `TypeSpec`, `ValueType`, `IntrinsicTemporalSpec`, `PortSignature`, `InputSpec`, `OutputSpec`, Panel shell fields, `StrategyIRV04.capabilities`, canonical `NodeV04.token_ref`, and token-ref-aware signature hashing. It does not add WP3 temporal rule resolution, TokenSpec v2 registry, token packs, migration tooling, runtime execution, Panel behavior, custom token runtime, or v0.4 CLI authoring.
+WP2 is accepted and adds structured `TypeSpec`, `ValueType`, `IntrinsicTemporalSpec`, `PortSignature`, `InputSpec`, `OutputSpec`, Panel shell fields, `StrategyIRV04.capabilities`, canonical `NodeV04.token_ref`, and token-ref-aware signature hashing.
+
+WP3 is accepted and adds `TemporalRule`, v0.4 static temporal validation, and PV-C expected diagnostics/traces. It does not add WP4 numeric policy, TokenSpec v2 registry, token packs, migration tooling, runtime execution, Panel behavior, custom token runtime, or v0.4 CLI authoring.
 
 The authoritative roadmap is [docs/TOKEN_SYSTEM_V2_ROADMAP.md](docs/TOKEN_SYSTEM_V2_ROADMAP.md).
 
