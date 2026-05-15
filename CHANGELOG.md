@@ -1,5 +1,14 @@
 # Changelog
 
+## Token System v2 WP6b State FSM
+
+- Added `state_v2.FSMDefinition` and `FSMTransition` with closed state/event set validation.
+- Added deterministic `state_fsm()` reference semantics with reset-before-event handling, failure policies, structured diagnostics, and transition traces.
+- Added `replay_fsm_trace()` for deterministic FSM trace replay checks.
+- Added `qst-tokenpack-state-fsm/0.1.0` with core TokenSpecV2 metadata for `core.state.fsm` and a dependency on `qst-tokenpack-state-basic >=0.1.0`.
+- Added `qst_state_fsm_0_4` JSON schema.
+- Kept state recipes, PV-A, legacy runtime execution, migration tooling, Panel behavior, custom token runtime, and v0.4 CLI authoring out of scope.
+
 ## Token System v2 WP6a State Basic
 
 - Added `state_v2.StatePolicy` with deterministic warmup, reset, and missing-event policy defaults.

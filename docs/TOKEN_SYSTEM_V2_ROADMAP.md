@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 
-Status: WP0-WP6a accepted under the v1.0.3 standard. WP6a adds basic deterministic state reference semantics and TokenPack metadata.
+Status: WP0-WP6b accepted under the v1.0.3 standard. WP6b adds closed-set FSM reference semantics, transition tracing, replay checks, and TokenPack metadata.
 
 ## Direction
 
@@ -27,7 +27,7 @@ Legacy versions remain loadable and verifiable, but new authoring moves to `qst-
 | WP5 | TokenSpec v2 + Registry + TokenPack | accepted |
 | WP5b | Lock + Package Integration | accepted |
 | WP6a | State Basic | accepted |
-| WP6b | State FSM | not started |
+| WP6b | State FSM | accepted |
 | WP6c | State Recipes + PV-A | not started |
 | WP7 | Decision Algebra | not started |
 | WP8a | Panel Type Layer | not started |
@@ -153,6 +153,20 @@ WP6a adds basic deterministic state semantics for v0.4 metadata and tests:
 - JSON schema for `qst-state-policy/0.4`.
 
 WP6a does not add FSM behavior, state recipes, PV-A artifacts, legacy runtime execution, migration tooling, Panel behavior, custom token runtime, or v0.4 CLI authoring.
+
+## WP6b Accepted Scope
+
+WP6b adds deterministic closed-set FSM semantics for v0.4 metadata and tests:
+
+- `FSMDefinition` and `FSMTransition` with closed state/event set validation.
+- Failure policies `stay`, `transition_to_unknown`, and `raise`; `transition_to_unknown` requires an explicit closed `unknown_state`.
+- `state_fsm()` reference semantics with reset-before-event behavior, structured diagnostics, and complete transition traces.
+- `replay_fsm_trace()` for deterministic state sequence replay checks.
+- `qst-tokenpack-state-fsm/0.1.0` with core TokenSpecV2 metadata for `core.state.fsm`.
+- A declared TokenPack dependency from `qst-tokenpack-state-fsm` to `qst-tokenpack-state-basic >=0.1.0`.
+- JSON schema for `qst-state-fsm/0.4`.
+
+WP6b does not add state recipes, PV-A artifacts, legacy runtime execution, migration tooling, Panel behavior, custom token runtime, or v0.4 CLI authoring.
 
 ## P-Validate Gates
 

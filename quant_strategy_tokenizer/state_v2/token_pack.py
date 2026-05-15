@@ -2,15 +2,23 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from quant_strategy_tokenizer.ir_v04 import TokenRefV04
 from quant_strategy_tokenizer.numeric_v2 import NumericPolicy
 from quant_strategy_tokenizer.ports_v2 import InputSpec, OutputSpec
 from quant_strategy_tokenizer.state_v2.policy import default_state_policy
-from quant_strategy_tokenizer.tokens_v2 import TokenPackManifestV2, TokenSpecV2
+from quant_strategy_tokenizer.tokens_v2 import (
+    TokenPackDependency,
+    TokenPackManifestV2,
+    TokenSpecV2,
+)
 from quant_strategy_tokenizer.types_v2 import parse_type_spec
 
 STATE_BASIC_PACK_ID = "qst-tokenpack-state-basic"
 STATE_BASIC_PACK_VERSION = "0.1.0"
+STATE_FSM_PACK_ID = "qst-tokenpack-state-fsm"
+STATE_FSM_PACK_VERSION = "0.1.0"
 
 
 def state_basic_token_pack_v2() -> TokenPackManifestV2:
@@ -63,6 +71,52 @@ def state_basic_token_pack_v2() -> TokenPackManifestV2:
     )
 
 
+def state_fsm_token_pack_v2() -> TokenPackManifestV2:
+    """Return the accepted WP6b core TokenPack metadata for state.fsm."""
+
+    return TokenPackManifestV2(
+        pack_id=STATE_FSM_PACK_ID,
+        version=STATE_FSM_PACK_VERSION,
+        namespaces=("core",),
+        tokens=(
+            _state_token_spec(
+                name="state.fsm",
+                params_schema={
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["states", "events", "initial_state", "transitions"],
+                    "properties": {
+                        "states": {
+                            "type": "array",
+                            "uniqueItems": True,
+                        },
+                        "events": {
+                            "type": "array",
+                            "uniqueItems": True,
+                        },
+                        "initial_state": {"type": "string", "minLength": 1},
+                        "transitions": {"type": "array"},
+                        "failure_policy": {
+                            "enum": ["stay", "transition_to_unknown", "raise"],
+                            "default": "raise",
+                        },
+                        "unknown_state": {"type": "string", "default": "unknown"},
+                    },
+                },
+                inputs={"event": _input("EventStream[string]")},
+                outputs={"state": _output("State[string]")},
+            ),
+        ),
+        dependencies=(
+            TokenPackDependency(
+                pack_id=STATE_BASIC_PACK_ID,
+                version_constraint=f">={STATE_BASIC_PACK_VERSION}",
+            ),
+        ),
+        origin_tier="core",
+    )
+
+
 def _state_token_spec(
     *,
     name: str,
@@ -70,6 +124,20 @@ def _state_token_spec(
     outputs: dict[str, OutputSpec],
     inputs: dict[str, InputSpec] | None = None,
 ) -> TokenSpecV2:
+    state_metadata: dict[str, Any] = {
+        "stateful": True,
+        "state_policy": default_state_policy().model_dump(mode="json"),
+        "wp": "WP6a",
+    }
+    if name == "state.fsm":
+        state_metadata = {
+            "stateful": True,
+            "closed_state_set": True,
+            "closed_event_set": True,
+            "failure_policy": ["stay", "transition_to_unknown", "raise"],
+            "state_policy": default_state_policy().model_dump(mode="json"),
+            "wp": "WP6b",
+        }
     return TokenSpecV2(
         token_id=f"core.{name}",
         token_ref=TokenRefV04(
@@ -85,11 +153,7 @@ def _state_token_spec(
         outputs=outputs,
         params_schema=params_schema,
         purity="contextual_read",
-        state={
-            "stateful": True,
-            "state_policy": default_state_policy().model_dump(mode="json"),
-            "wp": "WP6a",
-        },
+        state=state_metadata,
         numeric_policy=NumericPolicy(
             representation="object",
             deterministic_level="semantic",
