@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from quant_strategy_tokenizer.agent.fork import fork as _fork
@@ -10,6 +11,16 @@ from quant_strategy_tokenizer.agent.promote import promote as _promote
 from quant_strategy_tokenizer.agent.search import SearchResult
 from quant_strategy_tokenizer.agent.search import search as _search
 from quant_strategy_tokenizer.composition import expand_builtin_recipe, upgrade_verification
+from quant_strategy_tokenizer.custom_runtime_v2 import (
+    ApprovalRequest,
+    ApprovalStore,
+    TokenAuthorizationResult,
+    TokenExecutionResult,
+    TokenIntegrityResult,
+    TokenRuntimeContext,
+    TokenRuntimeService,
+    load_token_pack,
+)
 from quant_strategy_tokenizer.detokenize.explain_emitter import explain_ir as _explain_ir
 from quant_strategy_tokenizer.detokenize.trace_explainer import explain_trace as _explain_trace
 from quant_strategy_tokenizer.execution.fingerprint import compute_all_fingerprints
@@ -22,6 +33,7 @@ from quant_strategy_tokenizer.ir.hashing import compute_hashes
 from quant_strategy_tokenizer.ir.model import StrategyIR
 from quant_strategy_tokenizer.ir.validate import ValidationResult
 from quant_strategy_tokenizer.ir.validate import validate as _validate
+from quant_strategy_tokenizer.ir_v04 import TokenRefV04
 from quant_strategy_tokenizer.mutation import (
     MutationResult,
     diff_strategies,
@@ -69,6 +81,11 @@ from quant_strategy_tokenizer.runtime.signal_extraction import (
 )
 from quant_strategy_tokenizer.runtime.trace import Trace
 from quant_strategy_tokenizer.tokens.registry import get_registry
+
+
+def _token_pack_base_path(pack_path: str | Path) -> Path:
+    path = Path(pack_path)
+    return path.parent if path.is_file() else path
 
 
 def vocabulary(layer: str | None = None) -> list[dict[str, Any]]:
@@ -213,6 +230,112 @@ def verify_package(package_dir: str) -> VerifyResult:
     """Verify a P3a-1 qstpkg package."""
 
     return _verify_package(package_dir)
+
+
+def verify_token_pack(
+    pack_path: str,
+    token_ref: TokenRefV04 | dict[str, Any],
+    profile: str = "research",
+    approval_store: ApprovalStore | None = None,
+) -> dict[str, Any]:
+    """Verify custom-token integrity and authorization without executing code."""
+
+    ref = token_ref if isinstance(token_ref, TokenRefV04) else TokenRefV04.model_validate(token_ref)
+    pack = load_token_pack(pack_path)
+    service = TokenRuntimeService()
+    integrity = service.verify_integrity(
+        pack,
+        ref,
+        context=TokenRuntimeContext(base_path=_token_pack_base_path(pack_path)),
+    )
+    authorization = service.check_authorization(
+        integrity,
+        profile=profile,  # type: ignore[arg-type]
+        approval_store=approval_store,
+    )
+    return {
+        "ok": integrity.ok and authorization.ok,
+        "integrity": integrity.model_dump(mode="json"),
+        "authorization": authorization.model_dump(mode="json"),
+    }
+
+
+def explain_token_risk(integrity: TokenIntegrityResult | dict[str, Any]) -> dict[str, Any]:
+    """Return a compact risk summary for an integrity result."""
+
+    parsed = (
+        integrity
+        if isinstance(integrity, TokenIntegrityResult)
+        else TokenIntegrityResult.model_validate(integrity)
+    )
+    return {
+        "token_ref": parsed.token_ref.model_dump(mode="json"),
+        "risk_level": parsed.risk_level,
+        "diagnostics": [diagnostic.model_dump(mode="json") for diagnostic in parsed.diagnostics],
+    }
+
+
+def request_token_approval(
+    integrity: TokenIntegrityResult | dict[str, Any],
+    *,
+    profile: str,
+    approved_by: str,
+    allow_token: bool,
+    ack_risk: bool,
+) -> ApprovalRequest:
+    """Build an approval request; host/user confirmation must persist it."""
+
+    parsed = (
+        integrity
+        if isinstance(integrity, TokenIntegrityResult)
+        else TokenIntegrityResult.model_validate(integrity)
+    )
+    return ApprovalRequest(
+        token_ref=parsed.token_ref,
+        profile=profile,  # type: ignore[arg-type]
+        approved_by=approved_by,
+        allow_token=allow_token,
+        ack_risk=ack_risk,
+        approved_risk_level=parsed.risk_level,
+        token_spec_hash=parsed.token_spec_hash,
+        token_pack_hash=parsed.token_pack_hash,
+        implementation_ref_hash=parsed.implementation_ref_hash,
+        runtime_environment_hash=parsed.runtime_environment_hash,
+    )
+
+
+def execute_custom_token(
+    pack_path: str,
+    token_ref: TokenRefV04 | dict[str, Any],
+    inputs: dict[str, Any],
+    authorization: TokenAuthorizationResult | dict[str, Any],
+    integrity: TokenIntegrityResult | dict[str, Any],
+    approval_store: ApprovalStore,
+    run_id: str = "agent",
+) -> TokenExecutionResult:
+    """Execute a custom token only from existing approval-backed authorization."""
+
+    ref = token_ref if isinstance(token_ref, TokenRefV04) else TokenRefV04.model_validate(token_ref)
+    parsed_integrity = (
+        integrity
+        if isinstance(integrity, TokenIntegrityResult)
+        else TokenIntegrityResult.model_validate(integrity)
+    )
+    parsed_authorization = (
+        authorization
+        if isinstance(authorization, TokenAuthorizationResult)
+        else TokenAuthorizationResult.model_validate(authorization)
+    )
+    service = TokenRuntimeService()
+    grant = service.issue_execution_grant(parsed_integrity, parsed_authorization, run_id=run_id)
+    return service.execute_custom_token(
+        load_token_pack(pack_path),
+        ref,
+        inputs=inputs,
+        grant=grant,
+        context=TokenRuntimeContext(base_path=_token_pack_base_path(pack_path), run_id=run_id),
+        approval_store=approval_store,
+    )
 
 
 def add_artifact_to_package(

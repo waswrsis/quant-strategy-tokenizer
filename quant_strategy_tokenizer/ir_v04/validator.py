@@ -12,22 +12,28 @@ from quant_strategy_tokenizer.validation_v2 import Diagnostic, ValidationResult
 def validate_ir_v04(ir: StrategyIRV04, *, profile: ProfileName = "research") -> ValidationResult:
     """Return structured validation diagnostics for a qst-ir/0.4 shell.
 
-    WP8d accepts ``core``, ``panel_type``, ``panel_ops``, and
-    ``panel_weights``. Panel operator and weight capabilities must be explicitly
-    paired with ``panel_type``; later recipe capabilities and custom runtime
-    declarations remain gated until their owning work packages.
+    WP9 accepts ``core``, ``panel_type``, ``panel_ops``, ``panel_weights``, and
+    ``custom_token_runtime``. Panel operator and weight capabilities must be
+    explicitly paired with ``panel_type``; recipe declarations remain gated
+    until their owning work package.
     """
 
     diagnostics: list[Diagnostic] = []
     for capability in ir.capabilities:
-        if capability in {"core", "panel_type", "panel_ops", "panel_weights"}:
+        if capability in {
+            "core",
+            "panel_type",
+            "panel_ops",
+            "panel_weights",
+            "custom_token_runtime",
+        }:
             continue
         diagnostics.append(
             Diagnostic(
                 code="capability_not_accepted",
                 severity="error",
                 phase="profile",
-                message=f"Capability {capability!r} is not accepted in the WP8d shell.",
+                message=f"Capability {capability!r} is not accepted in the WP9 shell.",
                 remediation="Remove the capability or wait for its owning work package.",
             )
         )

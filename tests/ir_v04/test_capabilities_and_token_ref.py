@@ -15,7 +15,7 @@ def test_capabilities_default_to_core() -> None:
     assert validate_ir_v04(ir).ok
 
 
-def test_panel_and_custom_runtime_capabilities_fail_in_wp2() -> None:
+def test_panel_capability_fails_but_custom_runtime_is_accepted_after_wp9() -> None:
     ir = StrategyIRV04(
         capabilities=["core", "panel", "custom_token_runtime"],
         strategy=StrategyBodyV04(id="future_caps"),
@@ -25,7 +25,6 @@ def test_panel_and_custom_runtime_capabilities_fail_in_wp2() -> None:
 
     assert not result.ok
     assert [diagnostic.code for diagnostic in result.errors] == [
-        "capability_not_accepted",
         "capability_not_accepted",
     ]
 

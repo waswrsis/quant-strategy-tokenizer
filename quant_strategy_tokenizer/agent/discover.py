@@ -37,6 +37,12 @@ def discover() -> dict[str, object]:
             ],
             "p3": ["lock", "verify", "package", "unpack", "verify_package", "search", "fork"],
             "p4": ["add_artifact_to_package", "verify_package", "execute_to_signals"],
+            "token_system_v2_wp9": [
+                "verify_token_pack",
+                "explain_token_risk",
+                "request_token_approval",
+                "execute_custom_token",
+            ],
         },
         "cli_commands": {
             "p0": ["vocabulary", "validate", "canonicalize", "hash", "compare", "explain", "execute"],
@@ -44,6 +50,13 @@ def discover() -> dict[str, object]:
             "p2": ["tag verify", "recipe expand", "diff", "mutate", "fingerprint", "kernel plan"],
             "p3": ["lock", "verify", "package", "unpack", "search", "fork"],
             "p4": ["pkg add-artifact", "pkg verify-artifacts"],
+            "token_system_v2_wp9": [
+                "token verify",
+                "token approve",
+                "token approvals list",
+                "token approvals revoke",
+                "token execute",
+            ],
         },
         "supported_profiles": ["research", "paper", "pretrade", "production_guarded"],
         "supported_input_kinds": ["yaml", "json"],

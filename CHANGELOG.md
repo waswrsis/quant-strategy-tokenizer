@@ -1,5 +1,14 @@
 # Changelog
 
+## Token System v2 WP9 Custom Token Runtime + PV-D
+
+- Added custom token integrity, authorization, approval, execution grant, and audit models for `qst-ir/0.4`.
+- Added a core service that keeps `verify_integrity` free of imports/execution and requires local approval plus a hash-bound `ExecutionGrant` before `python_entrypoint` execution.
+- Added qstpkg TokenPack verification integration that checks embedded pack metadata/source hashes without executing embedded source.
+- Added the deterministic PV-D `my_pack.kalman_ema` TokenPack, fixtures, expected diagnostics, and trace artifacts.
+- Added `qst token verify`, `qst token approve`, approval listing/revocation, and `qst token execute` as explicit separate operations.
+- Kept sandboxing, WP10 migration, broad v0.4 strategy runtime, portable qstpkg trust, and legacy `qst execute` changes out of scope.
+
 ## Token System v2 WP8e PV-B Panel Reference Strategies
 
 - Added PV-B v0.4 Panel reference strategies for top/bottom market-neutral selection and BTC residual mean reversion.

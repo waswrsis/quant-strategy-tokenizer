@@ -151,7 +151,7 @@ def test_panel_type_capability_validates_and_panel_ops_requires_panel_type() -> 
     valid = validate_ir_v04(_ir_with_node(_panel_node()))
     rejected = {
         capability: validate_ir_v04(_ir_with_node(_panel_node(), capabilities=["core", capability]))
-        for capability in ["panel", "panel_ops", "panel_weights", "panel_recipes", "custom_token_runtime"]
+        for capability in ["panel", "panel_ops", "panel_weights", "panel_recipes"]
     }
 
     assert valid.ok
@@ -162,6 +162,14 @@ def test_panel_type_capability_validates_and_panel_ops_requires_panel_type() -> 
         if capability in {"panel_ops", "panel_weights"}:
             continue
         assert result.errors[0].code == "capability_not_accepted", capability
+
+    custom_runtime = validate_ir_v04(
+        StrategyIRV04(
+            capabilities=["core", "custom_token_runtime"],
+            strategy=StrategyBodyV04(id="custom_runtime_only"),
+        )
+    )
+    assert custom_runtime.ok
 
 
 def test_panel_output_requires_panel_type_capability_and_output_metadata() -> None:

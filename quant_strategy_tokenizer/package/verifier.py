@@ -14,6 +14,11 @@ from quant_strategy_tokenizer.artifacts.backtest_evidence import (
 from quant_strategy_tokenizer.artifacts.base import QSTArtifact
 from quant_strategy_tokenizer.artifacts.execution_report import ExecutionReport
 from quant_strategy_tokenizer.artifacts.portfolio_snapshot import PortfolioSnapshot
+from quant_strategy_tokenizer.custom_runtime_v2 import (
+    TokenRuntimeContext,
+    load_token_pack,
+    verify_integrity,
+)
 from quant_strategy_tokenizer.package.manifest import PackageFile, UnpackedPackage
 from quant_strategy_tokenizer.package.paths import safe_join
 from quant_strategy_tokenizer.package.reader import read_package
@@ -25,6 +30,10 @@ from quant_strategy_tokenizer.qst_lock.verify_result import (
     VerificationLevel,
     VerifyFailure,
     VerifyResult,
+)
+from quant_strategy_tokenizer.tokens_v2 import (
+    TokenPackManifestV2,
+    verify_token_pack_package_section,
 )
 
 
@@ -348,6 +357,54 @@ def _check_fixture_manifest_consistency(package: UnpackedPackage) -> list[Verify
     return failures
 
 
+def _load_embedded_token_packs(package: UnpackedPackage) -> list[tuple[TokenPackManifestV2, Path]]:
+    if package.manifest.token_packs is None:
+        return []
+    packs: list[tuple[TokenPackManifestV2, Path]] = []
+    for entry in package.manifest.token_packs.packs:
+        candidates = [
+            package.root / "deps" / "tokenpacks" / entry.pack_id,
+            package.root / "tokenpacks" / entry.pack_id,
+        ]
+        for candidate in candidates:
+            if candidate.exists():
+                packs.append((load_token_pack(candidate), candidate))
+                break
+    return packs
+
+
+def _check_token_packs(package: UnpackedPackage) -> list[VerifyFailure]:
+    section = package.manifest.token_packs
+    if section is None:
+        return []
+
+    embedded = _load_embedded_token_packs(package)
+    packs = [pack for pack, _ in embedded]
+    result = verify_token_pack_package_section(section, packs)
+    failures = [
+        _failure(
+            diagnostic.code,
+            diagnostic.message,
+            path="manifest.token_packs",
+        )
+        for diagnostic in result.errors
+    ]
+    for pack, pack_path in embedded:
+        context = TokenRuntimeContext(base_path=pack_path)
+        for spec in pack.tokens:
+            integrity = verify_integrity(pack, spec.token_ref, context=context)
+            failures.extend(
+                _failure(
+                    diagnostic.code,
+                    diagnostic.message,
+                    path=f"manifest.token_packs.{pack.pack_id}.{spec.token_id}",
+                )
+                for diagnostic in integrity.diagnostics
+                if diagnostic.severity == "error"
+            )
+    return failures
+
+
 def verify_package(package_dir: str | Path) -> VerifyResult:
     """Verify a qstpkg directory."""
 
@@ -387,6 +444,7 @@ def verify_package(package_dir: str | Path) -> VerifyResult:
 
     failures.extend(_check_fixture_manifest_consistency(package))
     failures.extend(_check_artifacts(package))
+    failures.extend(_check_token_packs(package))
 
     can_verify_lock = package.source_path.exists() and package.canonical_path.exists() and package.lock_path.exists()
     if can_verify_lock:

@@ -18,6 +18,14 @@ from quant_strategy_tokenizer.agent.search import search as search_index
 from quant_strategy_tokenizer.canonical_json import stable_json_bytes
 from quant_strategy_tokenizer.composition import expand_builtin_recipe, upgrade_verification
 from quant_strategy_tokenizer.core.output import jsonable_value
+from quant_strategy_tokenizer.custom_runtime_v2 import (
+    ApprovalRequest,
+    ApprovalStore,
+    TokenRuntimeContext,
+    TokenRuntimeService,
+    approval_record_hash,
+    load_token_pack,
+)
 from quant_strategy_tokenizer.detokenize.explain_emitter import explain_ir as explain_text
 from quant_strategy_tokenizer.detokenize.trace_explainer import explain_trace as explain_trace_text
 from quant_strategy_tokenizer.execution.fingerprint import compute_all_fingerprints
@@ -33,6 +41,7 @@ from quant_strategy_tokenizer.ir.envelope import ProfileLiteral
 from quant_strategy_tokenizer.ir.hashing import compute_hashes
 from quant_strategy_tokenizer.ir.serialize import to_json, to_plain
 from quant_strategy_tokenizer.ir.validate import validate as validate_ir
+from quant_strategy_tokenizer.ir_v04 import TokenRefV04
 from quant_strategy_tokenizer.mutation import diff_strategies, mutate_strategy, parse_mutation_op
 from quant_strategy_tokenizer.mutation.repair import mutation_from_repair_hint
 from quant_strategy_tokenizer.package import (
@@ -78,12 +87,16 @@ kernel_app = typer.Typer(no_args_is_help=True)
 pkg_app = typer.Typer(no_args_is_help=True)
 load_app = typer.Typer(no_args_is_help=True)
 adapter_app = typer.Typer(no_args_is_help=True)
+token_app = typer.Typer(no_args_is_help=True)
+token_approvals_app = typer.Typer(no_args_is_help=True)
 app.add_typer(tag_app, name="tag")
 app.add_typer(recipe_app, name="recipe")
 app.add_typer(kernel_app, name="kernel")
 app.add_typer(pkg_app, name="pkg")
 app.add_typer(load_app, name="load")
 app.add_typer(adapter_app, name="adapter")
+app.add_typer(token_app, name="token")
+token_app.add_typer(token_approvals_app, name="approvals")
 
 P0_TOKEN_TRIPLES: tuple[tuple[str, int, int], ...] = (
     ("data.column", 1, 1),
@@ -119,6 +132,45 @@ def _echo_json(value: Any) -> None:
 
 def _write_canonical_json(path: Path, value: Any) -> None:
     path.write_bytes(stable_json_bytes(jsonable_value(value)))
+
+
+def _parse_token_ref(value: str) -> TokenRefV04:
+    try:
+        token_part, version_part, behavior_part = value.split("/")
+        namespace, name = token_part.split(".", 1)
+        version = int(version_part.removeprefix("v"))
+        behavior_version = int(behavior_part.removeprefix("bv"))
+    except Exception as exc:
+        raise typer.BadParameter(
+            "token ref must be formatted as namespace.name/v1/bv1"
+        ) from exc
+    return TokenRefV04(
+        namespace=namespace,
+        name=name,
+        version=version,
+        behavior_version=behavior_version,
+    )
+
+
+def _approval_store_path(path: Path | None) -> Path:
+    return path or Path(".qst") / "approvals.json"
+
+
+def _load_approval_store(path: Path | None) -> tuple[Path, ApprovalStore]:
+    resolved = _approval_store_path(path)
+    return resolved, ApprovalStore.load(resolved)
+
+
+def _load_inputs(inputs_json: str | None, inputs_file: Path | None) -> dict[str, Any]:
+    if inputs_file is not None:
+        raw = json.loads(inputs_file.read_text(encoding="utf-8-sig"))
+    elif inputs_json is not None:
+        raw = json.loads(inputs_json)
+    else:
+        raw = {}
+    if not isinstance(raw, dict):
+        raise typer.BadParameter("custom token inputs must be a JSON object")
+    return raw
 
 
 def _ensure_market_frame(frame: Frame) -> MarketFrame:
@@ -469,6 +521,171 @@ def pkg_verify_artifacts_cmd(pkg_dir: Path) -> None:
     """Verify qstpkg contents including optional P4 artifacts."""
 
     result = verify_package(pkg_dir)
+    _echo_json(result.model_dump(mode="json", exclude_none=True))
+    if not result.ok:
+        raise typer.Exit(1)
+
+
+@token_app.command("verify")
+def token_verify_cmd(
+    token_ref: str,
+    pack: Annotated[Path, typer.Option("--pack")],
+    profile: Annotated[str, typer.Option("--profile")] = "research",
+    allow_token: Annotated[bool, typer.Option("--allow-token")] = False,
+    ack_risk: Annotated[bool, typer.Option("--ack-risk")] = False,
+    approvals: Annotated[Path | None, typer.Option("--approvals")] = None,
+) -> None:
+    """Verify custom token integrity and authorization without executing code."""
+
+    ref = _parse_token_ref(token_ref)
+    service = TokenRuntimeService()
+    pack_manifest = load_token_pack(pack)
+    _, store = _load_approval_store(approvals)
+    integrity = service.verify_integrity(
+        pack_manifest,
+        ref,
+        context=TokenRuntimeContext(base_path=pack.parent if pack.is_file() else pack),
+    )
+    authorization = service.check_authorization(
+        integrity,
+        profile=profile,  # type: ignore[arg-type]
+        approval_store=store,
+        allow_token=allow_token,
+        ack_risk=ack_risk,
+    )
+    payload = {"ok": integrity.ok and authorization.ok, "integrity": integrity, "authorization": authorization}
+    _echo_json(payload)
+    if not integrity.ok or authorization.status == "denied_by_profile":
+        raise typer.Exit(1)
+
+
+@token_app.command("approve")
+def token_approve_cmd(
+    token_ref: str,
+    pack: Annotated[Path, typer.Option("--pack")],
+    profile: Annotated[str, typer.Option("--profile")],
+    approved_by: Annotated[str, typer.Option("--approved-by")],
+    allow_token: Annotated[bool, typer.Option("--allow-token")] = False,
+    ack_risk: Annotated[bool, typer.Option("--ack-risk")] = False,
+    scope: Annotated[str, typer.Option("--scope")] = "project",
+    approvals: Annotated[Path | None, typer.Option("--approvals")] = None,
+) -> None:
+    """Write a local custom token approval record without executing code."""
+
+    ref = _parse_token_ref(token_ref)
+    service = TokenRuntimeService()
+    pack_manifest = load_token_pack(pack)
+    store_path, store = _load_approval_store(approvals)
+    integrity = service.verify_integrity(
+        pack_manifest,
+        ref,
+        context=TokenRuntimeContext(base_path=pack.parent if pack.is_file() else pack),
+    )
+    if not integrity.ok:
+        _echo_json({"ok": False, "integrity": integrity})
+        raise typer.Exit(1)
+    request = ApprovalRequest(
+        token_ref=ref,
+        profile=profile,  # type: ignore[arg-type]
+        scope=scope,  # type: ignore[arg-type]
+        approved_by=approved_by,
+        allow_token=allow_token,
+        ack_risk=ack_risk,
+        approved_risk_level=integrity.risk_level,
+        token_spec_hash=integrity.token_spec_hash,
+        token_pack_hash=integrity.token_pack_hash,
+        implementation_ref_hash=integrity.implementation_ref_hash,
+        runtime_environment_hash=integrity.runtime_environment_hash,
+    )
+    record, updated = service.approve_token_pack(request, approval_store=store)
+    updated.save(store_path)
+    _echo_json(
+        {
+            "ok": True,
+            "approval_record": record,
+            "approval_record_hash": approval_record_hash(record),
+            "approvals": str(store_path),
+        }
+    )
+
+
+@token_approvals_app.command("list")
+def token_approvals_list_cmd(
+    approvals: Annotated[Path | None, typer.Option("--approvals")] = None,
+) -> None:
+    """List local custom token approvals."""
+
+    store_path, store = _load_approval_store(approvals)
+    _echo_json(
+        {
+            "ok": True,
+            "approvals": str(store_path),
+            "records": [
+                {
+                    **record.model_dump(mode="json"),
+                    "approval_record_hash": approval_record_hash(record),
+                }
+                for record in store.records
+            ],
+        }
+    )
+
+
+@token_approvals_app.command("revoke")
+def token_approvals_revoke_cmd(
+    token_ref: str,
+    profile: Annotated[str | None, typer.Option("--profile")] = None,
+    approvals: Annotated[Path | None, typer.Option("--approvals")] = None,
+) -> None:
+    """Revoke local custom token approvals for a token."""
+
+    ref = _parse_token_ref(token_ref)
+    store_path, store = _load_approval_store(approvals)
+    updated = store.revoke(ref, profile=profile)  # type: ignore[arg-type]
+    updated.save(store_path)
+    _echo_json({"ok": True, "approvals": str(store_path), "records": len(updated.records)})
+
+
+@token_app.command("execute")
+def token_execute_cmd(
+    token_ref: str,
+    pack: Annotated[Path, typer.Option("--pack")],
+    profile: Annotated[str, typer.Option("--profile")] = "research",
+    inputs_json: Annotated[str | None, typer.Option("--inputs-json")] = None,
+    inputs_file: Annotated[Path | None, typer.Option("--inputs-file")] = None,
+    approvals: Annotated[Path | None, typer.Option("--approvals")] = None,
+    run_id: Annotated[str, typer.Option("--run-id")] = "manual",
+) -> None:
+    """Execute an approved custom token python_entrypoint."""
+
+    ref = _parse_token_ref(token_ref)
+    service = TokenRuntimeService()
+    pack_manifest = load_token_pack(pack)
+    _, store = _load_approval_store(approvals)
+    context = TokenRuntimeContext(
+        base_path=pack.parent if pack.is_file() else pack,
+        profile=profile,  # type: ignore[arg-type]
+        run_id=run_id,
+    )
+    integrity = service.verify_integrity(pack_manifest, ref, context=context)
+    authorization = service.check_authorization(
+        integrity,
+        profile=profile,  # type: ignore[arg-type]
+        approval_store=store,
+    )
+    try:
+        grant = service.issue_execution_grant(integrity, authorization, run_id=run_id)
+    except ValueError as exc:
+        _echo_json({"ok": False, "integrity": integrity, "authorization": authorization, "error": str(exc)})
+        raise typer.Exit(1) from None
+    result = service.execute_custom_token(
+        pack_manifest,
+        ref,
+        inputs=_load_inputs(inputs_json, inputs_file),
+        grant=grant,
+        context=context,
+        approval_store=store,
+    )
     _echo_json(result.model_dump(mode="json", exclude_none=True))
     if not result.ok:
         raise typer.Exit(1)

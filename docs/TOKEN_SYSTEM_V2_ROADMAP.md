@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 
-Status: WP0-WP8e accepted under the v1.0.3 standard. WP8e adds PV-B Panel reference strategies and deterministic expected artifacts.
+Status: WP0-WP9 accepted under the v1.0.3 standard. WP9 adds custom token runtime boundaries and PV-D deterministic expected artifacts.
 
 ## Direction
 
@@ -35,7 +35,7 @@ Legacy versions remain loadable and verifiable, but new authoring moves to `qst-
 | WP8c | Panel Operators | accepted |
 | WP8d | Weight Operators | accepted |
 | WP8e | PV-B Panel Reference Strategies | accepted |
-| WP9 | Custom Token Runtime + PV-D | not started |
+| WP9 | Custom Token Runtime + PV-D | accepted |
 | WP10 | Migration Tooling | not started |
 | Final | Token System v2 acceptance | not started |
 
@@ -274,6 +274,18 @@ WP8e completes the PV-B Panel / cross-sectional dogfooding gate without enabling
 - Expected artifacts include empty diagnostics files and hash `payload_without_hash` with no wall-clock timestamp.
 
 WP8e does not enable `panel_recipes`, add Panel recipe TokenSpecs or TokenPacks, add a legacy recipe registry entry, add runtime execution, add adapters, add migration tooling, or add v0.4 CLI authoring.
+
+## WP9 Accepted Scope
+
+WP9 accepts the custom token runtime boundary and PV-D dogfooding gate:
+
+- Integrity verification checks TokenSpec, TokenPack, implementation reference, runtime environment, dependency, and audit metadata without importing or executing custom code.
+- Authorization is separate from integrity and depends on profile policy plus local ApprovalRecord material.
+- Execution requires a short-lived ExecutionGrant bound to token, pack, implementation, runtime, approval, profile, and run id hashes.
+- qstpkg TokenPack verification checks metadata and embedded source hashes but never imports embedded source and never treats packaged approval as portable trust.
+- PV-D accepts the deterministic `my_pack.kalman_ema` custom token reference case with research, pretrade-default, and pretrade-approved artifacts.
+
+WP9 does not add a sandbox, WP10 migration, broad v0.4 strategy runtime, portable qstpkg trust, broker/exchange execution, or production-grade custom token isolation.
 
 ## P-Validate Gates
 
