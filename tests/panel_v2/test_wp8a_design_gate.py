@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 from jsonschema import Draft202012Validator, ValidationError
 
-from quant_strategy_tokenizer.ir_v04 import StrategyBodyV04, StrategyIRV04, validate_ir_v04
+from quant_strategy_tokenizer.ir_v04 import StrategyBodyV04, StrategyIRV04
 from quant_strategy_tokenizer.types_v2 import TypeSpec, parse_type_spec
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -32,7 +32,7 @@ EXPECTED_SCHEMA_HASHES = {
         "sha256:f171e4f4c1a0702835606c1100fc2bf0e93a31a632bb89c00aada8a0329f1e32"
     ),
     "qst_panel_missing_policy_0_4.schema.json": (
-        "sha256:2d32d215dee76458e08c695d14e9e138ad1df2b1cf0da99caead012d2a457481"
+        "sha256:7ce719f73763b0d974d58bdb0d0ca2550c0b74cdbe93dff5d68bdbee23cbcbb6"
     ),
     "qst_panel_group_spec_0_4.schema.json": (
         "sha256:b44d24f02e29cdc73a22becacbe392f761b24c734c0c31e2ea13364131209b4f"
@@ -145,6 +145,16 @@ def test_missing_policy_excludes_sparse_representation_and_nullable_decimal() ->
             {
                 "schema_version": "qst-panel-missing-policy/0.4",
                 "kind": "propagate_missing",
+                "applies_when": "universe_mask_true_value_missing",
+                "nullable_decimal_string": False,
+            },
+        )
+    with pytest.raises(ValidationError):
+        _validate(
+            "qst_panel_missing_policy_0_4.schema.json",
+            {
+                "schema_version": "qst-panel-missing-policy/0.4",
+                "kind": "drop_missing",
                 "applies_when": "universe_mask_true_value_missing",
                 "nullable_decimal_string": True,
             },
@@ -332,10 +342,5 @@ def test_panel_state_nested_shorthand_remains_schema_level_only() -> None:
 
 
 def test_panel_capability_remains_rejected() -> None:
-    ir = StrategyIRV04(capabilities=["core", "panel"], strategy=StrategyBodyV04(id="panel_gate"))
-
-    result = validate_ir_v04(ir)
-
-    assert not result.ok
-    assert [diagnostic.code for diagnostic in result.errors] == ["capability_not_accepted"]
-
+    with pytest.raises(ValueError):
+        StrategyIRV04(capabilities=["core", "panel"], strategy=StrategyBodyV04(id="panel_gate"))

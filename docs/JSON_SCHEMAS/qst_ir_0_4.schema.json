@@ -16,7 +16,6 @@
       "items": {
         "enum": [
           "core",
-          "panel",
           "panel_type",
           "panel_ops",
           "panel_weights",

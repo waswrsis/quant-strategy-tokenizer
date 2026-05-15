@@ -11,6 +11,7 @@ from quant_strategy_tokenizer.state_v2.policy import default_state_policy
 from quant_strategy_tokenizer.tokens_v2 import (
     TokenPackDependency,
     TokenPackManifestV2,
+    TokenRiskSpec,
     TokenSpecV2,
 )
 from quant_strategy_tokenizer.types_v2 import parse_type_spec
@@ -161,7 +162,7 @@ def _state_token_spec(
             nan_policy="propagate",
             inf_policy="reject",
         ),
-        risk={"risk_level": "medium"},
+        risk=TokenRiskSpec(risk_level="medium"),
         tests=[
             {
                 "kind": "reference_helper",

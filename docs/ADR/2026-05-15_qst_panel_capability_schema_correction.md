@@ -22,13 +22,13 @@ That is too coarse for WP8b because `panel` would imply more than the type layer
 
 WP8b applies a schema correction to the `qst-ir/0.4` capability enum:
 
-- keep `panel` as a parseable legacy umbrella capability, but reject it in validation;
+- remove the deprecated umbrella `panel` literal;
 - add `panel_type`;
 - add `panel_ops`;
 - add `panel_weights`;
 - add `panel_recipes`.
 
-Only `panel_type` is accepted by WP8b validation. `panel`, `panel_ops`, `panel_weights`, `panel_recipes`, and `custom_token_runtime` remain rejected until their owning work packages accept them.
+Only `panel_type` is accepted by WP8b validation. `panel_ops`, `panel_weights`, `panel_recipes`, and `custom_token_runtime` remain rejected until their owning work packages accept them. The umbrella `panel` literal is not part of canonical `qst-ir/0.4`.
 
 This correction does not modify:
 
@@ -49,4 +49,3 @@ node.metadata.panel_type_by_output
 ```
 
 and must enter Panel signature hash material through the typed Panel signature helper.
-

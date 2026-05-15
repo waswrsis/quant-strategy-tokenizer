@@ -6,6 +6,7 @@ from quant_strategy_tokenizer.ports_v2 import (
     PortTemporalSpec,
     TemporalRuleResolutionError,
     resolve_temporal_rule,
+    temporal_is_later,
 )
 
 
@@ -73,6 +74,21 @@ def test_param_max_floor_rule_applies_floor() -> None:
     assert resolved.min_history_bars == 5
 
 
+def test_param_max_floor_accepts_signed_param_before_floor() -> None:
+    resolved = resolve_temporal_rule(
+        {
+            "kind": "param_max_floor",
+            "param": "lag",
+            "field": "latency_bars",
+            "floor": 0,
+        },
+        inputs={},
+        params={"lag": -1},
+    )
+
+    assert resolved.latency_bars == 0
+
+
 def test_max_inputs_joins_input_temporal() -> None:
     resolved = resolve_temporal_rule(
         {"kind": "max_inputs", "inputs": ["a", "b"]},
@@ -105,3 +121,12 @@ def test_unresolved_rule_fails_deterministically() -> None:
             inputs={},
             params={},
         )
+
+
+def test_event_time_does_not_satisfy_bar_clock_requirements() -> None:
+    event_time = PortTemporalSpec(available_at="event_time")
+
+    assert temporal_is_later(event_time, "bar_close")
+    assert temporal_is_later(PortTemporalSpec(available_at="bar_close"), "event_time")
+    assert not temporal_is_later(event_time, "event_time")
+    assert not temporal_is_later(event_time, "unknown")

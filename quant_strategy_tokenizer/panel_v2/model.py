@@ -31,7 +31,7 @@ PANEL_TYPE_LAYER_SCHEMA_VERSION: Literal["qst-panel-type-layer/0.4"] = (
     "qst-panel-type-layer/0.4"
 )
 
-MissingPolicyKind = Literal["error_on_missing", "drop_missing", "propagate_missing"]
+MissingPolicyKind = Literal["error_on_missing", "drop_missing"]
 MissingGroupPolicy = Literal["error", "drop", "assign_unknown"]
 PanelLayerKind = Literal["panel", "selection_panel", "weight_panel"]
 GroupSpecKind = Literal["static_mapping", "field_ref"]
@@ -219,4 +219,3 @@ def parse_panel_type_by_output(value: Any) -> dict[str, PanelTypeLayerSpec]:
             spec if isinstance(spec, PanelTypeLayerSpec) else PanelTypeLayerSpec.model_validate(spec)
         )
     return parsed
-

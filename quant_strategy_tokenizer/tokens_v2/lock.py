@@ -225,7 +225,7 @@ def _qualified_name(ref: TokenRefV04) -> str:
 
 
 def _risk_level(spec: TokenSpecV2) -> RiskLevel:
-    value = spec.risk.get("risk_level")
+    value = spec.risk.risk_level
     if value == "low":
         return "low"
     if value == "medium":

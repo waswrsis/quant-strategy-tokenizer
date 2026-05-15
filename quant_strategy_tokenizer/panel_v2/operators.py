@@ -620,6 +620,17 @@ def selection_to_weights(
         elif method == "equal_short":
             rows.extend(_equal_weight_points(timestamp, selected, sign=-1))
         else:
+            both_points = [point for point in selected if point.side == "both"]
+            if both_points:
+                return _diagnostics(
+                    "selection.to_weights",
+                    [
+                        _diagnostic(
+                            "QST_V2_SELECTION_SIDE_BOTH_UNSUPPORTED",
+                            "equal_long_short does not support side='both' in WP8.",
+                        )
+                    ],
+                )
             long_points = [point for point in selected if point.side in {None, "long", "both"}]
             short_points = [point for point in selected if point.side in {"short", "both"}]
             rows.extend(_equal_weight_points(timestamp, long_points, sign=1))

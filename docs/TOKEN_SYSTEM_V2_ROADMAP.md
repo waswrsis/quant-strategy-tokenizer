@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 
-Status: WP0-WP10 accepted under the v1.0.3 standard. WP10 adds legacy-to-v0.4 migration tooling.
+Status: WP0-WP10 accepted under the v1.0.3 standard. Security and semantic cleanup blockers have been fixed before final acceptance.
 
 ## Direction
 
@@ -124,6 +124,7 @@ WP5 adds portable v0.4 token metadata and deterministic registry validation:
 - `TokenPackManifestV2` with PEP 440 versioning, declared namespaces, embedded-source flags, TokenSpec contents, and TokenPack dependencies.
 - Deterministic TokenPack dependency validation for transitive dependencies, missing packs, version mismatches, hash mismatches, and cycles.
 - `TokenRegistryV2` built only from TokenPack manifests, with core namespace protection, duplicate handling, project-local override rules, stable resolution logs, and non-self-trusted attestation diagnostics.
+- `user_local` override is limited to local development inside owned namespaces and is not publishable trust.
 - Typed hash helpers for TokenSpec and TokenPack material.
 - JSON schemas for TokenSpec v2 and TokenPack v2.
 
@@ -160,7 +161,7 @@ WP6a does not add FSM behavior, state recipes, PV-A artifacts, legacy runtime ex
 WP6b adds deterministic closed-set FSM semantics for v0.4 metadata and tests:
 
 - `FSMDefinition` and `FSMTransition` with closed state/event set validation.
-- Failure policies `stay`, `transition_to_unknown`, and `raise`; `transition_to_unknown` requires an explicit closed `unknown_state`.
+- Failure policies `stay`, `transition_to_unknown`, and `raise`; `transition_to_unknown` requires an explicit closed `unknown_state`, and `raise` means emit an error diagnostic rather than throw a Python exception.
 - `state_fsm()` reference semantics with reset-before-event behavior, structured diagnostics, and complete transition traces.
 - `replay_fsm_trace()` for deterministic state sequence replay checks.
 - `qst-tokenpack-state-fsm/0.1.0` with core TokenSpecV2 metadata for `core.state.fsm`.
@@ -202,7 +203,7 @@ WP8a freezes the Panel layer detail design before any Panel behavior is enabled:
 - Draft JSON Schemas cover `qst-panel-representation/0.4`, `qst-panel-universe-mask/0.4`, `qst-panel-missing-policy/0.4`, `qst-panel-group-spec/0.4`, `qst-panel-selection-weight/0.4`, and `qst-panel-temporal-state/0.4`.
 - `sparse_logical` is a Panel representation, not a MissingPolicy.
 - `UniverseMask=false` means out of universe, not missing data.
-- MissingPolicy applies only when `UniverseMask=true` and a value is absent; the default is `error_on_missing`.
+- MissingPolicy applies only when `UniverseMask=true` and a value is absent; the accepted values are `error_on_missing` and `drop_missing`, and the default is `error_on_missing`.
 - `dynamic_mapping` GroupSpec is deferred and rejected by the WP8a schema.
 - `SelectionPanel` and `WeightPanel` remain distinct wire concepts; weight normalization belongs to WP8d.
 - `panel.residualize/v1` is single-factor only: `Panel[float] + TimeSeries[float] -> Panel[float]`.
@@ -218,7 +219,7 @@ WP8b enables Panel type-layer validation without enabling Panel operators:
 
 - `docs/ADR/2026-05-15_qst_panel_capability_schema_correction.md` records the schema correction that adds granular Panel capabilities.
 - `panel_type` is accepted by `validate_ir_v04()`.
-- The old umbrella `panel` capability remains parseable but is rejected.
+- The old umbrella `panel` capability is not part of canonical `qst-ir/0.4`; granular `panel_type`, `panel_ops`, `panel_weights`, and `panel_recipes` are the only Panel capability literals.
 - `panel_ops`, `panel_weights`, `panel_recipes`, and `custom_token_runtime` remain rejected.
 - `quant_strategy_tokenizer.panel_v2` adds models for PanelRepresentation, UniverseMask, PanelMissingPolicy, GroupSpec, SelectionPanelType, WeightPanelType, and PanelTypeLayerSpec.
 - Panel semantic metadata must be output-scoped under `node.metadata.panel_type_by_output`.
@@ -238,6 +239,7 @@ WP8c enables deterministic Panel operator reference semantics without enabling r
 - `panel_weights`, `panel_recipes`, and `custom_token_runtime` remain rejected.
 - `panel.mask`, `panel.rank`, `panel.zscore`, `panel.top_k`, `panel.bottom_k`, `panel.demean`, `panel.group_demean`, `panel.winsorize`, `panel.residualize`, and `selection.to_weights` have deterministic reference helpers.
 - `selection.to_weights` emits raw `WeightPanel` output only; `weight.*` normalization and market-neutral operators remain WP8d scope.
+- `selection.to_weights(equal_long_short)` rejects `side="both"` as unsupported rather than emitting duplicate weight rows.
 - Reference semantics are finite-only, use canonical symbol order, default to `error_on_missing`, use stable symbol-order tie behavior, and keep `UniverseMask=false` distinct from missing data.
 - `panel.zscore` uses `ddof=0` and `zero_variance_policy=output_zero`.
 - `panel.winsorize` uses deterministic nearest-rank quantile bounds.
@@ -281,7 +283,10 @@ WP9 accepts the custom token runtime boundary and PV-D dogfooding gate:
 
 - Integrity verification checks TokenSpec, TokenPack, implementation reference, runtime environment, dependency, and audit metadata without importing or executing custom code.
 - Authorization is separate from integrity and depends on profile policy plus local ApprovalRecord material.
-- Execution requires a short-lived ExecutionGrant bound to token, pack, implementation, runtime, approval, profile, and run id hashes.
+- Executable approvals require both `allow_token=true` and `ack_risk=true`; incomplete persisted approvals are ignored.
+- Execution requires a short-lived ExecutionGrant bound to token, pack, implementation, runtime, approval, profile, expiry, and run id.
+- Custom token execution rejects missing or undeclared extra output ports, non-canonical numeric material, and TokenSpec output contract mismatches.
+- `installed_distribution` implementation evidence uses RECORD hashes when available and installed file bytes otherwise; incomplete RECORD material stays at recorded/replayable environment evidence and never implies bit-exact verification.
 - qstpkg TokenPack verification checks metadata and embedded source hashes but never imports embedded source and never treats packaged approval as portable trust.
 - PV-D accepts the deterministic `my_pack.kalman_ema` custom token reference case with research, pretrade-default, and pretrade-approved artifacts.
 

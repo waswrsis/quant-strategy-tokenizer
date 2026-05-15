@@ -15,18 +15,18 @@ def test_capabilities_default_to_core() -> None:
     assert validate_ir_v04(ir).ok
 
 
-def test_panel_capability_fails_but_custom_runtime_is_accepted_after_wp9() -> None:
-    ir = StrategyIRV04(
-        capabilities=["core", "panel", "custom_token_runtime"],
-        strategy=StrategyBodyV04(id="future_caps"),
+def test_umbrella_panel_capability_is_not_part_of_v04_schema() -> None:
+    with pytest.raises(ValidationError):
+        StrategyIRV04(
+            capabilities=["core", "panel", "custom_token_runtime"],
+            strategy=StrategyBodyV04(id="future_caps"),
+        )
+
+    custom_runtime = StrategyIRV04(
+        capabilities=["core", "custom_token_runtime"],
+        strategy=StrategyBodyV04(id="custom_runtime"),
     )
-
-    result = validate_ir_v04(ir)
-
-    assert not result.ok
-    assert [diagnostic.code for diagnostic in result.errors] == [
-        "capability_not_accepted",
-    ]
+    assert validate_ir_v04(custom_runtime).ok
 
 
 def test_capabilities_require_core_and_are_unique() -> None:

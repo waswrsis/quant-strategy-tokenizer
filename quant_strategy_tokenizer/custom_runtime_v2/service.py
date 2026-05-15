@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -88,6 +89,8 @@ class ApprovalStore(BaseModel):
 
     def find(self, integrity: TokenIntegrityResult, *, profile: ProfileName) -> ApprovalRecord | None:
         for record in self.records:
+            if not record.allow_token or not record.ack_risk:
+                continue
             if record.profile != profile:
                 continue
             if _ref_key(record.token_ref) != _ref_key(integrity.token_ref):
@@ -336,6 +339,8 @@ def approve_token_pack(
 ) -> tuple[ApprovalRecord, ApprovalStore]:
     """Persist a local approval record without executing token code."""
 
+    if not request.allow_token or not request.ack_risk:
+        raise ValueError("Approval requires allow_token=True and ack_risk=True")
     material = request.model_dump(mode="json")
     approval_id = "approval_" + approval_record_hash(
         {
@@ -389,7 +394,13 @@ def execute_custom_token(
         profile=grant.profile,
         approval_store=approval_store,
     )
-    grant_diagnostics = _validate_grant(integrity, authorization, grant)
+    grant_diagnostics = _validate_grant(
+        integrity,
+        authorization,
+        grant,
+        run_id=ctx.run_id,
+        current_time_utc=ctx.current_time_utc,
+    )
     spec = _find_spec(pack, token_ref)
     if spec is None:
         grant_diagnostics.append(_diagnostic("QST_V2_TOKEN_REF_NOT_FOUND", "runtime", "Token not found."))
@@ -469,16 +480,29 @@ def _canonical_output(
             )
         )
         return None
-    for output_name, output_spec in spec.outputs.items():
-        if output_name not in raw_output:
-            diagnostics.append(
-                _diagnostic(
-                    "QST_V2_CUSTOM_TOKEN_OUTPUT_SHAPE_INVALID",
-                    "runtime",
-                    f"Missing output port {output_name!r}.",
-                )
+    declared = set(spec.outputs)
+    actual = set(raw_output)
+    extra = sorted(actual - declared)
+    missing = sorted(declared - actual)
+    if extra:
+        diagnostics.append(
+            _diagnostic(
+                "QST_V2_CUSTOM_TOKEN_OUTPUT_EXTRA_PORT",
+                "runtime",
+                f"Undeclared output ports: {extra}.",
             )
-            continue
+        )
+    for output_name in missing:
+        diagnostics.append(
+            _diagnostic(
+                "QST_V2_CUSTOM_TOKEN_OUTPUT_SHAPE_INVALID",
+                "runtime",
+                f"Missing output port {output_name!r}.",
+            )
+        )
+    if extra or missing:
+        return None
+    for output_name, output_spec in spec.outputs.items():
         _validate_value_for_type(
             raw_output[output_name],
             output_spec.type.kind,
@@ -563,6 +587,9 @@ def _validate_grant(
     integrity: TokenIntegrityResult,
     authorization: TokenAuthorizationResult,
     grant: ExecutionGrant,
+    *,
+    run_id: str,
+    current_time_utc: str | None,
 ) -> list[Diagnostic]:
     diagnostics: list[Diagnostic] = []
     if not integrity.ok:
@@ -591,7 +618,44 @@ def _validate_grant(
         diagnostics.append(
             _diagnostic("QST_V2_EXECUTION_GRANT_TOKEN_MISMATCH", "runtime", "Grant token_ref mismatch.")
         )
+    if grant.issued_for_run_id != run_id:
+        diagnostics.append(
+            _diagnostic(
+                "QST_V2_EXECUTION_GRANT_RUN_ID_MISMATCH",
+                "runtime",
+                "ExecutionGrant run id does not match the current execution context.",
+            )
+        )
+    if grant.expires_at is not None:
+        expires_at = _parse_utc_timestamp(grant.expires_at)
+        current_time = _parse_utc_timestamp(current_time_utc) if current_time_utc is not None else None
+        if expires_at is None or current_time is None:
+            diagnostics.append(
+                _diagnostic(
+                    "QST_V2_EXECUTION_GRANT_EXPIRED",
+                    "runtime",
+                    "ExecutionGrant expiry cannot be verified with the provided timestamp material.",
+                )
+            )
+        elif expires_at <= current_time:
+            diagnostics.append(
+                _diagnostic(
+                    "QST_V2_EXECUTION_GRANT_EXPIRED",
+                    "runtime",
+                    "ExecutionGrant has expired.",
+                )
+            )
     return diagnostics
+
+
+def _parse_utc_timestamp(value: str) -> datetime | None:
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
 
 
 def _find_spec(pack: TokenPackManifestV2, token_ref: TokenRefV04) -> TokenSpecV2 | None:
@@ -615,7 +679,7 @@ def _parse_runtime_ref(spec: TokenSpecV2) -> RuntimeEnvironmentRef | None:
 
 
 def _risk_level(spec: TokenSpecV2) -> str:
-    value = spec.risk.get("risk_level")
+    value = spec.risk.risk_level
     return value if value in {"low", "medium", "high", "unknown"} else "unknown"
 
 

@@ -24,6 +24,7 @@ class TokenRuntimeContext(BaseModel):
     base_path: Path = Path(".")
     profile: ProfileName = "research"
     run_id: str = "manual"
+    current_time_utc: str | None = None
 
 
 class TokenIntegrityResult(BaseModel):

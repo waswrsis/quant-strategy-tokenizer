@@ -51,7 +51,8 @@
       },
       "purity": "pure",
       "risk": {
-        "explanation": [
+        "requires_approval": true,
+        "reasons": [
           "executes local Python source_tree through python_entrypoint"
         ],
         "risk_level": "medium"

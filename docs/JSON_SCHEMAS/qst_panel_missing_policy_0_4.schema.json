@@ -8,7 +8,7 @@
   "properties": {
     "schema_version": { "const": "qst-panel-missing-policy/0.4" },
     "kind": {
-      "enum": ["error_on_missing", "drop_missing", "propagate_missing"],
+      "enum": ["error_on_missing", "drop_missing"],
       "default": "error_on_missing"
     },
     "applies_when": { "const": "universe_mask_true_value_missing" },

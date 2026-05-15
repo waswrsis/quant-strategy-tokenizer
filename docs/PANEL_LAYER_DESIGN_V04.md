@@ -56,11 +56,12 @@ Accepted WP8a policy values:
 
 - `error_on_missing`
 - `drop_missing`
-- `propagate_missing`
 
 The default policy is `error_on_missing`.
 
 WP8a does not introduce `NullableDecimalString`.
+`propagate_missing` is deferred until a future stage defines explicit `None`
+propagation semantics for every panel operator.
 
 ## GroupSpec
 
@@ -148,7 +149,7 @@ The QST runtime canonical JSON depth limit is intentionally not used for these d
 |---|---|
 | `qst_panel_representation_0_4.schema.json` | `sha256:ed2fea8886b9a229b71b86ebaf5b4a717cf14e8e0cf4b23fcaebac192df66588` |
 | `qst_panel_universe_mask_0_4.schema.json` | `sha256:f171e4f4c1a0702835606c1100fc2bf0e93a31a632bb89c00aada8a0329f1e32` |
-| `qst_panel_missing_policy_0_4.schema.json` | `sha256:2d32d215dee76458e08c695d14e9e138ad1df2b1cf0da99caead012d2a457481` |
+| `qst_panel_missing_policy_0_4.schema.json` | `sha256:7ce719f73763b0d974d58bdb0d0ca2550c0b74cdbe93dff5d68bdbee23cbcbb6` |
 | `qst_panel_group_spec_0_4.schema.json` | `sha256:b44d24f02e29cdc73a22becacbe392f761b24c734c0c31e2ea13364131209b4f` |
 | `qst_panel_selection_weight_0_4.schema.json` | `sha256:baff36b907bdf7fafe400bf881866af2b87444d3e3fc78cd14906837edac9155` |
 | `qst_panel_temporal_state_0_4.schema.json` | `sha256:1cedea73f3d006e533aa3586455fb88e6f64924e313b90a914353bfe39566362` |
@@ -161,7 +162,6 @@ WP8a freezes design boundaries for future work:
 - WP8b may implement Panel type-layer behavior only after this gate.
 - WP8c may implement Panel operators.
 - WP8d may implement weight operators.
-- WP8e may implement Panel recipes and PV-B.
+- WP8e may implement PV-B Panel reference strategies; executable Panel recipes remain deferred.
 - WP9 owns custom token runtime.
 - WP10 owns migration tooling.
-

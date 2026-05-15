@@ -37,7 +37,10 @@
           "type": "array",
           "items": {"$ref": "#/$defs/fsm_transition"}
         },
-        "failure_policy": {"enum": ["stay", "transition_to_unknown", "raise"]},
+        "failure_policy": {
+          "enum": ["stay", "transition_to_unknown", "raise"],
+          "description": "`raise` emits an error diagnostic in WP6b reference semantics; it does not raise a Python exception."
+        },
         "unknown_state": {"type": "string"},
         "metadata": {"type": "object"}
       }
@@ -86,7 +89,10 @@
         "transition_found": {"type": "boolean"},
         "failure_policy_applied": {
           "oneOf": [
-            {"enum": ["stay", "transition_to_unknown", "raise"]},
+            {
+              "enum": ["stay", "transition_to_unknown", "raise"],
+              "description": "`raise` records an error diagnostic rather than throwing."
+            },
             {"type": "null"}
           ]
         },

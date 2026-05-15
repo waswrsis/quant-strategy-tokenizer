@@ -1,6 +1,6 @@
 {
   "artifact_version": "qst-v04-custom-token-validation-trace/0.1",
-  "audit_chain_hash": "sha256:e8fcaa3d784204109a8a5883aab650bd967d8f5a14328a164370c63801d3e1b9",
+  "audit_chain_hash": "sha256:9630b854965d3b40cec251240962a4a4d15448b95725be02ab1d6e32381b32c9",
   "audit_records": [
     {
       "action": "execute",
@@ -8,8 +8,8 @@
       "hashes": {
         "implementation_ref_hash": "sha256:d3ed488e2560763c7f7c02bf8bcaa4ad46e2592436fb63cef815cac3aa09e29f",
         "runtime_environment_hash": "sha256:947077c621cec3e34124fb6175276f3fe7f574619e9e803267121785b1615dcd",
-        "token_pack_hash": "sha256:74ea80cd66c58c1e21cebd6fd166076815bfa7332488a39026281b0be91368e3",
-        "token_spec_hash": "sha256:6dd62a0d49c159b7de0298fe08aee7d95f2d41d2253b12f03bc9cc9e1b15bca9"
+        "token_pack_hash": "sha256:f561294104ed65fb3628f96d4427a8354f5a1540b1fe4e25b460bf46d4698fe4",
+        "token_spec_hash": "sha256:f2e6fccb30591d4222863bf9c355cd2d2dbed17eb5057e38b46fb29595359efb"
       },
       "outcome": "ok",
       "profile": "research",
@@ -24,14 +24,14 @@
     }
   ],
   "authorization": {
-    "approval_record_hash": "sha256:30dd1e5774c048121216b767420b28b054b4184f3f1f64d01862b2f69daa70d4",
+    "approval_record_hash": "sha256:c6ed46b5cc52504aade89376557ceb6b2b6d8c9463cdb6a05454f843f61bbd84",
     "diagnostics": [],
     "ok": true,
     "profile": "research",
     "status": "allowed"
   },
   "case": "custom_token_kalman",
-  "expected_artifact_hash": "sha256:70b5afd85f76532356a364e88958b4e3d4c302349b1391c14cc0b29ec1e2aa3b",
+  "expected_artifact_hash": "sha256:0d305ba51aa410fb7a851a6d11cf70883c11f32a5a119c5d62ebb2049951ee33",
   "integrity": {
     "audit_chain_hash": "sha256:fa56621388b85e5b84ff45330302efd3faadf5ce95bcd4c037a4ef9342abaf0a",
     "diagnostics": [
@@ -60,14 +60,14 @@
     "ok": true,
     "risk_level": "medium",
     "runtime_environment_hash": "sha256:947077c621cec3e34124fb6175276f3fe7f574619e9e803267121785b1615dcd",
-    "token_pack_hash": "sha256:74ea80cd66c58c1e21cebd6fd166076815bfa7332488a39026281b0be91368e3",
+    "token_pack_hash": "sha256:f561294104ed65fb3628f96d4427a8354f5a1540b1fe4e25b460bf46d4698fe4",
     "token_ref": {
       "behavior_version": 1,
       "name": "kalman_ema",
       "namespace": "my_pack",
       "version": 1
     },
-    "token_spec_hash": "sha256:6dd62a0d49c159b7de0298fe08aee7d95f2d41d2253b12f03bc9cc9e1b15bca9"
+    "token_spec_hash": "sha256:f2e6fccb30591d4222863bf9c355cd2d2dbed17eb5057e38b46fb29595359efb"
   },
   "output": {
     "filtered": [

@@ -688,7 +688,11 @@ def token_approve_cmd(
         implementation_ref_hash=integrity.implementation_ref_hash,
         runtime_environment_hash=integrity.runtime_environment_hash,
     )
-    record, updated = service.approve_token_pack(request, approval_store=store)
+    try:
+        record, updated = service.approve_token_pack(request, approval_store=store)
+    except ValueError as exc:
+        _echo_json({"ok": False, "error": str(exc)})
+        raise typer.Exit(1) from None
     updated.save(store_path)
     _echo_json(
         {

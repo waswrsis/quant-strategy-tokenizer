@@ -7,7 +7,7 @@ from typing import Literal
 from quant_strategy_tokenizer.ir_v04 import TokenRefV04
 from quant_strategy_tokenizer.numeric_v2 import NumericPolicy
 from quant_strategy_tokenizer.ports_v2 import InputSpec, OutputSpec
-from quant_strategy_tokenizer.tokens_v2 import TokenPackManifestV2, TokenSpecV2
+from quant_strategy_tokenizer.tokens_v2 import TokenPackManifestV2, TokenRiskSpec, TokenSpecV2
 from quant_strategy_tokenizer.types_v2 import parse_type_spec
 
 DECISION_ALGEBRA_PACK_ID = "qst-tokenpack-decision-algebra"
@@ -64,7 +64,7 @@ def _decision_token_spec(name: str, category: DecisionAlgebraCategory) -> TokenS
             nan_policy="reject",
             inf_policy="reject",
         ),
-        risk={"risk_level": "low"},
+        risk=TokenRiskSpec(risk_level="low"),
         tests=[
             {
                 "kind": "reference_helper",

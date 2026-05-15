@@ -33,6 +33,31 @@ TokenPurityV2 = Literal[
 RiskLevel = Literal["low", "medium", "high", "unknown"]
 
 
+class TokenRiskSpec(BaseModel):
+    """Structured risk metadata for v0.4 token specs."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    risk_level: RiskLevel = "unknown"
+    reasons: tuple[str, ...] = ()
+    requires_approval: bool = True
+
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_legacy_shape(cls, value: Any) -> Any:
+        if isinstance(value, dict) and "explanation" in value and "reasons" not in value:
+            coerced = dict(value)
+            explanation = coerced.pop("explanation")
+            coerced["reasons"] = explanation
+            return coerced
+        return value
+
+    @field_validator("reasons", mode="after")
+    @classmethod
+    def _sort_reasons(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        return tuple(sorted(dict.fromkeys(value)))
+
+
 class TokenSpecV2(BaseModel):
     """Serializable v0.4 token specification.
 
@@ -58,7 +83,7 @@ class TokenSpecV2(BaseModel):
     implementation_ref: dict[str, Any] | None = None
     runtime_environment_ref: dict[str, Any] | None = None
     lifecycle: TokenLifecycleStatus = Field(default_factory=TokenLifecycleStatus)
-    risk: dict[str, Any] = Field(default_factory=dict)
+    risk: TokenRiskSpec = Field(default_factory=TokenRiskSpec)
     tests: list[dict[str, Any]] = Field(default_factory=list)
     dependencies: list[TokenRefV04] = Field(default_factory=list)
 
@@ -67,7 +92,6 @@ class TokenSpecV2(BaseModel):
         "state",
         "implementation_ref",
         "runtime_environment_ref",
-        "risk",
         mode="after",
     )
     @classmethod

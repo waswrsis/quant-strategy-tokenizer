@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import pytest
+from pydantic import ValidationError
+
 from quant_strategy_tokenizer.hash_v2 import (
     signature_hash_for_panel_ports_v2,
     signature_hash_for_ports_v2,
@@ -85,7 +88,8 @@ def test_panel_ops_capability_is_explicit_and_future_capabilities_stay_rejected(
 
     no_type = validate_ir_v04(_ir(_panel_operator_node(), ["core", "panel_ops"]))
     no_ops = validate_ir_v04(_ir(_panel_operator_node(), ["core", "panel_type"]))
-    umbrella = validate_ir_v04(_ir(_panel_operator_node(), ["core", "panel"]))
+    with pytest.raises(ValidationError):
+        _ir(_panel_operator_node(), ["core", "panel"])
     weights = validate_ir_v04(
         _ir(_panel_operator_node("weight.equal"), ["core", "panel_type", "panel_ops"])
     )
@@ -95,7 +99,6 @@ def test_panel_ops_capability_is_explicit_and_future_capabilities_stay_rejected(
         diagnostic.code for diagnostic in no_type.errors
     }
     assert "QST_V2_CAPABILITY_PANEL_OPS_REQUIRED" in {diagnostic.code for diagnostic in no_ops.errors}
-    assert umbrella.errors[0].code == "capability_not_accepted"
     assert "QST_V2_WEIGHT_OPERATOR_DEFERRED" in {
         diagnostic.code for diagnostic in weights.errors
     }
@@ -244,6 +247,20 @@ def test_selection_to_weights_outputs_raw_equal_weights() -> None:
         ("BTC/USDT", "0.5"),
         ("ETH/USDT", "-1"),
         ("SOL/USDT", "0.5"),
+    ]
+
+
+def test_equal_long_short_rejects_side_both() -> None:
+    selection = SelectionPanelValue(
+        selection_kind="long_short",
+        rows=(SelectionPoint(timestamp="t1", symbol="BTC/USDT", selected=True, side="both"),),
+    )
+
+    result = selection_to_weights(selection, method="equal_long_short")
+
+    assert result.weights is None
+    assert [diagnostic.code for diagnostic in result.diagnostics.diagnostics] == [
+        "QST_V2_SELECTION_SIDE_BOTH_UNSUPPORTED"
     ]
 
 

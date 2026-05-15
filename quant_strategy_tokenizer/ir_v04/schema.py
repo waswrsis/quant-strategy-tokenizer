@@ -18,7 +18,6 @@ CANONICAL_VERSION_V04: Literal["qst-canonical/0.4"] = "qst-canonical/0.4"
 IR_SCHEMA_VERSION_V04: Literal["qst-ir-schema/0.4"] = "qst-ir-schema/0.4"
 CapabilityV04 = Literal[
     "core",
-    "panel",
     "panel_type",
     "panel_ops",
     "panel_weights",

@@ -24,6 +24,8 @@
     "token_ref",
     "profile",
     "approved_by",
+    "allow_token",
+    "ack_risk",
     "token_spec_hash",
     "token_pack_hash",
     "implementation_ref_hash",

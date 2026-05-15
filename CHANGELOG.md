@@ -1,5 +1,13 @@
 # Changelog
 
+## Token System v2 Security + Semantic Cleanup
+
+- Hardened WP9 custom-token approval so executable approvals require both `allow_token=true` and `ack_risk=true`, and persisted incomplete approvals are ignored defensively.
+- Enforced `ExecutionGrant` expiry and run-id binding, and rejected undeclared extra custom-token output ports.
+- Strengthened `installed_distribution` implementation hashing to use RECORD hashes or installed file bytes, with stable incomplete-RECORD diagnostics.
+- Removed the deprecated umbrella `panel` capability from `qst-ir/0.4`, deferred `propagate_missing`, and rejected unsupported `side="both"` long/short weight conversion.
+- Tightened v0.4 temporal semantics for `event_time` and signed `param_max_floor`, and made TokenSpec risk metadata structured through `TokenRiskSpec`.
+
 ## Token System v2 WP10 Migration Tooling
 
 - Added `qst migrate-ir` and `qst migrate-package` for legacy `qst-ir/0.3` / `0.3.1` to `qst-ir/0.4` migration snapshots.

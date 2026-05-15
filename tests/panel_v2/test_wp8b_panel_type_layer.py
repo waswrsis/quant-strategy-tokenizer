@@ -99,7 +99,8 @@ def test_schema_correction_adr_and_ir_schema_reserve_granular_capabilities() -> 
     capabilities = set(schema["properties"]["capabilities"]["items"]["enum"])
 
     assert ADR.exists()
-    assert {"panel", "panel_type", "panel_ops", "panel_weights", "panel_recipes"} <= capabilities
+    assert {"panel_type", "panel_ops", "panel_weights", "panel_recipes"} <= capabilities
+    assert "panel" not in capabilities
 
 
 def test_panel_type_models_validate_wp8a_semantics() -> None:
@@ -151,10 +152,12 @@ def test_panel_type_capability_validates_and_panel_ops_requires_panel_type() -> 
     valid = validate_ir_v04(_ir_with_node(_panel_node()))
     rejected = {
         capability: validate_ir_v04(_ir_with_node(_panel_node(), capabilities=["core", capability]))
-        for capability in ["panel", "panel_ops", "panel_weights", "panel_recipes"]
+        for capability in ["panel_ops", "panel_weights", "panel_recipes"]
     }
 
     assert valid.ok
+    with pytest.raises(ValidationError):
+        _ir_with_node(_panel_node(), capabilities=["core", "panel"])
     assert rejected["panel_ops"].errors[0].code == "QST_V2_CAPABILITY_PANEL_OPS_REQUIRES_PANEL_TYPE"
     assert rejected["panel_weights"].errors[0].code == "QST_V2_CAPABILITY_PANEL_WEIGHTS_REQUIRES_PANEL_TYPE"
     for capability, result in rejected.items():

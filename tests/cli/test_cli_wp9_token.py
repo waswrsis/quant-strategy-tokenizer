@@ -37,6 +37,25 @@ def test_cli_token_verify_approve_execute_are_separate(tmp_path: Path) -> None:
     assert verify_payload["integrity"]["ok"] is True
     assert verify_payload["authorization"]["status"] == "requires_approval"
 
+    unacknowledged = runner.invoke(
+        app,
+        [
+            "token",
+            "approve",
+            TOKEN_REF,
+            "--pack",
+            str(PACK),
+            "--profile",
+            "pretrade",
+            "--approved-by",
+            "unit",
+            "--approvals",
+            str(approvals),
+        ],
+    )
+    assert unacknowledged.exit_code == 1
+    assert "allow_token=True and ack_risk=True" in unacknowledged.output
+
     approved = runner.invoke(
         app,
         [

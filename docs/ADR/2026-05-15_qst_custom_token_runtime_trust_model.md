@@ -35,7 +35,7 @@ Custom tokens must declare:
 - `source_tree`: deterministic source tree hash
 - `wheel`: wheel file SHA-256
 - `sdist`: source distribution SHA-256
-- `installed_distribution`: installed distribution metadata and RECORD hashes
+- `installed_distribution`: installed distribution metadata plus RECORD hashes when present, falling back to installed file bytes when RECORD omits a file hash
 
 Python bytecode is not part of the hash material.
 
@@ -65,7 +65,7 @@ Registry source order for v2 is:
 2. installed token packs
 3. core registry
 
-Namespace collision is rejected. User or community token packs cannot shadow the core namespace.
+Core namespace collision is rejected. Non-core duplicate token refs with the same TokenSpec hash are deduplicated; non-core duplicate token refs with different hashes are rejected except for `user_local` project overrides inside namespaces owned by that project. `user_local` override is a local development convenience and not portable trust for publishable qstpkg artifacts.
 
 ## Verify Behavior
 
@@ -75,8 +75,10 @@ Verification outcomes:
 - Token pack is embedded in qstpkg and attestation is acceptable for the requested profile: PASS or warning depending on profile policy.
 - Token pack is missing: FAIL.
 - Token pack hash or implementation reference hash mismatches: FAIL.
-- Token risk exceeds the requested profile and no explicit override is supplied: FAIL.
-- Explicit override with acknowledged risk may pass only when the profile policy permits it and an audit record is written.
+- Token risk exceeds the requested profile and no local approval is available: authorization requires approval or is denied by profile, while integrity may still pass.
+- Explicit override with acknowledged risk may pass only when the profile policy permits it, `allow_token=true`, `ack_risk=true`, and an audit record is written.
+
+`verify_integrity` never imports, loads entry points from, inspects, or executes the custom distribution. `installed_distribution` evidence records environment identity; incomplete RECORD material may support `environment_recorded` evidence but does not imply bit-exact replayability.
 
 ## Audit Location
 

@@ -49,7 +49,7 @@ def resolve_temporal_rule(
             return _with_field(PortTemporalSpec(), parsed.field, value)
         case "param_max_floor":
             field = _require_int_field(parsed.field, parsed.kind)
-            value = _coerce_int(_get_param(params, parsed.param), field_name=parsed.param)
+            value = _coerce_int(_get_param(params, parsed.param), field_name=parsed.param, allow_negative=True)
             if parsed.floor is None:
                 raise TemporalRuleResolutionError("param_max_floor requires floor")
             return _with_field(PortTemporalSpec(), field, max(value, parsed.floor))
@@ -82,8 +82,10 @@ def resolve_temporal_rule(
 def temporal_is_later(left: PortTemporalSpec, max_available_at: str) -> bool:
     """Return true when ``left`` is later than the allowed availability."""
 
-    if left.available_at == "event_time" or max_available_at == "event_time":
-        return False
+    if left.available_at == "event_time":
+        return max_available_at not in {"event_time", "unknown"}
+    if max_available_at == "event_time":
+        return True
     left_order = _AVAILABLE_AT_ORDER[left.available_at]
     max_order = _AVAILABLE_AT_ORDER[max_available_at]
     return left_order > max_order
@@ -107,10 +109,10 @@ def _get_param(params: Mapping[str, Any], name: str | None) -> Any:
         raise TemporalRuleResolutionError(f"Unknown temporal param: {name}") from exc
 
 
-def _coerce_int(value: Any, *, field_name: str | None) -> int:
+def _coerce_int(value: Any, *, field_name: str | None, allow_negative: bool = False) -> int:
     if isinstance(value, bool) or not isinstance(value, int):
         raise TemporalRuleResolutionError(f"Temporal param {field_name!r} must be an integer")
-    if value < 0:
+    if value < 0 and not allow_negative:
         raise TemporalRuleResolutionError(f"Temporal param {field_name!r} must be non-negative")
     return value
 

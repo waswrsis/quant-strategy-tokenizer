@@ -44,7 +44,7 @@
     "implementation_ref": {"oneOf": [{"type": "object"}, {"type": "null"}]},
     "runtime_environment_ref": {"oneOf": [{"type": "object"}, {"type": "null"}]},
     "lifecycle": {"$ref": "#/$defs/lifecycle"},
-    "risk": {"type": "object"},
+    "risk": {"$ref": "#/$defs/risk"},
     "tests": {"type": "array", "items": {"type": "object"}},
     "dependencies": {"type": "array", "items": {"$ref": "#/$defs/token_ref"}}
   },
@@ -64,6 +64,16 @@
       "enum": ["core", "verified_pack", "community_pack", "user_local", "experimental", "unsafe"]
     },
     "attestation_kind": {"enum": ["none", "local_tests_passed", "qst_verified", "signed_pack"]},
+    "risk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["risk_level", "reasons", "requires_approval"],
+      "properties": {
+        "risk_level": {"enum": ["low", "medium", "high", "unknown"]},
+        "reasons": {"type": "array", "items": {"type": "string"}},
+        "requires_approval": {"type": "boolean"}
+      }
+    },
     "lifecycle": {
       "type": "object",
       "additionalProperties": false,

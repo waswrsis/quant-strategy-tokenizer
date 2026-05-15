@@ -17,7 +17,7 @@ from quant_strategy_tokenizer.panel_v2.operators import (
     WeightOperatorName,
 )
 from quant_strategy_tokenizer.ports_v2 import InputSpec, OutputSpec
-from quant_strategy_tokenizer.tokens_v2 import TokenPackManifestV2, TokenSpecV2
+from quant_strategy_tokenizer.tokens_v2 import TokenPackManifestV2, TokenRiskSpec, TokenSpecV2
 from quant_strategy_tokenizer.types_v2 import parse_type_spec
 
 PanelOperatorCategory = Literal["panel_operator", "selection_operator"]
@@ -71,7 +71,7 @@ def _panel_operator_spec(name: PanelOperatorName) -> TokenSpecV2:
             "reference_semantics": "deterministic",
         },
         numeric_policy=_numeric_policy_for(name),
-        risk={"risk_level": "medium"},
+        risk=TokenRiskSpec(risk_level="medium"),
         tests=[
             {
                 "kind": "reference_helper",
@@ -110,7 +110,7 @@ def _weight_operator_spec(name: WeightOperatorName) -> TokenSpecV2:
             nan_policy="reject",
             inf_policy="reject",
         ),
-        risk={"risk_level": "medium"},
+        risk=TokenRiskSpec(risk_level="medium"),
         tests=[
             {
                 "kind": "reference_helper",
@@ -149,7 +149,7 @@ def _outputs_for(name: PanelOperatorName) -> dict[str, OutputSpec]:
 def _params_schema(name: PanelOperatorName) -> dict[str, object]:
     common_missing = {
         "missing_policy": {
-            "enum": ["error_on_missing", "drop_missing", "propagate_missing"],
+            "enum": ["error_on_missing", "drop_missing"],
             "default": "error_on_missing",
         }
     }
@@ -250,7 +250,7 @@ def _params_schema(name: PanelOperatorName) -> dict[str, object]:
 def _weight_params_schema(name: WeightOperatorName) -> dict[str, object]:
     common = {
         "missing_policy": {
-            "enum": ["error_on_missing", "drop_missing", "propagate_missing"],
+            "enum": ["error_on_missing", "drop_missing"],
             "default": "error_on_missing",
         }
     }

@@ -6,7 +6,7 @@ from quant_strategy_tokenizer.hash_v2 import token_spec_hash_for_spec_v2
 from quant_strategy_tokenizer.ir_v04 import TokenRefV04
 from quant_strategy_tokenizer.numeric_v2 import NumericPolicy, semantic_float64_policy
 from quant_strategy_tokenizer.token_evolution_v2 import TokenLifecycleStatus
-from quant_strategy_tokenizer.tokens_v2 import TOKEN_SPEC_SCHEMA_VERSION, TokenSpecV2
+from quant_strategy_tokenizer.tokens_v2 import TOKEN_SPEC_SCHEMA_VERSION, TokenRiskSpec, TokenSpecV2
 
 
 def make_spec(
@@ -51,6 +51,7 @@ def test_token_spec_v2_validates_required_fields() -> None:
     assert spec.token_ref.namespace == "demo"
     assert spec.inputs["x"].type.kind == "TimeSeries"
     assert spec.outputs["y"].type.kind == "TimeSeries"
+    assert spec.risk.risk_level == "unknown"
 
 
 def test_token_spec_rejects_inconsistent_token_ref() -> None:
@@ -114,3 +115,13 @@ def test_attestation_is_structural_claim_only() -> None:
     spec = make_spec(attestation_kind="qst_verified")
 
     assert spec.attestation_kind == "qst_verified"
+
+
+def test_token_risk_spec_is_structured_and_hash_sensitive() -> None:
+    low = make_spec(risk={"risk_level": "low", "reasons": ["b", "a", "a"], "requires_approval": False})
+    high = make_spec(risk={"risk_level": "high", "reasons": ["a", "b"], "requires_approval": True})
+    legacy_shape = make_spec(risk={"risk_level": "medium", "explanation": ["executes local code"]})
+
+    assert low.risk == TokenRiskSpec(risk_level="low", reasons=("a", "b"), requires_approval=False)
+    assert legacy_shape.risk.reasons == ("executes local code",)
+    assert token_spec_hash_for_spec_v2(low) != token_spec_hash_for_spec_v2(high)

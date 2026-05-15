@@ -30,6 +30,8 @@ from quant_strategy_tokenizer.tokens_v2.spec import (
     TOKEN_SPEC_SCHEMA_VERSION,
     AttestationKind,
     OriginTier,
+    RiskLevel,
+    TokenRiskSpec,
     TokenSpecV2,
 )
 
@@ -39,6 +41,7 @@ __all__ = [
     "AttestationKind",
     "OriginTier",
     "RegistryTokenRecord",
+    "RiskLevel",
     "TokenLockEntryV04",
     "TokenLockSnapshotV04",
     "TokenPackDependency",
@@ -48,6 +51,7 @@ __all__ = [
     "TokenPackPackageEntryV04",
     "TokenPacksPackageSectionV04",
     "TokenRegistryV2",
+    "TokenRiskSpec",
     "TokenSpecV2",
     "token_lock_entry_from_spec",
     "token_pack_lock_dependency_from_pack",

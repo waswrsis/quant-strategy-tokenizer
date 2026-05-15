@@ -155,13 +155,47 @@ def resolve_implementation_hash(ref: ImplementationRef, *, base_path: Path) -> t
         files = distribution.files or ()
         if not files:
             return implementation_ref_hash_for_ref(ref), "QST_V2_DISTRIBUTION_RECORD_INCOMPLETE"
+        incomplete_record = False
+        file_entries: list[dict[str, Any]] = []
+        for file in sorted(files, key=str):
+            entry: dict[str, Any] = {"path": str(file)}
+            size = getattr(file, "size", None)
+            if size is not None:
+                entry["size"] = size
+            record_hash = getattr(file, "hash", None)
+            if record_hash is not None:
+                mode = getattr(record_hash, "mode", None)
+                value = getattr(record_hash, "value", None)
+                entry["record_hash"] = {
+                    "mode": str(mode) if mode is not None else "unknown",
+                    "value": str(value) if value is not None else str(record_hash),
+                }
+            else:
+                incomplete_record = True
+                try:
+                    installed_path = Path(str(distribution.locate_file(file)))
+                    entry["sha256"] = hashlib.sha256(installed_path.read_bytes()).hexdigest()
+                except OSError:
+                    return (
+                        implementation_ref_hash_v2(
+                            {
+                                "kind": ref.kind,
+                                "distribution": ref.distribution,
+                                "version": distribution.version,
+                                "record_incomplete": True,
+                            }
+                        ),
+                        "QST_V2_DISTRIBUTION_RECORD_INCOMPLETE",
+                    )
+            file_entries.append(entry)
         material = {
             "kind": ref.kind,
             "distribution": ref.distribution,
             "version": distribution.version,
-            "files": sorted(str(file) for file in files),
+            "files": file_entries,
         }
-        return implementation_ref_hash_v2(material), None
+        diagnostic = "QST_V2_DISTRIBUTION_RECORD_INCOMPLETE" if incomplete_record else None
+        return implementation_ref_hash_v2(material), diagnostic
     raise AssertionError(f"Unhandled implementation kind: {ref.kind}")
 
 
