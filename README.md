@@ -1,6 +1,6 @@
 # Quant Strategy Tokenizer
 
-Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, P3, and P4-core construction stages. Token System v2 WP0-WP8b are accepted under the v1.0.3 construction standard.
+Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, P3, and P4-core construction stages. Token System v2 WP0-WP8c are accepted under the v1.0.3 construction standard.
 
 The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, implements P2a-0/P2a-1 provenance metadata, P2a-2 deterministic recipe generation, P2a-3 composition validation, P2b mutation, P2c-core execution-plan CSE, an opt-in P2c-extended kernel substitution spike, the P3a-0 deterministic lock hard gate, the P3a-1 directory package format, P3b-0 registry search, P3b-1 fork lineage, and P4-core artifacts, frames, qstpkg artifact extension, ports, signal extraction, mock adapters, and P4b CLI. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, a production kernel framework, P4c real adapter repositories, P4d semantic detokenize, P4+ full-text package search, or numerical equivalence verification.
 
@@ -31,6 +31,7 @@ The implemented loop covers:
 - Token System v2 Decision Algebra reference semantics and TokenPack metadata
 - Token System v2 Panel detail design gate schemas and design record
 - Token System v2 Panel type-layer validation with `panel_type` capability
+- Token System v2 Panel operator reference semantics and `panel_ops` TokenPack metadata
 
 ## Project Status
 
@@ -73,7 +74,7 @@ The implemented loop covers:
 | Token System v2 WP7 Decision Algebra | accepted under v1.0.3 |
 | Token System v2 WP8a Panel Detail Design Gate | accepted under v1.0.3 |
 | Token System v2 WP8b Panel Type Layer | accepted under v1.0.3 |
-| Token System v2 WP8c Panel Operators | not started |
+| Token System v2 WP8c Panel Operators | accepted under v1.0.3 |
 | Token System v2 WP8d Weight Operators | not started |
 | Token System v2 WP8e Panel Recipes + PV-B | not started |
 

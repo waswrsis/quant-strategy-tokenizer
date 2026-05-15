@@ -1,5 +1,13 @@
 # Changelog
 
+## Token System v2 WP8c Panel Operators
+
+- Added deterministic Panel operator reference helpers for mask, rank, zscore, top/bottom-k, demean, group-demean, winsorize, single-factor residualize, and selection-to-raw-weight conversion.
+- Accepted `panel_ops` only when `panel_type` is also explicitly declared; kept the umbrella `panel`, `panel_weights`, `panel_recipes`, `custom_token_runtime`, and `weight.*` operators rejected.
+- Added `qst-tokenpack-panel-ops/0.1.0` with core TokenSpecV2 metadata for WP8c Panel and selection operators.
+- Fixed WP8c numeric semantics for finite-only values, canonical symbol order, stable tie behavior, zscore zero-variance handling, nearest-rank winsorization, and raw WeightPanel output.
+- Kept Panel recipes, weight normalization, market-neutral constraints, runtime execution, migration tooling, adapters, and v0.4 CLI authoring out of scope.
+
 ## Token System v2 WP8b Panel Type Layer
 
 - Added a schema correction ADR for granular Panel capabilities and accepted `panel_type` while keeping `panel`, `panel_ops`, `panel_weights`, and `panel_recipes` rejected.

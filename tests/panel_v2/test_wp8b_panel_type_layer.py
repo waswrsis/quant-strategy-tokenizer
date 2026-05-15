@@ -147,7 +147,7 @@ def test_panel_type_models_reject_dynamic_group_and_bad_missing_shapes() -> None
         PanelMissingPolicy(kind="error_on_missing", nullable_decimal_string=True)
 
 
-def test_panel_type_capability_validates_but_later_panel_capabilities_reject() -> None:
+def test_panel_type_capability_validates_and_panel_ops_requires_panel_type() -> None:
     valid = validate_ir_v04(_ir_with_node(_panel_node()))
     rejected = {
         capability: validate_ir_v04(_ir_with_node(_panel_node(), capabilities=["core", capability]))
@@ -155,8 +155,11 @@ def test_panel_type_capability_validates_but_later_panel_capabilities_reject() -
     }
 
     assert valid.ok
+    assert rejected["panel_ops"].errors[0].code == "QST_V2_CAPABILITY_PANEL_OPS_REQUIRES_PANEL_TYPE"
     for capability, result in rejected.items():
         assert not result.ok
+        if capability == "panel_ops":
+            continue
         assert result.errors[0].code == "capability_not_accepted", capability
 
 
@@ -221,7 +224,7 @@ def test_panel_type_metadata_must_match_outputs_and_panel_outputs() -> None:
     }
 
 
-def test_panel_operator_and_state_autobroadcast_remain_rejected() -> None:
+def test_panel_operator_requires_ops_capability_and_state_autobroadcast_remains_rejected() -> None:
     panel_operator = validate_ir_v04(
         _ir_with_node(
             NodeV04(
@@ -255,7 +258,7 @@ def test_panel_operator_and_state_autobroadcast_remain_rejected() -> None:
         )
     )
 
-    assert "QST_V2_PANEL_OPERATOR_NOT_ACCEPTED" in {
+    assert "QST_V2_CAPABILITY_PANEL_OPS_REQUIRED" in {
         diagnostic.code for diagnostic in panel_operator.errors
     }
     assert "QST_V2_PANEL_STATE_AUTOBROADCAST_UNSUPPORTED" in {

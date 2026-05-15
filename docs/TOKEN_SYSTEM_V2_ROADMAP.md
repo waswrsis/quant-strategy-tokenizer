@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 
-Status: WP0-WP8b accepted under the v1.0.3 standard. WP8b adds the Panel Type Layer and `panel_type` capability validation.
+Status: WP0-WP8c accepted under the v1.0.3 standard. WP8c adds Panel operator reference semantics and `panel_ops` TokenPack metadata.
 
 ## Direction
 
@@ -32,7 +32,7 @@ Legacy versions remain loadable and verifiable, but new authoring moves to `qst-
 | WP7 | Decision Algebra | accepted |
 | WP8a | Panel Detail Design Gate | accepted |
 | WP8b | Panel Type Layer | accepted |
-| WP8c | Panel Operators | not started |
+| WP8c | Panel Operators | accepted |
 | WP8d | Weight Operators | not started |
 | WP8e | Panel Recipes + PV-B | not started |
 | WP9 | Custom Token Runtime + PV-D | not started |
@@ -228,6 +228,23 @@ WP8b enables Panel type-layer validation without enabling Panel operators:
 - `qst_typespec_0_4.schema.json`, the TypeSpec field set, TypeSpec enum/defaults, and non-panel signature hashes remain unchanged.
 
 WP8b does not add Panel TokenSpecs, Panel TokenPacks, Panel operators, weight operators, Panel recipes, runtime execution, migration tooling, or v0.4 CLI authoring.
+
+## WP8c Accepted Scope
+
+WP8c enables deterministic Panel operator reference semantics without enabling runtime execution or Panel recipes:
+
+- `panel_ops` is accepted only when `panel_type` is also explicitly declared.
+- The umbrella `panel` capability remains rejected.
+- `panel_weights`, `panel_recipes`, and `custom_token_runtime` remain rejected.
+- `panel.mask`, `panel.rank`, `panel.zscore`, `panel.top_k`, `panel.bottom_k`, `panel.demean`, `panel.group_demean`, `panel.winsorize`, `panel.residualize`, and `selection.to_weights` have deterministic reference helpers.
+- `selection.to_weights` emits raw `WeightPanel` output only; `weight.*` normalization and market-neutral operators remain WP8d scope.
+- Reference semantics are finite-only, use canonical symbol order, default to `error_on_missing`, use stable symbol-order tie behavior, and keep `UniverseMask=false` distinct from missing data.
+- `panel.zscore` uses `ddof=0` and `zero_variance_policy=output_zero`.
+- `panel.winsorize` uses deterministic nearest-rank quantile bounds.
+- `panel.residualize` is single-factor only with `include_intercept=true`, `min_observations=3`, and insufficient observations represented as unknown output plus diagnostics by default.
+- `qst-tokenpack-panel-ops/0.1.0` records TokenSpecV2 metadata for the WP8c operators.
+
+WP8c does not add Panel recipes, weight normalization, exposure constraints, market-neutral logic, adapters, migration tooling, legacy runtime execution, or v0.4 CLI authoring.
 
 ## P-Validate Gates
 

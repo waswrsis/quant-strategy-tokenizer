@@ -5,21 +5,24 @@ from __future__ import annotations
 from pydantic import ValidationError
 
 from quant_strategy_tokenizer.ir_v04.schema import NodeV04, StrategyIRV04
-from quant_strategy_tokenizer.panel_v2 import parse_panel_type_by_output
+from quant_strategy_tokenizer.panel_v2 import PANEL_OPERATOR_TOKENS, parse_panel_type_by_output
 from quant_strategy_tokenizer.validation_v2 import Diagnostic
 
+PANEL_OPS_CAPABILITY = "panel_ops"
 PANEL_TYPE_CAPABILITY = "panel_type"
 PANEL_OPERATOR_PREFIXES = ("panel.", "selection.", "weight.")
+PANEL_WEIGHT_OPERATOR_PREFIX = "weight."
 
 
 def validate_panel_type_layer_v04(ir: StrategyIRV04) -> list[Diagnostic]:
-    """Validate WP8b Panel type-layer declarations."""
+    """Validate WP8c Panel type-layer and operator declarations."""
 
     diagnostics: list[Diagnostic] = []
     has_panel_type_capability = PANEL_TYPE_CAPABILITY in ir.capabilities
+    has_panel_ops_capability = PANEL_OPS_CAPABILITY in ir.capabilities
     for node in ir.strategy.nodes:
         diagnostics.extend(_validate_node_panel_metadata(node, has_panel_type_capability))
-        diagnostics.extend(_validate_panel_operator_gate(node))
+        diagnostics.extend(_validate_panel_operator_gate(node, has_panel_ops_capability))
         diagnostics.extend(_validate_panel_state_gate(node))
     return diagnostics
 
@@ -101,16 +104,36 @@ def _validate_node_panel_metadata(node: NodeV04, has_panel_type_capability: bool
     return diagnostics
 
 
-def _validate_panel_operator_gate(node: NodeV04) -> list[Diagnostic]:
+def _validate_panel_operator_gate(node: NodeV04, has_panel_ops_capability: bool) -> list[Diagnostic]:
     name = _token_name(node)
     if name is None or not name.startswith(PANEL_OPERATOR_PREFIXES):
         return []
+    if name.startswith(PANEL_WEIGHT_OPERATOR_PREFIX):
+        return [
+            _diagnostic(
+                "QST_V2_CAPABILITY_PANEL_WEIGHTS_NOT_ENABLED",
+                node,
+                None,
+                f"Weight operator token {name!r} is not accepted until WP8d.",
+            )
+        ]
+    if name in PANEL_OPERATOR_TOKENS:
+        if has_panel_ops_capability:
+            return []
+        return [
+            _diagnostic(
+                "QST_V2_CAPABILITY_PANEL_OPS_REQUIRED",
+                node,
+                None,
+                f"Panel operator token {name!r} requires the panel_ops capability.",
+            )
+        ]
     return [
         _diagnostic(
             "QST_V2_PANEL_OPERATOR_NOT_ACCEPTED",
             node,
             None,
-            f"Panel operator token {name!r} is not accepted in WP8b.",
+            f"Panel operator token {name!r} is not accepted in WP8c.",
         )
     ]
 
@@ -125,7 +148,7 @@ def _validate_panel_state_gate(node: NodeV04) -> list[Diagnostic]:
             "QST_V2_PANEL_STATE_AUTOBROADCAST_UNSUPPORTED",
             node,
             None,
-            "state.fsm does not auto-broadcast over Panel inputs in WP8b.",
+            "state.fsm does not auto-broadcast over Panel inputs in WP8c.",
         )
     ]
 
@@ -153,4 +176,3 @@ def _diagnostic(code: str, node: NodeV04, port: str | None, message: str) -> Dia
         node_id=node.id,
         port=port,
     )
-
