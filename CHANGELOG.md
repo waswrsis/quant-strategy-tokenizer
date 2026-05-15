@@ -1,5 +1,12 @@
 # Changelog
 
+## Token System v2 WP10 Migration Tooling
+
+- Added `qst migrate-ir` and `qst migrate-package` for legacy `qst-ir/0.3` / `0.3.1` to `qst-ir/0.4` migration snapshots.
+- Added migration lineage with source instance hash, target core registry hash, and `qst-migrate/0.4.0`.
+- Added v0.4 package verification for migrated `qst-lock/0.4` snapshots while preserving legacy qstpkg verification.
+- Kept broad v0.4 runtime execution, semantic equivalence, numerical equivalence, P4b-v2 adapters, and legacy hash changes out of scope.
+
 ## Token System v2 WP9 Custom Token Runtime + PV-D
 
 - Added custom token integrity, authorization, approval, execution grant, and audit models for `qst-ir/0.4`.

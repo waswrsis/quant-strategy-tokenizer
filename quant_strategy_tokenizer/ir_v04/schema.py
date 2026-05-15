@@ -25,6 +25,7 @@ CapabilityV04 = Literal[
     "panel_recipes",
     "custom_token_runtime",
 ]
+MIGRATION_TOOL_VERSION_V04: Literal["qst-migrate/0.4.0"] = "qst-migrate/0.4.0"
 
 
 def _default_capabilities() -> list[CapabilityV04]:
@@ -48,6 +49,20 @@ class TokenRefV04(BaseModel):
     name: str = Field(min_length=1)
     version: int = Field(ge=1)
     behavior_version: int = Field(ge=1)
+
+
+class MigrationLineageV04(BaseModel):
+    """Historical lineage for a legacy-to-v0.4 IR migration."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    kind: Literal["ir_migration"] = "ir_migration"
+    source_ir_version: Literal["qst-ir/0.3", "qst-ir/0.3.1"]
+    source_instance_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    source_strategy: str
+    source_strategy_version: int = Field(ge=1)
+    target_core_registry_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    migration_tool_version: Literal["qst-migrate/0.4.0"] = MIGRATION_TOOL_VERSION_V04
 
 
 class NodeV04(BaseModel):
@@ -106,6 +121,7 @@ class StrategyIRV04(BaseModel):
     capabilities: list[CapabilityV04] = Field(default_factory=_default_capabilities)
     strategy: StrategyBodyV04
     metadata: dict[str, Any] = Field(default_factory=dict)
+    derived_from: MigrationLineageV04 | None = None
 
     @field_validator("metadata")
     @classmethod

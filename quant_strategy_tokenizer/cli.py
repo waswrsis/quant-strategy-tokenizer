@@ -41,7 +41,14 @@ from quant_strategy_tokenizer.ir.envelope import ProfileLiteral
 from quant_strategy_tokenizer.ir.hashing import compute_hashes
 from quant_strategy_tokenizer.ir.serialize import to_json, to_plain
 from quant_strategy_tokenizer.ir.validate import validate as validate_ir
-from quant_strategy_tokenizer.ir_v04 import TokenRefV04
+from quant_strategy_tokenizer.ir_v04 import TokenRefV04, canonical_bytes_v04
+from quant_strategy_tokenizer.migration_v2 import (
+    build_migration_lock_v04,
+    migrate_strategy_file,
+)
+from quant_strategy_tokenizer.migration_v2 import (
+    migrate_package as migrate_package_v2,
+)
 from quant_strategy_tokenizer.mutation import diff_strategies, mutate_strategy, parse_mutation_op
 from quant_strategy_tokenizer.mutation.repair import mutation_from_repair_hint
 from quant_strategy_tokenizer.package import (
@@ -171,6 +178,90 @@ def _load_inputs(inputs_json: str | None, inputs_file: Path | None) -> dict[str,
     if not isinstance(raw, dict):
         raise typer.BadParameter("custom token inputs must be a JSON object")
     return raw
+
+
+def _write_v04_strategy_yaml(path: Path, value: Any) -> None:
+    path.write_text(
+        yaml.safe_dump(
+            value.model_dump(mode="json", exclude_none=True),
+            sort_keys=False,
+            allow_unicode=True,
+        ),
+        encoding="utf-8",
+    )
+
+
+@app.command("migrate-ir")
+def migrate_ir_cmd(
+    strategy: Path,
+    to: Annotated[str, typer.Option("--to")] = "qst-ir/0.4",
+    output: Annotated[Path | None, typer.Option("--output")] = None,
+    canonical_output: Annotated[Path | None, typer.Option("--canonical-output")] = None,
+    lock_output: Annotated[Path | None, typer.Option("--lock-output")] = None,
+    report_output: Annotated[Path | None, typer.Option("--report-output")] = None,
+) -> None:
+    """Migrate a legacy qst-ir/0.3 or 0.3.1 strategy to qst-ir/0.4."""
+
+    if to != "qst-ir/0.4":
+        raise typer.BadParameter("WP10 only supports --to qst-ir/0.4")
+    result = migrate_strategy_file(strategy)
+    if report_output is not None:
+        _write_canonical_json(report_output, result.model_dump(mode="json"))
+    if not result.ok or result.strategy is None:
+        _echo_json(result.model_dump(mode="json"))
+        raise typer.Exit(1)
+
+    if output is not None:
+        _write_v04_strategy_yaml(output, result.strategy)
+    if canonical_output is not None:
+        canonical_output.write_bytes(canonical_bytes_v04(result.strategy))
+    if lock_output is not None:
+        _write_canonical_json(lock_output, build_migration_lock_v04(result))
+
+    _echo_json(
+        {
+            "ok": True,
+            "output": str(output) if output is not None else None,
+            "canonical_output": str(canonical_output) if canonical_output is not None else None,
+            "lock_output": str(lock_output) if lock_output is not None else None,
+            "source_instance_hash": result.source_hashes["instance_hash"],
+            "target_instance_hash": result.target_hashes["instance_hash"] if result.target_hashes else None,
+            "target_core_registry_hash": result.target_core_registry_hash,
+            "migration_tool_version": result.migration_tool_version,
+            "diagnostics": [diagnostic.model_dump(mode="json") for diagnostic in result.diagnostics],
+        }
+    )
+
+
+@app.command("migrate-package")
+def migrate_package_cmd(
+    package_dir: Path,
+    to: Annotated[str, typer.Option("--to")] = "qst-ir/0.4",
+    output: Annotated[Path, typer.Option("--output")] = Path("migrated.qstpkg"),
+) -> None:
+    """Migrate a legacy qstpkg directory to a qst-ir/0.4 package snapshot."""
+
+    if to != "qst-ir/0.4":
+        raise typer.BadParameter("WP10 only supports --to qst-ir/0.4")
+    result = migrate_package_v2(package_dir, output)
+    payload = {
+        "ok": result.migration.ok,
+        "output": str(result.package_dir),
+        "source_instance_hash": result.migration.source_hashes.get("instance_hash"),
+        "target_instance_hash": (
+            result.migration.target_hashes.get("instance_hash")
+            if result.migration.target_hashes is not None
+            else None
+        ),
+        "target_core_registry_hash": result.migration.target_core_registry_hash,
+        "migration_tool_version": result.migration.migration_tool_version,
+        "diagnostics": [
+            diagnostic.model_dump(mode="json") for diagnostic in result.migration.diagnostics
+        ],
+    }
+    _echo_json(payload)
+    if not result.migration.ok:
+        raise typer.Exit(1)
 
 
 def _ensure_market_frame(frame: Frame) -> MarketFrame:

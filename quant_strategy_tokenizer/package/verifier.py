@@ -19,6 +19,8 @@ from quant_strategy_tokenizer.custom_runtime_v2 import (
     load_token_pack,
     verify_integrity,
 )
+from quant_strategy_tokenizer.hash_v2 import compute_hashes_v2
+from quant_strategy_tokenizer.ir_v04 import canonical_bytes_v04, load_ir_v04_file
 from quant_strategy_tokenizer.package.manifest import PackageFile, UnpackedPackage
 from quant_strategy_tokenizer.package.paths import safe_join
 from quant_strategy_tokenizer.package.reader import read_package
@@ -405,6 +407,89 @@ def _check_token_packs(package: UnpackedPackage) -> list[VerifyFailure]:
     return failures
 
 
+def _check_v04_migration_lock(package: UnpackedPackage, lock: dict[str, object]) -> list[VerifyFailure]:
+    failures: list[VerifyFailure] = []
+    try:
+        source = load_ir_v04_file(package.source_path)
+        canonical_bytes = canonical_bytes_v04(source)
+    except Exception as exc:
+        return [
+            _failure(
+                "qst_ir_0_4_invalid",
+                f"Could not load migrated qst-ir/0.4 source: {type(exc).__name__}: {exc}",
+                path=package.manifest.strategy.source_path,
+            )
+        ]
+
+    actual_canonical = package.canonical_path.read_bytes()
+    if actual_canonical != canonical_bytes:
+        failures.append(
+            _failure(
+                "canonical_ir_tampered",
+                "Migrated package canonical JSON does not match qst-ir/0.4 source.",
+                path=package.manifest.strategy.canonical_path,
+            )
+        )
+
+    hashes = compute_hashes_v2(source)
+    lock_hashes = lock.get("hashes")
+    if isinstance(lock_hashes, dict):
+        for key, actual in hashes.__dict__.items():
+            expected = lock_hashes.get(key)
+            if expected != actual:
+                failures.append(
+                    _failure(
+                        f"{key}_mismatch",
+                        f"Migrated qst-lock/0.4 {key} does not match source.",
+                        path=f"qst.lock.hashes.{key}",
+                        expected=expected,
+                        actual=actual,
+                    )
+                )
+    else:
+        failures.append(
+            _failure(
+                "qst_lock_0_4_invalid",
+                "Migrated qst-lock/0.4 is missing hash material.",
+                path="qst.lock.hashes",
+            )
+        )
+
+    legacy_source = lock.get("legacy_source")
+    if source.derived_from is None:
+        failures.append(
+            _failure(
+                "migration_lineage_missing",
+                "Migrated qst-ir/0.4 source is missing derived_from lineage.",
+                path=package.manifest.strategy.source_path,
+            )
+        )
+    elif isinstance(legacy_source, dict):
+        expected = legacy_source.get("source_instance_hash")
+        actual = source.derived_from.source_instance_hash
+        if expected != actual:
+            failures.append(
+                _failure(
+                    "source_instance_hash_mismatch",
+                    "Migrated qst-lock/0.4 legacy source hash does not match derived_from.",
+                    path="qst.lock.legacy_source.source_instance_hash",
+                    expected=expected,
+                    actual=actual,
+                )
+            )
+    return failures
+
+
+def _load_migration_lock_v04(path: Path) -> dict[str, object] | None:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    if isinstance(payload, dict) and payload.get("lock_version") == "qst-lock/0.4":
+        return payload
+    return None
+
+
 def verify_package(package_dir: str | Path) -> VerifyResult:
     """Verify a qstpkg directory."""
 
@@ -448,14 +533,18 @@ def verify_package(package_dir: str | Path) -> VerifyResult:
 
     can_verify_lock = package.source_path.exists() and package.canonical_path.exists() and package.lock_path.exists()
     if can_verify_lock:
-        lock_result = verify_lock(
-            load_strategy_file(package.source_path),
-            read_lock(package.lock_path),
-            canonical_ir=read_canonical_ir(package.canonical_path),
-            market_path=package.market_path,
-            expected_trace_path=package.expected_trace_path,
-        )
-        failures.extend(lock_result.failures)
+        migration_lock = _load_migration_lock_v04(package.lock_path)
+        if migration_lock is not None:
+            failures.extend(_check_v04_migration_lock(package, migration_lock))
+        else:
+            lock_result = verify_lock(
+                load_strategy_file(package.source_path),
+                read_lock(package.lock_path),
+                canonical_ir=read_canonical_ir(package.canonical_path),
+                market_path=package.market_path,
+                expected_trace_path=package.expected_trace_path,
+            )
+            failures.extend(lock_result.failures)
 
     level = (
         VerificationLevel.SEMANTIC_TRACE

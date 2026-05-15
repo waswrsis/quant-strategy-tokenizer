@@ -1,6 +1,6 @@
 # Quant Strategy Tokenizer
 
-Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, P3, and P4-core construction stages. Token System v2 WP0-WP9 are accepted under the v1.0.3 construction standard.
+Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, P3, and P4-core construction stages. Token System v2 WP0-WP10 are accepted under the v1.0.3 construction standard.
 
 The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, implements P2a-0/P2a-1 provenance metadata, P2a-2 deterministic recipe generation, P2a-3 composition validation, P2b mutation, P2c-core execution-plan CSE, an opt-in P2c-extended kernel substitution spike, the P3a-0 deterministic lock hard gate, the P3a-1 directory package format, P3b-0 registry search, P3b-1 fork lineage, and P4-core artifacts, frames, qstpkg artifact extension, ports, signal extraction, mock adapters, and P4b CLI. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, a production kernel framework, P4c real adapter repositories, P4d semantic detokenize, P4+ full-text package search, or numerical equivalence verification.
 
@@ -35,6 +35,7 @@ The implemented loop covers:
 - Token System v2 WeightPanel normalization and constraint reference semantics with `panel_weights` TokenPack metadata
 - PV-B Panel reference strategies with deterministic expected traces and hashes
 - Token System v2 custom token runtime boundaries with PV-D Kalman reference artifacts
+- Token System v2 legacy-to-v0.4 migration tooling for strategies and qstpkg snapshots
 
 ## Project Status
 
@@ -81,6 +82,7 @@ The implemented loop covers:
 | Token System v2 WP8d Weight Operators | accepted under v1.0.3 |
 | Token System v2 WP8e PV-B Panel Reference Strategies | accepted under v1.0.3 |
 | Token System v2 WP9 Custom Token Runtime + PV-D | accepted under v1.0.3 |
+| Token System v2 WP10 Migration Tooling | accepted under v1.0.3 |
 
 ## Frozen P0 Baseline
 
@@ -220,6 +222,8 @@ WP8d is accepted as the Weight Operators layer. It accepts `panel_weights` only 
 WP8e is accepted as the PV-B Panel Reference Strategies stage. It adds deterministic reference strategies and expected artifacts for top/bottom market-neutral selection and BTC residual mean reversion using accepted WP8b/WP8c/WP8d helpers. It does not enable `panel_recipes`, add recipe TokenSpecs or TokenPacks, add runtime execution, or add v0.4 CLI authoring.
 
 WP9 is accepted as the Custom Token Runtime + PV-D stage. It separates integrity verification from profile/approval authorization, adds local ApprovalRecord and short-lived ExecutionGrant models, verifies qstpkg TokenPack metadata without executing code, and adds the deterministic custom Kalman PV-D reference case. It does not add a sandbox, WP10 migration, broad v0.4 runtime execution, or portable qstpkg trust.
+
+WP10 is accepted as the Migration Tooling stage. It adds `qst migrate-ir` and `qst migrate-package` for moving legacy `qst-ir/0.3` / `0.3.1` artifacts into `qst-ir/0.4` snapshots with source instance hash lineage and a target core registry hash. Migration creates a new v0.4 identity and does not assert semantic or numerical equivalence.
 
 The authoritative roadmap is [docs/TOKEN_SYSTEM_V2_ROADMAP.md](docs/TOKEN_SYSTEM_V2_ROADMAP.md).
 

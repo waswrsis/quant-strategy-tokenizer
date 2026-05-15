@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 
-Status: WP0-WP9 accepted under the v1.0.3 standard. WP9 adds custom token runtime boundaries and PV-D deterministic expected artifacts.
+Status: WP0-WP10 accepted under the v1.0.3 standard. WP10 adds legacy-to-v0.4 migration tooling.
 
 ## Direction
 
@@ -36,7 +36,7 @@ Legacy versions remain loadable and verifiable, but new authoring moves to `qst-
 | WP8d | Weight Operators | accepted |
 | WP8e | PV-B Panel Reference Strategies | accepted |
 | WP9 | Custom Token Runtime + PV-D | accepted |
-| WP10 | Migration Tooling | not started |
+| WP10 | Migration Tooling | accepted |
 | Final | Token System v2 acceptance | not started |
 
 ## WP0 Decisions
@@ -286,6 +286,19 @@ WP9 accepts the custom token runtime boundary and PV-D dogfooding gate:
 - PV-D accepts the deterministic `my_pack.kalman_ema` custom token reference case with research, pretrade-default, and pretrade-approved artifacts.
 
 WP9 does not add a sandbox, WP10 migration, broad v0.4 strategy runtime, portable qstpkg trust, broker/exchange execution, or production-grade custom token isolation.
+
+## WP10 Accepted Scope
+
+WP10 accepts the migration boundary from legacy IR into the active `qst-ir/0.4` authoring target:
+
+- `qst migrate-ir` migrates `qst-ir/0.3` and `qst-ir/0.3.1` strategy YAML to `qst-ir/0.4`, with optional canonical JSON, lock, and report outputs.
+- `qst migrate-package` migrates legacy qstpkg directories to qst-ir/0.4 package snapshots while preserving fixture and dependency material.
+- Migrated strategies record `derived_from.kind=ir_migration`, source IR version, source strategy identity, source instance hash, target core registry hash, and `migration_tool_version=qst-migrate/0.4.0`.
+- `target_core_registry_hash` binds migration output to the accepted legacy registry identities and accepted v2 core TokenPack hashes.
+- `decision.reduce` migration is limited to WP7-classified exact mappings; unsupported legacy semantics produce diagnostics instead of silent rewrites.
+- `verify_package()` accepts migrated qst-lock/0.4 snapshots through the v0.4 verification path while legacy qstpkg verification remains unchanged.
+
+WP10 does not add broad v0.4 runtime execution, semantic equivalence proof, numerical equivalence proof, P4b-v2 adapters, sandboxing, production custom-token isolation, or changes to legacy canonical/hash behavior.
 
 ## P-Validate Gates
 

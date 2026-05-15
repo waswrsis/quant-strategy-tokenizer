@@ -34,6 +34,15 @@ from quant_strategy_tokenizer.ir.model import StrategyIR
 from quant_strategy_tokenizer.ir.validate import ValidationResult
 from quant_strategy_tokenizer.ir.validate import validate as _validate
 from quant_strategy_tokenizer.ir_v04 import TokenRefV04
+from quant_strategy_tokenizer.migration_v2 import (
+    MigrationResult,
+)
+from quant_strategy_tokenizer.migration_v2 import (
+    migrate_package as _migrate_package_v2,
+)
+from quant_strategy_tokenizer.migration_v2 import (
+    migrate_strategy_file as _migrate_strategy_file_v2,
+)
 from quant_strategy_tokenizer.mutation import (
     MutationResult,
     diff_strategies,
@@ -336,6 +345,23 @@ def execute_custom_token(
         context=TokenRuntimeContext(base_path=_token_pack_base_path(pack_path), run_id=run_id),
         approval_store=approval_store,
     )
+
+
+def migrate_ir(strategy_path: str) -> MigrationResult:
+    """Migrate a legacy qst-ir/0.3 or 0.3.1 strategy to qst-ir/0.4."""
+
+    return _migrate_strategy_file_v2(strategy_path)
+
+
+def migrate_package(package_dir: str, output_dir: str) -> dict[str, Any]:
+    """Migrate a legacy qstpkg directory to a qst-ir/0.4 package snapshot."""
+
+    result = _migrate_package_v2(package_dir, output_dir)
+    return {
+        "package_dir": str(result.package_dir),
+        "migration": result.migration.model_dump(mode="json"),
+        "manifest": result.manifest.model_dump(mode="json"),
+    }
 
 
 def add_artifact_to_package(

@@ -43,6 +43,7 @@ def discover() -> dict[str, object]:
                 "request_token_approval",
                 "execute_custom_token",
             ],
+            "token_system_v2_wp10": ["migrate_ir", "migrate_package"],
         },
         "cli_commands": {
             "p0": ["vocabulary", "validate", "canonicalize", "hash", "compare", "explain", "execute"],
@@ -57,6 +58,7 @@ def discover() -> dict[str, object]:
                 "token approvals revoke",
                 "token execute",
             ],
+            "token_system_v2_wp10": ["migrate-ir", "migrate-package"],
         },
         "supported_profiles": ["research", "paper", "pretrade", "production_guarded"],
         "supported_input_kinds": ["yaml", "json"],

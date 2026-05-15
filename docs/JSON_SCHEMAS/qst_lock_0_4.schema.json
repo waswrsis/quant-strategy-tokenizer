@@ -101,6 +101,9 @@
         "source_instance_hash": {
           "$ref": "#/$defs/hash"
         },
+        "target_core_registry_hash": {
+          "$ref": "#/$defs/hash"
+        },
         "migration_lineage": {
           "type": "array",
           "items": {
