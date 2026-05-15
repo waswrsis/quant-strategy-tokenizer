@@ -1,5 +1,14 @@
 # Changelog
 
+## Token System v2 WP7 Decision Algebra
+
+- Added v0.4 `decision_v2` models for `DecisionV2`, true monoids, fold policies, aggregators, and structured combine results.
+- Added deterministic reference helpers for `combine_decisions`, `fold_decisions`, and `aggregate_decisions`.
+- Added legacy `decision.reduce` migration classification without silently mapping legacy errors into decisions.
+- Added `qst-tokenpack-decision-algebra/0.1.0` with core TokenSpecV2 metadata for seven Decision Algebra tokens.
+- Added Decision Algebra JSON schemas and test coverage for monoid laws, fold-policy truth tables, aggregators, token hashes, and legacy migration diagnostics.
+- Kept legacy runtime execution, legacy token registration, strategy mutation, Panel behavior, custom token runtime, migration tooling, and v0.4 CLI authoring out of scope.
+
 ## Token System v2 WP6c State Recipes + PV-A
 
 - Added PV-A state-heavy v0.4 reference strategies for cooldown, market freeze, circuit breaker, observe period, and minimal slot budget cases.

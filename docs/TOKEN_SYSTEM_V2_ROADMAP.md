@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 
-Status: WP0-WP6c accepted under the v1.0.3 standard. WP6c completes PV-A state-heavy reference cases with deterministic expected traces and hashes.
+Status: WP0-WP7 accepted under the v1.0.3 standard. WP7 adds v0.4 Decision Algebra metadata and deterministic reference semantics.
 
 ## Direction
 
@@ -29,7 +29,7 @@ Legacy versions remain loadable and verifiable, but new authoring moves to `qst-
 | WP6a | State Basic | accepted |
 | WP6b | State FSM | accepted |
 | WP6c | State Recipes + PV-A | accepted |
-| WP7 | Decision Algebra | not started |
+| WP7 | Decision Algebra | accepted |
 | WP8a | Panel Type Layer | not started |
 | WP8b | Panel Operators | not started |
 | WP8c | Weight Operators | not started |
@@ -179,6 +179,19 @@ WP6c adds the PV-A state-heavy reference gate:
 - Replay checks for FSM-backed PV-A cases.
 
 WP6c does not add legacy recipes, v0.4 runtime execution, Decision Algebra, Panel behavior, custom token runtime, migration tooling, or v0.4 CLI authoring.
+
+## WP7 Accepted Scope
+
+WP7 adds v0.4 Decision Algebra metadata and deterministic reference semantics:
+
+- `DecisionKind = accept | reject | unknown | block`; errors are diagnostics, not decisions.
+- True monoids for `decision.unknown_propagating_and` and `decision.any_accept`.
+- Fold policies for `decision.strict_and` and `decision.permissive_and` as monoid-backed finalizers.
+- Aggregators for `decision.majority`, `decision.weighted_vote`, and `decision.quorum`.
+- `qst-tokenpack-decision-algebra/0.1.0` with core TokenSpecV2 metadata for the seven decision algebra tokens.
+- Legacy `decision.reduce` migration classification with non-migratable error semantics reported as diagnostics.
+
+WP7 does not add legacy runtime execution, legacy token registration, strategy mutation, CLI migration tooling, Panel behavior, custom token runtime, or v0.4 CLI authoring.
 
 ## P-Validate Gates
 
