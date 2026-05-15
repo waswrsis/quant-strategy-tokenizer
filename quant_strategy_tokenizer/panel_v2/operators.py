@@ -26,12 +26,18 @@ PanelOperatorName = Literal[
     "panel.residualize",
     "selection.to_weights",
 ]
+WeightOperatorName = Literal[
+    "weight.normalize_gross",
+    "weight.cap_per_symbol",
+    "weight.market_neutral",
+]
 TiePolicy = Literal["stable_symbol_order"]
 PanelOrder = Literal["ascending", "descending"]
 ZeroVariancePolicy = Literal["output_zero"]
 SelectionSizePolicy = Literal["allow_smaller"]
 InsufficientObservationsPolicy = Literal["unknown", "error"]
 RawWeightMethod = Literal["equal_long", "equal_short", "equal_long_short"]
+ZeroGrossPolicy = Literal["keep_zero", "error"]
 
 PANEL_OPERATOR_TOKENS: tuple[PanelOperatorName, ...] = (
     "panel.mask",
@@ -47,6 +53,13 @@ PANEL_OPERATOR_TOKENS: tuple[PanelOperatorName, ...] = (
 )
 PANEL_OPS_PACK_ID = "qst-tokenpack-panel-ops"
 PANEL_OPS_PACK_VERSION = "0.1.0"
+WEIGHT_OPERATOR_TOKENS: tuple[WeightOperatorName, ...] = (
+    "weight.normalize_gross",
+    "weight.cap_per_symbol",
+    "weight.market_neutral",
+)
+PANEL_WEIGHTS_PACK_ID = "qst-tokenpack-panel-weights"
+PANEL_WEIGHTS_PACK_VERSION = "0.1.0"
 
 
 class PanelPoint(BaseModel):
@@ -139,13 +152,13 @@ class WeightPoint(BaseModel):
 
 
 class WeightPanelValue(BaseModel):
-    """Raw WeightPanel value produced by WP8c selection.to_weights."""
+    """Reference WeightPanel value used by WP8c/WP8d helpers."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     rows: tuple[WeightPoint, ...] = Field(default_factory=tuple)
-    weight_kind: Literal["raw"] = "raw"
-    normalized: Literal[False] = False
+    weight_kind: Literal["raw", "normalized"] = "raw"
+    normalized: bool = False
 
     @model_validator(mode="before")
     @classmethod
@@ -617,6 +630,228 @@ def selection_to_weights(
     )
 
 
+def weight_normalize_gross(
+    weights: WeightPanelValue,
+    *,
+    target_gross: str = "1",
+    zero_gross_policy: ZeroGrossPolicy = "keep_zero",
+) -> PanelOperatorResult:
+    """Scale eligible weights so gross exposure equals target_gross."""
+
+    target = _canonical_param_decimal(target_gross, param_name="target_gross")
+    if target < 0:
+        return _error("QST_V2_WEIGHT_TARGET_GROSS_INVALID", "target_gross must be >= 0.")
+    output: list[WeightPoint] = []
+    trace: dict[str, Any] = {
+        "operator_id": "weight.normalize_gross",
+        "target_gross": _canonical_decimal(target),
+        "zero_gross_policy": zero_gross_policy,
+        "gross_before": {},
+        "gross_after": {},
+        "net_before": {},
+        "net_after": {},
+        "zero_gross_policy_applied": {},
+    }
+    diagnostics: list[Diagnostic] = []
+    for timestamp, rows in _weights_by_time(weights).items():
+        active = [row for row in rows if row.in_universe]
+        inactive = [row for row in rows if not row.in_universe]
+        gross = _gross(active)
+        net = _net(active)
+        trace["gross_before"][timestamp] = _canonical_decimal(gross)
+        trace["net_before"][timestamp] = _canonical_decimal(net)
+        if gross == 0:
+            trace["zero_gross_policy_applied"][timestamp] = True
+            if zero_gross_policy == "error":
+                diagnostics.append(
+                    _diagnostic(
+                        "QST_V2_WEIGHT_ZERO_GROSS",
+                        f"Cannot normalize zero gross weights at timestamp {timestamp!r}.",
+                    )
+                )
+                continue
+            normalized = [row.model_copy(update={"weight": "0"}) for row in active]
+        else:
+            trace["zero_gross_policy_applied"][timestamp] = False
+            scale = target / gross
+            normalized = [
+                row.model_copy(update={"weight": _canonical_decimal(_weight_decimal(row) * scale)})
+                for row in active
+            ]
+        output.extend(normalized)
+        output.extend(inactive)
+        trace["gross_after"][timestamp] = _canonical_decimal(_gross(normalized))
+        trace["net_after"][timestamp] = _canonical_decimal(_net(normalized))
+    if diagnostics:
+        return _diagnostics("weight.normalize_gross", diagnostics)
+    return PanelOperatorResult(
+        weights=WeightPanelValue(rows=tuple(output), weight_kind="normalized", normalized=True),
+        diagnostics=ValidationResult(),
+        trace=trace,
+    )
+
+
+def weight_cap_per_symbol(
+    weights: WeightPanelValue,
+    *,
+    max_abs_weight: str,
+    mode: str = "clip_no_redistribute",
+) -> PanelOperatorResult:
+    """Clip per-symbol absolute weights without redistributing clipped exposure."""
+
+    cap = _canonical_param_decimal(max_abs_weight, param_name="max_abs_weight")
+    if cap < 0:
+        return _error("QST_V2_WEIGHT_MAX_ABS_WEIGHT_INVALID", "max_abs_weight must be >= 0.")
+    if mode != "clip_no_redistribute":
+        return _error(
+            "QST_V2_WEIGHT_CAP_MODE_UNSUPPORTED",
+            "WP8d only supports mode=clip_no_redistribute.",
+        )
+    output: list[WeightPoint] = []
+    capped_symbols: list[dict[str, str]] = []
+    trace: dict[str, Any] = {
+        "operator_id": "weight.cap_per_symbol",
+        "max_abs_weight": _canonical_decimal(cap),
+        "mode": mode,
+        "capped_symbols": capped_symbols,
+        "gross_before": {},
+        "gross_after": {},
+        "net_before": {},
+        "net_after": {},
+    }
+    for timestamp, rows in _weights_by_time(weights).items():
+        active = [row for row in rows if row.in_universe]
+        inactive = [row for row in rows if not row.in_universe]
+        trace["gross_before"][timestamp] = _canonical_decimal(_gross(active))
+        trace["net_before"][timestamp] = _canonical_decimal(_net(active))
+        clipped_rows: list[WeightPoint] = []
+        for row in active:
+            before = _weight_decimal(row)
+            after = min(max(before, -cap), cap)
+            if after != before:
+                capped_symbols.append(
+                    {
+                        "timestamp": timestamp,
+                        "symbol": row.symbol,
+                        "before": _canonical_decimal(before),
+                        "after": _canonical_decimal(after),
+                    }
+                )
+            clipped_rows.append(row.model_copy(update={"weight": _canonical_decimal(after)}))
+        output.extend(clipped_rows)
+        output.extend(inactive)
+        trace["gross_after"][timestamp] = _canonical_decimal(_gross(clipped_rows))
+        trace["net_after"][timestamp] = _canonical_decimal(_net(clipped_rows))
+    return PanelOperatorResult(
+        weights=WeightPanelValue(
+            rows=tuple(output),
+            weight_kind=weights.weight_kind,
+            normalized=weights.normalized,
+        ),
+        diagnostics=ValidationResult(),
+        trace=trace,
+    )
+
+
+def weight_market_neutral(
+    weights: WeightPanelValue,
+    *,
+    target_net: str = "0",
+    target_gross: str = "1",
+    neutralization_method: str = "demean_then_gross_normalize",
+    zero_gross_policy: ZeroGrossPolicy = "keep_zero",
+) -> PanelOperatorResult:
+    """Demean eligible weights and scale to target gross with target net zero."""
+
+    canonical_net = _canonical_param_decimal(target_net, param_name="target_net")
+    target = _canonical_param_decimal(target_gross, param_name="target_gross")
+    if canonical_net != 0:
+        return _error("QST_V2_WEIGHT_TARGET_NET_UNSUPPORTED", "WP8d only supports target_net=0.")
+    if target < 0:
+        return _error("QST_V2_WEIGHT_TARGET_GROSS_INVALID", "target_gross must be >= 0.")
+    if neutralization_method != "demean_then_gross_normalize":
+        return _error(
+            "QST_V2_WEIGHT_NEUTRALIZATION_METHOD_UNSUPPORTED",
+            "WP8d only supports demean_then_gross_normalize.",
+        )
+
+    output: list[WeightPoint] = []
+    diagnostics: list[Diagnostic] = []
+    trace: dict[str, Any] = {
+        "operator_id": "weight.market_neutral",
+        "neutralization_method": neutralization_method,
+        "target_net": "0",
+        "target_gross": _canonical_decimal(target),
+        "zero_gross_policy": zero_gross_policy,
+        "eligible_count": {},
+        "net_before": {},
+        "gross_before": {},
+        "adjustment": {},
+        "gross_after_demean": {},
+        "net_after": {},
+        "gross_after": {},
+        "zero_gross_policy_applied": {},
+    }
+    for timestamp, rows in _weights_by_time(weights).items():
+        active = [row for row in rows if row.in_universe]
+        inactive = [row for row in rows if not row.in_universe]
+        eligible_count = len(active)
+        trace["eligible_count"][timestamp] = eligible_count
+        if eligible_count == 0:
+            diagnostics.append(
+                _diagnostic(
+                    "QST_V2_WEIGHT_MARKET_NEUTRAL_EMPTY_UNIVERSE",
+                    f"market_neutral has no eligible weights at timestamp {timestamp!r}.",
+                )
+            )
+            continue
+        net = _net(active)
+        gross = _gross(active)
+        adjustment = net / Decimal(eligible_count)
+        demeaned_values = [_weight_decimal(row) - adjustment for row in active]
+        demeaned_gross = sum((abs(value) for value in demeaned_values), Decimal("0"))
+        trace["net_before"][timestamp] = _canonical_decimal(net)
+        trace["gross_before"][timestamp] = _canonical_decimal(gross)
+        trace["adjustment"][timestamp] = _canonical_decimal(adjustment)
+        trace["gross_after_demean"][timestamp] = _canonical_decimal(demeaned_gross)
+        if demeaned_gross == 0:
+            trace["zero_gross_policy_applied"][timestamp] = True
+            if zero_gross_policy == "error":
+                diagnostics.append(
+                    _diagnostic(
+                        "QST_V2_WEIGHT_MARKET_NEUTRAL_ZERO_GROSS",
+                        f"market_neutral demeaned gross is zero at timestamp {timestamp!r}.",
+                    )
+                )
+                continue
+            diagnostics.append(
+                _diagnostic(
+                    "QST_V2_WEIGHT_MARKET_NEUTRAL_ZEROED",
+                    f"market_neutral produced zero weights at timestamp {timestamp!r}.",
+                    severity="warning",
+                )
+            )
+            neutral_rows = [row.model_copy(update={"weight": "0"}) for row in active]
+        else:
+            trace["zero_gross_policy_applied"][timestamp] = False
+            scale = target / demeaned_gross
+            neutral_rows = [
+                row.model_copy(update={"weight": _canonical_decimal(value * scale)})
+                for row, value in zip(active, demeaned_values, strict=True)
+            ]
+        output.extend(neutral_rows)
+        output.extend(inactive)
+        trace["net_after"][timestamp] = _canonical_decimal(_net(neutral_rows))
+        trace["gross_after"][timestamp] = _canonical_decimal(_gross(neutral_rows))
+    if any(diagnostic.severity == "error" for diagnostic in diagnostics):
+        return _diagnostics("weight.market_neutral", diagnostics)
+    return PanelOperatorResult(
+        weights=WeightPanelValue(rows=tuple(output), weight_kind="normalized", normalized=True),
+        diagnostics=ValidationResult(diagnostics=diagnostics),
+        trace=trace,
+    )
+
+
 def _top_bottom_k(
     panel: PanelValue,
     *,
@@ -723,6 +958,25 @@ def _selection_by_time(selection: SelectionPanelValue) -> dict[str, list[Selecti
     return {key: sorted(value, key=lambda item: item.symbol) for key, value in sorted(grouped.items())}
 
 
+def _weights_by_time(weights: WeightPanelValue) -> dict[str, list[WeightPoint]]:
+    grouped: dict[str, list[WeightPoint]] = defaultdict(list)
+    for row in weights.rows:
+        grouped[row.timestamp].append(row)
+    return {key: sorted(value, key=lambda item: item.symbol) for key, value in sorted(grouped.items())}
+
+
+def _weight_decimal(row: WeightPoint) -> Decimal:
+    return Decimal(row.weight)
+
+
+def _gross(rows: list[WeightPoint]) -> Decimal:
+    return sum((abs(_weight_decimal(row)) for row in rows), Decimal("0"))
+
+
+def _net(rows: list[WeightPoint]) -> Decimal:
+    return sum((_weight_decimal(row) for row in rows), Decimal("0"))
+
+
 def _equal_weight_points(timestamp: str, points: list[SelectionPoint], *, sign: int) -> list[WeightPoint]:
     if not points:
         return []
@@ -740,6 +994,17 @@ def _nearest_rank_index(quantile: float, n: int) -> int:
 def _canonical_number(value: float) -> str:
     if isinstance(value, float) and abs(value) < 1e-12:
         value = 0.0
+    return normalize_to_canonical(value)
+
+
+def _canonical_param_decimal(raw: str | float | Decimal, *, param_name: str) -> Decimal:
+    try:
+        return Decimal(normalize_to_canonical(raw))
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{param_name} must be a finite canonicalizable DecimalString") from exc
+
+
+def _canonical_decimal(value: Decimal) -> str:
     return normalize_to_canonical(value)
 
 

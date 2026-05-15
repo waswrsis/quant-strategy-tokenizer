@@ -1,6 +1,6 @@
 # Quant Strategy Tokenizer
 
-Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, P3, and P4-core construction stages. Token System v2 WP0-WP8c are accepted under the v1.0.3 construction standard.
+Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, P3, and P4-core construction stages. Token System v2 WP0-WP8d are accepted under the v1.0.3 construction standard.
 
 The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, implements P2a-0/P2a-1 provenance metadata, P2a-2 deterministic recipe generation, P2a-3 composition validation, P2b mutation, P2c-core execution-plan CSE, an opt-in P2c-extended kernel substitution spike, the P3a-0 deterministic lock hard gate, the P3a-1 directory package format, P3b-0 registry search, P3b-1 fork lineage, and P4-core artifacts, frames, qstpkg artifact extension, ports, signal extraction, mock adapters, and P4b CLI. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, a production kernel framework, P4c real adapter repositories, P4d semantic detokenize, P4+ full-text package search, or numerical equivalence verification.
 
@@ -32,6 +32,7 @@ The implemented loop covers:
 - Token System v2 Panel detail design gate schemas and design record
 - Token System v2 Panel type-layer validation with `panel_type` capability
 - Token System v2 Panel operator reference semantics and `panel_ops` TokenPack metadata
+- Token System v2 WeightPanel normalization and constraint reference semantics with `panel_weights` TokenPack metadata
 
 ## Project Status
 
@@ -75,7 +76,7 @@ The implemented loop covers:
 | Token System v2 WP8a Panel Detail Design Gate | accepted under v1.0.3 |
 | Token System v2 WP8b Panel Type Layer | accepted under v1.0.3 |
 | Token System v2 WP8c Panel Operators | accepted under v1.0.3 |
-| Token System v2 WP8d Weight Operators | not started |
+| Token System v2 WP8d Weight Operators | accepted under v1.0.3 |
 | Token System v2 WP8e Panel Recipes + PV-B | not started |
 
 ## Frozen P0 Baseline
@@ -208,6 +209,10 @@ WP7 is accepted and adds v0.4 Decision Algebra models, true monoids, fold polici
 WP8a is accepted as the Panel Detail Design Gate. It adds draft schemas and the design record for sparse logical Panel representation, UniverseMask, MissingPolicy, GroupSpec, SelectionPanel / WeightPanel boundaries, single-factor residualize, Panel temporal joins, and Panel / State constraints. It does not alter `TypeSpec`, enable the `panel` capability, add Panel operators, add Panel TokenSpecs or TokenPacks, or introduce v0.4 runtime execution.
 
 WP8b is accepted as the Panel Type Layer. It adds a schema correction ADR for granular Panel capabilities, accepts `panel_type`, rejects the old umbrella `panel` and later Panel capabilities, adds `panel_v2` type-layer models, validates output-scoped `metadata.panel_type_by_output`, and makes Panel type metadata signature-hash-bearing. It does not alter `TypeSpec`, enable Panel operators, add Panel TokenSpecs or TokenPacks, or introduce runtime execution.
+
+WP8c is accepted as the Panel Operators layer. It accepts `panel_ops` only with explicit `panel_type`, adds deterministic reference helpers for Panel masking, rank, zscore, top/bottom-k, demean, group-demean, winsorize, single-factor residualize, and selection-to-raw-weight conversion, and records `qst-tokenpack-panel-ops/0.1.0`. It does not add Panel recipes, WeightPanel normalization, runtime execution, migration tooling, or v0.4 CLI authoring.
+
+WP8d is accepted as the Weight Operators layer. It accepts `panel_weights` only with explicit `panel_type`, adds deterministic reference helpers for `weight.normalize_gross`, `weight.cap_per_symbol`, and `weight.market_neutral`, validates that weight operators consume typed `WeightPanel` outputs rather than arbitrary `Panel[decimal]`, and records `qst-tokenpack-panel-weights/0.1.0`. It does not solve simultaneous gross/cap constraints, generate orders, add risk controls, add Panel recipes, or introduce runtime execution.
 
 The authoritative roadmap is [docs/TOKEN_SYSTEM_V2_ROADMAP.md](docs/TOKEN_SYSTEM_V2_ROADMAP.md).
 

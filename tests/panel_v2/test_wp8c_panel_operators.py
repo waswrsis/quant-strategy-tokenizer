@@ -87,7 +87,7 @@ def test_panel_ops_capability_is_explicit_and_future_capabilities_stay_rejected(
     no_ops = validate_ir_v04(_ir(_panel_operator_node(), ["core", "panel_type"]))
     umbrella = validate_ir_v04(_ir(_panel_operator_node(), ["core", "panel"]))
     weights = validate_ir_v04(
-        _ir(_panel_operator_node("weight.normalize_gross"), ["core", "panel_type", "panel_ops"])
+        _ir(_panel_operator_node("weight.equal"), ["core", "panel_type", "panel_ops"])
     )
     recipes = validate_ir_v04(_ir(_panel_operator_node(), ["core", "panel_type", "panel_recipes"]))
 
@@ -96,7 +96,7 @@ def test_panel_ops_capability_is_explicit_and_future_capabilities_stay_rejected(
     }
     assert "QST_V2_CAPABILITY_PANEL_OPS_REQUIRED" in {diagnostic.code for diagnostic in no_ops.errors}
     assert umbrella.errors[0].code == "capability_not_accepted"
-    assert "QST_V2_CAPABILITY_PANEL_WEIGHTS_NOT_ENABLED" in {
+    assert "QST_V2_WEIGHT_OPERATOR_DEFERRED" in {
         diagnostic.code for diagnostic in weights.errors
     }
     assert recipes.errors[0].code == "capability_not_accepted"

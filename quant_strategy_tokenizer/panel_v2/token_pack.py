@@ -10,13 +10,18 @@ from quant_strategy_tokenizer.panel_v2.operators import (
     PANEL_OPERATOR_TOKENS,
     PANEL_OPS_PACK_ID,
     PANEL_OPS_PACK_VERSION,
+    PANEL_WEIGHTS_PACK_ID,
+    PANEL_WEIGHTS_PACK_VERSION,
+    WEIGHT_OPERATOR_TOKENS,
     PanelOperatorName,
+    WeightOperatorName,
 )
 from quant_strategy_tokenizer.ports_v2 import InputSpec, OutputSpec
 from quant_strategy_tokenizer.tokens_v2 import TokenPackManifestV2, TokenSpecV2
 from quant_strategy_tokenizer.types_v2 import parse_type_spec
 
 PanelOperatorCategory = Literal["panel_operator", "selection_operator"]
+WeightOperatorCategory = Literal["weight_operator"]
 
 
 def panel_ops_token_pack_v2() -> TokenPackManifestV2:
@@ -27,6 +32,18 @@ def panel_ops_token_pack_v2() -> TokenPackManifestV2:
         version=PANEL_OPS_PACK_VERSION,
         namespaces=("core",),
         tokens=tuple(_panel_operator_spec(name) for name in PANEL_OPERATOR_TOKENS),
+        origin_tier="core",
+    )
+
+
+def panel_weights_token_pack_v2() -> TokenPackManifestV2:
+    """Return the WP8d core TokenPack metadata for Weight operators."""
+
+    return TokenPackManifestV2(
+        pack_id=PANEL_WEIGHTS_PACK_ID,
+        version=PANEL_WEIGHTS_PACK_VERSION,
+        namespaces=("core",),
+        tokens=tuple(_weight_operator_spec(name) for name in WEIGHT_OPERATOR_TOKENS),
         origin_tier="core",
     )
 
@@ -54,6 +71,45 @@ def _panel_operator_spec(name: PanelOperatorName) -> TokenSpecV2:
             "reference_semantics": "deterministic",
         },
         numeric_policy=_numeric_policy_for(name),
+        risk={"risk_level": "medium"},
+        tests=[
+            {
+                "kind": "reference_helper",
+                "deterministic": True,
+            }
+        ],
+    )
+
+
+def _weight_operator_spec(name: WeightOperatorName) -> TokenSpecV2:
+    return TokenSpecV2(
+        token_id=f"core.{name}",
+        token_ref=TokenRefV04(
+            namespace="core",
+            name=name,
+            version=1,
+            behavior_version=1,
+        ),
+        version=1,
+        behavior_version=1,
+        origin_tier="core",
+        inputs={"weights": _input("Panel[decimal]")},
+        outputs={"weights": _output("Panel[decimal]")},
+        params_schema=_weight_params_schema(name),
+        purity="pure",
+        state={
+            "panel_operator": True,
+            "category": "weight_operator",
+            "wp": "WP8d",
+            "reference_semantics": "deterministic",
+        },
+        numeric_policy=NumericPolicy(
+            representation="decimal",
+            deterministic_level="semantic",
+            reduction_order="fixed_input_order",
+            nan_policy="reject",
+            inf_policy="reject",
+        ),
         risk={"risk_level": "medium"},
         tests=[
             {
@@ -188,6 +244,50 @@ def _params_schema(name: PanelOperatorName) -> dict[str, object]:
         "type": "object",
         "additionalProperties": False,
         "properties": common_missing,
+    }
+
+
+def _weight_params_schema(name: WeightOperatorName) -> dict[str, object]:
+    common = {
+        "missing_policy": {
+            "enum": ["error_on_missing", "drop_missing", "propagate_missing"],
+            "default": "error_on_missing",
+        }
+    }
+    if name == "weight.normalize_gross":
+        return {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                **common,
+                "target_gross": {"type": "string", "default": "1"},
+                "zero_gross_policy": {"enum": ["keep_zero", "error"], "default": "keep_zero"},
+            },
+        }
+    if name == "weight.cap_per_symbol":
+        return {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["max_abs_weight"],
+            "properties": {
+                **common,
+                "max_abs_weight": {"type": "string"},
+                "mode": {"const": "clip_no_redistribute", "default": "clip_no_redistribute"},
+            },
+        }
+    return {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            **common,
+            "target_net": {"const": "0", "default": "0"},
+            "target_gross": {"type": "string", "default": "1"},
+            "neutralization_method": {
+                "const": "demean_then_gross_normalize",
+                "default": "demean_then_gross_normalize",
+            },
+            "zero_gross_policy": {"enum": ["keep_zero", "error"], "default": "keep_zero"},
+        },
     }
 
 

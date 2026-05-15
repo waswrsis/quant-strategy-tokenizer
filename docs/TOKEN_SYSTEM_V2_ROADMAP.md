@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 
-Status: WP0-WP8c accepted under the v1.0.3 standard. WP8c adds Panel operator reference semantics and `panel_ops` TokenPack metadata.
+Status: WP0-WP8d accepted under the v1.0.3 standard. WP8d adds WeightPanel normalization / constraint reference semantics and `panel_weights` TokenPack metadata.
 
 ## Direction
 
@@ -33,7 +33,7 @@ Legacy versions remain loadable and verifiable, but new authoring moves to `qst-
 | WP8a | Panel Detail Design Gate | accepted |
 | WP8b | Panel Type Layer | accepted |
 | WP8c | Panel Operators | accepted |
-| WP8d | Weight Operators | not started |
+| WP8d | Weight Operators | accepted |
 | WP8e | Panel Recipes + PV-B | not started |
 | WP9 | Custom Token Runtime + PV-D | not started |
 | WP10 | Migration Tooling | not started |
@@ -245,6 +245,21 @@ WP8c enables deterministic Panel operator reference semantics without enabling r
 - `qst-tokenpack-panel-ops/0.1.0` records TokenSpecV2 metadata for the WP8c operators.
 
 WP8c does not add Panel recipes, weight normalization, exposure constraints, market-neutral logic, adapters, migration tooling, legacy runtime execution, or v0.4 CLI authoring.
+
+## WP8d Accepted Scope
+
+WP8d enables deterministic WeightPanel normalization and constraint reference semantics without enabling portfolio execution or Panel recipes:
+
+- `panel_weights` is accepted only when `panel_type` is also explicitly declared.
+- `panel_weights` does not require `panel_ops`, allowing validated raw `WeightPanel` inputs from non-operator sources.
+- Weight operators reject arbitrary `Panel[decimal]` inputs; inputs must be valid `WeightPanel` type-layer outputs with `metadata.panel_type_by_output` entries using `kind=weight_panel`.
+- `weight.normalize_gross` scales eligible weights to a canonical DecimalString `target_gross` and handles zero-gross inputs through explicit `keep_zero` or `error` policy.
+- `weight.cap_per_symbol` implements `clip_no_redistribute`; `max_abs_weight="0"` is legal and clips all eligible weights to zero.
+- `weight.market_neutral` implements `demean_then_gross_normalize`, supports only `target_net="0"` in v1, and follows `zero_gross_policy` for empty demeaned gross.
+- DecimalString operator params are canonicalized before semantics and hash material, so equivalent inputs such as `"1"`, `"1.0"`, and `"1.00"` have the same meaning.
+- `qst-tokenpack-panel-weights/0.1.0` records TokenSpecV2 metadata for the WP8d weight operators.
+
+WP8d does not solve simultaneous gross/cap constraints, create orders, create execution reports, add risk controls, add portfolio optimizers, add Panel recipes, add adapters, add migration tooling, add legacy runtime execution, or add v0.4 CLI authoring.
 
 ## P-Validate Gates
 

@@ -5,24 +5,40 @@ from __future__ import annotations
 from pydantic import ValidationError
 
 from quant_strategy_tokenizer.ir_v04.schema import NodeV04, StrategyIRV04
-from quant_strategy_tokenizer.panel_v2 import PANEL_OPERATOR_TOKENS, parse_panel_type_by_output
+from quant_strategy_tokenizer.panel_v2 import (
+    PANEL_OPERATOR_TOKENS,
+    WEIGHT_OPERATOR_TOKENS,
+    PanelTypeLayerSpec,
+    parse_panel_type_by_output,
+)
 from quant_strategy_tokenizer.validation_v2 import Diagnostic
 
 PANEL_OPS_CAPABILITY = "panel_ops"
 PANEL_TYPE_CAPABILITY = "panel_type"
+PANEL_WEIGHTS_CAPABILITY = "panel_weights"
 PANEL_OPERATOR_PREFIXES = ("panel.", "selection.", "weight.")
 PANEL_WEIGHT_OPERATOR_PREFIX = "weight."
+DEFERRED_WEIGHT_TOKENS = {"weight.equal", "weight.long_short", "weight.normalize_net"}
 
 
 def validate_panel_type_layer_v04(ir: StrategyIRV04) -> list[Diagnostic]:
-    """Validate WP8c Panel type-layer and operator declarations."""
+    """Validate WP8d Panel type-layer, Panel operator, and Weight operator declarations."""
 
     diagnostics: list[Diagnostic] = []
     has_panel_type_capability = PANEL_TYPE_CAPABILITY in ir.capabilities
     has_panel_ops_capability = PANEL_OPS_CAPABILITY in ir.capabilities
+    has_panel_weights_capability = PANEL_WEIGHTS_CAPABILITY in ir.capabilities
+    weight_output_refs = _weight_output_refs(ir)
     for node in ir.strategy.nodes:
         diagnostics.extend(_validate_node_panel_metadata(node, has_panel_type_capability))
-        diagnostics.extend(_validate_panel_operator_gate(node, has_panel_ops_capability))
+        diagnostics.extend(
+            _validate_panel_operator_gate(
+                node,
+                has_panel_ops_capability,
+                has_panel_weights_capability,
+                weight_output_refs,
+            )
+        )
         diagnostics.extend(_validate_panel_state_gate(node))
     return diagnostics
 
@@ -104,19 +120,44 @@ def _validate_node_panel_metadata(node: NodeV04, has_panel_type_capability: bool
     return diagnostics
 
 
-def _validate_panel_operator_gate(node: NodeV04, has_panel_ops_capability: bool) -> list[Diagnostic]:
+def _validate_panel_operator_gate(
+    node: NodeV04,
+    has_panel_ops_capability: bool,
+    has_panel_weights_capability: bool,
+    weight_output_refs: set[str],
+) -> list[Diagnostic]:
     name = _token_name(node)
     if name is None or not name.startswith(PANEL_OPERATOR_PREFIXES):
         return []
     if name.startswith(PANEL_WEIGHT_OPERATOR_PREFIX):
-        return [
-            _diagnostic(
-                "QST_V2_CAPABILITY_PANEL_WEIGHTS_NOT_ENABLED",
-                node,
-                None,
-                f"Weight operator token {name!r} is not accepted until WP8d.",
-            )
-        ]
+        if name in DEFERRED_WEIGHT_TOKENS:
+            return [
+                _diagnostic(
+                    "QST_V2_WEIGHT_OPERATOR_DEFERRED",
+                    node,
+                    None,
+                    f"Weight operator token {name!r} is deferred beyond WP8d-v1.",
+                )
+            ]
+        if name not in WEIGHT_OPERATOR_TOKENS:
+            return [
+                _diagnostic(
+                    "QST_V2_WEIGHT_OPERATOR_NOT_ACCEPTED",
+                    node,
+                    None,
+                    f"Weight operator token {name!r} is not accepted in WP8d.",
+                )
+            ]
+        if not has_panel_weights_capability:
+            return [
+                _diagnostic(
+                    "QST_V2_CAPABILITY_PANEL_WEIGHTS_REQUIRED",
+                    node,
+                    None,
+                    f"Weight operator token {name!r} requires the panel_weights capability.",
+                )
+            ]
+        return _validate_weight_operator_signature(node, weight_output_refs)
     if name in PANEL_OPERATOR_TOKENS:
         if has_panel_ops_capability:
             return []
@@ -159,6 +200,91 @@ def _panel_outputs(node: NodeV04) -> list[str]:
         for output_name, output_spec in node.signature.outputs.items()
         if output_spec.type.kind == "Panel"
     ]
+
+
+def _weight_output_refs(ir: StrategyIRV04) -> set[str]:
+    refs: set[str] = set()
+    for node in ir.strategy.nodes:
+        raw = node.metadata.get("panel_type_by_output")
+        if raw is None:
+            continue
+        try:
+            parsed = parse_panel_type_by_output(raw)
+        except (TypeError, ValueError, ValidationError):
+            continue
+        for output_name, spec in parsed.items():
+            if spec.kind == "weight_panel":
+                refs.add(f"{node.id}.{output_name}")
+    return refs
+
+
+def _validate_weight_operator_signature(node: NodeV04, weight_output_refs: set[str]) -> list[Diagnostic]:
+    diagnostics: list[Diagnostic] = []
+    weight_inputs = [
+        input_name
+        for input_name, input_spec in node.signature.inputs.items()
+        if input_spec.type.kind == "Panel"
+    ]
+    if not weight_inputs:
+        diagnostics.append(
+            _diagnostic(
+                "QST_V2_WEIGHT_INPUT_NOT_WEIGHT_PANEL",
+                node,
+                None,
+                "Weight operators require a Panel[decimal] WeightPanel input.",
+            )
+        )
+    for input_name in weight_inputs:
+        input_spec = node.signature.inputs[input_name]
+        if input_spec.type.value_type is None or input_spec.type.value_type.name != "decimal":
+            diagnostics.append(
+                _diagnostic(
+                    "QST_V2_WEIGHT_INPUT_NOT_WEIGHT_PANEL",
+                    node,
+                    input_name,
+                    "Weight operator Panel inputs must use Panel[decimal].",
+                )
+            )
+        raw_ref = node.inputs.get(input_name)
+        if not isinstance(raw_ref, str) or raw_ref not in weight_output_refs:
+            diagnostics.append(
+                _diagnostic(
+                    "QST_V2_WEIGHT_INPUT_METADATA_REQUIRED",
+                    node,
+                    input_name,
+                    "Weight operator inputs must reference an output with weight_panel type metadata.",
+                )
+            )
+
+    parsed_outputs: dict[str, PanelTypeLayerSpec] = {}
+    raw_outputs = node.metadata.get("panel_type_by_output")
+    if raw_outputs is not None:
+        try:
+            parsed_outputs = parse_panel_type_by_output(raw_outputs)
+        except (TypeError, ValueError, ValidationError):
+            parsed_outputs = {}
+    for output_name, output_spec in node.signature.outputs.items():
+        if output_spec.type.kind != "Panel":
+            continue
+        if output_spec.type.value_type is None or output_spec.type.value_type.name != "decimal":
+            diagnostics.append(
+                _diagnostic(
+                    "QST_V2_WEIGHT_OUTPUT_NOT_WEIGHT_PANEL",
+                    node,
+                    output_name,
+                    "Weight operator outputs must use Panel[decimal].",
+                )
+            )
+        if output_name not in parsed_outputs or parsed_outputs[output_name].kind != "weight_panel":
+            diagnostics.append(
+                _diagnostic(
+                    "QST_V2_WEIGHT_OUTPUT_METADATA_REQUIRED",
+                    node,
+                    output_name,
+                    "Weight operator outputs must declare weight_panel type metadata.",
+                )
+            )
+    return diagnostics
 
 
 def _token_name(node: NodeV04) -> str | None:

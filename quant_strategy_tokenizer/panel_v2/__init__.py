@@ -24,6 +24,9 @@ from quant_strategy_tokenizer.panel_v2.operators import (
     PANEL_OPERATOR_TOKENS,
     PANEL_OPS_PACK_ID,
     PANEL_OPS_PACK_VERSION,
+    PANEL_WEIGHTS_PACK_ID,
+    PANEL_WEIGHTS_PACK_VERSION,
+    WEIGHT_OPERATOR_TOKENS,
     PanelOperatorResult,
     PanelPoint,
     PanelValue,
@@ -41,6 +44,9 @@ from quant_strategy_tokenizer.panel_v2.operators import (
     panel_winsorize,
     panel_zscore,
     selection_to_weights,
+    weight_cap_per_symbol,
+    weight_market_neutral,
+    weight_normalize_gross,
 )
 
 
@@ -48,6 +54,14 @@ def panel_ops_token_pack_v2() -> Any:
     """Return the WP8c Panel operators TokenPack without importing it eagerly."""
 
     from quant_strategy_tokenizer.panel_v2.token_pack import panel_ops_token_pack_v2 as _impl
+
+    return _impl()
+
+
+def panel_weights_token_pack_v2() -> Any:
+    """Return the WP8d Weight operators TokenPack without importing it eagerly."""
+
+    from quant_strategy_tokenizer.panel_v2.token_pack import panel_weights_token_pack_v2 as _impl
 
     return _impl()
 
@@ -61,7 +75,10 @@ __all__ = [
     "PANEL_REPRESENTATION_SCHEMA_VERSION",
     "PANEL_SELECTION_WEIGHT_SCHEMA_VERSION",
     "PANEL_TYPE_LAYER_SCHEMA_VERSION",
+    "PANEL_WEIGHTS_PACK_ID",
+    "PANEL_WEIGHTS_PACK_VERSION",
     "UNIVERSE_MASK_SCHEMA_VERSION",
+    "WEIGHT_OPERATOR_TOKENS",
     "GroupSpec",
     "PanelMissingPolicy",
     "PanelOperatorResult",
@@ -86,8 +103,12 @@ __all__ = [
     "panel_rank",
     "panel_residualize",
     "panel_top_k",
+    "panel_weights_token_pack_v2",
     "panel_winsorize",
     "panel_zscore",
     "parse_panel_type_by_output",
     "selection_to_weights",
+    "weight_cap_per_symbol",
+    "weight_market_neutral",
+    "weight_normalize_gross",
 ]

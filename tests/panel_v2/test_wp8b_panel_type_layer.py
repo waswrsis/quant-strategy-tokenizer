@@ -156,9 +156,10 @@ def test_panel_type_capability_validates_and_panel_ops_requires_panel_type() -> 
 
     assert valid.ok
     assert rejected["panel_ops"].errors[0].code == "QST_V2_CAPABILITY_PANEL_OPS_REQUIRES_PANEL_TYPE"
+    assert rejected["panel_weights"].errors[0].code == "QST_V2_CAPABILITY_PANEL_WEIGHTS_REQUIRES_PANEL_TYPE"
     for capability, result in rejected.items():
         assert not result.ok
-        if capability == "panel_ops":
+        if capability in {"panel_ops", "panel_weights"}:
             continue
         assert result.errors[0].code == "capability_not_accepted", capability
 

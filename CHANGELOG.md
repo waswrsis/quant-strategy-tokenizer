@@ -1,5 +1,14 @@
 # Changelog
 
+## Token System v2 WP8d Weight Operators
+
+- Added deterministic WeightPanel reference helpers for `weight.normalize_gross`, `weight.cap_per_symbol`, and `weight.market_neutral`.
+- Accepted `panel_weights` only when `panel_type` is also explicitly declared; `panel_ops` is not required for validated raw `WeightPanel` inputs.
+- Added validation that weight operators consume typed `WeightPanel` outputs with output-scoped `metadata.panel_type_by_output`, not arbitrary `Panel[decimal]`.
+- Added `qst-tokenpack-panel-weights/0.1.0` with core TokenSpecV2 metadata for WP8d weight operators.
+- Canonicalized DecimalString operator params before semantics and hash material, including equivalent `target_gross` and cap values.
+- Kept simultaneous gross/cap optimization, order generation, execution artifacts, risk controls, Panel recipes, runtime execution, migration tooling, adapters, and v0.4 CLI authoring out of scope.
+
 ## Token System v2 WP8c Panel Operators
 
 - Added deterministic Panel operator reference helpers for mask, rank, zscore, top/bottom-k, demean, group-demean, winsorize, single-factor residualize, and selection-to-raw-weight conversion.
