@@ -1,5 +1,14 @@
 # Changelog
 
+## Token System v2 WP6a State Basic
+
+- Added `state_v2.StatePolicy` with deterministic warmup, reset, and missing-event policy defaults.
+- Added state transition trace models and deterministic reference helpers for `state.delay`, `state.accumulate`, and `state.edge_detect`.
+- Added `ReducerRegistry` with registered-only reducers and built-ins `sum`, `count`, `last`, `min`, and `max`.
+- Added `qst-tokenpack-state-basic/0.1.0` with core TokenSpecV2 metadata for `core.state.delay`, `core.state.accumulate`, and `core.state.edge_detect`.
+- Added `qst_state_policy_0_4` JSON schema.
+- Kept FSM, state recipes, PV-A, legacy runtime execution, migration tooling, Panel behavior, custom token runtime, and v0.4 CLI authoring out of scope.
+
 ## Token System v2 WP5b Lock + Package Integration
 
 - Added v0.4 TokenSpec / TokenPack lock snapshot models for token hashes, pack hashes, implementation-reference hashes, runtime-environment hashes, origin, attestation, and risk metadata.

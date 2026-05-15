@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 
-Status: WP0-WP5b accepted under the v1.0.3 standard. WP5b adds TokenSpec / TokenPack lock and qstpkg propagation metadata.
+Status: WP0-WP6a accepted under the v1.0.3 standard. WP6a adds basic deterministic state reference semantics and TokenPack metadata.
 
 ## Direction
 
@@ -26,7 +26,7 @@ Legacy versions remain loadable and verifiable, but new authoring moves to `qst-
 | WP4 | NumericPolicy + TokenEvolutionPolicy | accepted |
 | WP5 | TokenSpec v2 + Registry + TokenPack | accepted |
 | WP5b | Lock + Package Integration | accepted |
-| WP6a | State Basic | not started |
+| WP6a | State Basic | accepted |
 | WP6b | State FSM | not started |
 | WP6c | State Recipes + PV-A | not started |
 | WP7 | Decision Algebra | not started |
@@ -140,6 +140,19 @@ WP5b makes TokenSpec / TokenPack metadata portable through future v0.4 locks and
 - JSON schemas for `qst_lock_0_4` and `qst_package_manifest` include the additive TokenPack propagation fields.
 
 WP5b does not add custom token execution, source-tree packaging layout, WP6 state, migration tooling, runtime integration, Panel behavior, v0.4 CLI authoring, or legacy qst.lock behavior changes.
+
+## WP6a Accepted Scope
+
+WP6a adds basic deterministic state semantics for v0.4 metadata and tests:
+
+- `quant_strategy_tokenizer.state_v2.StatePolicy` with accepted defaults for warmup, reset, and missing-event policy.
+- `StateTraceEvent` and `StateExecutionTrace` for deterministic policy and state transition tracing.
+- Reference helpers for `state.delay`, `state.accumulate`, and `state.edge_detect`.
+- `ReducerRegistry` with registered-only reducers and built-ins `sum`, `count`, `last`, `min`, and `max`.
+- `qst-tokenpack-state-basic/0.1.0` with core TokenSpecV2 metadata for `core.state.delay`, `core.state.accumulate`, and `core.state.edge_detect`.
+- JSON schema for `qst-state-policy/0.4`.
+
+WP6a does not add FSM behavior, state recipes, PV-A artifacts, legacy runtime execution, migration tooling, Panel behavior, custom token runtime, or v0.4 CLI authoring.
 
 ## P-Validate Gates
 
