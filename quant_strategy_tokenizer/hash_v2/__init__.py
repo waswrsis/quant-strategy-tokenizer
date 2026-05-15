@@ -17,8 +17,14 @@ from quant_strategy_tokenizer.hash_v2.signature_hash import (
     signature_hash_for_ports_v2,
     signature_hash_v2,
 )
-from quant_strategy_tokenizer.hash_v2.token_pack_hash import token_pack_hash_v2
-from quant_strategy_tokenizer.hash_v2.token_spec_hash import token_spec_hash_v2
+from quant_strategy_tokenizer.hash_v2.token_pack_hash import (
+    token_pack_hash_for_pack_v2,
+    token_pack_hash_v2,
+)
+from quant_strategy_tokenizer.hash_v2.token_spec_hash import (
+    token_spec_hash_for_spec_v2,
+    token_spec_hash_v2,
+)
 
 __all__ = [
     "HASH_V2_PATTERN",
@@ -37,6 +43,8 @@ __all__ = [
     "runtime_environment_hash_v2",
     "signature_hash_for_ports_v2",
     "signature_hash_v2",
+    "token_pack_hash_for_pack_v2",
     "token_pack_hash_v2",
+    "token_spec_hash_for_spec_v2",
     "token_spec_hash_v2",
 ]

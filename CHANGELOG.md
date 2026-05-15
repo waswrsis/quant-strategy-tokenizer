@@ -1,5 +1,14 @@
 # Changelog
 
+## Token System v2 WP5 TokenSpec v2 + Registry + TokenPack
+
+- Added `tokens_v2.TokenSpecV2` with canonical token refs, v2 port signatures, numeric policy, lifecycle, origin, attestation, and canonical metadata refs.
+- Added `TokenPackManifestV2` and TokenPack dependency declarations with PEP 440 validation.
+- Added deterministic TokenPack dependency validation for transitive resolution, missing packs, version mismatch, hash mismatch, and cycles.
+- Added `TokenRegistryV2` with core namespace protection, duplicate handling, project-local override diagnostics, stable resolution logs, and non-self-trusted attestation diagnostics.
+- Added typed TokenSpec and TokenPack hash helpers plus JSON schemas.
+- Kept WP5b lock/qstpkg propagation, custom token execution, runtime integration, migration tooling, Panel behavior, and v0.4 CLI authoring out of scope.
+
 ## Token System v2 WP4 NumericPolicy + TokenEvolutionPolicy
 
 - Added `numeric_v2.NumericPolicy` with explicit representation, determinism, reduction, `NaN`, and infinity policy fields.

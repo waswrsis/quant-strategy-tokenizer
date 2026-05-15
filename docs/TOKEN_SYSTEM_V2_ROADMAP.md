@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 
-Status: WP0-WP4 accepted under the v1.0.3 standard. WP4 adds NumericPolicy and TokenEvolutionPolicy hash material.
+Status: WP0-WP5 accepted under the v1.0.3 standard. WP5 adds TokenSpec v2, TokenPack, and deterministic registry validation.
 
 ## Direction
 
@@ -24,7 +24,7 @@ Legacy versions remain loadable and verifiable, but new authoring moves to `qst-
 | WP2 | Structured TypeSpec + PortSpec | accepted |
 | WP3 | PortTemporalSpec + PV-C | accepted |
 | WP4 | NumericPolicy + TokenEvolutionPolicy | accepted |
-| WP5 | TokenSpec v2 + Registry + TokenPack | not started |
+| WP5 | TokenSpec v2 + Registry + TokenPack | accepted |
 | WP6a | State Basic | not started |
 | WP6b | State FSM | not started |
 | WP6c | State Recipes + PV-A | not started |
@@ -113,6 +113,19 @@ WP4 adds behavior-policy material required before TokenSpec v2 registry work:
 - `docs/TOKEN_EVOLUTION_POLICY.md` as the accepted evolution policy record.
 
 WP4 does not add WP5 TokenSpec v2 registry, token packs, registry resolution, recipe migration, runtime execution, custom token runtime, Panel behavior, or v0.4 CLI authoring.
+
+## WP5 Accepted Scope
+
+WP5 adds portable v0.4 token metadata and deterministic registry validation:
+
+- `quant_strategy_tokenizer.tokens_v2.TokenSpecV2` with canonical `TokenRefV04`, `NumericPolicy`, lifecycle, port signatures, metadata refs, risk/tests/dependencies, origin, and attestation claims.
+- `TokenPackManifestV2` with PEP 440 versioning, declared namespaces, embedded-source flags, TokenSpec contents, and TokenPack dependencies.
+- Deterministic TokenPack dependency validation for transitive dependencies, missing packs, version mismatches, hash mismatches, and cycles.
+- `TokenRegistryV2` built only from TokenPack manifests, with core namespace protection, duplicate handling, project-local override rules, stable resolution logs, and non-self-trusted attestation diagnostics.
+- Typed hash helpers for TokenSpec and TokenPack material.
+- JSON schemas for TokenSpec v2 and TokenPack v2.
+
+WP5 does not add WP5b lock/qstpkg propagation, custom token execution, runtime integration, migration tooling, Panel behavior, or v0.4 CLI authoring.
 
 ## P-Validate Gates
 
