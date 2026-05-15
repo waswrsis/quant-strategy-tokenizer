@@ -1,5 +1,12 @@
 # Changelog
 
+## Token System v2 Follow-Up Cleanup
+
+- Made WP9 `ExecutionGrant` issuance deterministic and time-bound with an explicit UTC issuance timestamp and a default 15-minute TTL.
+- Tightened `installed_distribution` integrity checks so RECORD SHA-256 entries are verified against actual installed file bytes, and actual byte hashes always enter implementation hash material.
+- Rejected `bool` values for custom-token `TimeSeries[float]` and `Panel[float]` outputs while keeping integer values float-compatible.
+- Documented that WP8 Panel and Weight reference numerics use semantic `float64` policy and do not claim bit-exact reproducibility.
+
 ## Token System v2 Security + Semantic Cleanup
 
 - Hardened WP9 custom-token approval so executable approvals require both `allow_token=true` and `ack_risk=true`, and persisted incomplete approvals are ignored defensively.

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import importlib
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -41,6 +41,8 @@ from quant_strategy_tokenizer.ir_v04 import TokenRefV04
 from quant_strategy_tokenizer.profile_v2 import ProfileName
 from quant_strategy_tokenizer.tokens_v2 import TokenPackManifestV2, TokenSpecV2
 from quant_strategy_tokenizer.validation_v2 import Diagnostic, ValidationResult
+
+DEFAULT_EXECUTION_GRANT_TTL_SECONDS = 900
 
 
 class ApprovalStore(BaseModel):
@@ -149,8 +151,16 @@ class TokenRuntimeService:
         authorization: TokenAuthorizationResult,
         *,
         run_id: str,
+        issued_at_utc: str,
+        ttl_seconds: int = DEFAULT_EXECUTION_GRANT_TTL_SECONDS,
     ) -> ExecutionGrant:
-        return issue_execution_grant(integrity, authorization, run_id=run_id)
+        return issue_execution_grant(
+            integrity,
+            authorization,
+            run_id=run_id,
+            issued_at_utc=issued_at_utc,
+            ttl_seconds=ttl_seconds,
+        )
 
     def execute_custom_token(
         self,
@@ -359,11 +369,19 @@ def issue_execution_grant(
     authorization: TokenAuthorizationResult,
     *,
     run_id: str,
+    issued_at_utc: str,
+    ttl_seconds: int = DEFAULT_EXECUTION_GRANT_TTL_SECONDS,
 ) -> ExecutionGrant:
     """Issue a short-lived execution grant from verified authorization."""
 
     if not integrity.ok or not authorization.ok or authorization.approval_record_hash is None:
         raise ValueError("ExecutionGrant requires passing integrity and approval-backed authorization")
+    issued_at = _parse_utc_timestamp(issued_at_utc)
+    if issued_at is None:
+        raise ValueError("ExecutionGrant requires a valid UTC issued_at_utc timestamp")
+    if isinstance(ttl_seconds, bool) or not isinstance(ttl_seconds, int) or ttl_seconds <= 0:
+        raise ValueError("ExecutionGrant ttl_seconds must be a positive integer")
+    expires_at = _format_utc_timestamp(issued_at + timedelta(seconds=ttl_seconds))
     return ExecutionGrant(
         token_ref=integrity.token_ref,
         token_spec_hash=integrity.token_spec_hash,
@@ -373,6 +391,7 @@ def issue_execution_grant(
         approval_record_hash=authorization.approval_record_hash,
         profile=authorization.profile,
         issued_for_run_id=run_id,
+        expires_at=expires_at,
     )
 
 
@@ -506,7 +525,7 @@ def _canonical_output(
         _validate_value_for_type(
             raw_output[output_name],
             output_spec.type.kind,
-            str(output_spec.type.value_type) if output_spec.type.value_type is not None else None,
+            output_spec.type.value_type.name if output_spec.type.value_type is not None else None,
             diagnostics,
         )
     return raw_output
@@ -529,22 +548,32 @@ def _validate_value_for_type(
         )
         return
     for item in values:
-        if item is None:
+        payload = item.get("value") if kind == "Panel" and isinstance(item, dict) and "value" in item else item
+        if payload is None:
             continue
-        if value_type == "float" and not isinstance(item, int | float):
+        if value_type == "float" and (isinstance(payload, bool) or not isinstance(payload, int | float)):
             diagnostics.append(_diagnostic("QST_V2_CUSTOM_TOKEN_OUTPUT_TYPE_INVALID", "runtime", "Expected float."))
         if value_type == "decimal":
-            try:
-                validate_decimal_string(item)
-            except Exception as exc:
+            if not isinstance(payload, str):
                 diagnostics.append(
                     _diagnostic(
                         "QST_V2_CUSTOM_TOKEN_OUTPUT_DECIMAL_INVALID",
                         "runtime",
-                        str(exc),
+                        "Expected DecimalString.",
                     )
                 )
-        if value_type == "bool" and not isinstance(item, bool):
+            else:
+                try:
+                    validate_decimal_string(payload)
+                except Exception as exc:
+                    diagnostics.append(
+                        _diagnostic(
+                            "QST_V2_CUSTOM_TOKEN_OUTPUT_DECIMAL_INVALID",
+                            "runtime",
+                            str(exc),
+                        )
+                    )
+        if value_type == "bool" and not isinstance(payload, bool):
             diagnostics.append(_diagnostic("QST_V2_CUSTOM_TOKEN_OUTPUT_TYPE_INVALID", "runtime", "Expected bool."))
     if kind == "Decision":
         valid = {"accept", "reject", "unknown", "block"}
@@ -626,25 +655,24 @@ def _validate_grant(
                 "ExecutionGrant run id does not match the current execution context.",
             )
         )
-    if grant.expires_at is not None:
-        expires_at = _parse_utc_timestamp(grant.expires_at)
-        current_time = _parse_utc_timestamp(current_time_utc) if current_time_utc is not None else None
-        if expires_at is None or current_time is None:
-            diagnostics.append(
-                _diagnostic(
-                    "QST_V2_EXECUTION_GRANT_EXPIRED",
-                    "runtime",
-                    "ExecutionGrant expiry cannot be verified with the provided timestamp material.",
-                )
+    expires_at = _parse_utc_timestamp(grant.expires_at)
+    current_time = _parse_utc_timestamp(current_time_utc) if current_time_utc is not None else None
+    if expires_at is None or current_time is None:
+        diagnostics.append(
+            _diagnostic(
+                "QST_V2_EXECUTION_GRANT_EXPIRED",
+                "runtime",
+                "ExecutionGrant expiry cannot be verified with the provided timestamp material.",
             )
-        elif expires_at <= current_time:
-            diagnostics.append(
-                _diagnostic(
-                    "QST_V2_EXECUTION_GRANT_EXPIRED",
-                    "runtime",
-                    "ExecutionGrant has expired.",
-                )
+        )
+    elif expires_at <= current_time:
+        diagnostics.append(
+            _diagnostic(
+                "QST_V2_EXECUTION_GRANT_EXPIRED",
+                "runtime",
+                "ExecutionGrant has expired.",
             )
+        )
     return diagnostics
 
 
@@ -653,9 +681,14 @@ def _parse_utc_timestamp(value: str) -> datetime | None:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError:
         return None
-    if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=UTC)
+    if parsed.tzinfo is None or parsed.utcoffset() != timedelta(0):
+        return None
     return parsed.astimezone(UTC)
+
+
+def _format_utc_timestamp(value: datetime) -> str:
+    normalized = value.astimezone(UTC).replace(tzinfo=None)
+    return normalized.isoformat(timespec="seconds") + "Z"
 
 
 def _find_spec(pack: TokenPackManifestV2, token_ref: TokenRefV04) -> TokenSpecV2 | None:

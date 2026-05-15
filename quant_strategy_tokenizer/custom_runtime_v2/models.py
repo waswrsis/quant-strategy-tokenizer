@@ -123,7 +123,7 @@ class ExecutionGrant(BaseModel):
     approval_record_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
     profile: ProfileName
     issued_for_run_id: str
-    expires_at: str | None = None
+    expires_at: str
 
 
 class TokenVerifyReport(BaseModel):

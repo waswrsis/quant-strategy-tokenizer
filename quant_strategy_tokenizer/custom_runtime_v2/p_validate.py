@@ -177,7 +177,13 @@ def run_custom_pv_d_v04(
     pack_path = root / fixture.token_pack_path
     pack = load_token_pack(pack_path)
     service = TokenRuntimeService()
-    context = TokenRuntimeContext(base_path=pack_path, profile=fixture.profile, run_id="pv-d")
+    current_time_utc = "2026-05-15T00:00:00Z"
+    context = TokenRuntimeContext(
+        base_path=pack_path,
+        profile=fixture.profile,
+        run_id="pv-d",
+        current_time_utc=current_time_utc,
+    )
     integrity = service.verify_integrity(pack, fixture.token_ref, context=context)
     store = ApprovalStore()
     if fixture.approve:
@@ -203,7 +209,12 @@ def run_custom_pv_d_v04(
     )
     execution = None
     if authorization.ok:
-        grant = service.issue_execution_grant(integrity, authorization, run_id="pv-d")
+        grant = service.issue_execution_grant(
+            integrity,
+            authorization,
+            run_id="pv-d",
+            issued_at_utc=current_time_utc,
+        )
         execution = service.execute_custom_token(
             pack,
             fixture.token_ref,

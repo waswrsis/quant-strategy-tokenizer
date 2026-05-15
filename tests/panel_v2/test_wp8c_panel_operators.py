@@ -289,6 +289,10 @@ def test_panel_ops_token_pack_validates_and_hashes_semantic_params() -> None:
     assert token_pack_hash_for_pack_v2(pack) == token_pack_hash_for_pack_v2(panel_ops_token_pack_v2())
     assert token_spec_hash_for_spec_v2(zscore) != token_spec_hash_for_spec_v2(changed)
     assert {spec.state["category"] for spec in pack.tokens} == {"panel_operator", "selection_operator"}
+    for spec in pack.tokens:
+        if spec.numeric_policy.representation == "float64":
+            assert spec.numeric_policy.deterministic_level == "semantic"
+        assert spec.numeric_policy.deterministic_level != "bit_exact"
 
 
 def test_panel_operator_metadata_affects_panel_signature_hash_but_not_non_panel_hash() -> None:

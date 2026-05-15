@@ -76,6 +76,27 @@ def test_cli_token_verify_approve_execute_are_separate(tmp_path: Path) -> None:
     )
     assert approved.exit_code == 0, approved.output
 
+    missing_time = runner.invoke(
+        app,
+        [
+            "token",
+            "execute",
+            TOKEN_REF,
+            "--pack",
+            str(PACK),
+            "--profile",
+            "pretrade",
+            "--inputs-file",
+            str(inputs),
+            "--approvals",
+            str(approvals),
+            "--run-id",
+            "cli-test",
+        ],
+    )
+    assert missing_time.exit_code == 1
+    assert "requires --current-time-utc" in missing_time.output
+
     executed = runner.invoke(
         app,
         [
@@ -92,6 +113,8 @@ def test_cli_token_verify_approve_execute_are_separate(tmp_path: Path) -> None:
             str(approvals),
             "--run-id",
             "cli-test",
+            "--current-time-utc",
+            "2026-05-15T00:00:00Z",
         ],
     )
     assert executed.exit_code == 0, executed.output

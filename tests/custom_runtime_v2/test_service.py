@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import base64
+import hashlib
 import importlib.metadata
 import json
 from pathlib import Path
@@ -27,6 +29,7 @@ from quant_strategy_tokenizer.ir_v04 import TokenRefV04
 ROOT = Path(__file__).resolve().parents[2]
 PACK_DIR = ROOT / "tokenpacks" / "qst-tokenpack-kalman"
 TOKEN_REF = TokenRefV04(namespace="my_pack", name="kalman_ema", version=1, behavior_version=1)
+CURRENT_TIME = "2026-05-15T00:00:00Z"
 
 
 def test_integrity_verify_never_imports_custom_module(tmp_path: Path) -> None:
@@ -110,12 +113,19 @@ def test_execute_requires_grant_and_validates_output() -> None:
         base_path=PACK_DIR,
         profile="research",
         run_id="unit",
-        current_time_utc="2026-05-15T00:00:00Z",
+        current_time_utc=CURRENT_TIME,
     )
     integrity = service.verify_integrity(pack, TOKEN_REF, context=context)
     _, store = service.approve_token_pack(_approval_request(integrity), approval_store=ApprovalStore())
     authorization = service.check_authorization(integrity, profile="research", approval_store=store)
-    grant = service.issue_execution_grant(integrity, authorization, run_id="unit")
+    grant = service.issue_execution_grant(
+        integrity,
+        authorization,
+        run_id="unit",
+        issued_at_utc=CURRENT_TIME,
+    )
+
+    assert grant.expires_at == "2026-05-15T00:15:00Z"
 
     result = service.execute_custom_token(
         pack,
@@ -147,11 +157,37 @@ def test_execute_requires_grant_and_validates_output() -> None:
 def test_execute_rejects_expired_or_wrong_run_grant() -> None:
     service = TokenRuntimeService()
     pack = load_token_pack(PACK_DIR)
-    context = TokenRuntimeContext(base_path=PACK_DIR, profile="research", run_id="unit")
+    context = TokenRuntimeContext(
+        base_path=PACK_DIR,
+        profile="research",
+        run_id="unit",
+        current_time_utc=CURRENT_TIME,
+    )
     integrity = service.verify_integrity(pack, TOKEN_REF, context=context)
     _, store = service.approve_token_pack(_approval_request(integrity), approval_store=ApprovalStore())
     authorization = service.check_authorization(integrity, profile="research", approval_store=store)
-    grant = service.issue_execution_grant(integrity, authorization, run_id="unit")
+    grant = service.issue_execution_grant(
+        integrity,
+        authorization,
+        run_id="unit",
+        issued_at_utc=CURRENT_TIME,
+    )
+
+    short_grant = service.issue_execution_grant(
+        integrity,
+        authorization,
+        run_id="unit",
+        issued_at_utc=CURRENT_TIME,
+        ttl_seconds=60,
+    )
+    assert short_grant.expires_at == "2026-05-15T00:01:00Z"
+    with pytest.raises(ValueError, match="valid UTC issued_at_utc"):
+        service.issue_execution_grant(
+            integrity,
+            authorization,
+            run_id="unit",
+            issued_at_utc="2026-05-15T00:00:00",
+        )
 
     wrong_run = service.execute_custom_token(
         pack,
@@ -192,11 +228,21 @@ def test_execute_rejects_non_canonical_output(tmp_path: Path) -> None:
     (pack_dir / "tokenpack.json").write_text(json.dumps(manifest), encoding="utf-8")
     pack = load_token_pack(pack_dir)
     service = TokenRuntimeService()
-    context = TokenRuntimeContext(base_path=pack_dir, profile="research", run_id="bad")
+    context = TokenRuntimeContext(
+        base_path=pack_dir,
+        profile="research",
+        run_id="bad",
+        current_time_utc=CURRENT_TIME,
+    )
     integrity = service.verify_integrity(pack, TOKEN_REF, context=context)
     _, store = service.approve_token_pack(_approval_request(integrity), approval_store=ApprovalStore())
     authorization = service.check_authorization(integrity, profile="research", approval_store=store)
-    grant = service.issue_execution_grant(integrity, authorization, run_id="bad")
+    grant = service.issue_execution_grant(
+        integrity,
+        authorization,
+        run_id="bad",
+        issued_at_utc=CURRENT_TIME,
+    )
 
     result = service.execute_custom_token(
         pack,
@@ -228,11 +274,21 @@ def test_execute_rejects_extra_output_port(tmp_path: Path) -> None:
     (pack_dir / "tokenpack.json").write_text(json.dumps(manifest), encoding="utf-8")
     pack = load_token_pack(pack_dir)
     service = TokenRuntimeService()
-    context = TokenRuntimeContext(base_path=pack_dir, profile="research", run_id="extra")
+    context = TokenRuntimeContext(
+        base_path=pack_dir,
+        profile="research",
+        run_id="extra",
+        current_time_utc=CURRENT_TIME,
+    )
     integrity = service.verify_integrity(pack, TOKEN_REF, context=context)
     _, store = service.approve_token_pack(_approval_request(integrity), approval_store=ApprovalStore())
     authorization = service.check_authorization(integrity, profile="research", approval_store=store)
-    grant = service.issue_execution_grant(integrity, authorization, run_id="extra")
+    grant = service.issue_execution_grant(
+        integrity,
+        authorization,
+        run_id="extra",
+        issued_at_utc=CURRENT_TIME,
+    )
 
     result = service.execute_custom_token(
         pack,
@@ -274,6 +330,212 @@ def test_installed_distribution_hash_uses_file_content_when_record_incomplete(
     assert first_code == "QST_V2_DISTRIBUTION_RECORD_INCOMPLETE"
     assert second_code == "QST_V2_DISTRIBUTION_RECORD_INCOMPLETE"
     assert first != second
+
+
+def test_installed_distribution_verifies_record_hash_against_file_bytes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    package_file = tmp_path / "demo_pkg.py"
+    package_file.write_text("VALUE = 1\n", encoding="utf-8")
+
+    class FakeHash:
+        mode = "sha256"
+        value = _record_sha256(package_file.read_bytes())
+
+    class FakeFile:
+        hash = FakeHash()
+        size = package_file.stat().st_size
+
+        def __str__(self) -> str:
+            return "demo_pkg.py"
+
+    class FakeDistribution:
+        version = "1.0.0"
+        files = (FakeFile(),)
+
+        def locate_file(self, file: object) -> Path:
+            return tmp_path / str(file)
+
+    monkeypatch.setattr(importlib.metadata, "distribution", lambda _name: FakeDistribution())
+    ref = ImplementationRef(kind="installed_distribution", distribution="demo")
+
+    first, first_code = resolve_implementation_hash(ref, base_path=tmp_path)
+    package_file.write_text("VALUE = 2\n", encoding="utf-8")
+    second, second_code = resolve_implementation_hash(ref, base_path=tmp_path)
+
+    assert first_code is None
+    assert second_code == "QST_V2_DISTRIBUTION_RECORD_HASH_MISMATCH"
+    assert first != second
+
+
+def test_installed_distribution_unsupported_record_hash_mode_is_incomplete(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    package_file = tmp_path / "demo_pkg.py"
+    package_file.write_text("VALUE = 1\n", encoding="utf-8")
+
+    class FakeHash:
+        mode = "md5"
+        value = "not-used"
+
+    class FakeFile:
+        hash = FakeHash()
+
+        def __str__(self) -> str:
+            return "demo_pkg.py"
+
+    class FakeDistribution:
+        version = "1.0.0"
+        files = (FakeFile(),)
+
+        def locate_file(self, file: object) -> Path:
+            return tmp_path / str(file)
+
+    monkeypatch.setattr(importlib.metadata, "distribution", lambda _name: FakeDistribution())
+    ref = ImplementationRef(kind="installed_distribution", distribution="demo")
+
+    _, code = resolve_implementation_hash(ref, base_path=tmp_path)
+
+    assert code == "QST_V2_DISTRIBUTION_RECORD_INCOMPLETE"
+
+
+def test_execute_rejects_bool_as_float_timeseries(tmp_path: Path) -> None:
+    pack_dir = tmp_path / "pack"
+    src = pack_dir / "src"
+    src.mkdir(parents=True)
+    (src / "bool_float_token.py").write_text(
+        "def run(inputs):\n    return {'filtered': [True]}\n",
+        encoding="utf-8",
+    )
+    manifest = json.loads((PACK_DIR / "tokenpack.json").read_text(encoding="utf-8"))
+    manifest["tokens"][0]["implementation_ref"]["path"] = "src"
+    manifest["tokens"][0]["implementation_ref"]["python_entrypoint"] = "bool_float_token:run"
+    manifest["tokens"][0]["implementation_ref"]["expected_hash"] = source_tree_hash(src)
+    (pack_dir / "tokenpack.json").write_text(json.dumps(manifest), encoding="utf-8")
+    pack = load_token_pack(pack_dir)
+    service = TokenRuntimeService()
+    context = TokenRuntimeContext(
+        base_path=pack_dir,
+        profile="research",
+        run_id="bool-float",
+        current_time_utc=CURRENT_TIME,
+    )
+    integrity = service.verify_integrity(pack, TOKEN_REF, context=context)
+    _, store = service.approve_token_pack(_approval_request(integrity), approval_store=ApprovalStore())
+    authorization = service.check_authorization(integrity, profile="research", approval_store=store)
+    grant = service.issue_execution_grant(
+        integrity,
+        authorization,
+        run_id="bool-float",
+        issued_at_utc=CURRENT_TIME,
+    )
+
+    result = service.execute_custom_token(
+        pack,
+        TOKEN_REF,
+        inputs={"series": [1.0]},
+        grant=grant,
+        context=context,
+        approval_store=store,
+    )
+
+    assert not result.ok
+    assert [diagnostic.code for diagnostic in result.diagnostics] == [
+        "QST_V2_CUSTOM_TOKEN_OUTPUT_TYPE_INVALID"
+    ]
+
+
+def test_execute_accepts_int_as_float_timeseries(tmp_path: Path) -> None:
+    pack_dir = tmp_path / "pack"
+    src = pack_dir / "src"
+    src.mkdir(parents=True)
+    (src / "int_float_token.py").write_text(
+        "def run(inputs):\n    return {'filtered': [1, 1.5]}\n",
+        encoding="utf-8",
+    )
+    manifest = json.loads((PACK_DIR / "tokenpack.json").read_text(encoding="utf-8"))
+    manifest["tokens"][0]["implementation_ref"]["path"] = "src"
+    manifest["tokens"][0]["implementation_ref"]["python_entrypoint"] = "int_float_token:run"
+    manifest["tokens"][0]["implementation_ref"]["expected_hash"] = source_tree_hash(src)
+    (pack_dir / "tokenpack.json").write_text(json.dumps(manifest), encoding="utf-8")
+    pack = load_token_pack(pack_dir)
+    service = TokenRuntimeService()
+    context = TokenRuntimeContext(
+        base_path=pack_dir,
+        profile="research",
+        run_id="int-float",
+        current_time_utc=CURRENT_TIME,
+    )
+    integrity = service.verify_integrity(pack, TOKEN_REF, context=context)
+    _, store = service.approve_token_pack(_approval_request(integrity), approval_store=ApprovalStore())
+    authorization = service.check_authorization(integrity, profile="research", approval_store=store)
+    grant = service.issue_execution_grant(
+        integrity,
+        authorization,
+        run_id="int-float",
+        issued_at_utc=CURRENT_TIME,
+    )
+
+    result = service.execute_custom_token(
+        pack,
+        TOKEN_REF,
+        inputs={"series": [1.0]},
+        grant=grant,
+        context=context,
+        approval_store=store,
+    )
+
+    assert result.ok
+    assert result.output == {"filtered": [1, 1.5]}
+
+
+def test_execute_rejects_bool_as_float_panel(tmp_path: Path) -> None:
+    pack_dir = tmp_path / "pack"
+    src = pack_dir / "src"
+    src.mkdir(parents=True)
+    (src / "bool_panel_token.py").write_text(
+        "def run(inputs):\n    return {'filtered': [{'timestamp': 't1', 'symbol': 'BTC/USDT', 'value': True}]}\n",
+        encoding="utf-8",
+    )
+    manifest = json.loads((PACK_DIR / "tokenpack.json").read_text(encoding="utf-8"))
+    manifest["tokens"][0]["implementation_ref"]["path"] = "src"
+    manifest["tokens"][0]["implementation_ref"]["python_entrypoint"] = "bool_panel_token:run"
+    manifest["tokens"][0]["implementation_ref"]["expected_hash"] = source_tree_hash(src)
+    manifest["tokens"][0]["outputs"]["filtered"]["type"] = "Panel[float]"
+    (pack_dir / "tokenpack.json").write_text(json.dumps(manifest), encoding="utf-8")
+    pack = load_token_pack(pack_dir)
+    service = TokenRuntimeService()
+    context = TokenRuntimeContext(
+        base_path=pack_dir,
+        profile="research",
+        run_id="bool-panel",
+        current_time_utc=CURRENT_TIME,
+    )
+    integrity = service.verify_integrity(pack, TOKEN_REF, context=context)
+    _, store = service.approve_token_pack(_approval_request(integrity), approval_store=ApprovalStore())
+    authorization = service.check_authorization(integrity, profile="research", approval_store=store)
+    grant = service.issue_execution_grant(
+        integrity,
+        authorization,
+        run_id="bool-panel",
+        issued_at_utc=CURRENT_TIME,
+    )
+
+    result = service.execute_custom_token(
+        pack,
+        TOKEN_REF,
+        inputs={"series": [1.0]},
+        grant=grant,
+        context=context,
+        approval_store=store,
+    )
+
+    assert not result.ok
+    assert [diagnostic.code for diagnostic in result.diagnostics] == [
+        "QST_V2_CUSTOM_TOKEN_OUTPUT_TYPE_INVALID"
+    ]
 
 
 def test_audit_chain_excludes_wall_clock_timestamp() -> None:
@@ -320,3 +582,8 @@ def _approval_request(integrity: object, profile: str = "research") -> ApprovalR
         implementation_ref_hash=integrity.implementation_ref_hash,
         runtime_environment_hash=integrity.runtime_environment_hash,
     )
+
+
+def _record_sha256(content: bytes) -> str:
+    digest = hashlib.sha256(content).digest()
+    return base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")

@@ -245,6 +245,7 @@ WP8c enables deterministic Panel operator reference semantics without enabling r
 - `panel.winsorize` uses deterministic nearest-rank quantile bounds.
 - `panel.residualize` is single-factor only with `include_intercept=true`, `min_observations=3`, and insufficient observations represented as unknown output plus diagnostics by default.
 - `qst-tokenpack-panel-ops/0.1.0` records TokenSpecV2 metadata for the WP8c operators.
+- Panel operator TokenSpecs use semantic `float64` numeric policy where applicable; WP8c reference semantics do not claim bit-exact reproducibility.
 
 WP8c does not add Panel recipes, weight normalization, exposure constraints, market-neutral logic, adapters, migration tooling, legacy runtime execution, or v0.4 CLI authoring.
 
@@ -260,6 +261,7 @@ WP8d enables deterministic WeightPanel normalization and constraint reference se
 - `weight.market_neutral` implements `demean_then_gross_normalize`, supports only `target_net="0"` in v1, and follows `zero_gross_policy` for empty demeaned gross.
 - DecimalString operator params are canonicalized before semantics and hash material, so equivalent inputs such as `"1"`, `"1.0"`, and `"1.00"` have the same meaning.
 - `qst-tokenpack-panel-weights/0.1.0` records TokenSpecV2 metadata for the WP8d weight operators.
+- Weight operator TokenSpecs use semantic numeric policy and do not claim bit-exact portfolio-engine reproducibility.
 
 WP8d does not solve simultaneous gross/cap constraints, create orders, create execution reports, add risk controls, add portfolio optimizers, add Panel recipes, add adapters, add migration tooling, add legacy runtime execution, or add v0.4 CLI authoring.
 
@@ -284,9 +286,9 @@ WP9 accepts the custom token runtime boundary and PV-D dogfooding gate:
 - Integrity verification checks TokenSpec, TokenPack, implementation reference, runtime environment, dependency, and audit metadata without importing or executing custom code.
 - Authorization is separate from integrity and depends on profile policy plus local ApprovalRecord material.
 - Executable approvals require both `allow_token=true` and `ack_risk=true`; incomplete persisted approvals are ignored.
-- Execution requires a short-lived ExecutionGrant bound to token, pack, implementation, runtime, approval, profile, expiry, and run id.
+- Execution requires a short-lived ExecutionGrant bound to token, pack, implementation, runtime, approval, profile, expiry, and run id. Newly issued grants require explicit UTC issuance time and default to a 15-minute TTL.
 - Custom token execution rejects missing or undeclared extra output ports, non-canonical numeric material, and TokenSpec output contract mismatches.
-- `installed_distribution` implementation evidence uses RECORD hashes when available and installed file bytes otherwise; incomplete RECORD material stays at recorded/replayable environment evidence and never implies bit-exact verification.
+- `installed_distribution` implementation evidence always includes installed file byte hashes. When RECORD SHA-256 material exists, it is verified against those bytes; incomplete or unsupported RECORD material stays at recorded/replayable environment evidence and never implies bit-exact verification.
 - qstpkg TokenPack verification checks metadata and embedded source hashes but never imports embedded source and never treats packaged approval as portable trust.
 - PV-D accepts the deterministic `my_pack.kalman_ema` custom token reference case with research, pretrade-default, and pretrade-approved artifacts.
 

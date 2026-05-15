@@ -750,9 +750,13 @@ def token_execute_cmd(
     inputs_file: Annotated[Path | None, typer.Option("--inputs-file")] = None,
     approvals: Annotated[Path | None, typer.Option("--approvals")] = None,
     run_id: Annotated[str, typer.Option("--run-id")] = "manual",
+    current_time_utc: Annotated[str | None, typer.Option("--current-time-utc")] = None,
 ) -> None:
     """Execute an approved custom token python_entrypoint."""
 
+    if current_time_utc is None:
+        _echo_json({"ok": False, "error": "qst token execute requires --current-time-utc"})
+        raise typer.Exit(1)
     ref = _parse_token_ref(token_ref)
     service = TokenRuntimeService()
     pack_manifest = load_token_pack(pack)
@@ -761,6 +765,7 @@ def token_execute_cmd(
         base_path=pack.parent if pack.is_file() else pack,
         profile=profile,  # type: ignore[arg-type]
         run_id=run_id,
+        current_time_utc=current_time_utc,
     )
     integrity = service.verify_integrity(pack_manifest, ref, context=context)
     authorization = service.check_authorization(
@@ -769,7 +774,12 @@ def token_execute_cmd(
         approval_store=store,
     )
     try:
-        grant = service.issue_execution_grant(integrity, authorization, run_id=run_id)
+        grant = service.issue_execution_grant(
+            integrity,
+            authorization,
+            run_id=run_id,
+            issued_at_utc=current_time_utc,
+        )
     except ValueError as exc:
         _echo_json({"ok": False, "integrity": integrity, "authorization": authorization, "error": str(exc)})
         raise typer.Exit(1) from None

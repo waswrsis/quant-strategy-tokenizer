@@ -320,6 +320,7 @@ def execute_custom_token(
     authorization: TokenAuthorizationResult | dict[str, Any],
     integrity: TokenIntegrityResult | dict[str, Any],
     approval_store: ApprovalStore,
+    current_time_utc: str,
     run_id: str = "agent",
 ) -> TokenExecutionResult:
     """Execute a custom token only from existing approval-backed authorization."""
@@ -336,13 +337,22 @@ def execute_custom_token(
         else TokenAuthorizationResult.model_validate(authorization)
     )
     service = TokenRuntimeService()
-    grant = service.issue_execution_grant(parsed_integrity, parsed_authorization, run_id=run_id)
+    grant = service.issue_execution_grant(
+        parsed_integrity,
+        parsed_authorization,
+        run_id=run_id,
+        issued_at_utc=current_time_utc,
+    )
     return service.execute_custom_token(
         load_token_pack(pack_path),
         ref,
         inputs=inputs,
         grant=grant,
-        context=TokenRuntimeContext(base_path=_token_pack_base_path(pack_path), run_id=run_id),
+        context=TokenRuntimeContext(
+            base_path=_token_pack_base_path(pack_path),
+            run_id=run_id,
+            current_time_utc=current_time_utc,
+        ),
         approval_store=approval_store,
     )
 

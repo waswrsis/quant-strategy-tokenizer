@@ -35,7 +35,7 @@ Custom tokens must declare:
 - `source_tree`: deterministic source tree hash
 - `wheel`: wheel file SHA-256
 - `sdist`: source distribution SHA-256
-- `installed_distribution`: installed distribution metadata plus RECORD hashes when present, falling back to installed file bytes when RECORD omits a file hash
+- `installed_distribution`: installed distribution metadata plus actual installed file byte hashes; RECORD SHA-256 entries are verified against installed bytes when present, and incomplete or unsupported RECORD material is recorded as a diagnostic
 
 Python bytecode is not part of the hash material.
 
@@ -78,7 +78,7 @@ Verification outcomes:
 - Token risk exceeds the requested profile and no local approval is available: authorization requires approval or is denied by profile, while integrity may still pass.
 - Explicit override with acknowledged risk may pass only when the profile policy permits it, `allow_token=true`, `ack_risk=true`, and an audit record is written.
 
-`verify_integrity` never imports, loads entry points from, inspects, or executes the custom distribution. `installed_distribution` evidence records environment identity; incomplete RECORD material may support `environment_recorded` evidence but does not imply bit-exact replayability.
+`verify_integrity` never imports, loads entry points from, inspects, or executes the custom distribution. `installed_distribution` evidence records environment identity by reading installed file bytes and checking supported RECORD hashes; incomplete RECORD material may support `environment_recorded` evidence but does not imply bit-exact replayability.
 
 ## Audit Location
 

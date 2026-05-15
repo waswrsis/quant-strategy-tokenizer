@@ -129,6 +129,10 @@ For cross-sectional operators with no rolling requirement, `operator_required_hi
 
 For `panel.residualize/v1`, output temporal metadata is the join of the panel input and the factor input.
 
+## Numeric Status
+
+Panel and Weight reference helpers use semantic numeric policy. Operators that work over floating-point material declare semantic `float64` where applicable, reject NaN and Infinity, and fix reduction order for reference traces. WP8 does not claim bit-exact reproducibility across engines, BLAS implementations, platforms, or future optimized kernels.
+
 ## Panel And State
 
 `Panel[State]` remains a type shell only in WP8a.

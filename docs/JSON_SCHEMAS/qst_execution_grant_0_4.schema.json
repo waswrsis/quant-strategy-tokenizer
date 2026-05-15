@@ -4,7 +4,7 @@
   "additionalProperties": false,
   "properties": {
     "approval_record_hash": {"pattern": "^sha256:[0-9a-f]{64}$", "type": "string"},
-    "expires_at": {"type": ["string", "null"]},
+    "expires_at": {"type": "string"},
     "implementation_ref_hash": {"pattern": "^sha256:[0-9a-f]{64}$", "type": "string"},
     "issued_for_run_id": {"type": "string"},
     "profile": {"enum": ["research", "paper", "pretrade", "production_guarded"], "type": "string"},
@@ -23,7 +23,8 @@
     "runtime_environment_hash",
     "approval_record_hash",
     "profile",
-    "issued_for_run_id"
+    "issued_for_run_id",
+    "expires_at"
   ],
   "type": "object"
 }

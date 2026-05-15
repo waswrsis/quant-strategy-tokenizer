@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import importlib.metadata
 import platform
@@ -156,37 +157,45 @@ def resolve_implementation_hash(ref: ImplementationRef, *, base_path: Path) -> t
         if not files:
             return implementation_ref_hash_for_ref(ref), "QST_V2_DISTRIBUTION_RECORD_INCOMPLETE"
         incomplete_record = False
+        record_hash_mismatch = False
         file_entries: list[dict[str, Any]] = []
         for file in sorted(files, key=str):
             entry: dict[str, Any] = {"path": str(file)}
             size = getattr(file, "size", None)
             if size is not None:
                 entry["size"] = size
+            try:
+                installed_path = Path(str(distribution.locate_file(file)))
+                file_bytes = installed_path.read_bytes()
+            except OSError:
+                return (
+                    implementation_ref_hash_v2(
+                        {
+                            "kind": ref.kind,
+                            "distribution": ref.distribution,
+                            "version": distribution.version,
+                            "record_unreadable": str(file),
+                        }
+                    ),
+                    "QST_V2_DISTRIBUTION_RECORD_INCOMPLETE",
+                )
+            entry["sha256"] = hashlib.sha256(file_bytes).hexdigest()
             record_hash = getattr(file, "hash", None)
             if record_hash is not None:
                 mode = getattr(record_hash, "mode", None)
                 value = getattr(record_hash, "value", None)
+                mode_text = str(mode) if mode is not None else "unknown"
+                value_text = str(value) if value is not None else str(record_hash)
                 entry["record_hash"] = {
-                    "mode": str(mode) if mode is not None else "unknown",
-                    "value": str(value) if value is not None else str(record_hash),
+                    "mode": mode_text,
+                    "value": value_text,
                 }
+                if mode_text != "sha256":
+                    incomplete_record = True
+                elif _record_sha256_value(file_bytes) != value_text.rstrip("="):
+                    record_hash_mismatch = True
             else:
                 incomplete_record = True
-                try:
-                    installed_path = Path(str(distribution.locate_file(file)))
-                    entry["sha256"] = hashlib.sha256(installed_path.read_bytes()).hexdigest()
-                except OSError:
-                    return (
-                        implementation_ref_hash_v2(
-                            {
-                                "kind": ref.kind,
-                                "distribution": ref.distribution,
-                                "version": distribution.version,
-                                "record_incomplete": True,
-                            }
-                        ),
-                        "QST_V2_DISTRIBUTION_RECORD_INCOMPLETE",
-                    )
             file_entries.append(entry)
         material = {
             "kind": ref.kind,
@@ -194,7 +203,11 @@ def resolve_implementation_hash(ref: ImplementationRef, *, base_path: Path) -> t
             "version": distribution.version,
             "files": file_entries,
         }
-        diagnostic = "QST_V2_DISTRIBUTION_RECORD_INCOMPLETE" if incomplete_record else None
+        diagnostic = None
+        if record_hash_mismatch:
+            diagnostic = "QST_V2_DISTRIBUTION_RECORD_HASH_MISMATCH"
+        elif incomplete_record:
+            diagnostic = "QST_V2_DISTRIBUTION_RECORD_INCOMPLETE"
         return implementation_ref_hash_v2(material), diagnostic
     raise AssertionError(f"Unhandled implementation kind: {ref.kind}")
 
@@ -212,3 +225,8 @@ def source_tree_hash(path: Path) -> str:
         digest = hashlib.sha256(file_path.read_bytes()).hexdigest()
         entries.append({"path": relative, "sha256": digest})
     return implementation_ref_hash_v2({"kind": "source_tree", "files": entries})
+
+
+def _record_sha256_value(file_bytes: bytes) -> str:
+    digest = hashlib.sha256(file_bytes).digest()
+    return base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
