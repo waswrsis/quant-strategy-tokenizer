@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from quant_strategy_tokenizer.types_v2 import AvailableAt, TypeSpec, parse_type_spec
+
+PORT_SPEC_SCHEMA_VERSION: Literal["qst-portspec/0.4"] = "qst-portspec/0.4"
+PORT_TEMPORAL_SCHEMA_VERSION: Literal["qst-port-temporal/0.4"] = "qst-port-temporal/0.4"
 
 
 class TemporalRequirement(BaseModel):
@@ -14,6 +17,7 @@ class TemporalRequirement(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
+    schema_version: Literal["qst-port-temporal/0.4"] = PORT_TEMPORAL_SCHEMA_VERSION
     max_available_at: AvailableAt = "bar_close"
     allow_unsafe_future: bool = False
 
@@ -26,6 +30,7 @@ class PortTemporalSpec(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
+    schema_version: Literal["qst-port-temporal/0.4"] = PORT_TEMPORAL_SCHEMA_VERSION
     available_at: AvailableAt = "bar_close"
     latency_bars: int = Field(default=0, ge=0)
     min_history_bars: int = Field(default=0, ge=0)
@@ -37,6 +42,7 @@ class InputSpec(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
+    schema_version: Literal["qst-portspec/0.4"] = PORT_SPEC_SCHEMA_VERSION
     type: TypeSpec
     temporal_requirement: TemporalRequirement | None = None
 
@@ -51,6 +57,7 @@ class OutputSpec(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
+    schema_version: Literal["qst-portspec/0.4"] = PORT_SPEC_SCHEMA_VERSION
     type: TypeSpec
     port_temporal: PortTemporalSpec | None = None
 
@@ -65,5 +72,6 @@ class PortSignature(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
+    schema_version: Literal["qst-portspec/0.4"] = PORT_SPEC_SCHEMA_VERSION
     inputs: dict[str, InputSpec] = Field(default_factory=dict)
     outputs: dict[str, OutputSpec] = Field(default_factory=dict)

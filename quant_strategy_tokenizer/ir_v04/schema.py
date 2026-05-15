@@ -1,8 +1,7 @@
 """Minimal qst-ir/0.4 shell models.
 
-WP1 intentionally keeps this model small. It establishes an independent v0.4
-identity and canonical byte surface without introducing TypeSpec, PortSpec, or
-TokenSpec v2 semantics.
+WP1 established the independent v0.4 identity. WP2 adds structured signature
+and canonical token reference shells without connecting legacy runtime paths.
 """
 
 from __future__ import annotations
@@ -16,6 +15,12 @@ from quant_strategy_tokenizer.ports_v2 import PortSignature
 
 IR_VERSION_V04: Literal["qst-ir/0.4"] = "qst-ir/0.4"
 CANONICAL_VERSION_V04: Literal["qst-canonical/0.4"] = "qst-canonical/0.4"
+IR_SCHEMA_VERSION_V04: Literal["qst-ir-schema/0.4"] = "qst-ir-schema/0.4"
+CapabilityV04 = Literal["core", "panel", "custom_token_runtime"]
+
+
+def _default_capabilities() -> list[CapabilityV04]:
+    return ["core"]
 
 
 def _ensure_canonical_json(value: Any, *, field_name: str) -> Any:
@@ -26,6 +31,17 @@ def _ensure_canonical_json(value: Any, *, field_name: str) -> Any:
     return value
 
 
+class TokenRefV04(BaseModel):
+    """Canonical token reference for qst-ir/0.4 nodes."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    namespace: str = Field(min_length=1)
+    name: str = Field(min_length=1)
+    version: int = Field(ge=1)
+    behavior_version: int = Field(ge=1)
+
+
 class NodeV04(BaseModel):
     """Opaque v0.4 node shell used before TypeSpec/PortSpec land."""
 
@@ -34,6 +50,7 @@ class NodeV04(BaseModel):
     id: str
     token: str | None = None
     version: int | None = Field(default=None, ge=1)
+    token_ref: TokenRefV04 | None = None
     inputs: dict[str, Any] = Field(default_factory=dict)
     params: dict[str, Any] = Field(default_factory=dict)
     signature: PortSignature = Field(default_factory=PortSignature)
@@ -75,8 +92,10 @@ class StrategyIRV04(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
+    schema_version: Literal["qst-ir-schema/0.4"] = IR_SCHEMA_VERSION_V04
     ir_version: Literal["qst-ir/0.4"] = IR_VERSION_V04
     canonical_version: Literal["qst-canonical/0.4"] = CANONICAL_VERSION_V04
+    capabilities: list[CapabilityV04] = Field(default_factory=_default_capabilities)
     strategy: StrategyBodyV04
     metadata: dict[str, Any] = Field(default_factory=dict)
 
@@ -85,3 +104,12 @@ class StrategyIRV04(BaseModel):
     def _validate_metadata(cls, value: dict[str, Any]) -> dict[str, Any]:
         _ensure_canonical_json(value, field_name="metadata")
         return value
+
+    @field_validator("capabilities")
+    @classmethod
+    def _validate_capabilities(cls, value: list[CapabilityV04]) -> list[CapabilityV04]:
+        if len(value) != len(set(value)):
+            raise ValueError("qst-ir/0.4 capabilities must be unique")
+        if "core" not in value:
+            raise ValueError('qst-ir/0.4 capabilities must include "core"')
+        return sorted(value)

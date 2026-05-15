@@ -46,6 +46,7 @@ def canonicalize_v04(ir: StrategyIRV04 | Mapping[str, Any]) -> StrategyIRV04:
     )
 
     return StrategyIRV04(
+        capabilities=source.capabilities,
         strategy=strategy,
         metadata=_stable_plain(source.metadata),
     )

@@ -51,7 +51,9 @@
         "token_spec_hash",
         "token_pack_hash",
         "implementation_ref_hash",
-        "audit_chain_hash"
+        "audit_chain_hash",
+        "runtime_environment_hash",
+        "expected_artifact_hash"
       ],
       "properties": {
         "graph_hash": {
@@ -79,6 +81,12 @@
           "$ref": "#/$defs/hash"
         },
         "audit_chain_hash": {
+          "$ref": "#/$defs/hash"
+        },
+        "runtime_environment_hash": {
+          "$ref": "#/$defs/hash"
+        },
+        "expected_artifact_hash": {
           "$ref": "#/$defs/hash"
         }
       }

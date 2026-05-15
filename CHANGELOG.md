@@ -1,5 +1,15 @@
 # Changelog
 
+## Token System v2 v1.0.3 WP0-WP2 Compliance Retrofit
+
+- Added the remaining v1.0.3 ADRs for Panel layer design, hash stability milestones, and TokenPack propagation/package policy.
+- Added `validation_v2` structured diagnostics and deterministic validator registry.
+- Added `profile_v2` default profile policy shells for research, paper, pretrade, and production-guarded profiles.
+- Extended hash v2 with runtime environment and expected artifact hash kinds.
+- Added explicit schema-version shell fields for v0.4 IR, TypeSpec, PortSpec, PortTemporal, and ProfilePolicy material.
+- Added Panel TypeSpec shell fields, `StrategyIRV04.capabilities`, canonical `NodeV04.token_ref`, and token-ref-aware signature hashing.
+- Kept WP3 temporal resolution, TokenSpec v2 registry, token packs, migration tooling, Panel behavior, custom runtime, and v0.4 CLI authoring out of scope.
+
 ## Token System v2 WP2 Structured TypeSpec + PortSpec
 
 - Added structured v2 type models for `TypeSpec`, `ValueType`, and `IntrinsicTemporalSpec`.

@@ -10,10 +10,12 @@ from quant_strategy_tokenizer.hash_v2 import (
     audit_chain_hash_v2,
     behavior_hash_v2,
     compute_hashes_v2,
+    expected_artifact_hash_v2,
     graph_hash_v2,
     implementation_ref_hash_v2,
     instance_hash_v2,
     param_hash_v2,
+    runtime_environment_hash_v2,
     signature_hash_v2,
     token_pack_hash_v2,
     token_spec_hash_v2,
@@ -89,6 +91,8 @@ def test_all_hash_kinds_return_sha256_values() -> None:
         token_pack_hash_v2,
         implementation_ref_hash_v2,
         audit_chain_hash_v2,
+        runtime_environment_hash_v2,
+        expected_artifact_hash_v2,
     ):
         _assert_hash(hash_fn(payload))
 
@@ -99,3 +103,9 @@ def test_hash_kinds_reject_non_canonical_json_values() -> None:
 
     with pytest.raises(TypeError):
         behavior_hash_v2({"bad": (1, 2)})
+
+
+def test_new_wp1_hash_kinds_are_deterministic_and_empty_capable() -> None:
+    assert runtime_environment_hash_v2() == runtime_environment_hash_v2({})
+    assert expected_artifact_hash_v2() == expected_artifact_hash_v2({})
+    assert runtime_environment_hash_v2({"python": "3.11"}) == runtime_environment_hash_v2({"python": "3.11"})

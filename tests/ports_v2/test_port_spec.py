@@ -19,8 +19,10 @@ def test_input_spec_has_type_and_temporal_requirement() -> None:
     )
 
     assert spec.model_dump(mode="json", exclude_none=True) == {
-        "type": {"kind": "TimeSeries", "value_type": "float"},
+        "schema_version": "qst-portspec/0.4",
+        "type": {"schema_version": "qst-typespec/0.4", "kind": "TimeSeries", "value_type": "float"},
         "temporal_requirement": {
+            "schema_version": "qst-port-temporal/0.4",
             "max_available_at": "bar_close",
             "allow_unsafe_future": False,
         },
@@ -39,8 +41,10 @@ def test_output_spec_has_type_and_port_temporal() -> None:
     )
 
     assert spec.model_dump(mode="json", exclude_none=True) == {
-        "type": {"kind": "TimeSeries", "value_type": "bool"},
+        "schema_version": "qst-portspec/0.4",
+        "type": {"schema_version": "qst-typespec/0.4", "kind": "TimeSeries", "value_type": "bool"},
         "port_temporal": {
+            "schema_version": "qst-port-temporal/0.4",
             "available_at": "bar_close",
             "latency_bars": 0,
             "min_history_bars": 0,
@@ -81,4 +85,8 @@ def test_type_intrinsic_temporal_port_temporal_and_input_requirement_are_distinc
 
 
 def test_empty_port_signature_is_stable() -> None:
-    assert PortSignature().model_dump(mode="json") == {"inputs": {}, "outputs": {}}
+    assert PortSignature().model_dump(mode="json") == {
+        "schema_version": "qst-portspec/0.4",
+        "inputs": {},
+        "outputs": {},
+    }

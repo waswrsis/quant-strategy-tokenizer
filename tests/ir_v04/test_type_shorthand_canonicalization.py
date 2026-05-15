@@ -24,8 +24,27 @@ def test_node_signature_shorthand_canonicalizes_to_structured_types() -> None:
     signature = canonical.strategy.nodes[0].signature.model_dump(mode="json", exclude_none=True)
 
     assert signature == {
-        "inputs": {"price": {"type": {"kind": "TimeSeries", "value_type": "float"}}},
-        "outputs": {"signal": {"type": {"kind": "TimeSeries", "value_type": "bool"}}},
+        "schema_version": "qst-portspec/0.4",
+        "inputs": {
+            "price": {
+                "schema_version": "qst-portspec/0.4",
+                "type": {
+                    "schema_version": "qst-typespec/0.4",
+                    "kind": "TimeSeries",
+                    "value_type": "float",
+                },
+            }
+        },
+        "outputs": {
+            "signal": {
+                "schema_version": "qst-portspec/0.4",
+                "type": {
+                    "schema_version": "qst-typespec/0.4",
+                    "kind": "TimeSeries",
+                    "value_type": "bool",
+                },
+            }
+        },
     }
 
 

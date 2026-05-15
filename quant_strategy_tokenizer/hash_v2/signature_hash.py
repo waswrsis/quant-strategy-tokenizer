@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from quant_strategy_tokenizer.hash_v2.common import hash_v2_payload
+from quant_strategy_tokenizer.ir_v04.schema import TokenRefV04
 from quant_strategy_tokenizer.ports_v2 import PortSignature
 
 
@@ -15,8 +16,18 @@ def signature_hash_v2(payload: Any | None = None) -> str:
     return hash_v2_payload("signature", {} if payload is None else payload)
 
 
-def signature_hash_for_ports_v2(signature: PortSignature | Mapping[str, Any]) -> str:
+def signature_hash_for_ports_v2(
+    signature: PortSignature | Mapping[str, Any],
+    *,
+    token_ref: TokenRefV04 | Mapping[str, Any] | None = None,
+) -> str:
     """Hash structured v2 PortSignature material."""
 
     parsed = signature if isinstance(signature, PortSignature) else PortSignature.model_validate(signature)
-    return signature_hash_v2(parsed.model_dump(mode="json", exclude_none=True))
+    payload: dict[str, Any] = {
+        "signature": parsed.model_dump(mode="json", exclude_none=True),
+    }
+    if token_ref is not None:
+        parsed_ref = token_ref if isinstance(token_ref, TokenRefV04) else TokenRefV04.model_validate(token_ref)
+        payload["token_ref"] = parsed_ref.model_dump(mode="json")
+    return signature_hash_v2(payload)
