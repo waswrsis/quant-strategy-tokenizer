@@ -1,5 +1,13 @@
 # Changelog
 
+## Token System v2 WP2 Structured TypeSpec + PortSpec
+
+- Added structured v2 type models for `TypeSpec`, `ValueType`, and `IntrinsicTemporalSpec`.
+- Added v2 port contract models for input requirements, output temporal promises, and node `PortSignature`.
+- Added `NodeV04.signature` and canonical shorthand expansion for structured port signatures.
+- Added structured signature hash support through `signature_hash_for_ports_v2()`.
+- Kept WP3 temporal rule resolution, TokenSpec v2 registry, migration tooling, runtime execution, and v0.4 CLI authoring out of scope.
+
 ## Token System v2 WP1 qst-ir/0.4 Shell + Hash Framework
 
 - Added the independent `qst-ir/0.4` shell and `qst-canonical/0.4` canonical byte surface.

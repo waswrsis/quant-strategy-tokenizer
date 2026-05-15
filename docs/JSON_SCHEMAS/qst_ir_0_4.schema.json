@@ -30,7 +30,7 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["id", "inputs", "params", "metadata"],
+            "required": ["id", "inputs", "params", "signature", "metadata"],
             "properties": {
               "id": {
                 "type": "string",
@@ -49,6 +49,9 @@
               "params": {
                 "type": "object"
               },
+              "signature": {
+                "$ref": "#/$defs/port_signature"
+              },
               "metadata": {
                 "type": "object"
               }
@@ -65,6 +68,131 @@
     },
     "metadata": {
       "type": "object"
+    }
+  },
+  "$defs": {
+    "type_spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "Scalar",
+            "TimeSeries",
+            "Panel",
+            "Decision",
+            "Plan",
+            "State",
+            "Event",
+            "EventStream"
+          ]
+        },
+        "value_type": {
+          "enum": [
+            "bool",
+            "int",
+            "float",
+            "decimal",
+            "string",
+            "datetime",
+            "json",
+            "object"
+          ]
+        },
+        "intrinsic_temporal": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["default_available_at", "default_clock"],
+          "properties": {
+            "default_available_at": {
+              "enum": ["bar_open", "bar_close", "next_bar_open", "event_time", "unknown"]
+            },
+            "default_clock": {
+              "enum": ["bar", "event", "none", "unknown"]
+            }
+          }
+        }
+      }
+    },
+    "temporal_requirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_available_at", "allow_unsafe_future"],
+      "properties": {
+        "max_available_at": {
+          "enum": ["bar_open", "bar_close", "next_bar_open", "event_time", "unknown"]
+        },
+        "allow_unsafe_future": {
+          "type": "boolean"
+        }
+      }
+    },
+    "port_temporal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["available_at", "latency_bars", "min_history_bars", "unsafe_future"],
+      "properties": {
+        "available_at": {
+          "enum": ["bar_open", "bar_close", "next_bar_open", "event_time", "unknown"]
+        },
+        "latency_bars": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "min_history_bars": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unsafe_future": {
+          "type": "boolean"
+        }
+      }
+    },
+    "input_spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/type_spec"
+        },
+        "temporal_requirement": {
+          "$ref": "#/$defs/temporal_requirement"
+        }
+      }
+    },
+    "output_spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/type_spec"
+        },
+        "port_temporal": {
+          "$ref": "#/$defs/port_temporal"
+        }
+      }
+    },
+    "port_signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inputs", "outputs"],
+      "properties": {
+        "inputs": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/input_spec"
+          }
+        },
+        "outputs": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/output_spec"
+          }
+        }
+      }
     }
   }
 }

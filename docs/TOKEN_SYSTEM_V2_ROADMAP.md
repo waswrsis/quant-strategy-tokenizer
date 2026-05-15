@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 
-Status: WP0 ADR Gate accepted. WP1 qst-ir/0.4 shell + hash framework accepted.
+Status: WP0 ADR Gate accepted. WP1 qst-ir/0.4 shell + hash framework accepted. WP2 Structured TypeSpec + PortSpec accepted.
 
 ## Direction
 
@@ -21,7 +21,7 @@ Legacy versions remain loadable and verifiable, but new authoring moves to `qst-
 |---|---|---|
 | WP0 | ADR Gate | accepted |
 | WP1 | qst-ir/0.4 shell + canonical/hash framework | accepted |
-| WP2 | Structured TypeSpec + PortSpec | not started |
+| WP2 | Structured TypeSpec + PortSpec | accepted |
 | WP3 | PortTemporalSpec + PV-C | not started |
 | WP4 | NumericPolicy + TokenEvolutionPolicy | not started |
 | WP5 | TokenSpec v2 + Registry + TokenPack | not started |
@@ -64,6 +64,18 @@ WP1 adds the minimal Token System v2 kernel shell without changing accepted lega
 - Minimal JSON schemas for `qst_ir_0_4` and `qst_lock_0_4`.
 
 WP1 does not add TypeSpec, PortSpec, TokenSpec v2, token pack loading, custom token runtime, migration tooling, or v0.4 CLI authoring.
+
+## WP2 Accepted Scope
+
+WP2 adds the structured type and port contract layer used by future TokenSpec v2 work:
+
+- `quant_strategy_tokenizer.types_v2` with `TypeSpec`, `ValueType`, and `IntrinsicTemporalSpec`.
+- `quant_strategy_tokenizer.ports_v2` with `InputSpec`, `OutputSpec`, `PortSignature`, `TemporalRequirement`, and `PortTemporalSpec`.
+- `NodeV04.signature` as the canonical place for v0.4 node port contracts; graph wiring remains in `NodeV04.inputs`.
+- `signature_hash_for_ports_v2()` for structured TypeSpec / PortSpec hash material.
+- `qst_ir_0_4` schema support for structured node signatures.
+
+WP2 does not add WP3 temporal rule resolution, TokenSpec v2 registry, token packs, migration tooling, runtime execution, or v0.4 CLI authoring.
 
 ## P-Validate Gates
 

@@ -57,6 +57,7 @@ The implemented loop covers:
 | P4d semantic detokenize | not started |
 | Token System v2 WP0 ADR Gate | accepted |
 | Token System v2 WP1 qst-ir/0.4 shell | accepted |
+| Token System v2 WP2 TypeSpec + PortSpec | accepted |
 
 ## Frozen P0 Baseline
 
@@ -164,7 +165,9 @@ WP0 ADR Gate is accepted and records:
 - No sandbox for custom `python_entrypoint` tokens in v0.1.
 - Embedded P-Validate gates for temporal safety, state, panel, and custom token work.
 
-WP1 is accepted and adds the independent `qst-ir/0.4` shell, `qst-canonical/0.4` canonical bytes, hash v2 framework, and read-only legacy boundary loaders. It does not add TypeSpec, PortSpec, TokenSpec v2, token packs, migration tooling, custom token runtime, or v0.4 CLI authoring.
+WP1 is accepted and adds the independent `qst-ir/0.4` shell, `qst-canonical/0.4` canonical bytes, hash v2 framework, and read-only legacy boundary loaders.
+
+WP2 is accepted and adds structured `TypeSpec`, `ValueType`, `IntrinsicTemporalSpec`, `PortSignature`, `InputSpec`, and `OutputSpec` models. It does not add WP3 temporal rule resolution, TokenSpec v2 registry, token packs, migration tooling, runtime execution, custom token runtime, or v0.4 CLI authoring.
 
 The authoritative roadmap is [docs/TOKEN_SYSTEM_V2_ROADMAP.md](docs/TOKEN_SYSTEM_V2_ROADMAP.md).
 

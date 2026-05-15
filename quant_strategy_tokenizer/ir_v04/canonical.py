@@ -31,6 +31,7 @@ def canonicalize_v04(ir: StrategyIRV04 | Mapping[str, Any]) -> StrategyIRV04:
                 **node.model_dump(mode="json", exclude_none=True),
                 "inputs": _stable_plain(node.inputs),
                 "params": _stable_plain(node.params),
+                "signature": _stable_plain(node.signature.model_dump(mode="json", exclude_none=True)),
                 "metadata": _stable_plain(node.metadata),
             }
         )

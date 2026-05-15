@@ -12,6 +12,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from quant_strategy_tokenizer.canonical_json import stable_json_bytes
+from quant_strategy_tokenizer.ports_v2 import PortSignature
 
 IR_VERSION_V04: Literal["qst-ir/0.4"] = "qst-ir/0.4"
 CANONICAL_VERSION_V04: Literal["qst-canonical/0.4"] = "qst-canonical/0.4"
@@ -35,6 +36,7 @@ class NodeV04(BaseModel):
     version: int | None = Field(default=None, ge=1)
     inputs: dict[str, Any] = Field(default_factory=dict)
     params: dict[str, Any] = Field(default_factory=dict)
+    signature: PortSignature = Field(default_factory=PortSignature)
     metadata: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("inputs", "params", "metadata")
