@@ -1,6 +1,6 @@
 # Quant Strategy Tokenizer
 
-Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, P3, and P4-core construction stages.
+Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, P3, and P4-core construction stages. Token System v2 has entered WP0 ADR Gate.
 
 The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, implements P2a-0/P2a-1 provenance metadata, P2a-2 deterministic recipe generation, P2a-3 composition validation, P2b mutation, P2c-core execution-plan CSE, an opt-in P2c-extended kernel substitution spike, the P3a-0 deterministic lock hard gate, the P3a-1 directory package format, P3b-0 registry search, P3b-1 fork lineage, and P4-core artifacts, frames, qstpkg artifact extension, ports, signal extraction, mock adapters, and P4b CLI. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, a production kernel framework, P4c real adapter repositories, P4d semantic detokenize, P4+ full-text package search, or numerical equivalence verification.
 
@@ -55,6 +55,8 @@ The implemented loop covers:
 | P4b-1 mock adapters | accepted |
 | P4c real adapters | external repos / not started |
 | P4d semantic detokenize | not started |
+| Token System v2 WP0 ADR Gate | accepted |
+| Token System v2 WP1 qst-ir/0.4 shell | not started |
 
 ## Frozen P0 Baseline
 
@@ -147,6 +149,22 @@ P4-core includes:
 | P4b mock adapters and CLI | five local mock adapters, `qst adapter`, `qst load market`, `qst backtest`, `qst submit-plan`, `qst poll-execution`, `qst track` |
 
 P4-core does not include P4c real adapters, production broker or exchange integration, MCP, P4d semantic detokenize, or numerical equivalence proof. Real adapters belong in independent `qst-adapter-*` repositories.
+
+P4b-old ports, signal extraction, mock adapters, and CLI are accepted legacy infrastructure. Token System v2 supersedes P4b-old for future adapter expansion; P4b-v2 is deferred as a standalone design after Token System v2 acceptance.
+
+## Token System v2 Roadmap
+
+Token System v2 is the next kernel-level refactor. It targets `qst-ir/0.4` and `qst-canonical/0.4`.
+
+WP0 ADR Gate is accepted and records:
+
+- `qst-ir/0.4` as the only future active authoring target.
+- `qst-ir/0.3` and `qst-ir/0.3.1` as legacy load / verify / explain / migrate inputs.
+- Legacy IR as invalid for new token, recipe, adapter, mutation, or fork output once v2 migration is active.
+- No sandbox for custom `python_entrypoint` tokens in v0.1.
+- Embedded P-Validate gates for temporal safety, state, panel, and custom token work.
+
+The authoritative roadmap is [docs/TOKEN_SYSTEM_V2_ROADMAP.md](docs/TOKEN_SYSTEM_V2_ROADMAP.md).
 
 ## Current P2a Composition Layer
 

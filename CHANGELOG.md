@@ -1,5 +1,12 @@
 # Changelog
 
+## Token System v2 WP0 ADR Gate
+
+- Added ADRs for the `qst-ir/0.4` transition, custom token runtime trust model, and Token System v2 P-Validate cases.
+- Added the Token System v2 roadmap covering WP0-WP10, embedded P-Validate gates, and P4b-v2 as a deferred standalone stage.
+- Marked P4b-old ports, signal extraction, mock adapters, and CLI as accepted legacy infrastructure superseded for future expansion by Token System v2.
+- Did not add `qst-ir/0.4`, TokenSpec v2, hash v2, migration tooling, or custom token runtime code.
+
 ## P4-core Acceptance
 
 - Recorded P4-core acceptance and final code audit for the accepted P4a/P4b stages.
