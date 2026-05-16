@@ -1,0 +1,6 @@
+﻿strategies\broken_no_lift.qst.yaml:ir_version: qst-ir/0.3
+strategies\examples_kdj_with_ema_filter.pretrade.qst.yaml:ir_version: qst-ir/0.3
+strategies\examples_kdj_with_ema_filter.qst.yaml:ir_version: qst-ir/0.3
+strategies\kdj_cross_basic.qst.yaml:ir_version: qst-ir/0.3
+strategies\uses_cse_duplicate_chain.qst.yaml:ir_version: qst-ir/0.3
+strategies\uses_ewm_with_provenance.qst.yaml:ir_version: qst-ir/0.3
