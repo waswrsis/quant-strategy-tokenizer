@@ -1,59 +1,67 @@
 # Contributing
 
-This repository follows the P0 construction manual v1.1 with the v1.1.1 patch, plus the P1-core scope from `QST_P1_CONSTRUCTION_MANUAL_v1.2.md`.
+QST is an accepted reference kernel. Changes should preserve the final project
+boundaries recorded in [QST_PROJECT_ACCEPTANCE.md](QST_PROJECT_ACCEPTANCE.md)
+and [TOKEN_SYSTEM_V2_ACCEPTANCE.md](TOKEN_SYSTEM_V2_ACCEPTANCE.md).
 
-P0 is a frozen compatibility baseline. P1-core changes may add new tokens, recipes, schemas, CLI flags, and agent APIs, but they must not alter P0 token behavior, P0 recipe definitions, canonicalization, hashing, or the frozen hashes recorded in `docs/P0_ACCEPTANCE.md`.
+## Invariants
+
+- Do not change accepted legacy P0-P4 hash, canonicalization, lock, package,
+  runtime, mutation, search, fork, or CLI behavior without an explicit ADR or
+  work package.
+- Do not change accepted `qst-ir/0.4` schema, hash, TokenSpec, TokenPack,
+  temporal, state, decision, panel, custom-token, or migration semantics without
+  an explicit ADR or work package.
+- Keep custom-token integrity verification free of imports, entry-point loading,
+  introspection of custom modules, and execution.
+- Keep approvals local. qstpkg contents must not become portable trust.
+- Preserve the frozen hash evidence recorded in
+  [docs/ACCEPTANCE/HASH_STABILITY_REPORT.md](docs/ACCEPTANCE/HASH_STABILITY_REPORT.md).
 
 ## Quality Gates
 
 Run these before committing:
 
 ```bash
-ruff check .
-mypy quant_strategy_tokenizer tests
-pytest --cov=quant_strategy_tokenizer --cov-fail-under=80
-python -m quant_strategy_tokenizer.lint.stateless quant_strategy_tokenizer/
+python -m ruff check .
+python -m mypy quant_strategy_tokenizer
+python -m quant_strategy_tokenizer.lint.stateless quant_strategy_tokenizer
+python -m pytest --cov=quant_strategy_tokenizer --cov-fail-under=90
 ```
 
-The P0 backward-compatibility test is a hard gate:
+Focused compatibility checks:
 
 ```bash
-pytest tests/e2e/test_p0_p1_backward_compat.py
+python -m pytest tests/e2e/test_p0_p1_backward_compat.py tests/e2e/test_p2_p3_backward_compat.py -v
+python -m pytest tests/package tests/custom_runtime_v2 tests/migration_v2 -v
+python -m quant_strategy_tokenizer.cli vocabulary --check
+python -m quant_strategy_tokenizer.cli hash strategies/kdj_cross_basic.qst.yaml
+python -m quant_strategy_tokenizer.cli hash strategies/examples_kdj_with_ema_filter.qst.yaml
 ```
 
 ## Registry Rules
 
-- Production code reads token specs through `get_registry()`.
-- Production code reads recipes through `get_recipe_registry()`.
+- Production code reads legacy token specs through `get_registry()`.
+- Production code reads legacy recipes through `get_recipe_registry()`.
 - Tests must not mutate global registries.
-- Temporary tokens use `isolated_registry`.
-- Temporary recipes use `isolated_recipe_registry`.
-- New P1 tokens may be appended, but P0 `v1` token specs and behavior contracts remain frozen.
-- New P1 recipes may be appended, but P0 recipe JSON remains frozen.
+- Temporary legacy tokens use `isolated_registry`.
+- Temporary legacy recipes use `isolated_recipe_registry`.
+- Token System v2 work uses `TokenRegistryV2` and TokenPack manifests rather
+  than legacy registry internals.
 
-## P1-Core Scope
+## Documentation Rules
 
-Allowed in P1-core:
-
-- Decision variants `Block` and `Abstain`
-- Deployment envelope parsing outside Strategy Content IR
-- Profiles `research`, `paper`, `pretrade`, and `production_guarded`
-- Risk-path validation for guarded order-intent strategies
-- P1-core vocabulary and recipes listed in `docs/TAXONOMY.md`
-- `agent.promote`, `agent.explain_trace`, `qst promote`, and `qst explain-trace`
-
-Not allowed in P1-core:
-
-- FSM/state transition engine
-- New TA indicators beyond the P1-core manual scope
-- `max_loss` risk token
-- Purity or temporal validator expansion
-- Plugin registry
-- LLM parser or MCP adapter
+- Keep README focused on current usage and maintenance.
+- Keep final acceptance evidence in `QST_PROJECT_ACCEPTANCE.md`,
+  `TOKEN_SYSTEM_V2_ACCEPTANCE.md`, and `docs/ACCEPTANCE/`.
+- Keep architecture decisions in `docs/ADR/`.
+- Avoid reintroducing construction-plan or stage-by-stage acceptance journals
+  into the repository root.
 
 ## Stateless Lint
 
-Stateless lint is a best-effort guardrail, not a formal effect system. Local false positives can be disabled with:
+Stateless lint is a best-effort guardrail, not a formal effect system. Local
+false positives can be disabled with:
 
 ```python
 # qst-lint: disable-next-line -- deterministic test clock stub

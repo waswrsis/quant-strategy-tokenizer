@@ -5,3 +5,4 @@
 Future checkpoints should be recorded here before entering each destructive WP.
 - cleanline-after-R1: pending commit for cleanline ADR
 - cleanline-after-R2: pending commit for legacy strategy escape migration
+- cleanline-after-R3: pending commit for historical archive
