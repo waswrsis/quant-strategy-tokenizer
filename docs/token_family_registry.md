@@ -93,3 +93,24 @@ an error diagnostic in the reference helper, not raise a Python exception.
 
 Gate tokens are stateful reference semantics. They are not order management,
 portfolio risk enforcement, or broker/exchange execution.
+
+## Stage 3A.4 Panel, Weight, Risk, and Optimizer Families
+
+Stage 3A.4 completes the accepted panel/weight/risk surface:
+
+- `panel.*`: accepted panel reference operators from WP8c.
+- `selection.to_weights`: raw WeightPanel conversion, still under reference semantics.
+- `weight.*`: accepted WeightPanel constraint transforms from WP8d.
+- `risk.*`: deterministic reference helpers for position caps, volatility
+  scaling, and turnover clipping.
+- `optimizer.mean_variance`: experimental metadata-only solver-backed design
+  surface.
+
+Panel float operators declare `semantic_float64`, not bit-exact reproducibility.
+Weight operators use canonical decimal reference semantics. Risk helpers do not
+create a portfolio engine, optimizer, order planner, or broker risk control.
+They only expose deterministic conformance behavior for token contracts.
+
+Solver-backed optimizer tokens remain non-executable until they provide an
+explicit solver determinism contract. In Stage 3A.4, optimizer tokens are visible
+for vocabulary and agent explanation only.

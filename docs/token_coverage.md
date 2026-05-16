@@ -45,6 +45,18 @@ Stage 3A.3 adds decision/gate/state conformance coverage:
 Gate helpers output `DecisionV2` values only. Diagnostics remain diagnostics and
 do not become a DecisionKind.
 
+Stage 3A.4 adds panel/weight/risk/optimizer conformance coverage:
+
+- panel and weight token surface contracts preserve accepted WP8 semantics;
+- panel float operators are explicitly semantic float64 and make no bit-exact
+  claim;
+- weight operators use canonical decimal reference arithmetic;
+- risk helpers cover position-cap blocking, volatility-target scaling, and
+  turnover-cap clipping without optimization, redistribution, order planning, or
+  broker execution;
+- optimizer tokens are experimental, solver-backed, and metadata-only until a
+  deterministic solver contract is accepted.
+
 ## Hash Impact
 
 | Object | Stage 3A impact |

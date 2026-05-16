@@ -8,7 +8,13 @@ from __future__ import annotations
 
 import math
 from collections.abc import Iterable, Sequence
+from decimal import Decimal
 from typing import Any, Literal, cast, overload
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from qst.artifacts.decimal_string import normalize_to_canonical
+from qst.validation import Diagnostic, ValidationResult
 
 SeriesRow = tuple[str, Any]
 NumericSeries = list[tuple[str, float]]
@@ -21,6 +27,17 @@ class TokenReferenceError(ValueError):
     def __init__(self, code: str, message: str) -> None:
         super().__init__(message)
         self.code = code
+
+
+class TokenReferenceResult(BaseModel):
+    """Structured conformance helper result for non-runtime token facades."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, arbitrary_types_allowed=True)
+
+    decisions: tuple[Any, ...] = Field(default_factory=tuple)
+    weights: Any | None = None
+    diagnostics: ValidationResult = Field(default_factory=ValidationResult)
+    trace: dict[str, Any] = Field(default_factory=dict)
 
 
 def evaluate_math_token(name: str, *args: Any, **params: Any) -> object:
@@ -334,6 +351,103 @@ def evaluate_gate_token(name: str, values: Sequence[Any], **params: Any) -> list
         return _slot_budget_gate(consumed, slot_budget=slot_budget)
 
     raise TokenReferenceError("QST_TOKEN_REFERENCE_UNSUPPORTED", f"Unsupported gate token: {name}")
+
+
+def evaluate_panel_token(name: str, *args: Any, **params: Any) -> object:
+    """Evaluate Stage 3A.4 panel facade helpers for conformance tests only."""
+
+    if name.startswith("core."):
+        name = name.removeprefix("core.")
+
+    from qst.panel import (
+        panel_bottom_k,
+        panel_demean,
+        panel_group_demean,
+        panel_mask,
+        panel_rank,
+        panel_residualize,
+        panel_top_k,
+        panel_winsorize,
+        panel_zscore,
+        selection_to_weights,
+    )
+
+    if name == "panel.mask":
+        panel, mask = _expect_args(name, args, 2)
+        return panel_mask(panel, mask)
+    if name == "panel.rank":
+        (panel,) = _expect_args(name, args, 1)
+        return panel_rank(panel, **params)
+    if name == "panel.zscore":
+        (panel,) = _expect_args(name, args, 1)
+        return panel_zscore(panel, **params)
+    if name == "panel.top_k":
+        (panel,) = _expect_args(name, args, 1)
+        return panel_top_k(panel, **params)
+    if name == "panel.bottom_k":
+        (panel,) = _expect_args(name, args, 1)
+        return panel_bottom_k(panel, **params)
+    if name == "panel.demean":
+        (panel,) = _expect_args(name, args, 1)
+        return panel_demean(panel, **params)
+    if name == "panel.group_demean":
+        (panel,) = _expect_args(name, args, 1)
+        return panel_group_demean(panel, **params)
+    if name == "panel.winsorize":
+        (panel,) = _expect_args(name, args, 1)
+        return panel_winsorize(panel, **params)
+    if name == "panel.residualize":
+        (panel,) = _expect_args(name, args, 1)
+        return panel_residualize(panel, **params)
+    if name == "selection.to_weights":
+        (selection,) = _expect_args(name, args, 1)
+        return selection_to_weights(selection, **params)
+
+    raise TokenReferenceError("QST_TOKEN_REFERENCE_UNSUPPORTED", f"Unsupported panel token: {name}")
+
+
+def evaluate_weight_token(name: str, *args: Any, **params: Any) -> object:
+    """Evaluate Stage 3A.4 weight facade helpers for conformance tests only."""
+
+    if name.startswith("core."):
+        name = name.removeprefix("core.")
+
+    from qst.panel import (
+        weight_cap_per_symbol,
+        weight_market_neutral,
+        weight_normalize_gross,
+    )
+
+    if name == "weight.normalize_gross":
+        (weights,) = _expect_args(name, args, 1)
+        return weight_normalize_gross(weights, **params)
+    if name == "weight.cap_per_symbol":
+        (weights,) = _expect_args(name, args, 1)
+        return weight_cap_per_symbol(weights, **params)
+    if name == "weight.market_neutral":
+        (weights,) = _expect_args(name, args, 1)
+        return weight_market_neutral(weights, **params)
+
+    raise TokenReferenceError("QST_TOKEN_REFERENCE_UNSUPPORTED", f"Unsupported weight token: {name}")
+
+
+def evaluate_risk_token(name: str, *args: Any, **params: Any) -> TokenReferenceResult:
+    """Evaluate Stage 3A.4 risk reference helpers without portfolio execution."""
+
+    if name.startswith("core."):
+        name = name.removeprefix("core.")
+
+    if name == "risk.position_cap":
+        decisions, positions = _expect_args(name, args, 2)
+        return _risk_position_cap(decisions, positions, **params)
+    if name == "risk.volatility_target":
+        weights, volatility = _expect_args(name, args, 2)
+        return _risk_volatility_target(weights, volatility, **params)
+    if name == "risk.turnover_cap":
+        weights, previous = _expect_args(name, args, 2)
+        return _risk_turnover_cap(weights, previous, **params)
+
+    raise TokenReferenceError("QST_TOKEN_REFERENCE_UNSUPPORTED", f"Unsupported risk token: {name}")
 
 
 def evaluate_data_token(name: str, series: Sequence[SeriesRow], **params: Any) -> NumericSeries:
@@ -787,6 +901,174 @@ def _gate_decision(*, blocked: bool, block_reason: str) -> Any:
     )
 
 
+def _risk_position_cap(decisions: Any, positions: Any, **params: Any) -> TokenReferenceResult:
+    from qst.decision import DecisionV2
+
+    max_abs_position = _coerce_decimal_param(
+        params.get("max_abs_position"),
+        "max_abs_position",
+    )
+    if max_abs_position < 0:
+        raise TokenReferenceError(
+            "QST_TOKEN_RISK_PARAM_INVALID",
+            "risk.position_cap max_abs_position must be non-negative.",
+        )
+    decision_values = list(decisions)
+    position_values = [_coerce_decimal_value(value, "position") for value in positions]
+    if len(decision_values) != len(position_values):
+        raise TokenReferenceError(
+            "QST_TOKEN_RISK_INPUT_LENGTH_MISMATCH",
+            "risk.position_cap decisions and positions must have the same length.",
+        )
+
+    output: list[DecisionV2] = []
+    capped_count = 0
+    for decision, position in zip(decision_values, position_values, strict=True):
+        if not isinstance(decision, DecisionV2):
+            decision = DecisionV2.model_validate(decision)
+        if decision.kind == "block" or abs(position) <= max_abs_position:
+            output.append(decision)
+            continue
+        capped_count += 1
+        output.append(
+            DecisionV2(
+                kind="block",
+                reasons=(*decision.reasons, "RISK_POSITION_CAP_EXCEEDED"),
+                score=decision.score,
+            )
+        )
+    return TokenReferenceResult(
+        decisions=tuple(output),
+        trace={
+            "operator_id": "risk.position_cap",
+            "max_abs_position": _canonical_decimal(max_abs_position),
+            "blocked_count": capped_count,
+        },
+    )
+
+
+def _risk_volatility_target(weights: Any, volatility: Any, **params: Any) -> TokenReferenceResult:
+    from qst.panel import WeightPanelValue, WeightPoint
+
+    weight_panel = weights if isinstance(weights, WeightPanelValue) else WeightPanelValue.model_validate(weights)
+    volatility_by_key = _panel_numeric_map(volatility)
+    target = _coerce_decimal_param(params.get("target_volatility", "1"), "target_volatility")
+    if target < 0:
+        raise TokenReferenceError(
+            "QST_TOKEN_RISK_PARAM_INVALID",
+            "risk.volatility_target target_volatility must be non-negative.",
+        )
+
+    output: list[WeightPoint] = []
+    diagnostics: list[Diagnostic] = []
+    scaled_count = 0
+    for row in weight_panel.rows:
+        if not row.in_universe:
+            output.append(row)
+            continue
+        key = (row.timestamp, row.symbol)
+        vol = volatility_by_key.get(key)
+        if vol is None:
+            diagnostics.append(
+                _reference_diagnostic(
+                    "QST_TOKEN_RISK_VOLATILITY_MISSING",
+                    f"Missing volatility for {key!r}.",
+                )
+            )
+            continue
+        if vol <= 0:
+            diagnostics.append(
+                _reference_diagnostic(
+                    "QST_TOKEN_RISK_VOLATILITY_NONPOSITIVE",
+                    f"Volatility must be positive for {key!r}.",
+                )
+            )
+            continue
+        scaled_count += 1
+        scaled = Decimal(row.weight) * target / vol
+        output.append(row.model_copy(update={"weight": _canonical_decimal(scaled)}))
+    if diagnostics:
+        return TokenReferenceResult(
+            diagnostics=ValidationResult(diagnostics=diagnostics),
+            trace={"operator_id": "risk.volatility_target"},
+        )
+    return TokenReferenceResult(
+        weights=WeightPanelValue(
+            rows=tuple(output),
+            weight_kind=weight_panel.weight_kind,
+            normalized=weight_panel.normalized,
+        ),
+        trace={
+            "operator_id": "risk.volatility_target",
+            "target_volatility": _canonical_decimal(target),
+            "scaled_count": scaled_count,
+            "normalization": "none",
+        },
+    )
+
+
+def _risk_turnover_cap(weights: Any, previous: Any, **params: Any) -> TokenReferenceResult:
+    from qst.panel import WeightPanelValue, WeightPoint
+
+    weight_panel = weights if isinstance(weights, WeightPanelValue) else WeightPanelValue.model_validate(weights)
+    previous_panel = (
+        previous if isinstance(previous, WeightPanelValue) else WeightPanelValue.model_validate(previous)
+    )
+    previous_by_key = {
+        (row.timestamp, row.symbol): Decimal(row.weight)
+        for row in previous_panel.rows
+        if row.in_universe
+    }
+    max_turnover = _coerce_decimal_param(params.get("max_turnover"), "max_turnover")
+    if max_turnover < 0:
+        raise TokenReferenceError(
+            "QST_TOKEN_RISK_PARAM_INVALID",
+            "risk.turnover_cap max_turnover must be non-negative.",
+        )
+
+    output: list[WeightPoint] = []
+    diagnostics: list[Diagnostic] = []
+    clipped_count = 0
+    for row in weight_panel.rows:
+        if not row.in_universe:
+            output.append(row)
+            continue
+        key = (row.timestamp, row.symbol)
+        if key not in previous_by_key:
+            diagnostics.append(
+                _reference_diagnostic(
+                    "QST_TOKEN_RISK_PREVIOUS_WEIGHT_MISSING",
+                    f"Missing previous weight for {key!r}.",
+                )
+            )
+            continue
+        previous_weight = previous_by_key[key]
+        current_weight = Decimal(row.weight)
+        delta = current_weight - previous_weight
+        clipped_delta = min(max(delta, -max_turnover), max_turnover)
+        if clipped_delta != delta:
+            clipped_count += 1
+        output.append(row.model_copy(update={"weight": _canonical_decimal(previous_weight + clipped_delta)}))
+    if diagnostics:
+        return TokenReferenceResult(
+            diagnostics=ValidationResult(diagnostics=diagnostics),
+            trace={"operator_id": "risk.turnover_cap"},
+        )
+    return TokenReferenceResult(
+        weights=WeightPanelValue(
+            rows=tuple(output),
+            weight_kind=weight_panel.weight_kind,
+            normalized=weight_panel.normalized,
+        ),
+        trace={
+            "operator_id": "risk.turnover_cap",
+            "max_turnover": _canonical_decimal(max_turnover),
+            "clipped_count": clipped_count,
+            "redistribution": "none",
+        },
+    )
+
+
 def _local_name(name: str, prefix: str) -> str:
     if name.startswith("core."):
         name = name.removeprefix("core.")
@@ -836,6 +1118,35 @@ def _coerce_number(value: Any, *, allow_nonfinite: bool = False) -> float:
             "Numeric token input must be finite.",
         )
     return result
+
+
+def _coerce_decimal_param(value: Any, name: str) -> Decimal:
+    if value is None:
+        raise TokenReferenceError(
+            "QST_TOKEN_PARAM_TYPE_INVALID",
+            f"{name} is required.",
+        )
+    return _coerce_decimal_value(value, name)
+
+
+def _coerce_decimal_value(value: Any, name: str) -> Decimal:
+    if isinstance(value, bool) or not isinstance(value, (int, float, str, Decimal)):
+        raise TokenReferenceError(
+            "QST_TOKEN_NUMERIC_TYPE_INVALID",
+            f"{name} must be int, float, Decimal, or DecimalString, not bool.",
+        )
+    try:
+        canonical = normalize_to_canonical(value)
+    except ValueError as exc:
+        raise TokenReferenceError(
+            "QST_TOKEN_NUMERIC_NONFINITE",
+            f"{name} must be finite canonical decimal material.",
+        ) from exc
+    return Decimal(canonical)
+
+
+def _canonical_decimal(value: Decimal) -> str:
+    return normalize_to_canonical(value)
 
 
 def _coerce_int_param(value: Any, name: str) -> int:
@@ -918,6 +1229,26 @@ def _numeric_series(series: Sequence[SeriesRow], *, allow_none: bool = False) ->
     return output
 
 
+def _panel_numeric_map(panel: Any) -> dict[tuple[str, str], Decimal]:
+    from qst.panel import PanelValue
+
+    panel_value = panel if isinstance(panel, PanelValue) else PanelValue.model_validate(panel)
+    output: dict[tuple[str, str], Decimal] = {}
+    for row in panel_value.rows:
+        if not row.in_universe:
+            continue
+        if row.value is None:
+            raise TokenReferenceError(
+                "QST_TOKEN_RISK_PANEL_VALUE_MISSING",
+                f"Missing active risk panel value for {(row.timestamp, row.symbol)!r}.",
+            )
+        output[(row.timestamp, row.symbol)] = _coerce_decimal_value(
+            row.value,
+            f"{row.timestamp}/{row.symbol}",
+        )
+    return output
+
+
 def _series_rows(series: Sequence[SeriesRow]) -> list[SeriesRow]:
     rows: list[SeriesRow] = []
     seen: set[str] = set()
@@ -989,3 +1320,7 @@ def _rsi_from_avgs(avg_gain: float, avg_loss: float) -> float:
         return 100
     rs = avg_gain / avg_loss
     return 100 - 100 / (1 + rs)
+
+
+def _reference_diagnostic(code: str, message: str) -> Diagnostic:
+    return Diagnostic(code=code, severity="error", phase="runtime", message=message)

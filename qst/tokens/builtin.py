@@ -14,6 +14,7 @@ from qst.tokens.pack import TokenPackManifestV2
 from qst.tokens.spec import TokenRiskSpec, TokenSpecV2
 from qst.tokens.surface import (
     ExecutionSupport,
+    SolverContractSpec,
     TokenFamily,
     TokenLayer,
     TokenMaturity,
@@ -107,6 +108,15 @@ def _spec(
             ),
             missing_data=missing_data,
             failure_mode=failure_mode,
+            solver=(
+                SolverContractSpec(
+                    solver_required=True,
+                    deterministic_contract="missing_solver_determinism_contract",
+                    bit_exact_claim=False,
+                )
+                if solver_backed
+                else None
+            ),
             state="stateful reference semantics" if stateful else None,
             panel="panel-aware token" if panel_aware else None,
             stateful=stateful,
@@ -117,6 +127,8 @@ def _spec(
             deterministic_level=(
                 "reserved"
                 if reserved_only
+                else "annotation_only"
+                if execution_support == "metadata_only"
                 else "semantic_float64"
                 if numeric == "float64"
                 else "reference_exact"
@@ -253,6 +265,23 @@ _SLOT_BUDGET_PARAMS: dict[str, object] = {
     "additionalProperties": False,
     "properties": {"slot_budget": {"type": "integer", "minimum": 0, "default": 2}},
 }
+_POSITION_CAP_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["max_abs_position"],
+    "properties": {"max_abs_position": {"type": "string"}},
+}
+_VOLATILITY_TARGET_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {"target_volatility": {"type": "string", "default": "1"}},
+}
+_TURNOVER_CAP_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["max_turnover"],
+    "properties": {"max_turnover": {"type": "string"}},
+}
 
 _TOKEN_DEFINITIONS: tuple[dict[str, Any], ...] = (
     # Math and boolean primitives.
@@ -337,13 +366,13 @@ _TOKEN_DEFINITIONS: tuple[dict[str, Any], ...] = (
     {"name": "gate.circuit_breaker", "family": "gate", "category": "state_gate", "inputs": {"decision": _DECISION}, "outputs": {"decision": _DECISION}, "params_schema": _BREACH_THRESHOLD_PARAMS, "numeric": "object", "stateful": True, "failure_mode": "breach threshold emits DecisionKind block; errors remain diagnostics"},
     {"name": "gate.observe_period", "family": "gate", "category": "state_gate", "inputs": {"decision": _DECISION}, "outputs": {"decision": _DECISION}, "params_schema": _OBSERVE_PERIOD_PARAMS, "numeric": "object", "stateful": True, "failure_mode": "observe warmup emits DecisionKind block; errors remain diagnostics"},
     {"name": "gate.slot_budget", "family": "gate", "category": "state_gate", "inputs": {"decision": _DECISION}, "outputs": {"decision": _DECISION}, "params_schema": _SLOT_BUDGET_PARAMS, "numeric": "object", "stateful": True, "failure_mode": "slot budget breach emits DecisionKind block; errors remain diagnostics"},
-    {"name": "risk.position_cap", "family": "risk", "category": "risk_gate", "inputs": {"decision": _DECISION, "state": "State[object]"}, "outputs": {"decision": _DECISION}, "numeric": "object", "risk_level": "medium"},
-    {"name": "risk.volatility_target", "family": "risk", "category": "weight_risk", "inputs": {"weights": _PANEL_DECIMAL, "volatility": _PANEL_FLOAT}, "outputs": {"weights": _PANEL_DECIMAL}, "numeric": "decimal", "panel_aware": True, "risk_level": "medium"},
-    {"name": "risk.turnover_cap", "family": "risk", "category": "weight_risk", "inputs": {"weights": _PANEL_DECIMAL, "previous": _PANEL_DECIMAL}, "outputs": {"weights": _PANEL_DECIMAL}, "numeric": "decimal", "panel_aware": True, "risk_level": "medium"},
+    {"name": "risk.position_cap", "family": "risk", "category": "risk_gate", "inputs": {"decision": _DECISION, "state": "State[object]"}, "outputs": {"decision": _DECISION}, "params_schema": _POSITION_CAP_PARAMS, "numeric": "object", "risk_level": "medium", "failure_mode": "position cap breach emits DecisionKind block; errors remain diagnostics", "usage_notes": ("Reference helper does not place orders or enforce broker limits.",)},
+    {"name": "risk.volatility_target", "family": "risk", "category": "weight_risk", "inputs": {"weights": _PANEL_DECIMAL, "volatility": _PANEL_FLOAT}, "outputs": {"weights": _PANEL_DECIMAL}, "params_schema": _VOLATILITY_TARGET_PARAMS, "numeric": "decimal", "panel_aware": True, "risk_level": "medium", "failure_mode": "missing or nonpositive volatility emits diagnostic error", "usage_notes": ("Scales weights only; no gross/net normalization or portfolio engine.",)},
+    {"name": "risk.turnover_cap", "family": "risk", "category": "weight_risk", "inputs": {"weights": _PANEL_DECIMAL, "previous": _PANEL_DECIMAL}, "outputs": {"weights": _PANEL_DECIMAL}, "params_schema": _TURNOVER_CAP_PARAMS, "numeric": "decimal", "panel_aware": True, "risk_level": "medium", "failure_mode": "missing previous weight emits diagnostic error", "usage_notes": ("Clips per-symbol deltas only; no redistribution or rebalance plan.",)},
     {"name": "plan.noop", "family": "execution", "category": "plan_shell", "inputs": {"decision": _DECISION}, "outputs": {"plan": _PLAN}, "numeric": "object", "execution_support": "metadata_only"},
     {"name": "plan.order_intent", "family": "execution", "category": "plan_shell", "inputs": {"decision": _DECISION, "sizing": "Scalar[float]"}, "outputs": {"plan": _PLAN}, "numeric": "object", "execution_support": "metadata_only"},
     # Experimental optimizer and reserved design boundaries.
-    {"name": "optimizer.mean_variance", "family": "optimizer", "category": "portfolio_optimizer", "inputs": {"expected_return": _PANEL_FLOAT, "risk": _PANEL_FLOAT}, "outputs": {"weights": _PANEL_DECIMAL}, "numeric": "decimal", "maturity": "experimental", "panel_aware": True, "solver_backed": True, "risk_level": "high", "usage_notes": ("Requires explicit solver determinism contract before promotion.",)},
+    {"name": "optimizer.mean_variance", "family": "optimizer", "category": "portfolio_optimizer", "inputs": {"expected_return": _PANEL_FLOAT, "risk": _PANEL_FLOAT}, "outputs": {"weights": _PANEL_DECIMAL}, "numeric": "decimal", "maturity": "experimental", "execution_support": "metadata_only", "panel_aware": True, "solver_backed": True, "risk_level": "high", "usage_notes": ("Requires explicit solver determinism contract before promotion.", "Metadata-only in Stage 3A.4; no executable optimizer path is exposed.")},
     {"name": "event.join_asof", "family": "event", "category": "event_stream", "inputs": {"events": "EventStream[object]"}, "outputs": {"events": "EventStream[object]"}, "numeric": "object", "maturity": "reserved_design", "execution_support": "metadata_only", "reserved_only": True},
     {"name": "distribution.normal_fit", "family": "distribution", "category": "distribution_model", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_OBJECT}, "numeric": "object", "maturity": "reserved_design", "execution_support": "metadata_only", "reserved_only": True},
     {"name": "score.zscore", "family": "continuous_score", "category": "score_transform", "inputs": {"series": _TS_FLOAT}, "outputs": {"score": _TS_FLOAT}},

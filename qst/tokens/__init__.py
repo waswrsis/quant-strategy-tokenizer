@@ -23,6 +23,7 @@ from qst.tokens.package_policy import (
 )
 from qst.tokens.reference import (
     TokenReferenceError,
+    TokenReferenceResult,
     evaluate_align_token,
     evaluate_bool_token,
     evaluate_channel_breakout_token,
@@ -32,9 +33,12 @@ from qst.tokens.reference import (
     evaluate_gate_token,
     evaluate_indicator_token,
     evaluate_math_token,
+    evaluate_panel_token,
+    evaluate_risk_token,
     evaluate_signal_token,
     evaluate_state_token,
     evaluate_time_token,
+    evaluate_weight_token,
     evaluate_window_token,
 )
 from qst.tokens.registry import (
@@ -92,6 +96,7 @@ __all__ = [
     "TokenPackPackageEntryV04",
     "TokenPacksPackageSectionV04",
     "TokenReferenceError",
+    "TokenReferenceResult",
     "TokenRegistryV2",
     "TokenRiskSpec",
     "TokenSpecV2",
@@ -106,9 +111,12 @@ __all__ = [
     "evaluate_gate_token",
     "evaluate_indicator_token",
     "evaluate_math_token",
+    "evaluate_panel_token",
+    "evaluate_risk_token",
     "evaluate_signal_token",
     "evaluate_state_token",
     "evaluate_time_token",
+    "evaluate_weight_token",
     "evaluate_window_token",
     "token_lock_entry_from_spec",
     "token_pack_lock_dependency_from_pack",
