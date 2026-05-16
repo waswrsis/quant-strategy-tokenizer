@@ -19,6 +19,21 @@ The primitive coverage fixes:
 - boolean truth tables and explicit empty-input policies for boolean folds;
 - comparison truth tables with inclusive range boundaries by default.
 
+Stage 3A.2 adds accepted data/time/align/window/signal/indicator coverage.
+Series reference helpers use `Sequence[tuple[str, value]]` test material,
+canonical timestamp ordering, and duplicate-timestamp diagnostics. Numeric
+series reject bool, NaN, and Infinity. The helpers are intentionally separate
+from strategy validation and do not create a broad runtime.
+
+The series coverage fixes:
+
+- unsafe future behavior for negative `data.shift` periods;
+- return-transform domain errors for zero percentage-change denominators and
+  non-positive log-return inputs;
+- trailing-window behavior, `min_periods`, population standard deviation, and
+  zero-variance z-score output;
+- cross/threshold signal truth tables and current-bar-safe channel breakout.
+
 ## Hash Impact
 
 | Object | Stage 3A impact |

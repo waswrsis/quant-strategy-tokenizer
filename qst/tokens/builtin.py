@@ -188,6 +188,51 @@ _BETWEEN_PARAMS: dict[str, object] = {
     "additionalProperties": False,
     "properties": {"inclusive": {"type": "boolean", "default": True}},
 }
+_SHIFT_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "periods": {"type": "integer", "default": 1},
+        "allow_unsafe_future": {"type": "boolean", "default": False},
+    },
+}
+_SESSION_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["start_hhmm", "end_hhmm"],
+    "properties": {
+        "start_hhmm": {"type": "string"},
+        "end_hhmm": {"type": "string"},
+    },
+}
+_WINDOW_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["window"],
+    "properties": {
+        "window": {"type": "integer", "minimum": 1},
+        "min_periods": {"type": "integer", "minimum": 1},
+    },
+}
+_BOLLINGER_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["window"],
+    "properties": {
+        "window": {"type": "integer", "minimum": 1},
+        "min_periods": {"type": "integer", "minimum": 1},
+        "width": {"type": "number", "default": 2},
+    },
+}
+_THRESHOLD_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["threshold"],
+    "properties": {
+        "threshold": {"type": "number"},
+        "inclusive": {"type": "boolean", "default": True},
+    },
+}
 
 _TOKEN_DEFINITIONS: tuple[dict[str, Any], ...] = (
     # Math and boolean primitives.
@@ -236,23 +281,35 @@ _TOKEN_DEFINITIONS: tuple[dict[str, Any], ...] = (
     {"name": "compare.le", "family": "compare", "category": "comparison", "inputs": {"a": _TS_FLOAT, "b": _TS_FLOAT}, "outputs": {"value": _TS_BOOL}, "numeric": "bool"},
     {"name": "compare.eq", "family": "compare", "category": "comparison", "inputs": {"a": _TS_FLOAT, "b": _TS_FLOAT}, "outputs": {"value": _TS_BOOL}, "numeric": "bool"},
     # Data, time, alignment, window, signal, and indicators.
-    {"name": "data.shift", "family": "data", "category": "lag", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "temporal": "positive periods lag; negative periods require unsafe-future diagnostics"},
+    {"name": "data.shift", "family": "data", "category": "lag", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "params_schema": _SHIFT_PARAMS, "temporal": "positive periods lag; negative periods require unsafe-future diagnostics", "failure_mode": "negative periods emit unsafe-future diagnostic unless explicitly allowed"},
     {"name": "data.identity", "family": "data", "category": "identity", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}},
-    {"name": "time.session_filter", "family": "time", "category": "calendar_filter", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}},
+    {"name": "data.diff", "family": "data", "category": "delta", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "temporal": "uses previous timestamp only"},
+    {"name": "data.pct_change", "family": "data", "category": "return_transform", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "temporal": "uses previous timestamp only", "failure_mode": "previous value zero emits diagnostic error"},
+    {"name": "data.log_return", "family": "data", "category": "return_transform", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "temporal": "uses previous timestamp only", "failure_mode": "non-positive current or previous value emits diagnostic error"},
+    {"name": "time.session_filter", "family": "time", "category": "calendar_filter", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "params_schema": _SESSION_PARAMS},
     {"name": "align.inner_join", "family": "align", "category": "alignment", "inputs": {"left": _TS_FLOAT, "right": _TS_FLOAT}, "outputs": {"left": _TS_FLOAT, "right": _TS_FLOAT}},
+    {"name": "align.left_join", "family": "align", "category": "alignment", "inputs": {"left": _TS_FLOAT, "right": _TS_FLOAT}, "outputs": {"left": _TS_FLOAT, "right": _TS_FLOAT}, "missing_data": "right side may be None where timestamp is absent"},
     {"name": "align.forward_fill", "family": "align", "category": "alignment", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}},
-    {"name": "window.max", "family": "window", "category": "rolling_window", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "temporal": "min_history_bars derives from window parameter"},
-    {"name": "window.min", "family": "window", "category": "rolling_window", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "temporal": "min_history_bars derives from window parameter"},
-    {"name": "window.mean", "family": "window", "category": "rolling_window", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "temporal": "min_history_bars derives from window parameter"},
-    {"name": "window.std", "family": "window", "category": "rolling_window", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "temporal": "min_history_bars derives from window parameter"},
+    {"name": "align.drop_missing", "family": "align", "category": "alignment", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "missing_data": "drops None values from active timestamp set"},
+    {"name": "window.max", "family": "window", "category": "rolling_window", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "params_schema": _WINDOW_PARAMS, "temporal": "trailing window; min_history_bars derives from window parameter"},
+    {"name": "window.min", "family": "window", "category": "rolling_window", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "params_schema": _WINDOW_PARAMS, "temporal": "trailing window; min_history_bars derives from window parameter"},
+    {"name": "window.mean", "family": "window", "category": "rolling_window", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "params_schema": _WINDOW_PARAMS, "temporal": "trailing window; min_history_bars derives from window parameter"},
+    {"name": "window.std", "family": "window", "category": "rolling_window", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "params_schema": _WINDOW_PARAMS, "temporal": "trailing window; min_history_bars derives from window parameter"},
+    {"name": "window.sum", "family": "window", "category": "rolling_window", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "params_schema": _WINDOW_PARAMS, "temporal": "trailing window; min_history_bars derives from window parameter"},
+    {"name": "window.count", "family": "window", "category": "rolling_window", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": "TimeSeries[int]"}, "params_schema": _WINDOW_PARAMS, "numeric": "object", "temporal": "trailing window; min_history_bars derives from window parameter"},
+    {"name": "window.zscore", "family": "window", "category": "rolling_window", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "params_schema": _WINDOW_PARAMS, "temporal": "trailing window; zero variance outputs 0"},
     {"name": "norm.range_position", "family": "signal", "category": "normalization", "inputs": {"value": _TS_FLOAT, "high": _TS_FLOAT, "low": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}},
     {"name": "smooth.linear_recursive", "family": "signal", "category": "smoothing", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "stateful": True},
     {"name": "signal.cross_above", "family": "signal", "category": "cross", "inputs": {"a": _TS_FLOAT, "b": _TS_FLOAT}, "outputs": {"value": _TS_BOOL}, "numeric": "bool"},
     {"name": "signal.cross_below", "family": "signal", "category": "cross", "inputs": {"a": _TS_FLOAT, "b": _TS_FLOAT}, "outputs": {"value": _TS_BOOL}, "numeric": "bool"},
-    {"name": "indicator.ema", "family": "indicator", "category": "trend", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "stateful": True},
-    {"name": "indicator.rsi", "family": "indicator", "category": "oscillator", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}},
-    {"name": "indicator.bollinger", "family": "indicator", "category": "band", "inputs": {"series": _TS_FLOAT}, "outputs": {"middle": _TS_FLOAT, "upper": _TS_FLOAT, "lower": _TS_FLOAT}},
-    {"name": "indicator.channel_breakout", "family": "indicator", "category": "breakout", "inputs": {"high": _TS_FLOAT, "low": _TS_FLOAT, "close": _TS_FLOAT}, "outputs": {"value": _TS_BOOL}, "numeric": "bool"},
+    {"name": "signal.crosses", "family": "signal", "category": "cross", "inputs": {"a": _TS_FLOAT, "b": _TS_FLOAT}, "outputs": {"value": _TS_BOOL}, "numeric": "bool"},
+    {"name": "signal.threshold_above", "family": "signal", "category": "threshold", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_BOOL}, "params_schema": _THRESHOLD_PARAMS, "numeric": "bool"},
+    {"name": "signal.threshold_below", "family": "signal", "category": "threshold", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_BOOL}, "params_schema": _THRESHOLD_PARAMS, "numeric": "bool"},
+    {"name": "indicator.sma", "family": "indicator", "category": "trend", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "params_schema": _WINDOW_PARAMS},
+    {"name": "indicator.ema", "family": "indicator", "category": "trend", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "params_schema": _WINDOW_PARAMS, "stateful": True},
+    {"name": "indicator.rsi", "family": "indicator", "category": "oscillator", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "params_schema": _WINDOW_PARAMS},
+    {"name": "indicator.bollinger", "family": "indicator", "category": "band", "inputs": {"series": _TS_FLOAT}, "outputs": {"middle": _TS_FLOAT, "upper": _TS_FLOAT, "lower": _TS_FLOAT}, "params_schema": _BOLLINGER_PARAMS},
+    {"name": "indicator.channel_breakout", "family": "indicator", "category": "breakout", "inputs": {"high": _TS_FLOAT, "low": _TS_FLOAT, "close": _TS_FLOAT}, "outputs": {"value": _TS_BOOL}, "params_schema": _WINDOW_PARAMS, "numeric": "bool", "temporal": "uses previous trailing window only to avoid current-bar lookahead"},
     # Decision, gate, risk, and plan surface tokens.
     {"name": "decision.lift_bool", "family": "decision", "category": "decision_bridge", "inputs": {"series": _TS_BOOL}, "outputs": {"decision": _DECISION}, "numeric": "object"},
     {"name": "gate.cooldown", "family": "gate", "category": "state_gate", "inputs": {"decision": _DECISION}, "outputs": {"decision": _DECISION}, "numeric": "object", "stateful": True},

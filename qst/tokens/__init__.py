@@ -23,9 +23,16 @@ from qst.tokens.package_policy import (
 )
 from qst.tokens.reference import (
     TokenReferenceError,
+    evaluate_align_token,
     evaluate_bool_token,
+    evaluate_channel_breakout_token,
     evaluate_cmp_token,
+    evaluate_data_token,
+    evaluate_indicator_token,
     evaluate_math_token,
+    evaluate_signal_token,
+    evaluate_time_token,
+    evaluate_window_token,
 )
 from qst.tokens.registry import (
     RegistryTokenRecord,
@@ -87,9 +94,16 @@ __all__ = [
     "TokenSpecV2",
     "TokenSurfaceSpec",
     "builtin_token_packs",
+    "evaluate_align_token",
     "evaluate_bool_token",
+    "evaluate_channel_breakout_token",
     "evaluate_cmp_token",
+    "evaluate_data_token",
+    "evaluate_indicator_token",
     "evaluate_math_token",
+    "evaluate_signal_token",
+    "evaluate_time_token",
+    "evaluate_window_token",
     "token_lock_entry_from_spec",
     "token_pack_lock_dependency_from_pack",
     "token_pack_package_entry_from_pack",

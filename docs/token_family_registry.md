@@ -57,3 +57,19 @@ not the comparison family.
 
 Primitive reference helpers are conformance helpers only. They do not create a
 broad GKR runtime and are not invoked by validation.
+
+## Stage 3A.2 Series Families
+
+Stage 3A.2 completes the accepted series-token surface for:
+
+- `data.*`: identity, shift, diff, percentage change, and log return.
+- `time.*`: session filtering over timestamp time-of-day.
+- `align.*`: inner join, left join, forward fill, and missing-row drop.
+- `window.*`: trailing max/min/mean/std/sum/count/zscore.
+- `signal.*`: cross, threshold, normalization, and simple recursive smoothing.
+- `indicator.*`: SMA, EMA, RSI, Bollinger bands, and channel breakout.
+
+All Stage 3A.2 helpers use deterministic reference semantics for conformance
+only. Window tokens are trailing-window tokens; centered windows remain unsafe
+temporal behavior. `data.shift` with negative periods is an unsafe-future
+operation unless a reference test explicitly opts in.
