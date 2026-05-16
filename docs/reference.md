@@ -9,6 +9,11 @@ qst validate examples/strategies/kdj_cross_basic.gkr.yaml
 qst hash examples/strategies/kdj_with_ema_filter.gkr.yaml
 ```
 
+The public Stage 3A examples are indexed in
+[`examples/strategies/README.md`](../examples/strategies/README.md). Each public
+demo has matching validation diagnostics and graph/param/instance hash
+sentinels under `tests/reference/strategies/<case>/`.
+
 ## Schemas
 
 Public schema files live in `docs/schemas/`. File names are public product names; internal `$id` and `schema_version` values remain stable.
@@ -38,6 +43,12 @@ Deterministic reference material lives under `tests/reference/`:
 - `strategies/`
 
 These fixtures and traces are conformance material for the current QST tree, not runtime execution logs.
+
+The Stage 3A demo acceptance gate requires all 12 public examples to validate
+through both the Python API and CLI, and to match their reference hash
+sentinels. Full trace artifacts are intentionally limited to
+`01_ema_cross`, `08_market_neutral_rank`, and
+`12_custom_token_kalman_signal`.
 
 ## Token Surface
 

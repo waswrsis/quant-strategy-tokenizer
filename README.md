@@ -56,6 +56,10 @@ qst validate examples/strategies/01_ema_cross/strategy.gkr.yaml
 qst hash examples/strategies/12_custom_token_kalman_signal/strategy.gkr.yaml
 ```
 
+The 12-demo index is [examples/strategies/README.md](examples/strategies/README.md).
+Each demo has validation diagnostics and graph/param/instance hash sentinels
+under `tests/reference/strategies/<case>/`.
+
 ## What QST Provides
 
 - A single active IR target with typed nodes, structured token refs, capabilities, and port signatures.
@@ -79,6 +83,7 @@ docs/adr/                    Active architecture decisions
 docs/agent/                  Agent workflow and conformance guidance
 docs/project_history/        Public background material
 examples/strategies/         Public GKR strategy examples
+examples/strategies/README.md Public demo index and coverage table
 examples/custom_token/       Custom-token reference example
 tests/reference/             Deterministic reference fixtures and traces
 tests/                       Unit and conformance tests

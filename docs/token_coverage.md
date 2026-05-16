@@ -68,6 +68,15 @@ Stage 3A.5 adds reserved-design and execution-boundary coverage:
 - continuous-score tokens remain separate from DecisionKind, order planning, and
   risk execution.
 
+Stage 3A.6 locks demo and acceptance coverage:
+
+- all 12 public examples validate through both Python API and CLI;
+- all 12 examples have expected diagnostics plus graph/param/instance hash
+  sentinels;
+- the accepted full-trace set is exactly `01_ema_cross`,
+  `08_market_neutral_rank`, and `12_custom_token_kalman_signal`;
+- demo artifacts are conformance evidence, not runtime execution logs.
+
 ## Hash Impact
 
 | Object | Stage 3A impact |
