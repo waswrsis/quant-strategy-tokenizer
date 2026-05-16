@@ -161,6 +161,8 @@ _TS_BOOL = "TimeSeries[bool]"
 _TS_OBJECT = "TimeSeries[object]"
 _EVENT_FLOAT = "EventStream[float]"
 _EVENT_BOOL = "EventStream[bool]"
+_EVENT_OBJECT = "EventStream[object]"
+_EVENT_OBJECT_SINGLE = "Event[object]"
 _DECISION = "Decision"
 _PLAN = "Plan"
 _PANEL_FLOAT = "Panel[float]"
@@ -282,6 +284,16 @@ _TURNOVER_CAP_PARAMS: dict[str, object] = {
     "required": ["max_turnover"],
     "properties": {"max_turnover": {"type": "string"}},
 }
+_RESERVED_DESIGN_USAGE = (
+    "Reserved design token: visible in vocabulary for planning, but not executable in strategies.",
+    "Do not treat this token as an implementation instruction.",
+)
+_QUANTILE_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["quantile"],
+    "properties": {"quantile": {"type": "number", "minimum": 0, "maximum": 1}},
+}
 
 _TOKEN_DEFINITIONS: tuple[dict[str, Any], ...] = (
     # Math and boolean primitives.
@@ -373,7 +385,15 @@ _TOKEN_DEFINITIONS: tuple[dict[str, Any], ...] = (
     {"name": "plan.order_intent", "family": "execution", "category": "plan_shell", "inputs": {"decision": _DECISION, "sizing": "Scalar[float]"}, "outputs": {"plan": _PLAN}, "numeric": "object", "execution_support": "metadata_only"},
     # Experimental optimizer and reserved design boundaries.
     {"name": "optimizer.mean_variance", "family": "optimizer", "category": "portfolio_optimizer", "inputs": {"expected_return": _PANEL_FLOAT, "risk": _PANEL_FLOAT}, "outputs": {"weights": _PANEL_DECIMAL}, "numeric": "decimal", "maturity": "experimental", "execution_support": "metadata_only", "panel_aware": True, "solver_backed": True, "risk_level": "high", "usage_notes": ("Requires explicit solver determinism contract before promotion.", "Metadata-only in Stage 3A.4; no executable optimizer path is exposed.")},
-    {"name": "event.join_asof", "family": "event", "category": "event_stream", "inputs": {"events": "EventStream[object]"}, "outputs": {"events": "EventStream[object]"}, "numeric": "object", "maturity": "reserved_design", "execution_support": "metadata_only", "reserved_only": True},
-    {"name": "distribution.normal_fit", "family": "distribution", "category": "distribution_model", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_OBJECT}, "numeric": "object", "maturity": "reserved_design", "execution_support": "metadata_only", "reserved_only": True},
+    {"name": "event.join_asof", "family": "event", "category": "event_stream", "inputs": {"events": _EVENT_OBJECT}, "outputs": {"events": _EVENT_OBJECT}, "numeric": "object", "maturity": "reserved_design", "execution_support": "metadata_only", "reserved_only": True, "usage_notes": _RESERVED_DESIGN_USAGE},
+    {"name": "event.filter", "family": "event", "category": "event_stream", "inputs": {"events": _EVENT_OBJECT, "predicate": _EVENT_BOOL}, "outputs": {"events": _EVENT_OBJECT}, "numeric": "object", "maturity": "reserved_design", "execution_support": "metadata_only", "reserved_only": True, "usage_notes": _RESERVED_DESIGN_USAGE},
+    {"name": "event.window_count", "family": "event", "category": "event_aggregation", "inputs": {"events": _EVENT_OBJECT}, "outputs": {"count": "TimeSeries[int]"}, "numeric": "object", "maturity": "reserved_design", "execution_support": "metadata_only", "reserved_only": True, "usage_notes": _RESERVED_DESIGN_USAGE},
+    {"name": "distribution.normal_fit", "family": "distribution", "category": "distribution_model", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_OBJECT}, "numeric": "object", "maturity": "reserved_design", "execution_support": "metadata_only", "reserved_only": True, "usage_notes": _RESERVED_DESIGN_USAGE},
+    {"name": "distribution.quantile", "family": "distribution", "category": "distribution_metric", "inputs": {"distribution": _TS_OBJECT}, "outputs": {"value": _TS_FLOAT}, "params_schema": _QUANTILE_PARAMS, "numeric": "object", "maturity": "reserved_design", "execution_support": "metadata_only", "reserved_only": True, "usage_notes": _RESERVED_DESIGN_USAGE},
+    {"name": "distribution.tail_probability", "family": "distribution", "category": "distribution_metric", "inputs": {"distribution": _TS_OBJECT, "threshold": _TS_FLOAT}, "outputs": {"probability": _TS_FLOAT}, "numeric": "object", "maturity": "reserved_design", "execution_support": "metadata_only", "reserved_only": True, "usage_notes": _RESERVED_DESIGN_USAGE},
+    {"name": "execution.submit_order", "family": "execution", "category": "execution_boundary", "inputs": {"plan": _PLAN}, "outputs": {"event": _EVENT_OBJECT_SINGLE}, "numeric": "object", "maturity": "reserved_design", "execution_support": "metadata_only", "reserved_only": True, "risk_level": "high", "usage_notes": _RESERVED_DESIGN_USAGE},
+    {"name": "execution.cancel_order", "family": "execution", "category": "execution_boundary", "inputs": {"plan": _PLAN}, "outputs": {"event": _EVENT_OBJECT_SINGLE}, "numeric": "object", "maturity": "reserved_design", "execution_support": "metadata_only", "reserved_only": True, "risk_level": "high", "usage_notes": _RESERVED_DESIGN_USAGE},
+    {"name": "execution.fill_report", "family": "execution", "category": "execution_feedback", "inputs": {"event": _EVENT_OBJECT_SINGLE}, "outputs": {"event": _EVENT_OBJECT_SINGLE}, "numeric": "object", "maturity": "reserved_design", "execution_support": "metadata_only", "reserved_only": True, "risk_level": "high", "usage_notes": _RESERVED_DESIGN_USAGE},
     {"name": "score.zscore", "family": "continuous_score", "category": "score_transform", "inputs": {"series": _TS_FLOAT}, "outputs": {"score": _TS_FLOAT}},
+    {"name": "score.calibrate", "family": "continuous_score", "category": "score_calibration", "inputs": {"score": _TS_FLOAT}, "outputs": {"score": _TS_FLOAT}, "maturity": "experimental", "execution_support": "metadata_only", "usage_notes": ("Calibration has no accepted reference helper in Stage 3A.5.", "Continuous-score tokens do not produce DecisionKind or execution plans.")},
 )

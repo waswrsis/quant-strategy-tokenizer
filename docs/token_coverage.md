@@ -57,6 +57,17 @@ Stage 3A.4 adds panel/weight/risk/optimizer conformance coverage:
 - optimizer tokens are experimental, solver-backed, and metadata-only until a
   deterministic solver contract is accepted.
 
+Stage 3A.5 adds reserved-design and execution-boundary coverage:
+
+- event, distribution, and execution boundary tokens are vocabulary-visible but
+  non-executable;
+- every reserved-design token is metadata-only, reserved-only, validation-only,
+  and rejected by strategy validation in every profile;
+- accepted `plan.*` tokens remain plan-shape metadata shells and do not expose a
+  runtime/reference facade;
+- continuous-score tokens remain separate from DecisionKind, order planning, and
+  risk execution.
+
 ## Hash Impact
 
 | Object | Stage 3A impact |

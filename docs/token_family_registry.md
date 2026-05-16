@@ -114,3 +114,23 @@ They only expose deterministic conformance behavior for token contracts.
 Solver-backed optimizer tokens remain non-executable until they provide an
 explicit solver determinism contract. In Stage 3A.4, optimizer tokens are visible
 for vocabulary and agent explanation only.
+
+## Stage 3A.5 Reserved Design and Execution Boundaries
+
+Stage 3A.5 locks vocabulary-visible but non-executable boundaries:
+
+- `event.*`: reserved EventStream design surface.
+- `distribution.*`: reserved distribution-model design surface.
+- `execution.*`: reserved broker/exchange execution and feedback boundary.
+- `plan.*`: accepted metadata-only plan shells; not runtime execution.
+- `score.*`: continuous-score transforms; not DecisionKind or execution plans.
+
+Reserved-design tokens must be `metadata_only`, `reserved_only=true`,
+`contract.scope=validation_only`, and `deterministic_level=reserved`. They may
+be listed by vocabulary and explained to agents, but any strategy node that
+references them fails validation with `QST_TOKEN_RESERVED_DESIGN_NOT_EXECUTABLE`
+in every profile.
+
+`score.calibrate` remains experimental metadata-only until an accepted reference
+helper or runtime contract exists. `score.zscore` remains an accepted reference
+helper.

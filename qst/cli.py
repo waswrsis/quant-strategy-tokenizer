@@ -26,6 +26,7 @@ from qst.ir import (
     validate_ir_v04,
 )
 from qst.tokens import TokenRegistryV2, builtin_token_packs
+from qst.validation import Diagnostic
 
 app = typer.Typer(no_args_is_help=True)
 token_app = typer.Typer(no_args_is_help=True)
@@ -106,22 +107,79 @@ def _core_packs() -> tuple[Any, ...]:
     return builtin_token_packs()
 
 
+def _vocabulary_surface_diagnostics(packs: tuple[Any, ...]) -> list[Diagnostic]:
+    diagnostics: list[Diagnostic] = []
+    for pack in packs:
+        for spec in pack.tokens:
+            surface = spec.surface
+            if surface.maturity == "reserved_design":
+                if surface.execution_support != "metadata_only":
+                    diagnostics.append(
+                        Diagnostic(
+                            code="QST_TOKEN_RESERVED_DESIGN_EXECUTION_SUPPORT_INVALID",
+                            severity="error",
+                            phase="token_registry",
+                            message=f"{spec.token_id} reserved_design must be metadata_only.",
+                        )
+                    )
+                if not surface.capabilities.reserved_only:
+                    diagnostics.append(
+                        Diagnostic(
+                            code="QST_TOKEN_RESERVED_DESIGN_FLAG_MISSING",
+                            severity="error",
+                            phase="token_registry",
+                            message=f"{spec.token_id} reserved_design must set reserved_only=true.",
+                        )
+                    )
+                if surface.capabilities.deterministic_level != "reserved":
+                    diagnostics.append(
+                        Diagnostic(
+                            code="QST_TOKEN_RESERVED_DESIGN_DETERMINISM_INVALID",
+                            severity="error",
+                            phase="token_registry",
+                            message=f"{spec.token_id} reserved_design must use deterministic_level=reserved.",
+                        )
+                    )
+                if surface.contract.scope != "validation_only":
+                    diagnostics.append(
+                        Diagnostic(
+                            code="QST_TOKEN_RESERVED_DESIGN_SCOPE_INVALID",
+                            severity="error",
+                            phase="token_registry",
+                            message=f"{spec.token_id} reserved_design must use validation_only contract scope.",
+                        )
+                    )
+            elif surface.capabilities.reserved_only:
+                diagnostics.append(
+                    Diagnostic(
+                        code="QST_TOKEN_RESERVED_ONLY_MATURITY_INVALID",
+                        severity="error",
+                        phase="token_registry",
+                        message=f"{spec.token_id} sets reserved_only without reserved_design maturity.",
+                    )
+                )
+    return diagnostics
+
+
 @app.command("vocabulary")
 def vocabulary(check: Annotated[bool, typer.Option("--check")] = False) -> None:
     """Print or validate the built-in TokenPack vocabulary."""
 
     packs = _core_packs()
     registry = TokenRegistryV2.from_packs(packs)
+    surface_diagnostics = _vocabulary_surface_diagnostics(packs)
+    diagnostics = [*registry.result.diagnostics, *surface_diagnostics]
+    ok = registry.result.ok and not any(diagnostic.severity == "error" for diagnostic in diagnostics)
     if check:
         _echo_json(
             {
-                "ok": registry.result.ok,
+                "ok": ok,
                 "packs": [pack.pack_id for pack in packs],
                 "token_count": len(registry.records),
-                "diagnostics": registry.result.diagnostics,
+                "diagnostics": diagnostics,
             }
         )
-        if not registry.result.ok:
+        if not ok:
             raise typer.Exit(1)
         return
     _echo_json(
