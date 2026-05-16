@@ -53,6 +53,36 @@ The verifier records byte count, line count, compile/parse checks, and verdict f
 - Stage 3C acceptance docs
 - the three complete golden task YAML files
 
+## Recorded Remote Evidence
+
+Recorded remote verification:
+
+- commit: `6d4847dfd5cf729f9b16d8df2f22e15e35d83a23`
+- CI run: `https://github.com/waswrsis/Quant-Strategy-Tokenizer/actions/runs/25972412726`
+- CI result: `success`
+- CI prompt-validation job: `success`
+- raw verifier command exit code: `0`
+- raw verifier result: `pass`
+
+Raw verifier summary:
+
+| Artifact | Line count | Key check | Verdict |
+| --- | ---: | --- | --- |
+| `tools/validate_prompt_set.py` | 359 | Python compile | pass |
+| `tests/agent_prompts/test_validate_prompt_set.py` | 104 | Python compile | pass |
+| prompt-pack `README.md` | 17 | Markdown readability | pass |
+| `core/00_FOUNDATION.md` | 34 | Markdown readability | pass |
+| `tasks/CLASSIFY_STRATEGY_INTENT.md` | 16 | Markdown readability | pass |
+| `validation/VALIDATE_PROMPT_SET.md` | 25 | Markdown readability | pass |
+| `construction/STAGE_3C_PROMPT_ACCEPTANCE.md` | 30 | Markdown readability | pass |
+| `construction/STAGE_3C_PROMPT_ACCEPTANCE_EVIDENCE.md` | 63 | Markdown readability | pass |
+| `golden/01_ema_cross.intent.yaml` | 32 | YAML parse and schema | pass |
+| `golden/12_custom_token_kalman_signal.intent.yaml` | 31 | YAML parse and schema | pass |
+| `golden/13_event_stream_intraday.intent.yaml` | 32 | YAML parse and schema | pass |
+
+The final evidence-update commit must run the same CI prompt-validation gate.
+Reviewers can rerun the raw verifier against the final commit SHA using the command above.
+
 ## Acceptance Decision
 
 Stage 3C prompt pack acceptance requires all local prompt gates, CI prompt gates, and raw-artifact evidence checks to pass.
