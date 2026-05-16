@@ -46,7 +46,7 @@ def test_stage3c_prompt_validator_detects_stale_state_and_hash_truth(tmp_path: P
     prompt_root = _copy_prompt_pack(tmp_path)
     stale = prompt_root / "core" / "99_STALE.md"
     stale.write_text(
-        "prompt_system_version: qst-stage-3c-v0.3.2.1\n"
+        "prompt_system_version: qst-stage-3c-v0.3.2.2\n"
         "QST_CURRENT_STATE\n"
         "graph_hash = sha256:0000000000000000000000000000000000000000000000000000000000000000\n",
         encoding="utf-8",
@@ -61,7 +61,7 @@ def test_stage3c_prompt_validator_detects_compressed_markdown(tmp_path: Path) ->
     prompt_root = _copy_prompt_pack(tmp_path)
     compressed = prompt_root / "tasks" / "CLASSIFY_STRATEGY_INTENT.md"
     compressed.write_text(
-        "# Classify Strategy Intent prompt_system_version: qst-stage-3c-v0.3.2.1 "
+        "# Classify Strategy Intent prompt_system_version: qst-stage-3c-v0.3.2.2 "
         "This intentionally compressed prompt should fail readability validation.",
         encoding="utf-8",
     )
@@ -76,7 +76,7 @@ def test_stage3c_prompt_validator_detects_incomplete_task_prompt(tmp_path: Path)
     task = prompt_root / "tasks" / "SELECT_TOKENS.md"
     task.write_text(
         "# Select Tokens\n\n"
-        "prompt_system_version: qst-stage-3c-v0.3.2.1\n\n"
+        "prompt_system_version: qst-stage-3c-v0.3.2.2\n\n"
         "## Use When\n\n"
         "This file intentionally omits required task sections and useful detail.\n",
         encoding="utf-8",
@@ -92,7 +92,7 @@ def test_stage3c_prompt_validator_detects_incomplete_reader_prompt(tmp_path: Pat
     reader = prompt_root / "readers" / "READ_TOKEN_SYSTEM.md"
     reader.write_text(
         "# Token System\n\n"
-        "prompt_system_version: qst-stage-3c-v0.3.2.1\n\n"
+        "prompt_system_version: qst-stage-3c-v0.3.2.2\n\n"
         "## Purpose\n\n"
         "This reader is too thin to guide repository inspection.\n",
         encoding="utf-8",
@@ -108,7 +108,7 @@ def test_stage3c_prompt_validator_detects_incomplete_schema_prompt(tmp_path: Pat
     schema = prompt_root / "schemas" / "STRATEGY_INTENT_SCHEMA.md"
     schema.write_text(
         "# Strategy Intent Schema\n\n"
-        "prompt_system_version: qst-stage-3c-v0.3.2.1\n\n"
+        "prompt_system_version: qst-stage-3c-v0.3.2.2\n\n"
         "## Purpose\n\n"
         "This schema omits required fields and validation rules.\n",
         encoding="utf-8",

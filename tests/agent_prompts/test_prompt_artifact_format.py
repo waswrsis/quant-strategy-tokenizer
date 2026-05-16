@@ -43,7 +43,7 @@ def test_prompt_markdown_files_are_multiline_and_readable() -> None:
             bad.append(f"{path}: only {len(lines)} lines")
         if not any(line.startswith("# ") for line in lines):
             bad.append(f"{path}: missing H1")
-        if "prompt_system_version: qst-stage-3c-v0.3.2.1" not in "\n".join(lines):
+        if "prompt_system_version: qst-stage-3c-v0.3.2.2" not in "\n".join(lines):
             bad.append(f"{path}: missing prompt_system_version")
         for line_number, line in enumerate(lines, start=1):
             if len(line) > MAX_MARKDOWN_LINE_LENGTH:

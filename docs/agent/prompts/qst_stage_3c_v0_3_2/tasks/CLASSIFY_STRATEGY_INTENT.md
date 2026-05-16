@@ -1,6 +1,6 @@
 # Classify Strategy Intent
 
-prompt_system_version: qst-stage-3c-v0.3.2.1
+prompt_system_version: qst-stage-3c-v0.3.2.2
 task_type: authoring
 foundation: core/00_FOUNDATION.md
 
@@ -16,11 +16,35 @@ Use before selecting tokens for a strategy request.
 
 ## Procedure
 
-1. Restate the task in QST terms and identify the active profile or artifact.
-2. Read the current repository evidence before making token, schema, or runtime claims.
-3. Apply the relevant token surface, profile gate, security, and hash boundaries.
-4. Make the smallest safe change or produce the requested review.
-5. Run focused validation and report any skipped gates.
+1. Restate the strategy intent in one sentence.
+2. Extract required components:
+   - data
+   - indicators
+   - transforms
+   - decision logic
+   - state/gates
+   - panel/universe
+   - risk/weight
+   - custom logic
+   - external/runtime requirements
+3. Check external/runtime requirements before token selection.
+4. Check current vocabulary and examples through repository evidence.
+5. Classify using exactly one allowed classification.
+6. Produce a strategy intent record.
+
+## Classification Rules
+
+- `supported`: current vocabulary and schema can express the strategy, the target profile
+  allows selected token families, and no unsupported runtime or type requirement appears.
+- `partially_supported`: the core strategy can be expressed, but one or more non-essential
+  elements must be omitted, reported, or routed without silent weakening.
+- `custom_token_required`: missing logic is representable as a custom token without an
+  unsupported base type or reserved runtime; custom token approval and execution are not
+  implied.
+- `reserved`: the request requires a reserved design surface such as EventStream, broad
+  stream runtime, unsupported type boundary, HFT/event-time replay, or distribution type.
+- `non_goal`: the request requires broker, exchange, live execution, order routing,
+  custody, production runtime, or a broad backtest engine.
 
 ## Allowed Classifications
 
@@ -32,7 +56,27 @@ Use before selecting tokens for a strategy request.
 
 ## Output
 
-Return a strategy intent record using `schemas/STRATEGY_INTENT_SCHEMA.md`.
+Return a strategy intent record using `schemas/STRATEGY_INTENT_SCHEMA.md`:
+
+```yaml
+strategy_intent:
+  intent_summary:
+  target_profile:
+  classification:
+  reason:
+  required_data:
+  signal_logic:
+  decision_logic:
+  state_requirements:
+  panel_requirements:
+  risk_weight_requirements:
+  external_requirements:
+  token_families:
+  missing_tokens:
+  missing_types:
+  blockers:
+  next_task:
+```
 
 ## Guardrails
 
@@ -40,3 +84,5 @@ Return a strategy intent record using `schemas/STRATEGY_INTENT_SCHEMA.md`.
 - Do not invent token refs, schema fields, capabilities, or runtime behavior.
 - Keep reserved design features non-executable and route unsupported behavior explicitly.
 - Treat validation, hash stability, and prompt success as engineering evidence only.
+- Do not fake reserved EventStream, HFT replay, broker, exchange, or live execution
+  requirements with ordinary time-series tokens.

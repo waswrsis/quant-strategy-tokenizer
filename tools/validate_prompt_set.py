@@ -9,7 +9,7 @@ from typing import Any
 
 import yaml
 
-PROMPT_VERSION = "qst-stage-3c-v0.3.2.1"
+PROMPT_VERSION = "qst-stage-3c-v0.3.2.2"
 ALLOWED_CLASSIFICATIONS = {
     "supported",
     "partially_supported",
@@ -67,6 +67,61 @@ REFERENCE_PATTERN = re.compile(r"`((?:core|load_profiles|readers|tasks|schemas|g
 MAX_MARKDOWN_LINE_LENGTH = 240
 MIN_MARKDOWN_LINES = 5
 
+SEMANTIC_ANCHORS: dict[str, tuple[tuple[str, tuple[str, ...]], ...]] = {
+    "core/01_REPO_CONTEXT_PROTOCOL.md": (
+        ("git status", ("git status",)),
+        ("git rev-parse", ("git rev-parse",)),
+        ("pyproject", ("pyproject.toml",)),
+        ("vocabulary command", ("qst vocabulary",)),
+        ("validation command", ("qst validate",)),
+        ("hash command", ("qst hash",)),
+        ("canonical command", ("canonicalize",)),
+        ("repo context output", ("repo_context",)),
+    ),
+    "tasks/CLASSIFY_STRATEGY_INTENT.md": (
+        ("supported classification", ("supported",)),
+        ("partially supported classification", ("partially_supported",)),
+        ("custom token classification", ("custom_token_required",)),
+        ("reserved classification", ("reserved",)),
+        ("non-goal classification", ("non_goal",)),
+        ("broker boundary", ("broker",)),
+        ("exchange boundary", ("exchange",)),
+        ("live execution boundary", ("live execution",)),
+        ("event stream boundary", ("eventstream", "event stream")),
+    ),
+    "tasks/SELECT_TOKENS.md": (
+        ("selected token output", ("selected_token_ref",)),
+        ("maturity output", ("maturity",)),
+        ("execution support output", ("execution_support",)),
+        ("rejected candidates", ("rejected_candidates",)),
+        ("missing tokens", ("missing_tokens",)),
+    ),
+    "tasks/AUTHOR_GKR_STRATEGY.md": (
+        ("strategy source", (".gkr.yaml",)),
+        ("node plan", ("node_plan",)),
+        ("validation command", ("qst validate",)),
+        ("hash command", ("qst hash",)),
+        ("canonical command", ("canonicalize",)),
+        ("repair route", ("repair_gkr_diagnostics",)),
+    ),
+    "tasks/REPAIR_GKR_DIAGNOSTICS.md": (
+        ("schema diagnostic", ("schema_error",)),
+        ("unknown token diagnostic", ("unknown_token",)),
+        ("port diagnostic", ("port_error",)),
+        ("type diagnostic", ("type_error",)),
+        ("temporal diagnostic", ("temporal_error",)),
+        ("attempt limit", ("3 attempts", "max 3", "maximum 3")),
+    ),
+    "tasks/CUSTOM_TOKEN_ROUTING.md": (
+        ("verify boundary", ("verify",)),
+        ("approve boundary", ("approve",)),
+        ("grant boundary", ("grant",)),
+        ("execute boundary", ("execute",)),
+        ("no execute boundary", ("must not execute",)),
+        ("no import boundary", ("must not import", "do not import")),
+    ),
+}
+
 
 @dataclass(frozen=True)
 class Check:
@@ -102,6 +157,7 @@ def validate_prompt_set(root: Path) -> dict[str, Any]:
         _check_reserved_design_rule(root),
         _check_golden_yaml_schema(root),
         _check_golden_tasks(root),
+        _check_semantic_anchors(root),
         _check_operator_manual_boundary(root),
     ]
     result = "pass" if all(check.result == "pass" for check in checks) else "fail"
@@ -322,6 +378,20 @@ def _check_operator_manual_boundary(root: Path) -> Check:
     if "operator_manual.md" in text and "active prompt system" in text:
         issues.append("operator_manual.md appears in active prompt system wording")
     return Check("operator_manual", "operator manual is reference-only", tuple(issues))
+
+
+def _check_semantic_anchors(root: Path) -> Check:
+    issues: list[str] = []
+    for rel_path, groups in SEMANTIC_ANCHORS.items():
+        path = root / rel_path
+        if not path.is_file():
+            issues.append(f"{rel_path} missing semantic anchor target file")
+            continue
+        text = path.read_text(encoding="utf-8").lower()
+        for group_name, anchors in groups:
+            if not any(anchor.lower() in text for anchor in anchors):
+                issues.append(f"{rel_path} missing semantic anchor group {group_name}")
+    return Check("semantic_anchors", "operational semantic anchors are present", tuple(issues))
 
 
 def _prompt_markdown_files(root: Path) -> list[Path]:

@@ -1,6 +1,6 @@
 # Repair Gkr Diagnostics
 
-prompt_system_version: qst-stage-3c-v0.3.2.1
+prompt_system_version: qst-stage-3c-v0.3.2.2
 task_type: repair
 foundation: core/00_FOUNDATION.md
 
@@ -16,15 +16,46 @@ Use when a strategy fails validation or produces unexpected diagnostics.
 
 ## Procedure
 
-1. Restate the task in QST terms and identify the active profile or artifact.
-2. Read the current repository evidence before making token, schema, or runtime claims.
-3. Apply the relevant token surface, profile gate, security, and hash boundaries.
-4. Make the smallest safe change or produce the requested review.
-5. Run focused validation and report any skipped gates.
+1. Preserve the original strategy intent.
+2. Classify every diagnostic.
+3. Decide whether each diagnostic is repairable.
+4. Apply the smallest repair.
+5. Re-run validation.
+6. Stop after 3 attempts.
+7. Escalate if repair requires a new token, new type-system feature, validator bypass,
+   profile weakening, reserved design execution, runtime, broker, or exchange capability.
+
+## Diagnostic Classes
+
+Classify each diagnostic as one of:
+
+- schema_error
+- unknown_token
+- profile_blocked_token
+- reserved_design_token
+- port_error
+- type_error
+- temporal_error
+- capability_error
+- custom_token_required
+- non_goal_runtime_required
 
 ## Output
 
-Return failure cause, patch summary, and command evidence.
+Return failure cause, patch summary, command evidence, and final blockers:
+
+```yaml
+diagnostic_repair:
+  attempts:
+    - number:
+      diagnostics_before:
+      change:
+      diagnostics_after:
+      command:
+  final_status:
+  unrepaired_blockers:
+  escalation:
+```
 
 ## Guardrails
 
@@ -32,3 +63,4 @@ Return failure cause, patch summary, and command evidence.
 - Do not invent token refs, schema fields, capabilities, or runtime behavior.
 - Keep reserved design features non-executable and route unsupported behavior explicitly.
 - Treat validation, hash stability, and prompt success as engineering evidence only.
+- Do not make more than 3 attempts before reporting unrepaired blockers.

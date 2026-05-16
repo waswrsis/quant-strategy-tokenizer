@@ -1,6 +1,6 @@
 # Strategy Intent Schema
 
-prompt_system_version: qst-stage-3c-v0.3.2.1
+prompt_system_version: qst-stage-3c-v0.3.2.2
 schema_type: prompt_contract
 
 ## Purpose
@@ -9,13 +9,47 @@ Define the record produced by strategy intent classification.
 
 ## Required Fields
 
-- intent_summary, target_profile, classification, required_data, token_families, blockers
+```yaml
+strategy_intent:
+  intent_summary:
+  target_profile:
+  classification:
+  reason:
+  universe:
+    kind:
+    assets:
+  required_data:
+    - name:
+      type:
+      timeframe:
+  signal_logic:
+  decision_logic:
+  state_requirements:
+  panel_requirements:
+  risk_weight_requirements:
+  external_requirements:
+    broker:
+    exchange:
+    live_execution:
+    order_routing:
+    backtest_engine:
+    hft_runtime:
+    event_stream:
+    distribution_type:
+  token_families:
+  missing_tokens:
+  missing_types:
+  blockers:
+  next_task:
+```
 
 ## Validation Rules
 
 - classification must be supported, partially_supported, reserved, custom_token_required, or non_goal.
 - Missing fields must be reported explicitly instead of inferred.
 - Output should be deterministic and compact enough for review.
+- external requirements must distinguish broker, exchange, live execution, EventStream,
+  HFT runtime, and distribution type blockers.
 
 ## Output
 

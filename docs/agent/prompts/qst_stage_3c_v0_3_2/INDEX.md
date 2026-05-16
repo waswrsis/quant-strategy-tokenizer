@@ -1,6 +1,6 @@
 # Stage 3C Prompt Index
 
-prompt_system_version: qst-stage-3c-v0.3.2.1
+prompt_system_version: qst-stage-3c-v0.3.2.2
 
 ## Core
 
@@ -22,3 +22,9 @@ current repository facts.
 
 Run `validation/VALIDATE_PROMPT_SET.md` and the repository validator before treating this
 prompt pack as accepted.
+
+## Active Version
+
+Directory path: `qst_stage_3c_v0_3_2`.
+Active prompt-system version: `qst-stage-3c-v0.3.2.2`.
+Previous version: `qst-stage-3c-v0.3.2.1`.

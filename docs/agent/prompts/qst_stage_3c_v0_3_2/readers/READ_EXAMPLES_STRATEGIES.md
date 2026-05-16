@@ -1,6 +1,6 @@
 # Examples Strategies
 
-prompt_system_version: qst-stage-3c-v0.3.2.1
+prompt_system_version: qst-stage-3c-v0.3.2.2
 reader_type: repository_reader
 
 ## Purpose
@@ -10,19 +10,42 @@ The reader gathers facts; it does not decide or edit by itself.
 
 ## Read
 
-- Active code, docs, tests, schemas, examples, or CI files that define public example strategies and reference strategy artifacts.
-- Adjacent tests that prove the behavior or boundary.
-- Reference artifacts only when they are part of the current product surface.
+Inspect:
+
+- `examples/strategies/README.md`
+- `examples/strategies/<case>/strategy.gkr.yaml`
+- `tests/reference/strategies/<case>/`
+- related validation diagnostics
+- related hash sentinels
+
+Use examples as schema and style evidence, not as proof of profitability or runtime
+support.
 
 ## Extract
 
-- Stable facts that can be tied to file paths or command output.
-- Contradictions between implementation, tests, and docs.
-- Missing tests, stale claims, or unsupported capability wording.
+```yaml
+examples_strategies:
+  cases:
+    - id:
+      path:
+      focus:
+      token_families:
+      full_trace:
+      validation_command:
+      hash_command:
+      reference_path:
+  authoring_patterns:
+  schema_patterns:
+  node_id_patterns:
+  capability_patterns:
+```
+
+Also extract contradictions between examples, tests, docs, and current CLI behavior.
 
 ## Report
 
-Return a concise module report with inspected files, facts learned, and remaining risk.
+Return a concise module report with example cases inspected, reusable authoring patterns,
+and any reference artifact gaps.
 If stale information appears, route the task through `tasks/REPAIR_STALE_INFORMATION.md`.
 
 ## Guardrails

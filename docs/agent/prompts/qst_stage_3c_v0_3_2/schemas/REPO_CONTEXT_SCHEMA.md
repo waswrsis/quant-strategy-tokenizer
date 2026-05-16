@@ -1,6 +1,6 @@
 # Repo Context Schema
 
-prompt_system_version: qst-stage-3c-v0.3.2.1
+prompt_system_version: qst-stage-3c-v0.3.2.2
 schema_type: prompt_contract
 
 ## Purpose

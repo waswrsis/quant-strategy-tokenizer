@@ -1,15 +1,16 @@
 # Stage 3C Prompt Acceptance Evidence
 
-prompt_system_version: qst-stage-3c-v0.3.2.1
+prompt_system_version: qst-stage-3c-v0.3.2.2
 construction_type: acceptance_evidence
 
 This evidence records the Stage 3C prompt-pack validation gates. It is intentionally
 focused on commands and verifier outcomes rather than rendered browser snippets.
 
 The directory name `qst_stage_3c_v0_3_2` is the stable pack directory.
-The internal `qst-stage-3c-v0.3.2.1` value is the patch prompt-system version inside that pack.
+The active internal patch prompt-system version is `qst-stage-3c-v0.3.2.2`.
+Previous version: `qst-stage-3c-v0.3.2.1`.
 
-## Local Command Evidence
+## Local Evidence
 
 Recorded command results:
 
@@ -19,17 +20,20 @@ Recorded command results:
 | `python -m py_compile tests/agent_prompts/test_validate_prompt_set.py` | `0` | no output | no output | pass |
 | `python tools/validate_prompt_set.py docs/agent/prompts/qst_stage_3c_v0_3_2` | `0` | `"result": "pass"`; all validator checks pass, including content completeness | no output | pass |
 | `python tools/verify_prompt_remote_artifacts.py docs/agent/prompts/qst_stage_3c_v0_3_2` | `0` | `"result": "pass"`; local artifact format checks pass for Python, Markdown, and golden YAML | no output | pass |
-| `python -m pytest tests/agent_prompts -q` | `0` | `19 passed` | no output | pass |
+| `python -m pytest tests/agent_prompts -q` | `0` | `26 passed` | no output | pass |
+| `python -m pytest tests/agent_prompts/test_prompt_semantic_anchors.py -q` | `0` | semantic anchor tests pass | no output | pass |
 | `python -m ruff check .` | `0` | `All checks passed!` | no output | pass |
 | `python -m mypy qst` | `0` | `Success: no issues found in 105 source files` | no output | pass |
-| `python -m pytest tests -q` | `0` | `429 passed` | no output | pass |
-| `python -m pytest --cov=qst --cov-fail-under=85 -q` | `0` | `429 passed`; total coverage remains above the configured floor | no output | pass |
+| `python -m pytest tests -q` | `0` | `441 passed` | no output | pass |
+| `python -m pytest --cov=qst --cov-fail-under=85 -q` | `0` | `441 passed`; total coverage remains above the configured floor | no output | pass |
 | `python -m qst.cli vocabulary --check` | `0` | `"ok": true`; zero diagnostics | no output | pass |
 
 Additional artifact-format gates passed locally:
 
 - `tools/validate_prompt_set.py`, `tools/verify_prompt_remote_artifacts.py`, and
   `tests/agent_prompts/test_validate_prompt_set.py` compile as Python.
+- semantic anchor validation passes for repo context, strategy classification, token
+  selection, GKR authoring, diagnostic repair, and custom-token routing prompts.
 - `.github/workflows/ci.yml` parses as YAML and contains a `prompt-validation` job.
 - every golden intent YAML file parses as a mapping and contains `golden_task`.
 - critical artifact line-count checks pass for the validator, validator tests, CI workflow,
@@ -49,9 +53,10 @@ python -m pytest tests/agent_prompts -q
 
 CI must pass this job before Stage 3C prompt-pack acceptance is considered complete. The
 validator now rejects prompt files that are merely present but lack required sections or
-minimum useful content.
+minimum useful content, and it rejects low-information prompts missing operational
+semantic anchors.
 
-## Raw Artifact Evidence
+## External Post-Push Evidence
 
 The raw-artifact verifier can be run against a commit-SHA raw URL after push:
 

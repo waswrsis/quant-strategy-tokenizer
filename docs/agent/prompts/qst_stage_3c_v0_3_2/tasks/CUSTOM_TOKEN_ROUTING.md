@@ -1,6 +1,6 @@
 # Custom Token Routing
 
-prompt_system_version: qst-stage-3c-v0.3.2.1
+prompt_system_version: qst-stage-3c-v0.3.2.2
 task_type: security
 foundation: core/00_FOUNDATION.md
 
@@ -16,17 +16,44 @@ Use for any request involving custom Python entry points or external code.
 
 ## Procedure
 
-1. Restate the task in QST terms and identify the active profile or artifact.
-2. Read the current repository evidence before making token, schema, or runtime claims.
-3. Apply the relevant token surface, profile gate, security, and hash boundaries.
-4. Make the smallest safe change or produce the requested review.
-5. Run focused validation and report any skipped gates.
+1. Restate why custom token routing is needed.
+2. Verify whether the request is metadata-only, approval, grant, or execution.
+3. For verification, inspect metadata and integrity records only.
+4. Do not import custom Python during verification.
+5. Do not execute custom Python during verification.
+6. Do not approve trust or create grants unless the user explicitly requested that step.
+7. For execution, require explicit user request, verification pass, profile authorization,
+   local approval, execution grant, current UTC time, run id, user-approved inputs, and
+   output validation.
+8. Report sandbox status and residual risks.
 
 Boundary words: verify, approve, execute, and must not execute code during verification.
 
 ## Output
 
-Return verify, approve, execute, grant, and audit status separately.
+Return verify, approve, grant, execute, and audit status separately:
+
+```yaml
+custom_token_routing:
+  custom_token_needed:
+  reason:
+  verify:
+    command:
+    status:
+    code_executed: false
+  approve:
+    required:
+    status:
+  grant:
+    required:
+    status:
+  execute:
+    requested_by_user:
+    allowed:
+    status:
+  sandbox_status:
+  residual_risks:
+```
 
 ## Guardrails
 
@@ -34,3 +61,5 @@ Return verify, approve, execute, grant, and audit status separately.
 - Do not invent token refs, schema fields, capabilities, or runtime behavior.
 - Keep reserved design features non-executable and route unsupported behavior explicitly.
 - Treat validation, hash stability, and prompt success as engineering evidence only.
+- Verification must not execute or import custom code; approval, grant, and execution are
+  distinct steps.

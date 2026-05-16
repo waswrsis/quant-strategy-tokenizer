@@ -1,6 +1,6 @@
 # Validation Diagnostics
 
-prompt_system_version: qst-stage-3c-v0.3.2.1
+prompt_system_version: qst-stage-3c-v0.3.2.2
 reader_type: repository_reader
 
 ## Purpose
@@ -10,19 +10,49 @@ The reader gathers facts; it does not decide or edit by itself.
 
 ## Read
 
-- Active code, docs, tests, schemas, examples, or CI files that define validation diagnostics, profile gates, and stable error reporting.
-- Adjacent tests that prove the behavior or boundary.
-- Reference artifacts only when they are part of the current product surface.
+Inspect:
+
+- validation entrypoint files under `qst/`
+- validator tests
+- diagnostic model tests
+- profile gate tests
+- `tests/reference/strategies/<case>/diagnostics*`
+- CLI validation command behavior
+
+Run when available:
+
+```bash
+qst validate examples/strategies/01_ema_cross/strategy.gkr.yaml
+qst validate examples/strategies/12_custom_token_kalman_signal/strategy.gkr.yaml
+```
 
 ## Extract
 
-- Stable facts that can be tied to file paths or command output.
-- Contradictions between implementation, tests, and docs.
-- Missing tests, stale claims, or unsupported capability wording.
+```yaml
+validation_diagnostics:
+  entrypoints:
+  diagnostic_shape:
+  severity_values:
+  stable_ordering:
+  profile_gate_behavior:
+  reserved_design_behavior:
+  common_error_classes:
+    - schema_error
+    - unknown_token
+    - profile_blocked_token
+    - reserved_design_token
+    - port_error
+    - type_error
+    - temporal_error
+    - capability_error
+```
+
+Also extract contradictions between implementation, tests, docs, and reference artifacts.
 
 ## Report
 
-Return a concise module report with inspected files, facts learned, and remaining risk.
+Return a concise module report with inspected files, diagnostic facts, profile gate facts,
+and remaining risk.
 If stale information appears, route the task through `tasks/REPAIR_STALE_INFORMATION.md`.
 
 ## Guardrails

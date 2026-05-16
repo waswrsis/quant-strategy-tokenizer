@@ -11,7 +11,7 @@ from urllib.request import urlopen
 
 import yaml
 
-PROMPT_VERSION = "qst-stage-3c-v0.3.2.1"
+PROMPT_VERSION = "qst-stage-3c-v0.3.2.2"
 MAX_MARKDOWN_LINE_LENGTH = 240
 MIN_MARKDOWN_LINES = 5
 

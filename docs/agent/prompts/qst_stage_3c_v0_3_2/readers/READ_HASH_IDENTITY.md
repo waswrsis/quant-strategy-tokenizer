@@ -1,6 +1,6 @@
 # Hash Identity
 
-prompt_system_version: qst-stage-3c-v0.3.2.1
+prompt_system_version: qst-stage-3c-v0.3.2.2
 reader_type: repository_reader
 
 ## Purpose
@@ -10,19 +10,44 @@ The reader gathers facts; it does not decide or edit by itself.
 
 ## Read
 
-- Active code, docs, tests, schemas, examples, or CI files that define hash classes, hash material, and drift sentinels.
-- Adjacent tests that prove the behavior or boundary.
-- Reference artifacts only when they are part of the current product surface.
+Inspect active hash code, CLI hash behavior, reference strategy hash tests, docs, and
+`tests/reference` artifacts.
+
+Look for these hash identities:
+
+- graph_hash
+- param_hash
+- instance_hash
+- behavior_hash
+- token_hash
+- TokenSpec and TokenPack hash material
+- excluded material
+- sentinel files and tests/reference evidence
 
 ## Extract
 
-- Stable facts that can be tied to file paths or command output.
-- Contradictions between implementation, tests, and docs.
-- Missing tests, stale claims, or unsupported capability wording.
+```yaml
+hash_identity:
+  classes:
+    graph_hash:
+    param_hash:
+    instance_hash:
+    behavior_hash:
+    token_hash:
+  hash_material:
+  excluded_material:
+  sentinel_paths:
+  drift_policy:
+  command_evidence:
+```
+
+Also extract contradictions between implementation, tests, docs, examples, and hash
+sentinels.
 
 ## Report
 
-Return a concise module report with inspected files, facts learned, and remaining risk.
+Return a concise module report with inspected files, hash facts, drift risks, and any
+missing sentinel evidence.
 If stale information appears, route the task through `tasks/REPAIR_STALE_INFORMATION.md`.
 
 ## Guardrails
