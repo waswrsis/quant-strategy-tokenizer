@@ -37,7 +37,9 @@ jobs:
           python-version: "3.11"
       - run: pip install -e ".[dev]"
       - run: python -m py_compile tools/validate_prompt_set.py
+      - run: python -m py_compile tests/agent_prompts/test_validate_prompt_set.py
       - run: python tools/validate_prompt_set.py docs/agent/prompts/qst_stage_3c_v0_3_2
+      - run: python tools/verify_prompt_remote_artifacts.py docs/agent/prompts/qst_stage_3c_v0_3_2
       - run: python -m pytest tests/agent_prompts -q
 
   test:
