@@ -28,6 +28,18 @@ jobs:
       - run: pip install -e ".[dev]"
       - run: mypy qst/
 
+  prompt-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -e ".[dev]"
+      - run: python -m py_compile tools/validate_prompt_set.py
+      - run: python tools/validate_prompt_set.py docs/agent/prompts/qst_stage_3c_v0_3_2
+      - run: python -m pytest tests/agent_prompts -q
+
   test:
     runs-on: ubuntu-latest
     strategy:

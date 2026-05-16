@@ -57,6 +57,30 @@ def test_stage3c_prompt_validator_detects_stale_state_and_hash_truth(tmp_path: P
     assert "stale_information" in _issue_ids(result)
 
 
+def test_stage3c_prompt_validator_detects_compressed_markdown(tmp_path: Path) -> None:
+    prompt_root = _copy_prompt_pack(tmp_path)
+    compressed = prompt_root / "tasks" / "CLASSIFY_STRATEGY_INTENT.md"
+    compressed.write_text(
+        "# Classify Strategy Intent prompt_system_version: qst-stage-3c-v0.3.2.1 "
+        "This intentionally compressed prompt should fail readability validation.",
+        encoding="utf-8",
+    )
+    result = validate_prompt_set(prompt_root)
+
+    assert result["prompt_validation"]["result"] == "fail"
+    assert "markdown_readability" in _issue_ids(result)
+
+
+def test_stage3c_prompt_validator_detects_invalid_golden_yaml(tmp_path: Path) -> None:
+    prompt_root = _copy_prompt_pack(tmp_path)
+    golden = prompt_root / "golden" / "01_ema_cross.intent.yaml"
+    golden.write_text("golden_task: [unterminated\n", encoding="utf-8")
+    result = validate_prompt_set(prompt_root)
+
+    assert result["prompt_validation"]["result"] == "fail"
+    assert {"golden_yaml_schema", "golden_tasks"} <= _issue_ids(result)
+
+
 def test_stage3c_prompt_validator_detects_load_profile_missing_file(tmp_path: Path) -> None:
     prompt_root = _copy_prompt_pack(tmp_path)
     profile = prompt_root / "load_profiles" / "PROFILE_MINIMAL.md"

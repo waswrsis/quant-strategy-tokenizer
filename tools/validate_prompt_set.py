@@ -46,6 +46,7 @@ REQUIRED_FILES = (
     "construction/REPLACEMENT_PLAN.md",
     "construction/ROADMAP_BY_MODULE.md",
     "construction/STAGE_3C_PROMPT_ACCEPTANCE.md",
+    "construction/STAGE_3C_PROMPT_ACCEPTANCE_EVIDENCE.md",
 )
 
 STALE_PATTERNS = (
@@ -63,6 +64,8 @@ STALE_PATTERNS = (
 )
 
 REFERENCE_PATTERN = re.compile(r"`((?:core|load_profiles|readers|tasks|schemas|golden|validation|construction)/[^`]+?)`")
+MAX_MARKDOWN_LINE_LENGTH = 240
+MIN_MARKDOWN_LINES = 5
 
 
 @dataclass(frozen=True)
@@ -89,12 +92,14 @@ def validate_prompt_set(root: Path) -> dict[str, Any]:
     checks = [
         _check_required_files(root),
         _check_version_consistency(root),
+        _check_markdown_readability(root),
         _check_stale_information(root),
         _check_cross_references(root),
         _check_load_profiles(root),
         _check_classification_vocabulary(root),
         _check_custom_token_separation(root),
         _check_reserved_design_rule(root),
+        _check_golden_yaml_schema(root),
         _check_golden_tasks(root),
         _check_operator_manual_boundary(root),
     ]
@@ -120,6 +125,23 @@ def _check_version_consistency(root: Path) -> Check:
         if f"prompt_system_version: {PROMPT_VERSION}" not in text:
             issues.append(f"{_rel(root, path)} missing prompt_system_version {PROMPT_VERSION}")
     return Check("version", "prompt version consistency", tuple(issues))
+
+
+def _check_markdown_readability(root: Path) -> Check:
+    issues: list[str] = []
+    for path in _prompt_markdown_files(root):
+        lines = path.read_text(encoding="utf-8").splitlines()
+        rel_path = _rel(root, path)
+        if not any(line.startswith("# ") for line in lines):
+            issues.append(f"{rel_path} missing H1 heading")
+        if len(lines) < MIN_MARKDOWN_LINES:
+            issues.append(f"{rel_path} appears compressed: only {len(lines)} lines")
+        for line_number, line in enumerate(lines, start=1):
+            if len(line) > MAX_MARKDOWN_LINE_LENGTH:
+                issues.append(
+                    f"{rel_path}:{line_number} line length {len(line)} exceeds {MAX_MARKDOWN_LINE_LENGTH}"
+                )
+    return Check("markdown_readability", "Markdown prompts are readable multi-line files", tuple(issues))
 
 
 def _check_stale_information(root: Path) -> Check:
@@ -194,6 +216,24 @@ def _check_reserved_design_rule(root: Path) -> Check:
     return Check("reserved_design", "reserved design cannot be executable", tuple(issues))
 
 
+def _check_golden_yaml_schema(root: Path) -> Check:
+    tasks, load_issues = _load_golden_tasks(root)
+    issues = list(load_issues)
+    for path, task in tasks:
+        payload = task.get("golden_task")
+        if not isinstance(payload, dict):
+            issues.append(f"{_rel(root, path)} missing golden_task mapping")
+            continue
+        if not isinstance(payload.get("id"), str) or not payload["id"]:
+            issues.append(f"{_rel(root, path)} missing string golden_task.id")
+        expected = payload.get("expected")
+        if not isinstance(expected, dict):
+            issues.append(f"{_rel(root, path)} missing expected mapping")
+        elif expected.get("classification") not in ALLOWED_CLASSIFICATIONS:
+            issues.append(f"{_rel(root, path)} invalid or missing expected.classification")
+    return Check("golden_yaml_schema", "golden YAML parses and follows minimum schema", tuple(issues))
+
+
 def _check_golden_tasks(root: Path) -> Check:
     issues: list[str] = []
     complete: list[str] = []
@@ -202,7 +242,9 @@ def _check_golden_tasks(root: Path) -> Check:
         "12_custom_token_kalman_signal": "custom_token_required",
         "13_event_stream_intraday": "reserved",
     }
-    for path, task in _golden_tasks(root):
+    tasks, load_issues = _load_golden_tasks(root)
+    issues.extend(load_issues)
+    for path, task in tasks:
         payload = task.get("golden_task", {}) if isinstance(task, dict) else {}
         task_id = payload.get("id")
         if not task_id:
@@ -233,7 +275,7 @@ def _check_golden_tasks(root: Path) -> Check:
         actual = next(
             (
                 _nested(task, ("golden_task", "expected", "classification"))
-                for _, task in _golden_tasks(root)
+                for _, task in tasks
                 if _nested(task, ("golden_task", "id")) == task_id
             ),
             None,
@@ -267,11 +309,23 @@ def _prompt_text_files(root: Path) -> list[Path]:
 
 
 def _golden_tasks(root: Path) -> list[tuple[Path, dict[str, Any]]]:
+    return _load_golden_tasks(root)[0]
+
+
+def _load_golden_tasks(root: Path) -> tuple[list[tuple[Path, dict[str, Any]]], list[str]]:
     tasks: list[tuple[Path, dict[str, Any]]] = []
+    issues: list[str] = []
     for path in sorted((root / "golden").glob("*.yaml")):
-        loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
-        tasks.append((path, loaded if isinstance(loaded, dict) else {}))
-    return tasks
+        try:
+            loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+        except yaml.YAMLError as exc:
+            issues.append(f"{_rel(root, path)} YAML parse error: {exc}")
+            continue
+        if not isinstance(loaded, dict):
+            issues.append(f"{_rel(root, path)} YAML root must be a mapping")
+            loaded = {}
+        tasks.append((path, loaded))
+    return tasks, issues
 
 
 def _nested(value: dict[str, Any], keys: tuple[str, ...]) -> Any:
