@@ -86,6 +86,7 @@ examples/strategies/         Public GKR strategy examples
 examples/strategies/README.md Public demo index and coverage table
 examples/custom_token/       Custom-token reference example
 tests/reference/             Deterministic reference fixtures and traces
+docs/reports/                Token surface acceptance and gap-review reports
 tests/                       Unit and conformance tests
 ```
 
@@ -111,6 +112,7 @@ See [docs/security.md](docs/security.md).
 - [Reference](docs/reference.md)
 - [Token Family Registry](docs/token_family_registry.md)
 - [Token Coverage](docs/token_coverage.md)
+- [Stage 3B Token Surface Acceptance](docs/reports/token_surface_acceptance.md)
 - [GKR Artifact Naming ADR](docs/adr/gkr-artifact-naming.md)
 - [Token-First Surface ADR](docs/adr/token-first-after-core.md)
 - [Agent Guidance](docs/agent/README.md)

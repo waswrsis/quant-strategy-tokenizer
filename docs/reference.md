@@ -60,6 +60,14 @@ notes. Surface metadata is TokenSpec hash material.
 See [token_family_registry.md](token_family_registry.md) and
 [token_coverage.md](token_coverage.md).
 
+Stage 3B acceptance reports live in `docs/reports/`:
+
+- `token_surface_acceptance.md`
+- `token_contract_audit.md`
+- `token_coverage_review.md`
+- `token_gap_report.md`
+- `stage_3b_decision.md`
+
 ## Numeric Status
 
 Panel and weight helpers define semantic float64 reference behavior. They are deterministic for the provided reference inputs but are not a bit-exact numerical portability claim across every possible runtime.

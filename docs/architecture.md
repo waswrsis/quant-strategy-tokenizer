@@ -31,3 +31,4 @@ the strategy graph or params themselves change.
 - Packaged Graph Kernel Records reserve `.gkr`.
 - JSON schemas live in `docs/schemas/` and keep their internal `$id` and `schema_version` values stable.
 - Deterministic reference artifacts live in `tests/reference/`.
+- Stage 3B token-surface acceptance and gap-review reports live in `docs/reports/`.
