@@ -8,7 +8,7 @@ QST is organized around Graph Kernel Records: typed strategy records with determ
 - `qst.types`: TypeSpec parsing and structured value types.
 - `qst.ports`: input/output signatures and temporal rules.
 - `qst.hash`: graph, parameter, behavior, signature, token, runtime, audit, and expected-artifact hashes.
-- `qst.tokens`: TokenSpec, TokenPack, lock metadata, and registry resolution.
+- `qst.tokens`: TokenSpec, TokenSurfaceSpec, TokenPack, lock metadata, built-in vocabulary, and registry resolution.
 - `qst.validation`: diagnostics, validation results, and deterministic validator ordering.
 - `qst.profiles`: research, paper, pretrade, and guarded-production policy shells.
 - `qst.numeric`: numeric policy and token evolution metadata.
@@ -20,6 +20,10 @@ QST is organized around Graph Kernel Records: typed strategy records with determ
 ## Canonical Material
 
 The canonical surface is JSON-compatible and deterministic. Semantic model changes enter the appropriate hash material; trace output and local approval state do not enter strategy identity.
+
+Token surface metadata is canonical TokenSpec material. It changes TokenSpec and
+TokenPack hashes, but it does not alter strategy graph or parameter hashes unless
+the strategy graph or params themselves change.
 
 ## Public Artifacts
 

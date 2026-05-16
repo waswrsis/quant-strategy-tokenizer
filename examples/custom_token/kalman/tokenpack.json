@@ -57,6 +57,52 @@
         "requires_approval": true,
         "risk_level": "medium"
       },
+      "surface": {
+        "agent_metadata": {
+          "common_mistakes": [
+            "Approval is local security state and is not portable with the token pack."
+          ],
+          "examples": [
+            "my_pack.kalman_ema/v1/bv1"
+          ],
+          "profile_caveats": [
+            "pretrade requires explicit approval and risk acknowledgement"
+          ],
+          "usage_notes": [
+            "External Python entrypoint execution is controlled by the custom runtime service."
+          ]
+        },
+        "capabilities": {
+          "deterministic_level": "external",
+          "external_code": true,
+          "panel_aware": false,
+          "reserved_only": false,
+          "solver_backed": false,
+          "stateful": true
+        },
+        "category": "custom_signal",
+        "contract": {
+          "failure_mode": "runtime_diagnostic",
+          "missing_data": "reject_or_declared_by_token",
+          "numeric": "semantic_float64",
+          "panel": null,
+          "scope": "execution_semantics",
+          "solver": null,
+          "state": "custom entrypoint internal state is not QST state.fsm",
+          "supported_profiles": [
+            "research",
+            "paper",
+            "pretrade",
+            "production_guarded"
+          ],
+          "temporal": "declared_by_ports"
+        },
+        "execution_support": "external_only",
+        "family": "signal",
+        "layer": "custom",
+        "maturity": "accepted",
+        "schema_version": "qst-token-surface/0.4"
+      },
       "runtime_environment_ref": {
         "dependency_token_pack_hashes": {},
         "distribution_hashes": {},

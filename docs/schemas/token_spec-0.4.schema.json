@@ -22,6 +22,7 @@
     "runtime_environment_ref",
     "lifecycle",
     "risk",
+    "surface",
     "tests",
     "dependencies"
   ],
@@ -45,6 +46,7 @@
     "runtime_environment_ref": {"oneOf": [{"type": "object"}, {"type": "null"}]},
     "lifecycle": {"$ref": "#/$defs/lifecycle"},
     "risk": {"$ref": "#/$defs/risk"},
+    "surface": {"$ref": "token_surface-0.4.schema.json"},
     "tests": {"type": "array", "items": {"type": "object"}},
     "dependencies": {"type": "array", "items": {"$ref": "#/$defs/token_ref"}}
   },

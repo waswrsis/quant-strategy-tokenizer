@@ -7,7 +7,7 @@ from typing import Literal
 from qst.ir import TokenRefV04
 from qst.numeric import NumericPolicy
 from qst.ports import InputSpec, OutputSpec
-from qst.tokens import TokenPackManifestV2, TokenRiskSpec, TokenSpecV2
+from qst.tokens import TokenPackManifestV2, TokenRiskSpec, TokenSpecV2, token_surface
 from qst.types import parse_type_spec
 
 DECISION_ALGEBRA_PACK_ID = "qst-tokenpack-decision-algebra"
@@ -65,6 +65,19 @@ def _decision_token_spec(name: str, category: DecisionAlgebraCategory) -> TokenS
             inf_policy="reject",
         ),
         risk=TokenRiskSpec(risk_level="low"),
+        surface=token_surface(
+            family="decision",
+            category=category,
+            layer="primitive" if category == "monoid" else "derived",
+            maturity="accepted",
+            execution_support="reference_helper",
+            temporal="inherits_input_decision_events",
+            numeric="score annotation ignored unless score_policy is declared",
+            missing_data="unknown DecisionKind handled by policy",
+            failure_mode="validation_result_diagnostics",
+            examples=(f"core.{name}/v1/bv1",),
+            common_mistakes=("Do not treat diagnostics as DecisionKind error.",),
+        ),
         tests=[
             {
                 "kind": "reference_helper",

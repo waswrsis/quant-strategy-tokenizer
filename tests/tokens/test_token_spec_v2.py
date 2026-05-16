@@ -6,7 +6,7 @@ from qst.hash import token_spec_hash_for_spec_v2
 from qst.ir import TokenRefV04
 from qst.numeric import NumericPolicy, semantic_float64_policy
 from qst.token_evolution import TokenLifecycleStatus
-from qst.tokens import TOKEN_SPEC_SCHEMA_VERSION, TokenRiskSpec, TokenSpecV2
+from qst.tokens import TOKEN_SPEC_SCHEMA_VERSION, TokenRiskSpec, TokenSpecV2, token_surface
 
 
 def make_spec(
@@ -40,6 +40,13 @@ def make_spec(
         implementation_ref=implementation_ref,
         runtime_environment_ref=runtime_environment_ref,
         risk=risk or {},
+        surface=token_surface(
+            family="math",
+            category="identity",
+            layer="custom",
+            maturity="experimental",
+            execution_support="metadata_only",
+        ),
     )
 
 
@@ -65,6 +72,13 @@ def test_token_spec_rejects_inconsistent_token_ref() -> None:
             inputs={},
             outputs={},
             numeric_policy=semantic_float64_policy(),
+            surface=token_surface(
+                family="math",
+                category="identity",
+                layer="custom",
+                maturity="experimental",
+                execution_support="metadata_only",
+            ),
         )
 
 
@@ -84,6 +98,14 @@ def test_token_spec_requires_numeric_policy() -> None:
                 "origin_tier": "community_pack",
             }
         )
+
+
+def test_token_spec_requires_surface_metadata() -> None:
+    payload = make_spec().model_dump(mode="json")
+    payload.pop("surface")
+
+    with pytest.raises(ValueError):
+        TokenSpecV2.model_validate(payload)
 
 
 def test_token_spec_hash_is_deterministic_and_policy_sensitive() -> None:

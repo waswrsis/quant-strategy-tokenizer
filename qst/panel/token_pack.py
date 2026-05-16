@@ -17,7 +17,7 @@ from qst.panel.operators import (
     WeightOperatorName,
 )
 from qst.ports import InputSpec, OutputSpec
-from qst.tokens import TokenPackManifestV2, TokenRiskSpec, TokenSpecV2
+from qst.tokens import TokenPackManifestV2, TokenRiskSpec, TokenSpecV2, token_surface
 from qst.types import parse_type_spec
 
 PanelOperatorCategory = Literal["panel_operator", "selection_operator"]
@@ -72,6 +72,26 @@ def _panel_operator_spec(name: PanelOperatorName) -> TokenSpecV2:
         },
         numeric_policy=_numeric_policy_for(name),
         risk=TokenRiskSpec(risk_level="medium"),
+        surface=token_surface(
+            family="weight" if name == "selection.to_weights" else "panel",
+            category=_category_for(name),
+            layer="derived",
+            maturity="accepted",
+            execution_support="reference_helper",
+            temporal="panel operators join input port temporal metadata",
+            numeric="semantic_float64" if _numeric_policy_for(name).representation == "float64" else "declared_by_numeric_policy",
+            missing_data="UniverseMask=false is out-of-universe; active missing values follow missing_policy",
+            failure_mode="validation_result_diagnostics",
+            panel="requires panel_type and panel_ops capabilities",
+            panel_aware=True,
+            deterministic_level=(
+                "semantic_float64"
+                if _numeric_policy_for(name).representation == "float64"
+                else "reference_exact"
+            ),
+            examples=(f"core.{name}/v1/bv1",),
+            common_mistakes=("Panel reference numeric behavior is semantic float64, not bit-exact.",),
+        ),
         tests=[
             {
                 "kind": "reference_helper",
@@ -111,6 +131,22 @@ def _weight_operator_spec(name: WeightOperatorName) -> TokenSpecV2:
             inf_policy="reject",
         ),
         risk=TokenRiskSpec(risk_level="medium"),
+        surface=token_surface(
+            family="weight",
+            category="weight_operator",
+            layer="derived",
+            maturity="accepted",
+            execution_support="reference_helper",
+            temporal="weight operators join input port temporal metadata",
+            numeric="decimal canonical weight arithmetic with semantic reference rules",
+            missing_data="UniverseMask=false is out-of-universe; active missing weights follow missing_policy",
+            failure_mode="validation_result_diagnostics",
+            panel="requires panel_type and panel_weights capabilities; input must be WeightPanel",
+            panel_aware=True,
+            deterministic_level="reference_exact",
+            examples=(f"core.{name}/v1/bv1",),
+            common_mistakes=("cap_per_symbol does not redistribute or preserve gross exposure.",),
+        ),
         tests=[
             {
                 "kind": "reference_helper",

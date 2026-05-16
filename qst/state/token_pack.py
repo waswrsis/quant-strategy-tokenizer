@@ -13,6 +13,7 @@ from qst.tokens import (
     TokenPackManifestV2,
     TokenRiskSpec,
     TokenSpecV2,
+    token_surface,
 )
 from qst.types import parse_type_spec
 
@@ -163,6 +164,21 @@ def _state_token_spec(
             inf_policy="reject",
         ),
         risk=TokenRiskSpec(risk_level="medium"),
+        surface=token_surface(
+            family="state",
+            category="fsm" if name == "state.fsm" else "basic_state",
+            layer="primitive",
+            maturity="accepted",
+            execution_support="reference_helper",
+            temporal="state evolves in input order; reset before current event",
+            numeric="declared_by_numeric_policy",
+            missing_data="state policy controls missing input behavior",
+            failure_mode="validation_result_diagnostics",
+            state="deterministic reference state trace",
+            stateful=True,
+            examples=(f"core.{name}/v1/bv1",),
+            common_mistakes=("state.fsm failure_policy='raise' emits diagnostics, not Python exceptions.",),
+        ),
         tests=[
             {
                 "kind": "reference_helper",

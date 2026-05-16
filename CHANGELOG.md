@@ -1,5 +1,13 @@
 # Changelog
 
+## Stage 3A Token Surface Completion
+
+- Added TokenSurfaceSpec metadata and token contract fields to TokenSpec.
+- Added deterministic built-in TokenPack vocabulary entrypoint and token conformance gates.
+- Added public token-surface demo strategies with validation artifacts and hash sentinels.
+- Documented token family maturity, execution support, and hash impact boundaries.
+- No broad runtime, broker, backtester, optimizer engine, IR, or canonical hash algorithm change was introduced.
+
 ## Public Product Tree Reset
 
 - Renamed the public Python package to `qst` while keeping the distribution name `quant-strategy-tokenizer`.

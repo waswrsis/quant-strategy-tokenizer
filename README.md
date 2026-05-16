@@ -49,12 +49,20 @@ qst token approve --help
 qst token execute --help
 ```
 
+Public token-surface demos live under `examples/strategies/<case>/strategy.gkr.yaml`:
+
+```bash
+qst validate examples/strategies/01_ema_cross/strategy.gkr.yaml
+qst hash examples/strategies/12_custom_token_kalman_signal/strategy.gkr.yaml
+```
+
 ## What QST Provides
 
 - A single active IR target with typed nodes, structured token refs, capabilities, and port signatures.
 - Canonical JSON and deterministic hash helpers for graph, params, instance, behavior, signatures, token specs, token packs, runtime environments, audits, and reference artifacts.
 - TypeSpec and PortSpec models for scalar, time-series, panel, decision, state, event, and stream surfaces.
 - Temporal validation, numeric policy metadata, token evolution policy, TokenSpec and TokenPack metadata, and registry resolution.
+- Token surface metadata for family, maturity, execution support, contracts, and agent-facing usage notes.
 - Reference semantics for state, FSM, decision algebra, panel operators, weight operators, and custom token integrity/approval/execution boundaries.
 - Reference validation fixtures under `tests/reference/` for temporal, state, panel, and custom-token cases.
 
@@ -65,6 +73,8 @@ qst/                         Python package and CLI
 docs/architecture.md         System architecture
 docs/security.md             Trust and execution boundary
 docs/reference.md            Schema and artifact reference
+docs/token_family_registry.md Token family, maturity, and execution-support registry
+docs/token_coverage.md       Token coverage and hash impact matrix
 docs/adr/                    Active architecture decisions
 docs/agent/                  Agent workflow and conformance guidance
 docs/project_history/        Public background material
@@ -85,6 +95,7 @@ See [docs/security.md](docs/security.md).
 - No broad strategy runtime is provided for every IR node.
 - No broker, exchange, order router, or production trading engine is included.
 - No portfolio optimizer or simultaneous constraint solver is included.
+- Token maturity `accepted` does not imply broad runtime executability; check `execution_support`.
 - Panel numeric behavior is semantic float64 reference behavior, not bit-exact reproducibility.
 - `.gkr` package handling is reserved by suffix and documentation boundary; this tree does not add a packaged runtime.
 
@@ -93,6 +104,9 @@ See [docs/security.md](docs/security.md).
 - [Architecture](docs/architecture.md)
 - [Security](docs/security.md)
 - [Reference](docs/reference.md)
+- [Token Family Registry](docs/token_family_registry.md)
+- [Token Coverage](docs/token_coverage.md)
 - [GKR Artifact Naming ADR](docs/adr/gkr-artifact-naming.md)
+- [Token-First Surface ADR](docs/adr/token-first-after-core.md)
 - [Agent Guidance](docs/agent/README.md)
 - [Project Background](docs/project_history/PROJECT_EXPERIENCE.md)

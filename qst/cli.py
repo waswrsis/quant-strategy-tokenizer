@@ -17,7 +17,6 @@ from qst.custom_runtime import (
     TokenRuntimeService,
     load_token_pack,
 )
-from qst.decision import decision_algebra_token_pack_v2
 from qst.hash import compute_hashes_v2
 from qst.ir import (
     TokenRefV04,
@@ -26,9 +25,7 @@ from qst.ir import (
     load_ir_v04_file,
     validate_ir_v04,
 )
-from qst.panel import panel_ops_token_pack_v2, panel_weights_token_pack_v2
-from qst.state import state_basic_token_pack_v2, state_fsm_token_pack_v2
-from qst.tokens import TokenRegistryV2
+from qst.tokens import TokenRegistryV2, builtin_token_packs
 
 app = typer.Typer(no_args_is_help=True)
 token_app = typer.Typer(no_args_is_help=True)
@@ -106,13 +103,7 @@ def _load_gkr_source(path: Path) -> Any:
 
 
 def _core_packs() -> tuple[Any, ...]:
-    return (
-        decision_algebra_token_pack_v2(),
-        state_basic_token_pack_v2(),
-        state_fsm_token_pack_v2(),
-        panel_ops_token_pack_v2(),
-        panel_weights_token_pack_v2(),
-    )
+    return builtin_token_packs()
 
 
 @app.command("vocabulary")

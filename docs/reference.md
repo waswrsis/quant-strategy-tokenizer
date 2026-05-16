@@ -19,6 +19,7 @@ Important schemas include:
 - `type_spec-0.4.schema.json`
 - `port_spec-0.4.schema.json`
 - `token_spec-0.4.schema.json`
+- `token_surface-0.4.schema.json`
 - `token_pack-0.4.schema.json`
 - `decision-0.4.schema.json`
 - `state_policy-0.4.schema.json`
@@ -34,8 +35,19 @@ Deterministic reference material lives under `tests/reference/`:
 - `state/`
 - `panel/`
 - `custom_token/kalman/`
+- `strategies/`
 
 These fixtures and traces are conformance material for the current QST tree, not runtime execution logs.
+
+## Token Surface
+
+Built-in tokens are exposed through `builtin_token_packs()` and each TokenSpec
+contains `surface: TokenSurfaceSpec`. Surface metadata declares family, category,
+layer, maturity, execution support, contracts, capability flags, and agent-facing
+notes. Surface metadata is TokenSpec hash material.
+
+See [token_family_registry.md](token_family_registry.md) and
+[token_coverage.md](token_coverage.md).
 
 ## Numeric Status
 

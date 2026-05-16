@@ -11,6 +11,7 @@ from qst.ir import TokenRefV04
 from qst.numeric import NumericPolicy
 from qst.ports import InputSpec, OutputSpec
 from qst.token_evolution import TokenLifecycleStatus
+from qst.tokens.surface import TokenSurfaceSpec
 
 TOKEN_SPEC_SCHEMA_VERSION: Literal["qst-token-spec/0.4"] = "qst-token-spec/0.4"
 
@@ -84,6 +85,7 @@ class TokenSpecV2(BaseModel):
     runtime_environment_ref: dict[str, Any] | None = None
     lifecycle: TokenLifecycleStatus = Field(default_factory=TokenLifecycleStatus)
     risk: TokenRiskSpec = Field(default_factory=TokenRiskSpec)
+    surface: TokenSurfaceSpec
     tests: list[dict[str, Any]] = Field(default_factory=list)
     dependencies: list[TokenRefV04] = Field(default_factory=list)
 
