@@ -1,26 +1,35 @@
 # QST Strategy Coverage Frontier
 
-This is the PR 1 baseline and protocol report for Coverage Frontier v0.3. It is not a
+This is the PR 2 baseline and protocol report for Coverage Frontier v0.3. It is not a
 final coverage frontier claim and does not publish a single strategy coverage percentage.
 
 ## Repo
 
 - Branch: `main`
-- Baseline HEAD before PR 1 docs: `9fd9a78aa4f6b9a58ed15531c42d26d4d9ffc9f0`
-- Dirty state before PR 1 docs: clean
-- Local branch state before PR 1 docs: ahead of `origin/main` by 1 commit
+- PR 1 baseline commit: `8a483dc469e2966ab0b315a3e284728b6a3378c9`
+- PR 2 scope: matrix v0 and stratified external benchmark seed
+- Runtime, token, IR, hash, schema, CI, prompt, and example behavior changes: none
 
 ## Current Command Evidence
 
 | Command | Exit code | Output summary |
 | --- | ---: | --- |
-| `git status --short` | 0 | no output; clean before PR 1 docs |
+| `git status --short` | 0 | clean before PR 2 edits |
 | `git rev-parse --abbrev-ref HEAD` | 0 | `main` |
-| `git rev-parse HEAD` | 0 | `9fd9a78aa4f6b9a58ed15531c42d26d4d9ffc9f0` |
+| `git rev-parse HEAD` | 0 | `8a483dc469e2966ab0b315a3e284728b6a3378c9` |
 | `python -m qst.cli --help` | 0 | CLI exposes `vocabulary`, `validate`, `hash`, `canonicalize`, `write-json`, and `token` |
 | `python -m qst.cli vocabulary --check` | 0 | `ok: true`; 6 packs; 120 tokens; zero diagnostics |
 | `python -m pytest tests -q` | 0 | `441 passed` |
 | `python -m pytest --cov=qst --cov-fail-under=85 -q` | 0 | `441 passed`; total code coverage `88.63%` |
+
+## PR 2 Evidence Files
+
+- `docs/reports/strategy_coverage_matrix.yaml`
+- `docs/reports/external_benchmark_sources.md`
+- `tests/coverage_cases/external/README.md`
+- `tests/coverage_cases/external/external_benchmark_seed.yaml`
+
+These files create seed data only. PR 3 owns validator and report tooling.
 
 ## Existing Examples
 
@@ -84,30 +93,76 @@ Reference groups:
 - `tests/reference/panel`: panel fixtures, diagnostics, strategies, and traces.
 - `tests/reference/custom_token`: custom token Kalman strategy, fixtures, diagnostics, and traces.
 
-## Baseline Coverage
+## Matrix Baseline
 
-No strategy coverage matrix exists in PR 1. These values are intentionally not reported as
-frontier percentages.
+PR 2 adds matrix v0 with seed rows, not a final frontier percentage.
 
 | Metric | Value | Evidence |
 | --- | ---: | --- |
-| Intent routing | TBD | no strategy coverage matrix yet |
-| Direct built-in GKR coverage | TBD | no strategy coverage matrix yet |
-| Partial record coverage | TBD | no strategy coverage matrix yet |
-| Custom-token route coverage | TBD | no strategy coverage matrix yet |
-| Routable record coverage | TBD | no strategy coverage matrix yet |
-| False-supported rate | TBD | protocol added; no matrix or review data yet |
-| Kernel-gap count | TBD | protocol added; no matrix rows yet |
+| Schema version | `qst-strategy-coverage/0.3` | `docs/reports/strategy_coverage_matrix.yaml` |
+| Total patterns | 101 | matrix v0 |
+| Internal matrix rows | 80 | matrix v0 |
+| External benchmark rows | 20 | matrix v0 plus `external_benchmark_sources.md` |
+| Dogfood rows | 1 | provisional placeholder only |
+| Reserved plus non-goal rows | >= 10 | matrix v0 sanity check |
+| External stratification | complete for PR 2 required categories | matrix v0 sanity check |
+
+The matrix can support these future PR 3 report metrics:
+
+- intent routing by coverage class
+- direct built-in record coverage
+- partial record coverage
+- custom-token route coverage using provisional discount `0.5`
+- reserved/non-goal boundary count
+- false-supported review queue
+- kernel-gap review queue
+
+The matrix does not yet publish a single coverage percentage because PR 3 has not added
+the validator/report tool and semantic false-supported review is still pending.
+
+## External Benchmark Seed
+
+PR 2 adds `docs/reports/external_benchmark_sources.md` and
+`tests/coverage_cases/external/external_benchmark_seed.yaml`.
+
+The external seed covers at least one pattern for each required PR 2 category:
+
+- `indicator_rule`
+- `mean_reversion`
+- `trend_following`
+- `breakout`
+- `state_gate`
+- `panel_factor`
+- `weight_record`
+- `custom_signal`
+- `custom_model`
+- `reserved_event_stream`
+- `non_goal_execution`
+
+The seed records strategy intent and source references only. It is not an executable test
+suite and does not copy proprietary strategy code.
+
+## Dogfood Placeholder
+
+The matrix includes one provisional dogfood row:
+
+- `dog_001_original_multi_asset_mean_reversion_grid`
+
+It exists only to wire the matrix for PR 3 and PR 4. It does not count as final frontier
+publication evidence. PR 4 owns the detailed dogfood artifact, candidate GKR, diagnostics,
+false-supported review, and final routing decision.
 
 ## Protocol Baseline
 
-PR 1 adds protocol files only:
+PR 1 added protocol files:
 
 - `docs/coverage/coverage_taxonomy.md`
 - `docs/coverage/market_weight_protocol.md`
 - `docs/coverage/false_supported_protocol.md`
 - `docs/coverage/custom_token_route_policy.md`
 - `docs/coverage/kernel_gap_decision_protocol.md`
+
+PR 2 registers the first matrix and external seed against those protocols.
 
 ## Boundary Statement
 
@@ -117,7 +172,5 @@ portfolio optimizer coverage.
 
 ## Next Work
 
-- PR 2: matrix v0 and stratified external benchmark seed.
 - PR 3: matrix validator and coverage report tool.
 - PR 4: original failure dogfood case.
-
