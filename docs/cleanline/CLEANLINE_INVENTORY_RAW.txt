@@ -1,0 +1,1533 @@
+﻿.\README.md:`qst-ir/0.3` and `qst-ir/0.3.1` remain loadable, verifiable, explainable, and
+.\README.md:Validate and hash a legacy strategy:
+.\README.md:Migrate a legacy strategy snapshot to `qst-ir/0.4`:
+.\README.md:qst migrate-ir strategies/kdj_cross_basic.qst.yaml --to qst-ir/0.4 --output out/kdj.v04.qst.yaml
+.\README.md:QST has two accepted layers: the legacy P0-P4 foundation and Token System v2.
+.\README.md:### Legacy P0-P4 Foundation
+.\README.md:- Stable YAML strategy loading and canonicalization for `qst-ir/0.3`.
+.\README.md:- Three-layer legacy hashes: graph, param, and instance.
+.\README.md:- Universal port protocols, signal extraction, mock adapters, and mock P4b CLI
+.\README.md:- Decision algebra with true monoids, fold policies, aggregators, and legacy
+.\README.md:- Legacy strategy and legacy qstpkg migration tooling to v0.4 snapshots.
+.\README.md:Legacy P0-P4 hashes remain frozen. The accepted reference hashes are recorded in
+.\README.md:legacy hashes. Migration records legacy source hashes as lineage evidence and
+.\README.md:  ir/                     legacy qst-ir/0.3 models, canonicalization, hashing
+.\README.md:  migration_v2/           legacy-to-v0.4 migration tooling
+.\README.md:  legacy examples and v0.4 P-Validate strategies
+.\README.md:python -m pytest tests/e2e/test_p0_p1_backward_compat.py tests/e2e/test_p2_p3_backward_compat.py -v
+.\README.md:- P4b-v2 external adapter design is deferred.
+.\QST_PROJECT_ACCEPTANCE.md:- P0 frozen primitive baseline.
+.\QST_PROJECT_ACCEPTANCE.md:- P1-core and P1-extended-a guarded validation.
+.\QST_PROJECT_ACCEPTANCE.md:- P2 provenance, mutation, CSE, kernel-substitution spike, and explain tooling.
+.\QST_PROJECT_ACCEPTANCE.md:- P3 lock, qstpkg, package verification, agent search/discover, and fork lineage.
+.\QST_PROJECT_ACCEPTANCE.md:- P4-core artifacts, frames, qstpkg artifact extension, ports, signal extraction, mock adapters, and P4b CLI.
+.\QST_PROJECT_ACCEPTANCE.md:- Token System v2 WP0-WP10.
+.\QST_PROJECT_ACCEPTANCE.md:- P4b-v2 external ports.
+.\QST_PROJECT_ACCEPTANCE.md:| G2 Legacy compatibility | PASS | P0-P4 compatibility tests and frozen hash checks pass. |
+.\QST_PROJECT_ACCEPTANCE.md:| G3 Architecture and phase integrity | PASS | Roadmap, ADRs, migration boundary, and active/legacy IR roles are consistent. |
+.\QST_PROJECT_ACCEPTANCE.md:| G4 Token System v2 modules | PASS | WP0-WP10 module tests pass. |
+.\QST_PROJECT_ACCEPTANCE.md:- `python -m pytest tests/e2e/test_p0_p1_backward_compat.py -v`
+.\QST_PROJECT_ACCEPTANCE.md:- `python -m pytest tests/e2e/test_p2_p3_backward_compat.py -v`
+.\QST_PROJECT_ACCEPTANCE.md:P0-P4 accepted foundations remain preserved. Token System v2 WP0-WP10 are accepted. The active token-kernel target is `qst-ir/0.4`. Legacy `qst-ir/0.3` and `qst-ir/0.3.1` remain loadable, verifiable, explainable, and migratable. Future changes to accepted v0.4 hash, schema, token, package, or security semantics require a new ADR or work package.
+.\CHANGELOG.md:- Recorded project-wide acceptance for the P0-P4 foundation and Token System v2
+.\CHANGELOG.md:  WP0-WP10.
+.\CHANGELOG.md:- Preserved legacy `qst-ir/0.3` and `qst-ir/0.3.1` as load, verify, explain,
+.\CHANGELOG.md:  custom-token runtime boundaries, and legacy migration tooling.
+.\CHANGELOG.md:## Legacy P0-P4 Foundation
+.\CHANGELOG.md:- Preserved the frozen P0 baseline and compatibility hashes.
+.\CHANGELOG.md:  qstpkg packages, package verification, search, fork lineage, P4 artifact
+.\CHANGELOG.md:  adapters, and P4b CLI surfaces.
+.\CONTRIBUTING.md:- Do not change accepted legacy P0-P4 hash, canonicalization, lock, package,
+.\CONTRIBUTING.md:python -m pytest tests/e2e/test_p0_p1_backward_compat.py tests/e2e/test_p2_p3_backward_compat.py -v
+.\CONTRIBUTING.md:- Production code reads legacy token specs through `get_registry()`.
+.\CONTRIBUTING.md:- Production code reads legacy recipes through `get_recipe_registry()`.
+.\CONTRIBUTING.md:- Temporary legacy tokens use `isolated_registry`.
+.\CONTRIBUTING.md:- Temporary legacy recipes use `isolated_recipe_registry`.
+.\CONTRIBUTING.md:  than legacy registry internals.
+.\TOKEN_SYSTEM_V2_ACCEPTANCE.md:Token System v2 is accepted through WP10 at the code freeze baseline `1ede6998bf442c22102b6a83530ef89a0cdadaaa`.
+.\TOKEN_SYSTEM_V2_ACCEPTANCE.md:- `qst-ir/0.3` and `qst-ir/0.3.1` remain loadable, verifiable, explainable, and migratable.
+.\TOKEN_SYSTEM_V2_ACCEPTANCE.md:| WP0 | Six ADR gate under v1.0.3. |
+.\TOKEN_SYSTEM_V2_ACCEPTANCE.md:| WP1 | `qst-ir/0.4` shell, canonical bytes, hash v2, validation/profile shells, legacy loaders. |
+.\TOKEN_SYSTEM_V2_ACCEPTANCE.md:| WP2 | Structured TypeSpec, PortSpec, `TokenRefV04`, signatures, capability shell. |
+.\TOKEN_SYSTEM_V2_ACCEPTANCE.md:| WP3 | TemporalRule, static temporal validation, PV-C. |
+.\TOKEN_SYSTEM_V2_ACCEPTANCE.md:| WP4 | NumericPolicy, TokenEvolutionPolicy, lifecycle and behavior hash material. |
+.\TOKEN_SYSTEM_V2_ACCEPTANCE.md:| WP7 | Decision Algebra, true monoids, fold policies, aggregators, legacy reduce classifier. |
+.\TOKEN_SYSTEM_V2_ACCEPTANCE.md:| WP10 | Legacy strategy and qstpkg migration tooling to v0.4 snapshots. |
+.\TOKEN_SYSTEM_V2_ACCEPTANCE.md:| `2026-05-15_qst_ir_0_4_transition.md` | v0.4 is the active authoring target; legacy versions are migration sources. | `tests/ir_v04`, `tests/migration_v2`, `tests/e2e/*compat*` |
+.\strategies\broken_no_lift.qst.yaml:ir_version: qst-ir/0.3
+.\examples\_gen_sample_market.py:"""Generate deterministic 15m BTC OHLCV sample data for P0 demos."""
+.\docs\ACCEPTANCE\KNOWN_LIMITATIONS.md:11. P4b-v2 external ports are deferred.
+.\docs\ACCEPTANCE\KNOWN_LIMITATIONS.md:13. Migration creates new v0.4 identity and does not claim legacy/v0.4 semantic equivalence.
+.\strategies\examples_kdj_with_ema_filter.pretrade.qst.yaml:  notes: P1-core reference strategy with KDJ, EMA filter, risk cap, and order intent.
+.\strategies\examples_kdj_with_ema_filter.pretrade.qst.yaml:ir_version: qst-ir/0.3
+.\docs\ACCEPTANCE\HASH_STABILITY_REPORT.md:`kdj_cross_basic.qst.yaml` migrated to `qst-ir/0.4`:
+.\docs\ACCEPTANCE\HASH_STABILITY_REPORT.md:`examples_kdj_with_ema_filter.qst.yaml` migrated to `qst-ir/0.4`:
+.\docs\ACCEPTANCE\HASH_STABILITY_REPORT.md:- legacy graph/params/strategy content for legacy three-layer hashes.
+.\docs\ACCEPTANCE\HASH_STABILITY_REPORT.md:- legacy provenance fields where accepted hash rules exclude them.
+.\docs\ACCEPTANCE\HASH_STABILITY_REPORT.md:Any future drift in accepted legacy hashes, v0.4 identity hashes, TokenSpec/TokenPack hashes, schema capability meaning, or expected artifact hashes requires a new ADR or explicit correction work package.
+.\docs\TOKEN_EVOLUTION_POLICY.md:Status: accepted for Token System v2 WP4.
+.\docs\TOKEN_EVOLUTION_POLICY.md:WP4 does not implement TokenSpec v2 registry resolution, TokenPack loading, recipe migration, runtime execution, or custom token execution.
+.\docs\TAXONOMY.md:This taxonomy records the frozen P0 vocabulary and the accepted P1-core additions. It is also the P1-extended-a metadata checklist for purity and temporal safety.
+.\docs\TAXONOMY.md:## P0 Frozen Tokens
+.\docs\TAXONOMY.md:| `data.column` | 1 | 1 | computation | data | core_candidate | pure | false | none | same_bar_close | not_declared | all | P0 frozen |
+.\docs\TAXONOMY.md:| `data.shift` | 1 | 1 | computation | data | core_candidate | pure | false | trailing | same_bar_close | not_declared | all | P0 frozen |
+.\docs\TAXONOMY.md:| `window.max` | 1 | 1 | computation | window | core_candidate | pure | false | trailing | end_of_window | not_declared | all | P0 frozen |
+.\docs\TAXONOMY.md:| `window.min` | 1 | 1 | computation | window | core_candidate | pure | false | trailing | end_of_window | not_declared | all | P0 frozen |
+.\docs\TAXONOMY.md:| `smooth.linear_recursive` | 1 | 1 | computation | smooth | core_candidate | pure | false | trailing | same_bar_close | not_declared | all | P0 frozen |
+.\docs\TAXONOMY.md:| `math.add` | 1 | 1 | computation | math | core_candidate | pure | false | none | same_bar_close | not_declared | all | P0 frozen |
+.\docs\TAXONOMY.md:| `math.sub` | 1 | 1 | computation | math | core_candidate | pure | false | none | same_bar_close | not_declared | all | P0 frozen |
+.\docs\TAXONOMY.md:| `math.mul` | 1 | 1 | computation | math | core_candidate | pure | false | none | same_bar_close | not_declared | all | P0 frozen |
+.\docs\TAXONOMY.md:| `math.div` | 1 | 1 | computation | math | core_candidate | pure | false | none | same_bar_close | not_declared | all | P0 frozen |
+.\docs\TAXONOMY.md:| `math.linear_combination` | 1 | 1 | computation | math | core_candidate | pure | false | none | same_bar_close | not_declared | all | P0 frozen |
+.\docs\TAXONOMY.md:| `compare.gt` | 1 | 1 | computation | compare | core_candidate | pure | false | none | same_bar_close | not_declared | all | P0 frozen |
+.\docs\TAXONOMY.md:| `compare.le` | 1 | 1 | computation | compare | core_candidate | pure | false | none | same_bar_close | not_declared | all | P0 frozen |
+.\docs\TAXONOMY.md:| `logic.and` | 1 | 1 | computation | logic | core_candidate | pure | false | none | same_bar_close | not_declared | all | P0 frozen |
+.\docs\TAXONOMY.md:| `norm.range_position` | 1 | 1 | computation | norm | core_candidate | pure | false | none | same_bar_close | not_declared | all | P0 frozen |
+.\docs\TAXONOMY.md:| `decision.lift_bool` | 1 | 1 | infrastructure | decision | core_candidate | contextual_read | false | none | same_bar_close | not_declared | all | P0 frozen |
+.\docs\TAXONOMY.md:| `decision.reduce` | 1 | 1 | infrastructure | decision | core_candidate | contextual_read | false | none | same_bar_close | not_declared | all | P0 frozen |
+.\docs\TAXONOMY.md:| `plan.noop` | 1 | 1 | infrastructure | plan | core_candidate | contextual_read | false | none | same_bar_close | not_declared | all | P0 frozen |
+.\docs\TAXONOMY.md:## P1-Core Tokens
+.\docs\TAXONOMY.md:| `compare.ge` | 1 | 1 | computation | compare | core_candidate | pure | false | none | same_bar_close | not_declared | all | P1-core accepted |
+.\docs\TAXONOMY.md:| `compare.lt` | 1 | 1 | computation | compare | core_candidate | pure | false | none | same_bar_close | not_declared | all | P1-core accepted |
+.\docs\TAXONOMY.md:| `decision.map_status` | 1 | 1 | infrastructure | decision | core_candidate | contextual_read | false | none | same_bar_close | not_declared | all | P1-core accepted |
+.\docs\TAXONOMY.md:| `decision.reduce` | 2 | 1 | infrastructure | decision | core_candidate | contextual_read | false | none | same_bar_close | not_declared | all | P1-core accepted |
+.\docs\TAXONOMY.md:| `state.read_field` | 1 | 1 | infrastructure | state | core_candidate | contextual_read | false | none | same_bar_close | not_declared | all | P1-core accepted |
+.\docs\TAXONOMY.md:| `risk.position_cap` | 1 | 1 | infrastructure | risk | core_candidate | contextual_read | false | none | same_bar_close | not_declared | all | P1-core accepted |
+.\docs\TAXONOMY.md:| `risk.notional_cap` | 1 | 1 | infrastructure | risk | core_candidate | contextual_read | false | none | same_bar_close | not_declared | all | P1-core accepted |
+.\docs\TAXONOMY.md:| `plan.order_intent` | 1 | 1 | infrastructure | plan | core_candidate | contextual_read | false | none | same_bar_close | not_declared | all | P1-core accepted |
+.\docs\TAXONOMY.md:## P0 Frozen Recipes
+.\docs\TAXONOMY.md:| `indicator.ewm` | 1 | derived_from_graph | inherits_graph | inherits_graph | inherits_graph | not_declared | all | P0 frozen |
+.\docs\TAXONOMY.md:| `indicator.rma` | 1 | derived_from_graph | inherits_graph | inherits_graph | inherits_graph | not_declared | all | P0 frozen |
+.\docs\TAXONOMY.md:| `indicator.kdj` | 1 | derived_from_graph | inherits_graph | inherits_graph | inherits_graph | not_declared | all | P0 frozen |
+.\docs\TAXONOMY.md:| `event.cross_above` | 1 | derived_from_graph | inherits_graph | inherits_graph | inherits_graph | not_declared | all | P0 frozen |
+.\docs\TAXONOMY.md:## P1-Core Recipes
+.\docs\TAXONOMY.md:| `event.threshold_above` | 1 | derived_from_graph | inherits_graph | inherits_graph | inherits_graph | not_declared | all | P1-core accepted |
+.\docs\TAXONOMY.md:| `event.threshold_below` | 1 | derived_from_graph | inherits_graph | inherits_graph | inherits_graph | not_declared | all | P1-core accepted |
+.\docs\TAXONOMY.md:| `gate.elapsed_threshold` | 1 | derived_from_graph | inherits_graph | inherits_graph | inherits_graph | not_declared | all | P1-core accepted |
+.\docs\TAXONOMY.md:| `gate.cooldown` | 1 | derived_from_graph | inherits_graph | inherits_graph | inherits_graph | not_declared | all | P1-core accepted |
+.\docs\TAXONOMY.md:## P2a-2 Algorithm Recipes
+.\docs\TAXONOMY.md:| `signals.dual_ema_cross` | 1 | derived_from_graph | inherits_graph | inherits_graph | inherits_graph | not_declared | all | P2a-2 accepted |
+.\docs\ADR\2026-05-15_qst_token_system_v2_p_validate_cases.md:Owner: WP3 PortTemporalSpec.
+.\strategies\kdj_cross_basic.qst.yaml:ir_version: qst-ir/0.3
+.\docs\ADR\2026-05-15_qst_tokenpack_propagation_package_policy.md:At the same time, P0-P4 accepted packages and locks must remain valid. TokenPack
+.\docs\ADR\2026-05-15_qst_tokenpack_propagation_package_policy.md:support is additive to `qst-ir/0.4` and must not rewrite legacy `qst.lock` or
+.\docs\ADR\2026-05-15_qst_tokenpack_propagation_package_policy.md:- P3 `.qstpkg` remains accepted as a legacy package format.
+.\docs\ADR\2026-05-15_qst_tokenpack_propagation_package_policy.md:- v0.4 packages can carry TokenPack manifests later without changing P0-P4
+.\docs\ADR\2026-05-15_qst_tokenpack_propagation_package_policy.md:- WP0-WP2 only define policy and hash slots. TokenPack registry, package
+.\docs\ADR\2026-05-15_qst_panel_layer_detail_design.md:`TypeSpec` shape after core hashes have stabilized, WP2 must reserve the Panel
+.\docs\ADR\2026-05-15_qst_panel_layer_detail_design.md:The WP2 Panel shell contains these fields:
+.\docs\tagspecs\indicator.ewm.tagspec.yaml:    description: P2c-extended opt-in spike kernel for indicator.ewm/v1.
+.\docs\ADR\2026-05-15_qst_ir_0_4_transition.md:QST currently has an accepted P0-P4 core based on `qst-ir/0.3` and the additive `qst-ir/0.3.1` fork-lineage extension. That model is sufficient for the accepted TimeSeries-oriented token system, but Token System v2 needs structured types, port-level temporal contracts, explicit state, panel semantics, custom token packs, and stronger token behavior hashes.
+.\docs\ADR\2026-05-15_qst_ir_0_4_transition.md:`qst-ir/0.3` and `qst-ir/0.3.1` become legacy IR versions. Legacy IR is still supported for:
+.\docs\ADR\2026-05-15_qst_ir_0_4_transition.md:`qst fork` and future mutation tools must not keep producing `qst-ir/0.3.1` once the v2 migration tooling is active. They must either reject legacy input with a migration instruction or produce `qst-ir/0.4` through the approved migration path.
+.\docs\ADR\2026-05-15_qst_ir_0_4_transition.md:Migration from legacy IR creates a new identity, not a continuation of the old instance hash.
+.\docs\ADR\2026-05-15_qst_ir_0_4_transition.md:  source_ir_version: qst-ir/0.3.1
+.\docs\ADR\2026-05-15_qst_ir_0_4_transition.md:  migration_tool_version: qst-migrate/0.4.0
+.\docs\ADR\2026-05-15_qst_ir_0_4_transition.md:The legacy source instance hash is historical evidence only. It is not compared directly with the new `qst-ir/0.4` instance hash.
+.\docs\ADR\2026-05-15_qst_ir_0_4_transition.md:The frozen P0/P1/P2/P3/P4 hashes do not drift.
+.\docs\ADR\2026-05-15_qst_ir_0_4_transition.md:No `qst-ir/0.4` hash is defined as equal to a legacy hash. Equality across the migration boundary is not a supported concept.
+.\docs\ADR\2026-05-15_qst_ir_0_4_transition.md:Existing legacy packages and locks remain verifiable through a legacy loader. Missing v2-only fields such as signature hash, behavior hash, token spec hash, token pack hash, implementation ref hash, and audit chain hash must not make old locks fail by schema shape alone.
+.\docs\ADR\2026-05-15_qst_ir_0_4_transition.md:- New P4b-v2 adapter design must target `qst-ir/0.4`, not the accepted P4b-old TimeSeries boundary.
+.\docs\ADR\2026-05-15_qst_ir_0_4_transition.md:- Migration tooling becomes a required gate before legacy strategies can participate in v2 authoring, mutation, fork, or adapter workflows.
+.\docs\ADR\2026-05-14_qst_design_p4.md:# ADR: QST P4 Core Construction Boundary
+.\docs\ADR\2026-05-14_qst_design_p4.md:Status: Accepted for P4a-0 pre-flight
+.\docs\ADR\2026-05-14_qst_design_p4.md:P0 through P3 are accepted. P4 begins the universal artifact, frame, port, and adapter layer. The P4 construction manual v1.0.2 is the active construction basis, with the following clarifications locked before code construction begins:
+.\docs\ADR\2026-05-14_qst_design_p4.md:- P4a-0 must start with an ADR and pre-flight before artifact code.
+.\docs\ADR\2026-05-14_qst_design_p4.md:- P4a-0 validates five JSON schemas, not three.
+.\docs\ADR\2026-05-14_qst_design_p4.md:- `stable_json_bytes()` must be byte-compatible with existing P3 canonical lock bytes.
+.\docs\ADR\2026-05-14_qst_design_p4.md:P4-core is the universal interchange layer:
+.\docs\ADR\2026-05-14_qst_design_p4.md:P4-core is not a business adapter implementation layer. `qst-core` must not import vectorbt, qlib, ccxt, mlflow, backtrader, or other business-level third-party adapter frameworks. Real adapters live in separate `qst-adapter-*` repositories.
+.\docs\ADR\2026-05-14_qst_design_p4.md:P4a-0 is a hard gate. It may add:
+.\docs\ADR\2026-05-14_qst_design_p4.md:P4a-0 must not add:
+.\docs\ADR\2026-05-14_qst_design_p4.md:- any change to P0/P1/P2/P3 hashes, lock bytes, package verification, search, fork, mutation, CSE, or kernel behavior.
+.\docs\ADR\2026-05-14_qst_design_p4.md:P4a-0 gate item 1 means five schemas must pass draft 2020-12 validation:
+.\docs\ADR\2026-05-14_qst_design_p4.md:P4 uses strict canonical decimal strings:
+.\docs\ADR\2026-05-14_qst_design_p4.md:`quant_strategy_tokenizer.canonical_json.stable_json_bytes()` is a public API, but its byte output is defined by compatibility with current P3 canonical lock bytes. It must not introduce an independent line-ending, whitespace, or formatting policy.
+.\docs\ADR\2026-05-14_qst_design_p4.md:Backtest adapters consume `SignalFrame`, not `StrategyIR`. `execute_to_signals()` is qst-core responsibility and is validated later in P4b-0 by output type:
+.\docs\ADR\2026-05-14_qst_design_p4.md:Future submit-plan / poll-execution behavior is separate from existing `qst execute`. P4a-0 must not change `qst execute`.
+.\docs\ADR\2026-05-14_qst_design_p4.md:- P4a-0 code construction may start only after the pre-flight record is complete.
+.\docs\ADR\2026-05-14_qst_design_p4.md:- If `stable_json_bytes()` byte compatibility with P3 fails, P4a-0 fails and does not proceed.
+.\docs\ADR\2026-05-14_qst_design_p4.md:- If P0/P1/P2/P3 regression fails, P4a-0 fails and does not proceed.
+.\docs\ADR\2026-05-15_qst_hash_stability_milestones.md:- WP1-WP4: v0.4 hashes are provisional.
+.\docs\ADR\2026-05-15_qst_hash_stability_milestones.md:Current P0-P4 accepted hashes remain frozen and are not comparable to v0.4
+.\docs\ADR\2026-05-14_qst_design_p3.md:# ADR: QST P3 Lock And Portability Entry
+.\docs\ADR\2026-05-14_qst_design_p3.md:Accepted for WP-P3a-0 implementation.
+.\docs\ADR\2026-05-14_qst_design_p3.md:P0/P1/P2 are accepted with frozen Strategy Content IR semantics, stable canonicalization, and stable three-layer hashes. P3 needs a portable artifact boundary, but the first gate must prove deterministic lock material before package, search, or fork features begin.
+.\docs\ADR\2026-05-14_qst_design_p3.md:WP-P3a-0 introduces a canonical JSON `qst.lock` and structured verification result.
+.\docs\ADR\2026-05-14_qst_design_p3.md:P3a-0 verification is structural. It does not claim numerical output equivalence.
+.\docs\ADR\2026-05-14_qst_design_p3.md:WP-P3a-0 does not implement:
+.\docs\ADR\2026-05-14_qst_design_p3.md:- `qst-ir/0.3.1`
+.\docs\ADR\2026-05-14_qst_design_p3.md:`qst_version_policy=same_minor` is parsed but explicitly unsupported in P3a-0.
+.\docs\ADR\2026-05-14_qst_design_p3.md:P3a-0 must preserve:
+.\docs\ADR\2026-05-14_qst_design_p3.md:- P0 frozen hash baselines
+.\docs\ADR\2026-05-14_qst_design_p3.md:- P1-core hash baselines
+.\docs\ADR\2026-05-14_qst_design_p3.md:- P2 provenance, mutation, CSE, and kernel-spike behavior
+.\docs\ADR\2026-05-14_qst_design_p3.md:- `qst-ir/0.3`
+.\strategies\examples_kdj_with_ema_filter.qst.yaml:  notes: P1-core reference strategy with KDJ, EMA filter, risk cap, and order intent.
+.\strategies\examples_kdj_with_ema_filter.qst.yaml:ir_version: qst-ir/0.3
+.\docs\PROFILES.md:| Profile | P1-core behavior |
+.\docs\PROFILES.md:| `production_guarded` | Same P1-core risk-path rule as `pretrade`. |
+.\docs\ADR\2026-05-14_qst_design_v2.md:Draft. This ADR prepares P2 entry but does not start P2 implementation.
+.\docs\ADR\2026-05-14_qst_design_v2.md:QST is a strategy tokenization system with a frozen P0 baseline, accepted P1-core deployment/profile layer, and P1-extended-a purity/temporal validation.
+.\docs\ADR\2026-05-14_qst_design_v2.md:P0/P1 guarantees:
+.\docs\ADR\2026-05-14_qst_design_v2.md:- P0/P1 hash algorithms remain unchanged.
+.\docs\ADR\2026-05-14_qst_design_v2.md:- P0 token and recipe semantics remain backward compatible.
+.\docs\ADR\2026-05-14_qst_design_v2.md:- P1-core promotion changes the envelope only.
+.\docs\ADR\2026-05-14_qst_design_v2.md:- P1-extended-a validates safety metadata without changing Strategy Content IR hashes.
+.\docs\ADR\2026-05-14_qst_design_v2.md:P2 will be planned as a separate construction phase with three conceptual tracks:
+.\docs\ADR\2026-05-14_qst_design_v2.md:P2a-0 is a mandatory spike gate before any broader P2 work.
+.\docs\ADR\2026-05-14_qst_design_v2.md:- P2 must not back-edit P0/P1 hashes.
+.\docs\ADR\2026-05-14_qst_design_v2.md:- P2 implementation must use a separate plan and acceptance gate.
+.\strategies\uses_cse_duplicate_chain.qst.yaml:ir_version: qst-ir/0.3
+.\docs\ADR\2026-05-14_p2c_kernel_substitution_spike.md:# ADR: P2c-extended Kernel Substitution Spike
+.\docs\ADR\2026-05-14_p2c_kernel_substitution_spike.md:QST P2c-extended introduces an opt-in kernel substitution spike for `indicator.ewm/v1`.
+.\docs\ADR\2026-05-14_p2c_kernel_substitution_spike.md:P2c-core already introduced execution-plan CSE without changing canonical IR. Kernel substitution follows the same boundary: it is an execution-plan/runtime optimization, not strategy semantics.
+.\docs\ADR\2026-05-14_p2c_kernel_substitution_spike.md:The opt-in gate keeps P0/P1/P2 default behavior stable while proving that verified semantic provenance can safely select an alternative executor.
+.\docs\PANEL_LAYER_DESIGN_V04.md:The accepted WP2 Panel shell field set remains exactly:
+.\docs\PANEL_LAYER_DESIGN_V04.md:If a later Panel design requires additional TypeSpec fields, WP8a must fail and a WP2 correction ADR must authorize the shape change. WP8a is not allowed to silently extend TypeSpec.
+.\docs\PANEL_LAYER_DESIGN_V04.md:- WP10 owns migration tooling.
+.\docs\ERROR_CODES.md:This document lists stable validation and runtime error kinds used by P0 and P1-core.
+.\docs\ERROR_CODES.md:| `profile_violation` | validation | The strategy envelope/profile is inconsistent with P1-core rules. | Adjust `_envelope.profile` or strategy wiring. |
+.\docs\ERROR_CODES.md:P1-core keeps P0 repair hints compatible. In particular, `strategies/broken_no_lift.qst.yaml` must continue to produce a `type_mismatch` failure with a repair hint suggesting `decision.lift_bool`.
+.\strategies\uses_ewm_with_provenance.qst.yaml:ir_version: qst-ir/0.3
+.\docs\P1_EXTENDED_A_VALIDATORS.md:# P1-Extended-A Validators
+.\docs\P1_EXTENDED_A_VALIDATORS.md:python -m pytest tests/e2e/test_p0_p1_backward_compat.py -v
+.\docs\JSON_SCHEMAS\artifact_base.schema.json:  "title": "QST P4 Artifact Common Definitions",
+.\docs\JSON_SCHEMAS\generator.schema.json:  "title": "QST P2a-2 Recipe Generator",
+.\docs\JSON_SCHEMAS\qst_lock.schema.json:  "title": "QST P3a-0 Lock File",
+.\docs\JSON_SCHEMAS\qst_lock.schema.json:    "ir_version": {"enum": ["qst-ir/0.3", "qst-ir/0.3.1"]},
+.\docs\JSON_SCHEMAS\qst_ir_0_4.schema.json:        "source_ir_version": {"enum": ["qst-ir/0.3", "qst-ir/0.3.1"]},
+.\docs\JSON_SCHEMAS\qst_ir_0_4.schema.json:        "migration_tool_version": {"const": "qst-migrate/0.4.0"}
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: QST_P2A0_SPIKE_PLAN.md                         |  69 ---
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: QST_P2B0_BASIC_MUTATION_PLAN.md                |  36 --
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/MIGRATION_P0_TO_P1_CORE.md                |  48 --
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P0_ACCEPTANCE.md                          | 191 --------
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P0_P1_BOUNDARY.md                         |  93 ----
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P1_BOUNDARY.md                            |  81 ----
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P1_CORE_ACCEPTANCE.md                     | 134 ------
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P2A0_GATE_ACCEPTANCE.md                   |  46 --
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P2A2_GENERATOR_ACCEPTANCE.md              |  82 ----
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P2A3_COMPOSITION_VALIDATION_ACCEPTANCE.md |  90 ----
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P2B1_ADVANCED_MUTATION_ACCEPTANCE.md      |  87 ----
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P2C_CORE_ACCEPTANCE.md                    |  81 ----
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P2C_EXTENDED_ACCEPTANCE.md                |  76 ----
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P2_FINAL_CODE_AUDIT.md                    |  77 ----
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P3A0_LOCK_GATE_ACCEPTANCE.md              |  92 ----
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P3A1_PACKAGE_ACCEPTANCE.md                | 118 -----
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P3B0_SEARCH_ACCEPTANCE.md                 |  69 ---
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P3B1_FORK_ACCEPTANCE.md                   |  88 ----
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P3_FINAL_ACCEPTANCE.md                    |  83 ----
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P3_FINAL_CODE_AUDIT.md                    | 111 -----
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P4A0_ARTIFACT_GATE_ACCEPTANCE.md          | 102 -----
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P4A0_PREFLIGHT.md                         |  88 ----
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P4A1A_FRAME_ACCEPTANCE.md                 |  91 ----
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P4A1B_FRAME_IO_ACCEPTANCE.md              | 107 -----
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P4A1C_STRICT_ALIGNMENT_ACCEPTANCE.md      | 102 -----
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P4A2_QSTPKG_ARTIFACTS_ACCEPTANCE.md       | 129 ------
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P4B0_PORTS_ACCEPTANCE.md                  | 108 -----
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P4B1_MOCK_ADAPTERS_ACCEPTANCE.md          | 124 ------
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P4_CORE_ACCEPTANCE.md                     | 127 ------
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF_STAT.txt: docs/P4_FINAL_CODE_AUDIT.md                    | 137 ------
+.\docs\JSON_SCHEMAS\qst_package_manifest.schema.json:  "title": "QST P3a-1 Package Manifest",
+.\docs\cleanline\PRE_RESET_STATUS.txt: D QST_P2A0_SPIKE_PLAN.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D QST_P2B0_BASIC_MUTATION_PLAN.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/MIGRATION_P0_TO_P1_CORE.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P0_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P0_P1_BOUNDARY.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P1_BOUNDARY.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P1_CORE_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P2A0_GATE_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P2A2_GENERATOR_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P2A3_COMPOSITION_VALIDATION_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P2B1_ADVANCED_MUTATION_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P2C_CORE_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P2C_EXTENDED_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P2_FINAL_CODE_AUDIT.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P3A0_LOCK_GATE_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P3A1_PACKAGE_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P3B0_SEARCH_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P3B1_FORK_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P3_FINAL_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P3_FINAL_CODE_AUDIT.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P4A0_ARTIFACT_GATE_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P4A0_PREFLIGHT.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P4A1A_FRAME_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P4A1B_FRAME_IO_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P4A1C_STRICT_ALIGNMENT_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P4A2_QSTPKG_ARTIFACTS_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P4B0_PORTS_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P4B1_MOCK_ADAPTERS_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P4_CORE_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_STATUS.txt: D docs/P4_FINAL_CODE_AUDIT.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Recorded project-wide acceptance for P0-P4 accepted foundations and Token System v2 WP0-WP10.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## Token System v2 WP10 Migration Tooling
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Added `qst migrate-ir` and `qst migrate-package` for legacy `qst-ir/0.3` / `0.3.1` to `qst-ir/0.4` migration snapshots.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Added migration lineage with source instance hash, target core registry hash, and `qst-migrate/0.4.0`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Added v0.4 package verification for migrated `qst-lock/0.4` snapshots while preserving legacy qstpkg verification.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Kept broad v0.4 runtime execution, semantic equivalence, numerical equivalence, P4b-v2 adapters, and legacy hash changes out of scope.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Kept sandboxing, WP10 migration, broad v0.4 strategy runtime, portable qstpkg trust, and legacy `qst execute` changes out of scope.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Kept `panel_recipes`, recipe TokenSpecs/TokenPacks, legacy recipe registry entries, runtime execution, migration tooling, adapters, WP9, WP10, and v0.4 CLI authoring out of scope.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Added schema hash evidence and design-gate tests proving the WP2 Panel TypeSpec shell field set is unchanged and the `panel` capability remains rejected.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Added legacy `decision.reduce` migration classification without silently mapping legacy errors into decisions.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Added Decision Algebra JSON schemas and test coverage for monoid laws, fold-policy truth tables, aggregators, token hashes, and legacy migration diagnostics.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Kept legacy runtime execution, legacy token registration, strategy mutation, Panel behavior, custom token runtime, migration tooling, and v0.4 CLI authoring out of scope.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Kept legacy recipes, v0.4 runtime execution, Decision Algebra, Panel behavior, custom token runtime, migration tooling, and v0.4 CLI authoring out of scope.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Kept state recipes, PV-A, legacy runtime execution, migration tooling, Panel behavior, custom token runtime, and v0.4 CLI authoring out of scope.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Kept FSM, state recipes, PV-A, legacy runtime execution, migration tooling, Panel behavior, custom token runtime, and v0.4 CLI authoring out of scope.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Extended `qst_lock_0_4` and `qst_package_manifest` JSON schemas with TokenPack propagation fields while keeping legacy qstpkg manifests valid.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## Token System v2 WP4 NumericPolicy + TokenEvolutionPolicy
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Added WP4 behavior hash material requiring `numeric_policy` and including lifecycle status.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## Token System v2 WP3 PortTemporalSpec + PV-C
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Kept WP4 numeric policy, WP5 TokenSpec v2 registry, token packs, migration tooling, runtime execution, custom token runtime, and v0.4 CLI authoring out of scope.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## Token System v2 v1.0.3 WP0-WP2 Compliance Retrofit
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Kept WP3 temporal resolution, TokenSpec v2 registry, token packs, migration tooling, Panel behavior, custom runtime, and v0.4 CLI authoring out of scope.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## Token System v2 WP2 Structured TypeSpec + PortSpec
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Kept WP3 temporal rule resolution, TokenSpec v2 registry, migration tooling, runtime execution, and v0.4 CLI authoring out of scope.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## Token System v2 WP1 qst-ir/0.4 Shell + Hash Framework
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Added read-only legacy loaders for `qst-ir/0.3`, `qst-ir/0.3.1`, and P3 `qst.lock`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Kept current CLI behavior, legacy strategy hashes, TokenSpec v2, migration tooling, and custom token runtime out of scope.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## Token System v2 WP0 ADR Gate
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Added the Token System v2 roadmap covering WP0-WP10, embedded P-Validate gates, and P4b-v2 as a deferred standalone stage.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Marked P4b-old ports, signal extraction, mock adapters, and CLI as accepted legacy infrastructure superseded for future expansion by Token System v2.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P4-core Acceptance
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Recorded P4-core acceptance and final code audit for the accepted P4a/P4b stages.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Defined P4-core as the artifact, frame, qstpkg artifact, port, signal extraction, mock adapter, and P4b CLI layer.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Confirmed P0/P1/P2/P3 hash preservation, vocabulary preservation, local final gate, and mock adapter CLI evidence.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Kept P4c real adapter repositories, P4d semantic detokenize, production integrations, MCP, and numerical equivalence proof out of scope.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P4b-1 Mock Adapters + CLI
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Added P4b CLI commands for adapter discovery, market loading, mock backtesting, mock execution submit/poll, and mock experiment tracking.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P4b-0 Port Protocols + SignalExtractionPolicy
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P4a-2 qstpkg Artifacts Extension
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Added optional artifact references to `.qstpkg` manifests while preserving legacy P3 package verification.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Added package helpers and `qst pkg` commands for adding and verifying P4 artifact JSON files.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Kept P3 `qst.lock`, strategy hashes, runtime execution, mutation, search, fork, CSE, and kernel behavior unchanged.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P4a-1c Multi-Symbol Strict Alignment
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Preserved existing `compute_frame_hash()` material and P4a-1b frame hash evidence.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P4a-0 Artifact Schema Hard Gate
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Added public canonical JSON bytes support while preserving P3 lock byte compatibility.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Added P4 artifact base models and schemas for execution reports, backtest evidence, portfolio snapshots, and adapter manifests.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Added P4a-0 artifact schema, canonical JSON, toy e2e, and P2/P3 backward compatibility tests.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+- Recorded project-wide acceptance for the P0-P4 foundation and Token System v2
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+  WP0-WP10.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+- Preserved legacy `qst-ir/0.3` and `qst-ir/0.3.1` as load, verify, explain,
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+  custom-token runtime boundaries, and legacy migration tooling.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+## Legacy P0-P4 Foundation
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+- Preserved the frozen P0 baseline and compatibility hashes.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+  qstpkg packages, package verification, search, fork lineage, P4 artifact
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+  adapters, and P4b CLI surfaces.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-This repository follows the P0 construction manual v1.1 with the v1.1.1 patch, plus the P1-core scope from `QST_P1_CONSTRUCTION_MANUAL_v1.2.md`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P0 is a frozen compatibility baseline. P1-core changes may add new tokens, recipes, schemas, CLI flags, and agent APIs, but they must not alter P0 token behavior, P0 recipe definitions, canonicalization, hashing, or the frozen hashes recorded in `docs/P0_ACCEPTANCE.md`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+- Do not change accepted legacy P0-P4 hash, canonicalization, lock, package,
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-The P0 backward-compatibility test is a hard gate:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-pytest tests/e2e/test_p0_p1_backward_compat.py
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+python -m pytest tests/e2e/test_p0_p1_backward_compat.py tests/e2e/test_p2_p3_backward_compat.py -v
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+- Production code reads legacy token specs through `get_registry()`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+- Production code reads legacy recipes through `get_recipe_registry()`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- New P1 tokens may be appended, but P0 `v1` token specs and behavior contracts remain frozen.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- New P1 recipes may be appended, but P0 recipe JSON remains frozen.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P1-Core Scope
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-Allowed in P1-core:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P1-core vocabulary and recipes listed in `docs/TAXONOMY.md`
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+- Temporary legacy tokens use `isolated_registry`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+- Temporary legacy recipes use `isolated_recipe_registry`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+  than legacy registry internals.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-Not allowed in P1-core:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- New TA indicators beyond the P1-core manual scope
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/QST_P2A0_SPIKE_PLAN.md b/QST_P2A0_SPIKE_PLAN.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/QST_P2A0_SPIKE_PLAN.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# QST P2a-0 Spike Plan
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 `kdj_cross_basic` frozen hashes remain unchanged.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P1 `examples_kdj_with_ema_filter` frozen hashes remain unchanged.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Non-`indicator.ewm` recipes do not receive P2a-0 provenance.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-python -m pytest tests/e2e/test_p0_p1_backward_compat.py -v
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-If provenance changes any P0/P1 hash or canonical graph identity, stop P2a-0 and
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/QST_P2B0_BASIC_MUTATION_PLAN.md b/QST_P2B0_BASIC_MUTATION_PLAN.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/QST_P2B0_BASIC_MUTATION_PLAN.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# QST P2b-0 Basic Mutation Plan
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- No mutation engine in P1
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- No schema changes before P2a-0 passes
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 frozen strategies keep the same hashes unless the user explicitly mutates Strategy Content IR.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P2b-0 may start only after P2a-0 has passed its hard gate.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-Quant Strategy Tokenizer is a reference implementation of the construction manual v1.1 with the v1.1.1 patch applied, plus the accepted P1-core, P2, P3, P4-core, and Token System v2 construction stages. Project-wide acceptance is recorded in `QST_PROJECT_ACCEPTANCE.md`; Token System v2 WP0-WP10 are accepted under the v1.0.3 construction standard, with security and semantic cleanup applied before final acceptance.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-The current implementation keeps the P0 baseline frozen, accepts P1-core, adds P1-extended-a purity and temporal safety validators, implements P2a-0/P2a-1 provenance metadata, P2a-2 deterministic recipe generation, P2a-3 composition validation, P2b mutation, P2c-core execution-plan CSE, an opt-in P2c-extended kernel substitution spike, the P3a-0 deterministic lock hard gate, the P3a-1 directory package format, P3b-0 registry search, P3b-1 fork lineage, and P4-core artifacts, frames, qstpkg artifact extension, ports, signal extraction, mock adapters, and P4b CLI. It does not include P1-extended-b FSM, TA indicator expansion, max-loss risk controls, a production kernel framework, P4c real adapter repositories, P4d semantic detokenize, P4+ full-text package search, or numerical equivalence verification.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst fork` lineage metadata with `qst-ir/0.3.1`
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4 artifact schemas, artifact identity, and strict DecimalString values
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Universal Port protocols, `execute_to_signals()`, local mock adapters, and P4b CLI
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Token System v2 legacy-to-v0.4 migration tooling for strategies and qstpkg snapshots
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P0 | frozen |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P0.1 | hardened |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P1-core | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P1-extended-a | completed |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P1-extended-b | deferred |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P2a-0 | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P2a-1 | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P2a-2 | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P2a-3 | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P2b-0 | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P2b-1 | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P2c-core | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P2c-extended | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P3a-0 lock gate | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P3a-1 package | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P3b-0 search | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P3b-1 fork lineage | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P4a-0 artifact gate | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P4a-1 frames | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P4a-2 qstpkg artifacts | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P4b-0 ports | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P4b-1 mock adapters | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P4c real adapters | external repos / not started |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P4d semantic detokenize | not started |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| Token System v2 WP0 ADR Gate | accepted under v1.0.3 |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| Token System v2 WP1 qst-ir/0.4 shell | accepted under v1.0.3 |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| Token System v2 WP2 TypeSpec + PortSpec | accepted under v1.0.3 |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| Token System v2 WP3 PortTemporalSpec + PV-C | accepted under v1.0.3 |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| Token System v2 WP4 NumericPolicy + TokenEvolutionPolicy | accepted under v1.0.3 |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| Token System v2 WP10 Migration Tooling | accepted under v1.0.3 |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## Frozen P0 Baseline
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst-ir/0.3`
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Frozen hashes and vocabulary triples recorded in `docs/P0_ACCEPTANCE.md`
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P1-Core Definition
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P1-core is the accepted guarded-execution layer on top of the frozen P0 Strategy Content IR.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P1-core does not alter P0 canonicalization or the frozen P0 hash baseline.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P2-Core Definition
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P2-core is the accepted semantic tooling and execution-planning layer on top of P0/P1. It keeps canonical Strategy Content IR and P0/P1 three-layer hashes stable.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P2-core includes:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P2a semantic provenance and composition | `indicator.ewm/v1` provenance, TagSpec attachment/full verification, deterministic recipe generator DSL, `signals.dual_ema_cross/v1`, recipe contract/fuzzing/metamorphic verification |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P2b mutation | `qst diff`, `qst mutate`, `ChangeParam`, `InsertBefore`, `ReplaceToken`, `InlineRecipe`, before/after hash reports |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P2c execution planning | Merkle fingerprints, execution-plan CSE, runtime cache trace evidence, `qst fingerprint` |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P2-core does not include default kernel substitution, production kernel scheduling, plugin/MCP integration, FSM, expanded TA indicator libraries, RL, or HFT execution.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P2c-Extended Spike
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P2c-extended is accepted as an opt-in spike adjacent to P2-core:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P3a-0 Lock Gate
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P3a-0 is accepted as the deterministic lock hard gate before any P3 package, search, or fork work:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+`qst-ir/0.3` and `qst-ir/0.3.1` remain loadable, verifiable, explainable, and
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- no automatic `qst-ir/0.3` to `0.3.1` rewrite
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P3a-1 Package Format
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P3a-1 is accepted as a directory-based portable artifact layer:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P4-Core Definition
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4-core is the accepted universal artifact, frame, package-artifact, port, and mock-adapter layer. It is additive over P0/P1/P2/P3 and does not change Strategy Content IR canonicalization, three-layer hashes, `qst.lock`, mutation, search, fork, CSE, kernel substitution, or `qst execute`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4-core includes:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P4a artifacts | `QSTArtifact`, artifact identity, strict `DecimalString`, `ExecutionReport`, `BacktestEvidence`, `PortfolioSnapshot`, `AdapterManifest`, draft 2020-12 schemas |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P4a frames | `MarketFrame`, `SignalFrame`, `FeatureFrame`, `TraceLog`, stable frame hashes, JSON/CSV/pandas/Arrow/Parquet round trips, strict multi-symbol MarketFrame alignment |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P4a qstpkg artifacts | additive `.qstpkg` artifact references, `qst pkg add-artifact`, `qst pkg verify-artifacts`, automatic artifact verification in `qst verify <pkg_dir>` |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P4b ports | Universal Port protocols, `SignalExtractionPolicy`, `execute_to_signals()`, local adapter discovery foundation |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| P4b mock adapters and CLI | five local mock adapters, `qst adapter`, `qst load market`, `qst backtest`, `qst submit-plan`, `qst poll-execution`, `qst track` |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4-core does not include P4c real adapters, production broker or exchange integration, MCP, P4d semantic detokenize, or numerical equivalence proof. Real adapters belong in independent `qst-adapter-*` repositories.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4b-old ports, signal extraction, mock adapters, and CLI are accepted legacy infrastructure. Token System v2 supersedes P4b-old for future adapter expansion; P4b-v2 is deferred as a standalone design after Token System v2 acceptance.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-The v1.0.3 construction standard supersedes the earlier Token System v2 WP0-WP2 plans. WP0 ADR Gate is accepted with six ADRs and records:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst-ir/0.3` and `qst-ir/0.3.1` as legacy load / verify / explain / migrate inputs.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP1 is accepted and adds the independent `qst-ir/0.4` shell, `qst-canonical/0.4` canonical bytes, hash v2 framework, `validation_v2`, `profile_v2`, explicit schema-version shell material, and read-only legacy boundary loaders.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP2 is accepted and adds structured `TypeSpec`, `ValueType`, `IntrinsicTemporalSpec`, `PortSignature`, `InputSpec`, `OutputSpec`, Panel shell fields, `StrategyIRV04.capabilities`, canonical `NodeV04.token_ref`, and token-ref-aware signature hashing.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP3 is accepted and adds `TemporalRule`, v0.4 static temporal validation, and PV-C expected diagnostics/traces.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP4 is accepted and adds `NumericPolicy`, `TokenEvolutionPolicy`, lifecycle status hash material, numeric risk profile decisions, behavior-hash material helpers, and `docs/TOKEN_EVOLUTION_POLICY.md`. It does not add WP5 TokenSpec v2 registry, token packs, migration tooling, runtime execution, Panel behavior, custom token runtime, or v0.4 CLI authoring.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP6a is accepted and adds deterministic v0.4 state reference helpers, `StatePolicy`, state transition traces, `ReducerRegistry`, and the `qst-tokenpack-state-basic/0.1.0` metadata pack for `core.state.delay`, `core.state.accumulate`, and `core.state.edge_detect`. It does not add FSM, state recipes, PV-A, legacy runtime execution, migration tooling, Panel behavior, custom token runtime, or v0.4 CLI authoring.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP6b is accepted and adds closed-set FSM reference semantics, `FSMDefinition`, `FSMTransition`, transition traces, deterministic replay checks, and the `qst-tokenpack-state-fsm/0.1.0` metadata pack for `core.state.fsm`. It does not add state recipes, PV-A, legacy runtime execution, migration tooling, Panel behavior, custom token runtime, or v0.4 CLI authoring.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP6c is accepted and adds PV-A state-heavy reference strategy artifacts, deterministic fixtures, expected diagnostics/traces, and expected artifact hashes for cooldown, market freeze, circuit breaker, observe period, and minimal slot budget cases. It does not add v0.4 runtime execution, legacy recipes, Decision Algebra, Panel behavior, custom token runtime, migration tooling, or v0.4 CLI authoring.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP7 is accepted and adds v0.4 Decision Algebra models, true monoids, fold policies, aggregators, legacy reduce migration classification, and the `qst-tokenpack-decision-algebra/0.1.0` metadata pack. It does not add legacy runtime execution, legacy token registration, strategy mutation, Panel behavior, custom token runtime, migration tooling, or v0.4 CLI authoring.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP9 is accepted as the Custom Token Runtime + PV-D stage. It separates integrity verification from profile/approval authorization, requires `allow_token=true` and `ack_risk=true` for executable approvals, enforces run-id/expiry-bound ExecutionGrants with explicit UTC issuance time and a default 15-minute TTL, verifies qstpkg TokenPack metadata without executing code, and adds the deterministic custom Kalman PV-D reference case. It does not add a sandbox, WP10 migration, broad v0.4 runtime execution, or portable qstpkg trust.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP10 is accepted as the Migration Tooling stage. It adds `qst migrate-ir` and `qst migrate-package` for moving legacy `qst-ir/0.3` / `0.3.1` artifacts into `qst-ir/0.4` snapshots with source instance hash lineage and a target core registry hash. Migration creates a new v0.4 identity and does not assert semantic or numerical equivalence.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## Current P2a Composition Layer
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## Current P2b Mutation Layer
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## Not In Accepted P0/P1/P2/P3/P4-Core
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-The following are intentionally not part of the accepted P0/P1/P2/P3/P4-core baseline:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4+ full-text or cross-package search
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4c real adapter repositories inside `qst-core`
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4d semantic detokenize
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P1-core reference strategy:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P0 Verification
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+Validate and hash a legacy strategy:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst vocabulary --check` reports 25 tokens and 9 recipes, while P0 frozen triples remain resolvable.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst validate` exits 0 for the P0 reference strategy.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P1-Core Verification
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P2-Core Verification
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+Migrate a legacy strategy snapshot to `qst-ir/0.4`:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P2c-core CSE happens only in the execution plan layer; canonical IR and P0/P1 hashes remain unchanged.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+qst migrate-ir strategies/kdj_cross_basic.qst.yaml --to qst-ir/0.4 --output out/kdj.v04.qst.yaml
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P3a-0 Lock Verification
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+QST has two accepted layers: the legacy P0-P4 foundation and Token System v2.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+### Legacy P0-P4 Foundation
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+- Stable YAML strategy loading and canonicalization for `qst-ir/0.3`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+- Three-layer legacy hashes: graph, param, and instance.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+- Universal port protocols, signal extraction, mock adapters, and mock P4b CLI
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+- Decision algebra with true monoids, fold policies, aggregators, and legacy
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+- Legacy strategy and legacy qstpkg migration tooling to v0.4 snapshots.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3a-0 verification reports `STRUCTURAL` and does not claim numerical output equivalence.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P3a-1 Package Verification
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+Legacy P0-P4 hashes remain frozen. The accepted reference hashes are recorded in
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+legacy hashes. Migration records legacy source hashes as lineage evidence and
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+  ir/                     legacy qst-ir/0.3 models, canonicalization, hashing
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+  migration_v2/           legacy-to-v0.4 migration tooling
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P3b Search And Fork Verification
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+  legacy examples and v0.4 P-Validate strategies
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst fork` is the only command that emits `qst-ir/0.3.1`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Existing commands preserve `qst-ir/0.3`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P4-Core Verification
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+python -m pytest tests/e2e/test_p0_p1_backward_compat.py tests/e2e/test_p2_p3_backward_compat.py -v
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:+- P4b-v2 external adapter design is deferred.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst backtest` builds a `.qstpkg` and inserts `BacktestEvidence` through the P4a-2 artifact extension.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst verify <pkg_dir>` validates package artifacts in addition to P3 lock/package checks.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/MIGRATION_P0_TO_P1_CORE.md b/docs/MIGRATION_P0_TO_P1_CORE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/MIGRATION_P0_TO_P1_CORE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# Migration From P0 To P1-Core
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P1-core is backward compatible with the frozen P0 baseline.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## Existing P0 Strategies
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-No changes are required for existing P0 strategies:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 token and recipe ids remain resolvable.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 CLI commands and flags remain compatible.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-Before promoting a strategy that emits `plan.order_intent`, make sure the graph contains an upstream `risk.*` token. P1-core provides `risk.position_cap` and `risk.notional_cap`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P0 Compatibility Check
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-pytest tests/e2e/test_p0_p1_backward_compat.py
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-The P0 `kdj_cross_basic` instance hash must match `docs/P0_ACCEPTANCE.md`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P0_ACCEPTANCE.md b/docs/P0_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P0_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P0 Acceptance Record
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0.1 hardening patches applied.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P1 has not started.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 vocabulary remains frozen at 17 tokens and 4 recipes.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## Frozen Reference Values (Immutable; P1 Forbidden To Alter)
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- ir_version:        qst-ir/0.3
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P0 tokens `(id, version, behavior_version)`:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P0 recipes `(id, version)`:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Total behavior contracts at P0 acceptance: 34
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Golden collection at P0 acceptance: 35 tests (34 contracts + registry smoke)
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-After P1 starts, this file becomes **append-only**. The "Frozen Reference Values" section above is locked. Any change to those values must be made via:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-2. The original P0 section preserved verbatim
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P1-Core Acceptance Candidate
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-### P0 Backward Compatibility
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `tests/e2e/test_p0_p1_backward_compat.py`: PASS locally
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 graph_hash / param_hash / instance_hash unchanged: PASS locally
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 frozen token triples remain resolvable: PASS locally
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 frozen recipe pairs remain resolvable: PASS locally
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-### P1-Core Vocabulary
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- New P1-core tokens:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- New P1-core recipes:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-### P1-Core Local Checks
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P0 Baseline After P1-core Acceptance
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P0 frozen baseline remains unchanged:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 token count: 17
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 recipe count: 4
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- IR version: qst-ir/0.3
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 backward compatibility: PASS
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P1-core: accepted
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P1-extended-a: completed
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P1-extended-b: deferred
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P2: not started
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P0_P1_BOUNDARY.md b/docs/P0_P1_BOUNDARY.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P0_P1_BOUNDARY.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P0 / P1 Boundary
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P0.1 Only Allows Hardening
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- README P0 verification
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-Not allowed in P0.1:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## Entry Criteria For P1
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P1 may start only after:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 roundtrip e2e passes
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `docs/P0_ACCEPTANCE.md` records green CI
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## Technical Invariants Locked At P0
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P1 PRs **must not modify** the following. Any PR touching them is a breaking change that requires:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `ir_version` constant: stays `"qst-ir/0.3"`
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- All 17 P0 token `(id, version, behavior_version)` triples remain valid (see `docs/P0_ACCEPTANCE.md`)
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- All 4 P0 recipe `(id, version)` pairs remain valid
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P1 may **add** new versions (e.g. `decision.reduce/v2`) but must not modify `v1`
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P1 may **add** new tokens / recipes but must not rename or remove P0 entries
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P1 may add new token definitions in existing P0 token modules when the existing P0 token code paths and behavior contracts remain unchanged
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `docs/JSON_SCHEMAS/token.schema.json`: append-only (P1 may add optional fields, not required ones)
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- The 6 P0 agent API signatures: unchanged (`discover`, `vocabulary`, `recipes`, `validate`, `execute`, `explain_ir`)
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- The 7 P0 CLI commands: existing flags remain compatible (P1 may add new flags as optional with defaults)
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- The 34 P0 behavior contracts: unchanged
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `tests/e2e/test_p0_p1_backward_compat.py` asserts:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-  - `kdj_cross_basic` instance_hash equals the P0 value in `docs/P0_ACCEPTANCE.md`
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-  - All P0 vocabulary triples still resolve from registries
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## How P1 PRs Self-Check
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-Before merging any P1 PR, author confirms:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- [ ] No existing P0 token behavior in `tokens/computation/{data,window,smooth,math,compare,logic,norm}.py` modified
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- [ ] No existing P0 token behavior in `tokens/infrastructure/{decision,plan}.py` modified
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- [ ] P1 token additions in existing modules are append-only and have separate contracts
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- [ ] `tests/e2e/test_p0_p1_backward_compat.py` passes
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P1_BOUNDARY.md b/docs/P1_BOUNDARY.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P1_BOUNDARY.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P1 Boundary
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-This document freezes the accepted P1-core scope and keeps P1-extended work out of the current baseline.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P1-Core Allowed
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P1-Core Not Allowed
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P1-Core Freeze
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P1-core is accepted. The following semantics are frozen unless an ADR explicitly authorizes change:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-No new indicators, FSM tokens, drawdown tokens, provenance tags, recipe generators, CSE, or kernel substitution may be added under P1-core.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P1-Extended-A Freeze
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P1-extended-a is limited to:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P1-extended-a does not add provenance, recipe generators, CSE, kernel substitution, new indicators, FSM, risk.max_loss, or drawdown controls.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P1-Extended-B Entry Criteria
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P1-extended-b may start only after:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `tests/e2e/test_p0_p1_backward_compat.py` passes
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst vocabulary --check` reports P0 baseline preserved and current 25/8 vocabulary
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `docs/P1_CORE_ACCEPTANCE.md` records green local checks and CI
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `docs/P1_EXTENDED_A_VALIDATORS.md` records green local checks
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 frozen hashes in `docs/P0_ACCEPTANCE.md` remain unchanged
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- [ ] No P0 frozen token or recipe behavior changed
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- [ ] No P1-extended token, recipe, or validator was introduced
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- [ ] P1-core CLI JSON contracts remain compatible
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- [ ] P0 and P1-core e2e tests pass
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P1_CORE_ACCEPTANCE.md b/docs/P1_CORE_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P1_CORE_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P1-Core Acceptance Record
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P1-core library layer is implemented. P1-core CLI/e2e/docs are accepted. P1-extended-a was added afterward as a pre-P2 validator hardening step. P1-extended-b is not started.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P1-core token vocabulary and recipes
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- TA indicator expansion beyond P1-core
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## Frozen P0 Compatibility
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P0 frozen values remain unchanged. See `docs/P0_ACCEPTANCE.md`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-pytest tests/e2e/test_p0_p1_backward_compat.py
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P1-Core Reference Hashes
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 frozen tokens: 17
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 frozen recipes: 4
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P1-core total tokens: 25
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P1-core total recipes: 8
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P1-core additions:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `ir_version` remains `qst-ir/0.3`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P1-core promotion changes only the deployment envelope.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## After P1-Extended-A
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P1-core remains accepted.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P1-extended-a added:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P0 / P1-core compatibility:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P1-extended-a CI:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P1-extended-b and P2 remain deferred.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P2A0_GATE_ACCEPTANCE.md b/docs/P2A0_GATE_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P2A0_GATE_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P2a-0 Gate Acceptance Record
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P2a-0 hard gate passed for the `indicator.ewm` provenance spike.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `python -m pytest tests/e2e/test_p0_p1_backward_compat.py -v`: PASS
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 `kdj_cross_basic` graph_hash unchanged: PASS
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 `kdj_cross_basic` param_hash unchanged: PASS
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 `kdj_cross_basic` instance_hash unchanged: PASS
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P1-core `examples_kdj_with_ema_filter` graph_hash unchanged: PASS
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P1-core `examples_kdj_with_ema_filter` param_hash unchanged: PASS
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P1-core `examples_kdj_with_ema_filter` instance_hash unchanged: PASS
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-No primitive token, recipe, TagSpec, recipe generator, mutation engine, CSE/runtime cache, or kernel substitution was added in P2a-0.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P2A2_GENERATOR_ACCEPTANCE.md b/docs/P2A2_GENERATOR_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P2A2_GENERATOR_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P2a-2 Generator Acceptance Record
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P2a-2 recipe generator accepted.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P2a-3 composition validation.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P2b-1 advanced mutation.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P2c-extended kernel substitution.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `python -m pytest tests/e2e/test_p0_p1_backward_compat.py -v`: PASS
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 frozen baseline: 17 tokens, 4 recipes, preserved.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P1-core baseline: 25 tokens, 8 recipes, preserved.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- New P2a-2 recipe: `signals.dual_ema_cross/v1`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P0 `strategies/kdj_cross_basic.qst.yaml`:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P1-core `strategies/examples_kdj_with_ema_filter.qst.yaml`:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P2a-2 adds deterministic recipe generation and one algorithm recipe only. It does not add a primitive token, kernel, recipe generator runtime execution, P2a-3 composition validation, advanced mutation, or kernel substitution.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P2A3_COMPOSITION_VALIDATION_ACCEPTANCE.md b/docs/P2A3_COMPOSITION_VALIDATION_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P2A3_COMPOSITION_VALIDATION_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P2a-3 Composition Validation Acceptance Record
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P2a-3 composition validation accepted.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P2b-1 advanced mutation.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P2c-extended kernel substitution.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `python -m pytest tests/e2e/test_p0_p1_backward_compat.py -v`: PASS
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P0 `strategies/kdj_cross_basic.qst.yaml`:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P1-core `strategies/examples_kdj_with_ema_filter.qst.yaml`:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P2a-3 full verification is empirical, not formal. It does not change P0/P1 hash material, canonicalization, primitive vocabulary, algorithm recipe vocabulary, advanced mutation, or kernel substitution policy.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P2B1_ADVANCED_MUTATION_ACCEPTANCE.md b/docs/P2B1_ADVANCED_MUTATION_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P2B1_ADVANCED_MUTATION_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P2b-1 Advanced Mutation Acceptance Record
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P2b-1 advanced mutation accepted.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `python -m pytest tests/e2e/test_p0_p1_backward_compat.py -v`: PASS
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P0 `strategies/kdj_cross_basic.qst.yaml`:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P1-core `strategies/examples_kdj_with_ema_filter.qst.yaml`:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P2b-1 adds advanced mutation operations only. It does not change canonicalization, hash material, token vocabulary, recipe vocabulary, CSE behavior, or kernel substitution policy.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P2C_CORE_ACCEPTANCE.md b/docs/P2C_CORE_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P2C_CORE_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P2c-core Acceptance Record
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P2c-core accepted.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P2a-2 recipe generator.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P2a-3 composition validation.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P2b-1 advanced mutation.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P2c-extended kernel substitution.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `python -m pytest tests/e2e/test_p0_p1_backward_compat.py -v`: PASS
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P0 `strategies/kdj_cross_basic.qst.yaml`:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P1-core `strategies/examples_kdj_with_ema_filter.qst.yaml`:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- cache metadata is written only to trace/debug output, not to canonical Strategy Content IR or P0/P1 hash material
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P2c-core CSE is implemented only in the Execution Plan layer. No canonicalization CSE, recipe generator, advanced mutation, kernel substitution, new primitive token, or new recipe was added.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P2C_EXTENDED_ACCEPTANCE.md b/docs/P2C_EXTENDED_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P2C_EXTENDED_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P2c-extended Acceptance Record
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P2c-extended kernel substitution spike accepted.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `python -m pytest tests/e2e/test_p0_p1_backward_compat.py -v`: PASS
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P0 `strategies/kdj_cross_basic.qst.yaml`:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P1-core `strategies/examples_kdj_with_ema_filter.qst.yaml`:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P2_FINAL_CODE_AUDIT.md b/docs/P2_FINAL_CODE_AUDIT.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P2_FINAL_CODE_AUDIT.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P2 Final Code Audit
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-PASS. No blocking issue found in the accepted P2 implementation.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P0 / P1 Baseline
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 token triples remain resolvable.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 recipe pairs remain resolvable.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 `kdj_cross_basic` graph, param, and instance hashes match the frozen values.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P1-core `examples_kdj_with_ema_filter` graph, param, and instance hashes match the accepted values.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `tests/e2e/test_p0_p1_backward_compat.py` passes locally and in CI.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P2a Audit
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P2a-0 provenance is limited to `indicator.ewm/v1` recipe expansion.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P2b Audit
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P2c Audit
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 CLI commands remain compatible.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P1 CLI/API additions remain compatible.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P2 CLI additions are additive: `tag verify`, `recipe expand`, `diff`, `mutate`, `fingerprint`, `kernel plan`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P2 agent additions are additive: `tagspec_get`, `tagspec_verify`, `recipe_expand`, `diff`, `mutate`, `fingerprint`, `kernel_plan`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P2 is accepted through P2c-extended. The following remain out of scope:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P1-extended-b FSM.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P3A0_LOCK_GATE_ACCEPTANCE.md b/docs/P3A0_LOCK_GATE_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P3A0_LOCK_GATE_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P3a-0 Lock Gate Acceptance Record
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P3a-0 lock hard gate accepted.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3a-1 package format.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3b search index.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3b fork lineage and `qst-ir/0.3.1` output.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `python -m pytest tests/e2e/test_p0_p1_backward_compat.py -v`: PASS
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P0 `strategies/kdj_cross_basic.qst.yaml`:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P1-core `strategies/examples_kdj_with_ema_filter.qst.yaml`:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3a-0 commands do not rewrite `qst-ir/0.3` to `qst-ir/0.3.1`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P3a-0 is accepted as a lock hard gate only. Package, search, fork lineage, and `qst-ir/0.3.1` remain not started.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P3A1_PACKAGE_ACCEPTANCE.md b/docs/P3A1_PACKAGE_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P3A1_PACKAGE_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P3a-1 Package Acceptance Record
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P3a-1 package format accepted.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3b search index.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3b fork lineage and `qst-ir/0.3.1` output.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P3a-1 packages are directory packages, not archives.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `python -m pytest tests/e2e/test_p0_p1_backward_compat.py -v`: PASS, 5 tests
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P0 `strategies/kdj_cross_basic.qst.yaml`:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P1-core `strategies/examples_kdj_with_ema_filter.qst.yaml`:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst package`, `qst unpack`, and `qst verify` do not rewrite `qst-ir/0.3` to `qst-ir/0.3.1`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P3a-1 is accepted as a package format and package verification stage only. Search, fork lineage, `qst-ir/0.3.1`, and numerical output equivalence remain not started.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P3B0_SEARCH_ACCEPTANCE.md b/docs/P3B0_SEARCH_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P3B0_SEARCH_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P3b-0 Search Acceptance Record
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P3b-0 search and IndexRecord accepted.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- CI explicit P3b-0 test step.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `python -m pytest tests/e2e/test_p0_p1_backward_compat.py -v`: PASS
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P3b-0 is accepted as read-only field-filter search only. It does not introduce a persistent index, full-text search, package catalog search, or any mutation/fork behavior.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P3B1_FORK_ACCEPTANCE.md b/docs/P3B1_FORK_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P3B1_FORK_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P3b-1 Fork Acceptance Record
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P3b-1 fork and lineage metadata accepted.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Additive `qst-ir/0.3.1` support.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- CI explicit P3b-1 test step.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Any change to P0/P1/P2 canonical or hash algorithms.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `python -m pytest tests/e2e/test_p0_p1_backward_compat.py -v`: PASS
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Loader accepts both `qst-ir/0.3` and `qst-ir/0.3.1`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst-ir/0.3` with `derived_from` is rejected.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst fork` writes YAML with `ir_version: qst-ir/0.3.1`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Mutating `qst-ir/0.3` preserves `qst-ir/0.3` and does not add lineage.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Mutating forked `qst-ir/0.3.1` appends the operation JSON to `derived_from.mutation_chain`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-`qst fork` and `agent.fork()` are the only P3b-1 paths that intentionally emit `qst-ir/0.3.1`. Existing commands continue preserving `qst-ir/0.3`. Lineage is inert metadata and is excluded from validation semantics, execution behavior, trace semantics, graph/param/instance hash material, and execution fingerprint material.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P3_FINAL_ACCEPTANCE.md b/docs/P3_FINAL_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P3_FINAL_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P3 Final Acceptance Record
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P3 accepted.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3a-0 lock hard gate.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3a-1 package format.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3b-0 search and `IndexRecord`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3b-1 fork lineage and `qst-ir/0.3.1`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P3 provides:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst fork` as the only command that emits `qst-ir/0.3.1`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P3 does not provide:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4+ full-text search;
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- automatic upgrade from `qst-ir/0.3` to `qst-ir/0.3.1`;
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- changes to P0/P1/P2 token semantics, recipes, canonicalization, hashing, execution fingerprints, mutation semantics, or kernel behavior.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-The final local P3 gate was run before this record was committed:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `python -m pytest tests/e2e/test_p0_p1_backward_compat.py -v`: PASS
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-Latest P3 stage CI runs:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3b-0 implementation: https://github.com/waswrsis/Quant-Strategy-Tokenizer/actions/runs/25876104394, PASS
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3b-0 acceptance: https://github.com/waswrsis/Quant-Strategy-Tokenizer/actions/runs/25876300094, PASS
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3b-1 implementation: https://github.com/waswrsis/Quant-Strategy-Tokenizer/actions/runs/25876916903, PASS
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3b-1 acceptance: https://github.com/waswrsis/Quant-Strategy-Tokenizer/actions/runs/25877113522, PASS
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-The final acceptance documentation commit must also pass the standard CI workflow before P3 is considered closed on `main`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P3 is accepted as a structural packaging, verification, search, and lineage layer. P0/P1/P2 frozen behavior remains preserved.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P3_FINAL_CODE_AUDIT.md b/docs/P3_FINAL_CODE_AUDIT.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P3_FINAL_CODE_AUDIT.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P3 Final Code Audit
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-This audit covers the accepted P3 implementation:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3a-0 deterministic lock and structural verify.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3a-1 package/unpack/package verify.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3b-0 search/index records.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3b-1 fork/lineage.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P0/P1/P2 Baseline
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 token and recipe baseline remains guarded by `tests/e2e/test_p0_p1_backward_compat.py`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 and P1 reference hashes remain unchanged.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst-ir/0.3` remains the default IR version for existing commands.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst-ir/0.3.1` is emitted only by `qst fork` / `agent.fork()`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Hashing and execution fingerprint material remain positive-list based and ignore P3 lineage metadata.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P3a Lock And Package
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P3b Search
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P3b Fork And Lineage
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst-ir/0.3` rejects `derived_from`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst-ir/0.3.1` accepts `derived_from`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3 public CLI surfaces are present: `lock`, `verify`, `package`, `unpack`, `search`, and `fork`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3 agent API surfaces are present: `lock`, `verify`, `package`, `unpack`, `verify_package`, `search`, and `fork`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `agent.discover()` advertises the P3 surfaces.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0/P1/P2 CLI commands remain compatible.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Latest P3b-1 acceptance CI: https://github.com/waswrsis/Quant-Strategy-Tokenizer/actions/runs/25877113522, PASS.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- CI explicitly runs P0 compatibility, P3a lock, P3a package, P3b search, and P3b fork tests.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3 verification remains structural / trace-semantic, not numerical.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P3 is acceptable for closure. No blocking issue was found in the P3 lock/package/search/fork implementation, and P0/P1/P2 frozen behavior remains preserved.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P4A0_ARTIFACT_GATE_ACCEPTANCE.md b/docs/P4A0_ARTIFACT_GATE_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P4A0_ARTIFACT_GATE_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P4a-0 Artifact Schema Hard Gate Acceptance
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4a-0 artifact schema hard gate accepted.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4a-1 frame, P4a-2 qstpkg artifact extension, P4b ports/adapters, and P4d semantic detokenize are not started.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3 `canonical_lock_bytes()` remains a thin wrapper over byte-compatible canonical JSON.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4 artifact base models added:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4a-0 does not change `qst execute`, strategy canonicalization, strategy hashing, lock verification, package verification, search, fork, mutation, CSE, or kernel behavior.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Pre-flight fixture scan found decimal-looking strings only in non-P4 artifact fixture contexts; no migration was required.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-Result: P0/P1/P2/P3 hash baselines preserved.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-python -m pytest tests/e2e/test_p0_p1_backward_compat.py tests/e2e/test_p2_p3_backward_compat.py -v
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 backward compatibility
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P2/P3 backward compatibility
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4a-0 canonical JSON, artifact schema, and toy e2e tests
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3 lock/package/search/fork regression tests
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4a-0 is a schema and identity hard gate only.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P4A0_PREFLIGHT.md b/docs/P4A0_PREFLIGHT.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P4A0_PREFLIGHT.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P4a-0 Pre-flight Record
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4a-0 pre-flight completed. P4a-0 code construction may start after this record is committed and CI passes.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4a-0 gate item 1 validates five JSON schemas:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Upgrading to `mypy --strict` as a command-line gate is out of scope for P4a-0 and requires a separate hardening PR.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `examples/sample_market_btc_15m.csv` is a P0/P1/P2/P3 market CSV fixture consumed as pandas numeric data, not a P4 artifact `DecimalString` field.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `docs/contracts/indicator.ewm.contracts.yaml` is a composition contract fixture, not a P4 artifact `DecimalString` field.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `docs/fuzzing/indicator.ewm.ci_standard.json` is a fuzzing report fixture, not a P4 artifact `DecimalString` field.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- No migration is required before P4a-0 code construction.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P2/P3 regression command:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-python -m pytest tests/e2e/test_p0_p1_backward_compat.py tests/qst_lock tests/package tests/agent tests/e2e/test_p3a0_lock_spike.py tests/e2e/test_p3a1_package_roundtrip.py tests/e2e/test_p3b0_search.py tests/e2e/test_p3b1_fork.py -q
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P0/P1 hash smoke:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P4a-0 Start Conditions
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4 ADR exists: PASS
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0/P1/P2/P3 regression entrypoint confirmed: PASS
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3 stable JSON byte compatibility must be tested in P4a-0 code PR: PENDING
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Five artifact schemas must be validated in P4a-0 code PR: PENDING
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-This pre-flight record does not implement P4a-0 artifacts. The previously drafted local P4a-0 spike code is intentionally not part of this commit and remains local WIP until the pre-flight commit passes CI.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P4A1A_FRAME_ACCEPTANCE.md b/docs/P4A1A_FRAME_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P4A1A_FRAME_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P4a-1a Frame Model Minimal Acceptance
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4a-1a Frame Model Minimal accepted.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4a-1b Parquet/Arrow/pandas IO, P4a-1c strict multi-symbol alignment, P4a-2 qstpkg artifacts, P4b ports/adapters, and P4d semantic detokenize are not started.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Reused P4a-0 `DecimalString` for OHLCV, signal size, and feature values.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Did not change `qst execute`, strategy canonicalization, strategy hashing, P3 lock/package/search/fork behavior, mutation, CSE, or kernel behavior.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-Result: P0/P1/P2/P3/P4a-0 baselines preserved.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-python -m pytest tests/e2e/test_p0_p1_backward_compat.py tests/e2e/test_p2_p3_backward_compat.py -v
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4a-1a is limited to JSON/CSV minimal frame models and deterministic frame hashes.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P4A1B_FRAME_IO_ACCEPTANCE.md b/docs/P4A1B_FRAME_IO_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P4A1B_FRAME_IO_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P4a-1b Frame IO Extras Acceptance
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4a-1b Frame IO Extras accepted.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4a-1c strict alignment, P4a-2 qstpkg artifacts, P4b ports/adapters, and P4d semantic detokenize are not started.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-Result: P0/P1/P2/P3/P4a-0/P4a-1a baselines preserved.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-python -m pytest tests/e2e/test_p0_p1_backward_compat.py tests/e2e/test_p2_p3_backward_compat.py -v
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst vocabulary --check`: 25 tokens, 9 recipes, P0 baseline preserved.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4a-1b is limited to pandas, Arrow, and Parquet frame IO extras.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P4A1C_STRICT_ALIGNMENT_ACCEPTANCE.md b/docs/P4A1C_STRICT_ALIGNMENT_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P4A1C_STRICT_ALIGNMENT_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P4a-1c Strict Market Alignment Acceptance
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4a-1c Multi-Symbol Strict Alignment accepted.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4a-2 qstpkg artifacts, P4b ports/adapters, and P4d semantic detokenize are not started.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4a-1b toy MarketFrame hash remains unchanged:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4a-1b toy FeatureFrame hash remains unchanged:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-Result: P4a-1c strict alignment did not change accepted P4a-1b frame hash evidence.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-Result: P0/P1/P2/P3/P4a-0/P4a-1a/P4a-1b baselines preserved.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-python -m pytest tests/e2e/test_p0_p1_backward_compat.py tests/e2e/test_p2_p3_backward_compat.py -v
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `python -m pytest tests/e2e/test_p0_p1_backward_compat.py tests/e2e/test_p2_p3_backward_compat.py -v`: 8 passed.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst vocabulary --check`: 25 tokens, 9 recipes, P0 baseline preserved.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4a-1c is limited to strict OHLCV market frame alignment and frame hash stability coverage.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P4A2_QSTPKG_ARTIFACTS_ACCEPTANCE.md b/docs/P4A2_QSTPKG_ARTIFACTS_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P4A2_QSTPKG_ARTIFACTS_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P4a-2 qstpkg Artifacts Extension Acceptance
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4a-2 qstpkg Artifacts Extension accepted.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4b ports/adapters, P4d semantic detokenize, submit-plan, and poll-execution are not started.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Added an optional `artifacts` section to P3 `.qstpkg` manifests.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Added package helpers for adding P4 artifact JSON files to a package.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Did not change P3 `qst.lock` bytes, lock schema, strategy hashes, runtime execution, mutation, search, fork, CSE, or kernel behavior.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-Legacy P3 package manifests without `artifacts` remain valid under both Pydantic model validation and the draft 2020-12 package manifest schema.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-Result: P0/P1/P2/P3/P4a-0/P4a-1a/P4a-1b/P4a-1c baselines preserved.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-python -m pytest tests/e2e/test_p0_p1_backward_compat.py tests/e2e/test_p2_p3_backward_compat.py -v
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `python -m pytest tests/e2e/test_p0_p1_backward_compat.py tests/e2e/test_p2_p3_backward_compat.py -v`: 8 passed.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst vocabulary --check`: 25 tokens, 9 recipes, P0 baseline preserved.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-CI explicitly ran P0 backward compatibility, P2/P3 backward compatibility, P4a-0 artifact tests, frame tests, qst lock tests, package tests, search/fork tests, and the full coverage gate.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4a-2 is limited to additive package artifact manifest support and artifact verification.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P4B0_PORTS_ACCEPTANCE.md b/docs/P4B0_PORTS_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P4B0_PORTS_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P4b-0 Port Protocols + SignalExtractionPolicy Acceptance
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4b-0 is accepted.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4b-1 mock adapters and CLI commands.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4d semantic detokenize.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4b-0 did not change:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3 lock/package/search/fork behavior.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0/P1/P2/P3/P4a accepted baselines.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 baseline preserved.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `python -m pytest tests/e2e/test_p0_p1_backward_compat.py tests/e2e/test_p2_p3_backward_compat.py -v`: PASS, 8 passed.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4b-0 intentionally stops at protocols, signal extraction, and local discovery primitives. It does not prove external adapter behavior, broker semantics, backtest engine equivalence, or numerical execution equivalence.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P4B1_MOCK_ADAPTERS_ACCEPTANCE.md b/docs/P4B1_MOCK_ADAPTERS_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P4B1_MOCK_ADAPTERS_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P4b-1 Mock Adapters + CLI Acceptance
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4b-1 is accepted.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4b CLI commands:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4c external adapter repositories.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4d semantic detokenize.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- CSV and Parquet market adapters load P4 `MarketFrame` data.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst backtest` builds a qstpkg and adds `BacktestEvidence` through the P4a-2 artifact extension.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 baseline preserved.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `python -m pytest tests/e2e/test_p0_p1_backward_compat.py tests/e2e/test_p2_p3_backward_compat.py -v`: PASS, 8 passed.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4b-1 did not change:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3 lock/package/search/fork behavior.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0/P1/P2/P3/P4a accepted baselines.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P4_CORE_ACCEPTANCE.md b/docs/P4_CORE_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P4_CORE_ACCEPTANCE.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P4-Core Acceptance Record
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4-core is accepted.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4a-0 Artifact Schema Hard Gate
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4a-1a Frame Model Minimal
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4a-1b Frame I/O Extras
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4a-1c Multi-symbol Strict Alignment
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4a-2 qstpkg Artifacts Extension
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4b-0 Port Protocols + SignalExtractionPolicy
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4b-1 Mock Adapters + CLI
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4-core adds the universal artifact, frame, package-artifact, port, and mock-adapter layer.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Five local mock adapters and P4b CLI commands.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4c real adapter repositories.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4d semantic detokenize.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Changes to P0/P1/P2/P3 canonicalization, hashing, lock, package, search, fork, mutation, CSE, or kernel behavior.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 baseline preserved.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4b CLI coverage confirms:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst backtest` builds a qstpkg and inserts BacktestEvidence through the P4a-2 artifact extension.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `python -m pytest tests/e2e/test_p0_p1_backward_compat.py tests/e2e/test_p2_p3_backward_compat.py -v`: PASS, 8 passed.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-Latest P4b-1 acceptance CI before this final record:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-The P4-core acceptance commit must also pass GitHub Actions before P4-core is considered operationally closed.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4-core is accepted as the artifact/frame/package-artifact/port/mock-adapter layer.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4c real adapters and P4d semantic detokenize remain explicitly not started.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:diff --git a/docs/P4_FINAL_CODE_AUDIT.md b/docs/P4_FINAL_CODE_AUDIT.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:--- a/docs/P4_FINAL_CODE_AUDIT.md
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-# P4 Final Code Audit
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-This audit covers the accepted P4-core stages:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4a-0 Artifact Schema Hard Gate
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4a-1a Frame Model Minimal
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4a-1b Frame I/O Extras
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4a-1c Multi-symbol Strict Alignment
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4a-2 qstpkg Artifacts Extension
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4b-0 Port Protocols + SignalExtractionPolicy
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4b-1 Mock Adapters + CLI
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-It does not audit any unstarted P4c real adapter repository or P4d semantic detokenize work.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P0-P3 Baseline
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0 backward compatibility tests pass.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P2/P3 backward compatibility tests pass.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0/P1 frozen strategy hashes remain unchanged.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst vocabulary --check` reports 25 tokens, 9 recipes, and preserved P0 baseline.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst execute` behavior was not modified by P4-core stages.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3 lock/package/search/fork tests pass after P4-core.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4-core remains additive over Strategy Content IR and does not change canonicalization or three-layer hash algorithms.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P4a Artifacts, Frames, And Package Artifacts
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Package artifact extension tests pass and legacy packages without artifact sections remain valid.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4a package artifact support is additive and does not alter `qst.lock` bytes or package version.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## P4b Ports, Mock Adapters, And CLI
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- No production broker, exchange, backtest engine, ML tracking service, or network adapter is included in P4-core.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P3 lock tests pass after P4-core.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Package verification tests pass after P4-core.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4-core does not add artifact, frame, adapter, or port metadata to strategy hash material.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Existing P0/P1/P2/P3 CLI tests pass.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4b CLI commands are separate from `qst execute`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4b introduces new CLI surfaces without changing the old execution path.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Focused P0/P2/P3/P4 regression groups: PASS.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4 artifact/frame/package/port/adapter/CLI groups: PASS.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4b-1 acceptance GitHub Actions run: https://github.com/waswrsis/Quant-Strategy-Tokenizer/actions/runs/25891708451
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-The P4-core acceptance commit must pass GitHub Actions before this audit is treated as final.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4-core does not prove numerical output equivalence.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4-core mock adapters are not production integrations.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4c real adapters are intentionally external to this repository.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4d semantic detokenize has not started.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-Status: WP0-WP10 and final Token System v2 acceptance are accepted under the v1.0.3 standard. Security and semantic cleanup blockers have been fixed before final acceptance.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| WP0 | ADR Gate | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| WP1 | qst-ir/0.4 shell + canonical/hash framework | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| WP2 | Structured TypeSpec + PortSpec | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| WP3 | PortTemporalSpec + PV-C | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| WP4 | NumericPolicy + TokenEvolutionPolicy | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| WP10 | Migration Tooling | accepted |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## WP0 Decisions
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP0 accepted six ADRs under the v1.0.3 construction standard:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst-ir/0.3` and `qst-ir/0.3.1` are legacy: load, verify, explain, migrate.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## WP1 Accepted Scope
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP1 adds the minimal Token System v2 kernel shell without changing accepted legacy behavior:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Read-only legacy loaders for `qst-ir/0.3`, `qst-ir/0.3.1`, and P3 `qst.lock`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP1 does not add TokenSpec v2, token pack loading, custom token runtime, migration tooling, or v0.4 CLI authoring.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## WP2 Accepted Scope
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP2 adds the structured type and port contract layer used by future TokenSpec v2 work:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `NodeV04.token_ref` with canonical `namespace`, `name`, `version`, and `behavior_version` fields while retaining WP1 compatibility fields.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `StrategyIRV04.capabilities` defaulting to `["core"]`; `panel` and `custom_token_runtime` capabilities produce v2 validation errors in WP2.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP2 does not add WP3 temporal rule resolution, TokenSpec v2 registry, token packs, migration tooling, runtime execution, Panel behavior, custom token runtime, or v0.4 CLI authoring.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## WP3 Accepted Scope
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP3 adds static temporal safety validation for `qst-ir/0.4` shell documents:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP3 does not add WP4 numeric policy, WP5 TokenSpec v2 registry, token packs, migration tooling, runtime execution, custom token runtime, or v0.4 CLI authoring.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## WP4 Accepted Scope
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP4 adds behavior-policy material required before TokenSpec v2 registry work:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- WP4 behavior material helper requiring `numeric_policy` and including lifecycle status in `behavior_hash_v2()` material.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP4 does not add WP5 TokenSpec v2 registry, token packs, registry resolution, recipe migration, runtime execution, custom token runtime, Panel behavior, or v0.4 CLI authoring.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP5b does not add custom token execution, source-tree packaging layout, WP6 state, migration tooling, runtime integration, Panel behavior, v0.4 CLI authoring, or legacy qst.lock behavior changes.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP6a does not add FSM behavior, state recipes, PV-A artifacts, legacy runtime execution, migration tooling, Panel behavior, custom token runtime, or v0.4 CLI authoring.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP6b does not add state recipes, PV-A artifacts, legacy runtime execution, migration tooling, Panel behavior, custom token runtime, or v0.4 CLI authoring.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP6c does not add legacy recipes, v0.4 runtime execution, Decision Algebra, Panel behavior, custom token runtime, migration tooling, or v0.4 CLI authoring.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP7 does not add legacy runtime execution, legacy token registration, strategy mutation, CLI migration tooling, Panel behavior, custom token runtime, or v0.4 CLI authoring.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- The WP2 `TypeSpec` Panel shell field set is frozen and unchanged.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP8c does not add Panel recipes, weight normalization, exposure constraints, market-neutral logic, adapters, migration tooling, legacy runtime execution, or v0.4 CLI authoring.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP8d does not solve simultaneous gross/cap constraints, create orders, create execution reports, add risk controls, add portfolio optimizers, add Panel recipes, add adapters, add migration tooling, add legacy runtime execution, or add v0.4 CLI authoring.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP8e does not enable `panel_recipes`, add Panel recipe TokenSpecs or TokenPacks, add a legacy recipe registry entry, add runtime execution, add adapters, add migration tooling, or add v0.4 CLI authoring.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP9 does not add a sandbox, WP10 migration, broad v0.4 strategy runtime, portable qstpkg trust, broker/exchange execution, or production-grade custom token isolation.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## WP10 Accepted Scope
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP10 accepts the migration boundary from legacy IR into the active `qst-ir/0.4` authoring target:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst migrate-ir` migrates `qst-ir/0.3` and `qst-ir/0.3.1` strategy YAML to `qst-ir/0.4`, with optional canonical JSON, lock, and report outputs.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `qst migrate-package` migrates legacy qstpkg directories to qst-ir/0.4 package snapshots while preserving fixture and dependency material.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Migrated strategies record `derived_from.kind=ir_migration`, source IR version, source strategy identity, source instance hash, target core registry hash, and `migration_tool_version=qst-migrate/0.4.0`.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `target_core_registry_hash` binds migration output to the accepted legacy registry identities and accepted v2 core TokenPack hashes.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `decision.reduce` migration is limited to WP7-classified exact mappings; unsupported legacy semantics produce diagnostics instead of silent rewrites.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- `verify_package()` accepts migrated qst-lock/0.4 snapshots through the v0.4 verification path while legacy qstpkg verification remains unchanged.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-WP10 does not add broad v0.4 runtime execution, semantic equivalence proof, numerical equivalence proof, P4b-v2 adapters, sandboxing, production custom-token isolation, or changes to legacy canonical/hash behavior.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-| PV-C | WP3 | Temporal safety strategy |
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-## Legacy And P4 Boundary
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-The accepted P0-P4 core remains stable:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P0/P1/P2/P3/P4 frozen hashes do not drift.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4a artifacts, frames, qstpkg, and package artifact extension are retained.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4b-old ports, signal extraction, mock adapters, and CLI are accepted legacy infrastructure.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- P4b-old is superseded for future adapter expansion by Token System v2.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-P4b-v2 is deferred as a standalone design after Token System v2 acceptance.
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-Future P4b-v2 design must target:
+.\docs\cleanline\PRE_RESET_WORKTREE_DIFF.patch:-- Accepted legacy packages and locks remain verifiable through the legacy path.
+.\docs\JSON_SCHEMAS\qst_lock_0_4.schema.json:    "legacy_source": {
+.\docs\JSON_SCHEMAS\qst_lock_0_4.schema.json:          "enum": ["qst-ir/0.3", "qst-ir/0.3.1"]
+.\quant_strategy_tokenizer\ir_v04\temporal_validation.py:"""Temporal validation for qst-ir/0.4 WP3."""
+.\quant_strategy_tokenizer\ir_v04\schema.py:WP1 established the independent v0.4 identity. WP2 adds structured signature
+.\quant_strategy_tokenizer\ir_v04\schema.py:and canonical token reference shells without connecting legacy runtime paths.
+.\quant_strategy_tokenizer\ir_v04\schema.py:MIGRATION_TOOL_VERSION_V04: Literal["qst-migrate/0.4.0"] = "qst-migrate/0.4.0"
+.\quant_strategy_tokenizer\ir_v04\schema.py:    """Historical lineage for a legacy-to-v0.4 IR migration."""
+.\quant_strategy_tokenizer\ir_v04\schema.py:    source_ir_version: Literal["qst-ir/0.3", "qst-ir/0.3.1"]
+.\quant_strategy_tokenizer\ir_v04\schema.py:    migration_tool_version: Literal["qst-migrate/0.4.0"] = MIGRATION_TOOL_VERSION_V04
+.\quant_strategy_tokenizer\ir_v04\legacy.py:"""Read-only legacy boundary helpers for Token System v2."""
+.\quant_strategy_tokenizer\ir_v04\legacy.py:def load_legacy_strategy(value: Mapping[str, Any] | str) -> StrategyIR:
+.\quant_strategy_tokenizer\ir_v04\legacy.py:    """Load a qst-ir/0.3 or qst-ir/0.3.1 strategy without upgrading it."""
+.\quant_strategy_tokenizer\ir_v04\legacy.py:            raise ValueError("legacy strategy document must be a mapping")
+.\quant_strategy_tokenizer\ir_v04\legacy.py:            raise ValueError(f"unsupported legacy ir_version: {version!r}")
+.\quant_strategy_tokenizer\ir_v04\legacy.py:            raise ValueError(f"unsupported legacy ir_version: {version!r}")
+.\quant_strategy_tokenizer\ir_v04\legacy.py:def load_legacy_strategy_file(path: str | Path) -> StrategyIR:
+.\quant_strategy_tokenizer\ir_v04\legacy.py:    """Load a legacy strategy from disk without migration."""
+.\quant_strategy_tokenizer\ir_v04\legacy.py:    return load_legacy_strategy(Path(path).read_text(encoding="utf-8"))
+.\quant_strategy_tokenizer\ir_v04\legacy.py:def load_legacy_lock(value: Mapping[str, Any] | str) -> LockFile:
+.\quant_strategy_tokenizer\ir_v04\legacy.py:    """Load a P3 qst.lock without requiring v0.4-only fields."""
+.\quant_strategy_tokenizer\ir_v04\legacy.py:            raise ValueError("legacy qst.lock must be a JSON object")
+.\quant_strategy_tokenizer\ir_v04\legacy.py:def load_legacy_lock_file(path: str | Path) -> LockFile:
+.\quant_strategy_tokenizer\ir_v04\legacy.py:    """Load a P3 qst.lock from canonical JSON bytes."""
+.\quant_strategy_tokenizer\ir_v04\legacy.py:    return load_legacy_lock(Path(path).read_text(encoding="utf-8"))
+.\quant_strategy_tokenizer\ir_v04\canonical.py:    This function is deliberately independent from the legacy canonicalizer.
+.\quant_strategy_tokenizer\ir_v04\canonical.py:    It only sorts and normalizes the minimal v0.4 shell introduced in WP1.
+.\tests\cli\test_cli_p1.py:from tests.ir.p1_fixtures import P1_MISSING_RISK_PATH_YAML, P1_PRETRADE_READY_YAML
+.\tests\cli\test_cli_p1.py:    strategy.write_text(P1_PRETRADE_READY_YAML, encoding="utf-8")
+.\tests\cli\test_cli_p1.py:    strategy.write_text(P1_MISSING_RISK_PATH_YAML, encoding="utf-8")
+.\tests\cli\test_cli_p1.py:    strategy.write_text(P1_MISSING_RISK_PATH_YAML, encoding="utf-8")
+.\tests\cli\test_cli_p1.py:        ir_version="qst-ir/0.3",
+.\tests\decision_v2\test_legacy_migration.py:    classify_legacy_decision_reduce,
+.\tests\decision_v2\test_legacy_migration.py:    map_legacy_decision_kind,
+.\tests\decision_v2\test_legacy_migration.py:def test_legacy_decision_kind_mapping() -> None:
+.\tests\decision_v2\test_legacy_migration.py:    assert map_legacy_decision_kind("accept").v04_kind == "accept"
+.\tests\decision_v2\test_legacy_migration.py:    assert map_legacy_decision_kind("reject").v04_kind == "reject"
+.\tests\decision_v2\test_legacy_migration.py:    assert map_legacy_decision_kind("unknown").v04_kind == "unknown"
+.\tests\decision_v2\test_legacy_migration.py:    assert map_legacy_decision_kind("abstain").v04_kind == "unknown"
+.\tests\decision_v2\test_legacy_migration.py:    assert map_legacy_decision_kind("block").v04_kind == "block"
+.\tests\decision_v2\test_legacy_migration.py:    error = map_legacy_decision_kind("error")
+.\tests\decision_v2\test_legacy_migration.py:def test_legacy_reduce_supported_mappings() -> None:
+.\tests\decision_v2\test_legacy_migration.py:        classify_legacy_decision_reduce(
+.\tests\decision_v2\test_legacy_migration.py:        classify_legacy_decision_reduce(
+.\tests\decision_v2\test_legacy_migration.py:        classify_legacy_decision_reduce(
+.\tests\decision_v2\test_legacy_migration.py:        classify_legacy_decision_reduce(
+.\tests\decision_v2\test_legacy_migration.py:def test_legacy_reduce_non_migratable_cases_are_diagnostics() -> None:
+.\tests\decision_v2\test_legacy_migration.py:    ambiguous = classify_legacy_decision_reduce(
+.\tests\decision_v2\test_legacy_migration.py:    error_policy = classify_legacy_decision_reduce(
+.\docs\JSON_SCHEMAS\strategy_ir.schema.json:    "ir_version": {"enum": ["qst-ir/0.3", "qst-ir/0.3.1"]},
+.\quant_strategy_tokenizer\ports_v2\temporal.py:    """Resolve a WP3 TemporalRule into a PortTemporalSpec."""
+.\quant_strategy_tokenizer\ports_v2\temporal.py:        raise TemporalRuleResolutionError("event_time cannot be ordered in WP3 max_inputs")
+.\quant_strategy_tokenizer\ports_v2\port_spec.py:    WP2 only stores this data. WP3 owns temporal rule resolution and validation.
+.\quant_strategy_tokenizer\ports_v2\port_spec.py:    """Declarative temporal rule shell for WP3 resolution."""
+.\tests\e2e\test_wp10_migration.py:def test_migrate_ir_cli_writes_v04_outputs(tmp_path: Path) -> None:
+.\tests\e2e\test_wp10_migration.py:            "migrate-ir",
+.\tests\e2e\test_wp10_migration.py:    migrated = yaml.safe_load(output.read_text(encoding="utf-8"))
+.\tests\e2e\test_wp10_migration.py:    assert migrated["ir_version"] == "qst-ir/0.4"
+.\tests\e2e\test_wp10_migration.py:    assert migrated["derived_from"]["kind"] == "ir_migration"
+.\tests\e2e\test_wp10_migration.py:    assert migrated["derived_from"]["source_instance_hash"] == payload["source_instance_hash"]
+.\tests\e2e\test_wp10_migration.py:def test_migrate_package_cli_verifies_and_detects_tamper(tmp_path: Path) -> None:
+.\tests\e2e\test_wp10_migration.py:    legacy_package = tmp_path / "legacy.qstpkg"
+.\tests\e2e\test_wp10_migration.py:    migrated_package = tmp_path / "migrated.qstpkg"
+.\tests\e2e\test_wp10_migration.py:    packaged = runner.invoke(app, ["package", str(KDJ), "--output", str(legacy_package)])
+.\tests\e2e\test_wp10_migration.py:    migrated = runner.invoke(
+.\tests\e2e\test_wp10_migration.py:            "migrate-package",
+.\tests\e2e\test_wp10_migration.py:            str(legacy_package),
+.\tests\e2e\test_wp10_migration.py:            str(migrated_package),
+.\tests\e2e\test_wp10_migration.py:    assert migrated.exit_code == 0, migrated.output
+.\tests\e2e\test_wp10_migration.py:    migrated_payload = json.loads(migrated.output)
+.\tests\e2e\test_wp10_migration.py:    assert migrated_payload["source_instance_hash"] != migrated_payload["target_instance_hash"]
+.\tests\e2e\test_wp10_migration.py:    verified = runner.invoke(app, ["verify", str(migrated_package)])
+.\tests\e2e\test_wp10_migration.py:    (migrated_package / "strategies" / "canonical.json").write_text("{}", encoding="utf-8")
+.\tests\e2e\test_wp10_migration.py:    tampered = runner.invoke(app, ["verify", str(migrated_package)])
+.\tests\e2e\test_p1_extended_a_validators.py:ir_version: qst-ir/0.3
+.\tests\e2e\test_p1_extended_a_validators.py:def test_p0_p1_backward_compatibility_still_available() -> None:
+.\tests\e2e\test_p1_extended_a_validators.py:    assert "P0 frozen baseline:" in result.output
+.\tests\e2e\test_p1_core_regression.py:P1_STRATEGY = ROOT / "strategies" / "examples_kdj_with_ema_filter.qst.yaml"
+.\tests\e2e\test_p1_core_regression.py:P0_STRATEGY = ROOT / "strategies" / "kdj_cross_basic.qst.yaml"
+.\tests\e2e\test_p1_core_regression.py:        ["promote", str(P1_STRATEGY), "--to", "pretrade", "--output", str(output)],
+.\tests\e2e\test_p1_core_regression.py:    result = runner.invoke(app, ["promote", str(P0_STRATEGY), "--to", "pretrade"])
+.\tests\e2e\test_p1_core_regression.py:            str(P1_STRATEGY),
+.\tests\e2e\test_p1_core_regression.py:            str(P1_STRATEGY),
+.\tests\e2e\test_p1_core_pretrade.py:P1_STRATEGY = ROOT / "strategies" / "examples_kdj_with_ema_filter.qst.yaml"
+.\tests\e2e\test_p1_core_pretrade.py:P0_STRATEGY = ROOT / "strategies" / "kdj_cross_basic.qst.yaml"
+.\tests\e2e\test_p1_core_pretrade.py:        ["validate", str(P1_STRATEGY), "--profile", "research"],
+.\tests\e2e\test_p1_core_pretrade.py:            str(P1_STRATEGY),
+.\tests\e2e\test_p1_core_pretrade.py:            str(P1_STRATEGY),
+.\tests\e2e\test_p1_core_pretrade.py:    failed = runner.invoke(app, ["promote", str(P0_STRATEGY), "--to", "pretrade"])
+.\quant_strategy_tokenizer\ir\validators\temporal.py:"""Temporal safety validator for P1-extended-a."""
+.\quant_strategy_tokenizer\ir\validators\purity.py:"""Purity validator for P1-extended-a."""
+.\tests\e2e\test_p2_p3_backward_compat.py:P1 = ROOT / "strategies" / "examples_kdj_with_ema_filter.qst.yaml"
+.\tests\e2e\test_p2_p3_backward_compat.py:    assert compute_hashes(load_strategy_file(P1)).instance_hash == (
+.\tests\e2e\test_p2_p3_backward_compat.py:    assert load_strategy_file(fork_path).ir_version == "qst-ir/0.3.1"
+.\tests\e2e\test_p2_p3_backward_compat.py:    assert json.loads(canonical_path.read_text(encoding="utf-8"))["ir_version"] == "qst-ir/0.3"
+.\tests\e2e\test_p2_p3_backward_compat.py:    ] == "qst-ir/0.3"
+.\tests\e2e\test_p0_p1_backward_compat.py:P0_TOKEN_TRIPLES = [
+.\tests\e2e\test_p0_p1_backward_compat.py:P0_RECIPE_PAIRS = [
+.\tests\e2e\test_p0_p1_backward_compat.py:    for token_id, version, behavior_version in P0_TOKEN_TRIPLES:
+.\tests\e2e\test_p0_p1_backward_compat.py:    for recipe_id, version in P0_RECIPE_PAIRS:
+.\tests\e2e\test_p0_p1_backward_compat.py:    assert "P0 frozen baseline:" in outputs[0]
+.\tests\tokens_v2\test_token_spec_v2.py:    legacy_shape = make_spec(risk={"risk_level": "medium", "explanation": ["executes local code"]})
+.\tests\tokens_v2\test_token_spec_v2.py:    assert legacy_shape.risk.reasons == ("executes local code",)
+.\quant_strategy_tokenizer\ir\validators\profile_policy.py:"""Profile policy constants for P1-extended-a validators."""
+.\tests\e2e\test_p3b1_fork.py:P1_STRATEGY = ROOT / "strategies" / "examples_kdj_with_ema_filter.qst.yaml"
+.\tests\e2e\test_p3b1_fork.py:    assert parent.ir_version == "qst-ir/0.3"
+.\tests\e2e\test_p3b1_fork.py:    assert forked.ir_version == "qst-ir/0.3.1"
+.\tests\e2e\test_p3b1_fork.py:    assert payload["ir_version"] == "qst-ir/0.3.1"
+.\tests\e2e\test_p3b1_fork.py:    assert raw["ir_version"] == "qst-ir/0.3.1"
+.\tests\e2e\test_p3b1_fork.py:    p1_hashes = compute_hashes(load_strategy_file(P1_STRATEGY))
+.\quant_strategy_tokenizer\token_evolution_v2\policy.py:    """Return the accepted WP4 default token evolution policy."""
+.\quant_strategy_tokenizer\ir\validate.py:"""P0 Strategy IR validator."""
+.\tests\e2e\test_p3a1_package_roundtrip.py:P1_STRATEGY = ROOT / "strategies" / "examples_kdj_with_ema_filter.qst.yaml"
+.\tests\e2e\test_p3a1_package_roundtrip.py:            str(P1_STRATEGY),
+.\tests\e2e\test_03_hash_not_drift.py:P0_STRATEGY = ROOT / "strategies" / "kdj_cross_basic.qst.yaml"
+.\tests\e2e\test_03_hash_not_drift.py:P1_STRATEGY = ROOT / "strategies" / "examples_kdj_with_ema_filter.qst.yaml"
+.\tests\e2e\test_03_hash_not_drift.py:P0_HASHES = {
+.\tests\e2e\test_03_hash_not_drift.py:P1_HASHES = {
+.\tests\e2e\test_03_hash_not_drift.py:    hashes = compute_hashes(load_strategy_file(P0_STRATEGY))
+.\tests\e2e\test_03_hash_not_drift.py:    assert hashes.graph_hash == P0_HASHES["graph_hash"]
+.\tests\e2e\test_03_hash_not_drift.py:    assert hashes.param_hash == P0_HASHES["param_hash"]
+.\tests\e2e\test_03_hash_not_drift.py:    assert hashes.instance_hash == P0_HASHES["instance_hash"]
+.\tests\e2e\test_03_hash_not_drift.py:    hashes = compute_hashes(load_strategy_file(P1_STRATEGY))
+.\tests\e2e\test_03_hash_not_drift.py:    assert hashes.graph_hash == P1_HASHES["graph_hash"]
+.\tests\e2e\test_03_hash_not_drift.py:    assert hashes.param_hash == P1_HASHES["param_hash"]
+.\tests\e2e\test_03_hash_not_drift.py:    assert hashes.instance_hash == P1_HASHES["instance_hash"]
+.\tests\e2e\test_no_auto_ir_upgrade.py:    assert read_lock(lock_path).ir_version == "qst-ir/0.3"
+.\tests\e2e\test_no_auto_ir_upgrade.py:    assert "qst-ir/0.3.1" not in canonical_path.read_text(encoding="utf-8")
+.\tests\e2e\test_no_auto_ir_upgrade.py:    assert read_lock(package_dir / "qst.lock").ir_version == "qst-ir/0.3"
+.\tests\e2e\test_no_auto_ir_upgrade.py:    assert "qst-ir/0.3.1" not in (package_dir / "strategies" / "canonical.json").read_text(
+.\tests\e2e\test_no_auto_ir_upgrade.py:    assert "qst-ir/0.3.1" not in (
+.\tests\e2e\test_no_auto_ir_upgrade.py:    assert "qst-ir/0.3.1" in output.read_text(encoding="utf-8")
+.\quant_strategy_tokenizer\ir\repair.py:"""Repair hint generators for the P0 validator."""
+.\quant_strategy_tokenizer\ir\repair.py:    """Suggest the P0 default unknown handling policy."""
+.\quant_strategy_tokenizer\ir\repair.py:        "rationale": "P0 default; stricter profiles can choose another policy later.",
+.\tests\tokens_v2\test_package_policy.py:def test_legacy_package_manifest_without_token_packs_still_parses() -> None:
+.\quant_strategy_tokenizer\ir\model.py:IR_VERSION = "qst-ir/0.3"
+.\quant_strategy_tokenizer\ir\model.py:IR_VERSION_P3_LINEAGE = "qst-ir/0.3.1"
+.\quant_strategy_tokenizer\ir\model.py:SUPPORTED_IR_VERSIONS = (IR_VERSION, IR_VERSION_P3_LINEAGE)
+.\quant_strategy_tokenizer\ir\model.py:    """P3b-1 inert lineage metadata."""
+.\quant_strategy_tokenizer\ir\model.py:            raise ValueError("qst-ir/0.3 strategies cannot have derived_from; use qst-ir/0.3.1")
+.\quant_strategy_tokenizer\ports\__init__.py:"""P4 universal port protocols."""
+.\quant_strategy_tokenizer\ir\hashing.py:    """P0 graph, param, and instance hashes."""
+.\quant_strategy_tokenizer\ir\compare.py:"""Lightweight P0 IR comparison."""
+.\quant_strategy_tokenizer\ir\compare.py:    """Compare two Strategy IR instances by P0 hash layers."""
+.\tests\ir_v04\test_canonical_v04.py:def test_canonicalization_does_not_call_legacy_canonicalizer(
+.\tests\ir_v04\test_canonical_v04.py:    import quant_strategy_tokenizer.ir.canonicalize as legacy_canonicalize
+.\tests\ir_v04\test_canonical_v04.py:        raise AssertionError("legacy canonicalizer should not be called")
+.\tests\ir_v04\test_canonical_v04.py:    monkeypatch.setattr(legacy_canonicalize, "canonicalize", fail)
+.\tests\ir_v04\test_ir_shell.py:                "ir_version": "qst-ir/0.3",
+.\quant_strategy_tokenizer\core\errors.py:"""Stable error kinds for QST P0."""
+.\tests\ir_v04\test_capabilities_and_token_ref.py:                    token="legacy.compat",
+.\tests\ir_v04\test_capabilities_and_token_ref.py:    assert node.token == "legacy.compat"
+.\quant_strategy_tokenizer\core\context.py:"""Execution context for local P0 runs."""
+.\quant_strategy_tokenizer\core\context.py:    """Runtime context passed through the P0 executor."""
+.\tests\recipes\test_p2_algorithm_recipes.py:ir_version: qst-ir/0.3
+.\quant_strategy_tokenizer\tokens_v2\spec.py:    def _coerce_legacy_shape(cls, value: Any) -> Any:
+.\quant_strategy_tokenizer\tokens_v2\registry.py:        """Build a registry from token packs without reading legacy registry internals."""
+.\tests\mutation\test_cli_mutation.py:from tests.ir.p1_fixtures import P1_MISSING_RISK_PATH_YAML, P1_PRETRADE_READY_YAML
+.\tests\mutation\test_cli_mutation.py:    left.write_text(P1_PRETRADE_READY_YAML, encoding="utf-8")
+.\tests\mutation\test_cli_mutation.py:        P1_PRETRADE_READY_YAML.replace("max_position: 5", "max_position: 10"),
+.\tests\mutation\test_cli_mutation.py:    strategy.write_text(P1_MISSING_RISK_PATH_YAML, encoding="utf-8")
+.\tests\mutation\test_cli_mutation.py:    failure = validate(load_strategy(P1_MISSING_RISK_PATH_YAML), profile="pretrade").failures[0]
+.\tests\mutation\test_cli_mutation.py:ir_version: qst-ir/0.3
+.\tests\mutation\test_cli_mutation.py:ir_version: qst-ir/0.3
+.\tests\mutation\test_change_param.py:from tests.ir.p1_fixtures import P1_PRETRADE_READY_YAML
+.\tests\mutation\test_change_param.py:    ir = load_strategy(P1_PRETRADE_READY_YAML)
+.\tests\mutation\test_change_param.py:ir_version: qst-ir/0.3
+.\tests\mutation\test_replace_token.py:ir_version: qst-ir/0.3
+.\tests\mutation\test_repair_integration.py:from tests.ir.p1_fixtures import P1_MISSING_RISK_PATH_YAML
+.\tests\mutation\test_repair_integration.py:    ir = load_strategy(P1_MISSING_RISK_PATH_YAML)
+.\tests\mutation\test_lineage_chain.py:    assert result.ir.ir_version == "qst-ir/0.3"
+.\tests\ir\validator_helpers.py:        ir_version="qst-ir/0.3",
+.\tests\ir\validator_helpers.py:        ir_version="qst-ir/0.3",
+.\tests\mutation\test_insert_before.py:from tests.ir.p1_fixtures import P1_MISSING_RISK_PATH_YAML
+.\tests\mutation\test_insert_before.py:    ir = load_strategy(P1_MISSING_RISK_PATH_YAML)
+.\tests\mutation\test_insert_before.py:    ir = load_strategy(P1_MISSING_RISK_PATH_YAML)
+.\tests\package\test_verify_package.py:P1_STRATEGY = ROOT / "strategies" / "examples_kdj_with_ema_filter.qst.yaml"
+.\tests\package\test_verify_package.py:        P1_STRATEGY,
+.\tests\package\test_verify_package.py:    package_strategy(P1_STRATEGY, package_dir, market_path=MARKET)
+.\tests\package\test_verify_package.py:        P1_STRATEGY,
+.\tests\hash_v2\test_legacy_lock_loader.py:from quant_strategy_tokenizer.ir_v04.legacy import load_legacy_lock, load_legacy_strategy
+.\tests\hash_v2\test_legacy_lock_loader.py:    loaded = load_legacy_lock(raw)
+.\tests\hash_v2\test_legacy_lock_loader.py:def test_legacy_lock_loads_from_canonical_json_string() -> None:
+.\tests\hash_v2\test_legacy_lock_loader.py:    loaded = load_legacy_lock(lock_bytes.decode("utf-8"))
+.\tests\hash_v2\test_legacy_lock_loader.py:def test_legacy_strategy_loads_without_upgrade() -> None:
+.\tests\hash_v2\test_legacy_lock_loader.py:                "ir_version": "qst-ir/0.3",
+.\tests\hash_v2\test_legacy_lock_loader.py:                "strategy": "legacy",
+.\tests\hash_v2\test_legacy_lock_loader.py:    loaded = load_legacy_strategy(raw)
+.\tests\hash_v2\test_legacy_lock_loader.py:    assert loaded.ir_version == "qst-ir/0.3"
+.\tests\hash_v2\test_legacy_lock_loader.py:def test_non_legacy_strategy_version_rejected() -> None:
+.\tests\hash_v2\test_legacy_lock_loader.py:        load_legacy_strategy(
+.\tests\migration_v2\test_strategy_migration.py:    migrate_strategy,
+.\tests\migration_v2\test_strategy_migration.py:    migrate_strategy_file,
+.\tests\migration_v2\test_strategy_migration.py:def test_kdj_cross_migrates_with_lineage_and_new_identity() -> None:
+.\tests\migration_v2\test_strategy_migration.py:    legacy = load_strategy_file(KDJ)
+.\tests\migration_v2\test_strategy_migration.py:    result = migrate_strategy(legacy)
+.\tests\migration_v2\test_strategy_migration.py:    assert result.strategy.derived_from.source_instance_hash == compute_hashes(legacy).instance_hash
+.\tests\migration_v2\test_strategy_migration.py:    result = migrate_strategy_file(KDJ_EMA)
+.\tests\migration_v2\test_strategy_migration.py:    migrated_tokens = [node.token for node in result.strategy.strategy.nodes]
+.\tests\migration_v2\test_strategy_migration.py:    assert "decision.strict_and" in migrated_tokens
+.\tests\migration_v2\test_strategy_migration.py:    assert "decision.reduce" not in migrated_tokens
+.\tests\migration_v2\test_strategy_migration.py:    result = migrate_strategy(StrategyIR.model_validate(raw))
+.\tests\migration_v2\test_strategy_migration.py:    legacy = load_strategy_file(KDJ).model_copy(update={"ir_version": "qst-ir/0.3.1"})
+.\tests\migration_v2\test_strategy_migration.py:    result = migrate_strategy(legacy)
+.\tests\migration_v2\test_strategy_migration.py:    assert result.strategy.derived_from.source_ir_version == "qst-ir/0.3.1"
+.\tests\migration_v2\test_strategy_migration.py:    assert result.strategy.derived_from.source_instance_hash == compute_hashes(legacy).instance_hash
+.\tests\ir\test_risk_path.py:from tests.ir.p1_fixtures import P1_MISSING_RISK_PATH_YAML, P1_PRETRADE_READY_YAML
+.\tests\ir\test_risk_path.py:    ir = load_strategy(P1_MISSING_RISK_PATH_YAML)
+.\tests\ir\test_risk_path.py:    ir = load_strategy(P1_MISSING_RISK_PATH_YAML)
+.\tests\ir\test_risk_path.py:    ir = load_strategy(P1_PRETRADE_READY_YAML)
+.\tests\mutation\test_inline_recipe.py:ir_version: qst-ir/0.3
+.\tests\mutation\test_diff.py:from tests.ir.p1_fixtures import P1_PRETRADE_READY_YAML
+.\tests\mutation\test_diff.py:    left = load_strategy(P1_PRETRADE_READY_YAML)
+.\quant_strategy_tokenizer\composition\__init__.py:"""P2 composition and recipe generator API."""
+.\tests\ir\test_promote.py:from tests.ir.p1_fixtures import P1_MISSING_RISK_PATH_YAML, P1_PRETRADE_READY_YAML
+.\tests\ir\test_promote.py:    ir = load_strategy(P1_PRETRADE_READY_YAML)
+.\tests\ir\test_promote.py:    ir = load_strategy(P1_PRETRADE_READY_YAML)
+.\tests\ir\test_promote.py:    ir = load_strategy(P1_PRETRADE_READY_YAML)
+.\tests\ir\test_promote.py:    ir = load_strategy(P1_MISSING_RISK_PATH_YAML)
+.\quant_strategy_tokenizer\composition\verifier.py:"""P2a-3 composition verification upgrader."""
+.\quant_strategy_tokenizer\composition\verifier.py:    """Return whether a TagSpec source recipe is safe under P1-extended-a metadata."""
+.\quant_strategy_tokenizer\composition\verifier.py:    """Run P2a-3 checks and return a TagSpec with full verification fields."""
+.\quant_strategy_tokenizer\composition\metamorphic.py:"""Metamorphic property checks for P2a-3."""
+.\tests\package\test_artifact_manifest.py:def test_legacy_package_without_artifacts_parse_and_verify(tmp_path: Path) -> None:
+.\tests\ir\test_profile_validator.py:from tests.ir.p1_fixtures import P1_PRETRADE_READY_YAML
+.\tests\ir\test_profile_validator.py:    ir = load_strategy(P1_PRETRADE_READY_YAML)
+.\tests\ir\test_profile_validator.py:    ir = load_strategy(P1_PRETRADE_READY_YAML)
+.\quant_strategy_tokenizer\canonical_json.py:This module intentionally preserves the byte semantics used by the P3 lock
+.\quant_strategy_tokenizer\canonical_json.py:writer. P4 artifacts and future frame hashes use this public API instead of
+.\quant_strategy_tokenizer\canonical_json.py:    The output must remain byte-compatible with the P3 canonical lock bytes for
+.\quant_strategy_tokenizer\canonical_json.py:    every value accepted by the P3 implementation.
+.\tests\qst_lock\test_no_yaml_lock_docs.py:    # P3a-1 package manifests are YAML by design; qst.lock remains JSON.
+.\tests\ir\test_ir_pipeline.py:ir_version: qst-ir/0.3
+.\tests\ir\test_envelope.py:ir_version: qst-ir/0.3
+.\tests\qst_lock\test_verify_result.py:    P3A0_LIMITATION_NOTE,
+.\tests\qst_lock\test_verify_result.py:    assert result.limitation_note == P3A0_LIMITATION_NOTE
+.\tests\ir\test_derived_from.py:    raw["ir_version"] = "qst-ir/0.3.1"
+.\tests\ir\test_derived_from.py:    assert ir.ir_version == "qst-ir/0.3"
+.\tests\ir\test_derived_from.py:    assert parsed.ir_version == "qst-ir/0.3.1"
+.\tests\ir\test_derived_from.py:    assert parent.ir_version == "qst-ir/0.3"
+.\tests\ir\test_derived_from.py:    assert canonical.ir_version == "qst-ir/0.3.1"
+.\tests\ir\test_derived_from.py:    raw["ir_version"] = "qst-ir/0.3.1"
+.\tests\ir\test_derived_from.py:    raw["ir_version"] = "qst-ir/0.3.1"
+.\quant_strategy_tokenizer\composition\fuzzing.py:"""Reference fuzzing harness for P2a-3."""
+.\quant_strategy_tokenizer\composition\fuzzing.py:    """Independent EWM reference used by P2a-3 checks."""
+.\quant_strategy_tokenizer\composition\contract.py:"""Recipe contract runner for P2a-3 composition validation."""
+.\quant_strategy_tokenizer\cli.py:"""Typer CLI for QST P0."""
+.\quant_strategy_tokenizer\cli.py:    migrate_strategy_file,
+.\quant_strategy_tokenizer\cli.py:    migrate_package as migrate_package_v2,
+.\quant_strategy_tokenizer\cli.py:P0_TOKEN_TRIPLES: tuple[tuple[str, int, int], ...] = (
+.\quant_strategy_tokenizer\cli.py:P0_RECIPE_PAIRS: tuple[tuple[str, int], ...] = (
+.\quant_strategy_tokenizer\cli.py:@app.command("migrate-ir")
+.\quant_strategy_tokenizer\cli.py:def migrate_ir_cmd(
+.\quant_strategy_tokenizer\cli.py:    """Migrate a legacy qst-ir/0.3 or 0.3.1 strategy to qst-ir/0.4."""
+.\quant_strategy_tokenizer\cli.py:        raise typer.BadParameter("WP10 only supports --to qst-ir/0.4")
+.\quant_strategy_tokenizer\cli.py:    result = migrate_strategy_file(strategy)
+.\quant_strategy_tokenizer\cli.py:@app.command("migrate-package")
+.\quant_strategy_tokenizer\cli.py:def migrate_package_cmd(
+.\quant_strategy_tokenizer\cli.py:    output: Annotated[Path, typer.Option("--output")] = Path("migrated.qstpkg"),
+.\quant_strategy_tokenizer\cli.py:    """Migrate a legacy qstpkg directory to a qst-ir/0.4 package snapshot."""
+.\quant_strategy_tokenizer\cli.py:        raise typer.BadParameter("WP10 only supports --to qst-ir/0.4")
+.\quant_strategy_tokenizer\cli.py:    result = migrate_package_v2(package_dir, output)
+.\quant_strategy_tokenizer\cli.py:        for token_id, version, behavior_version in P0_TOKEN_TRIPLES:
+.\quant_strategy_tokenizer\cli.py:                    f"P0 token drift: {token_id}/v{version} expected bv{behavior_version}, "
+.\quant_strategy_tokenizer\cli.py:        for recipe_id, version in P0_RECIPE_PAIRS:
+.\quant_strategy_tokenizer\cli.py:        typer.echo("P0 frozen baseline:")
+.\quant_strategy_tokenizer\cli.py:    """Print P0 graph, param, and instance hashes."""
+.\quant_strategy_tokenizer\cli.py:    """Build a deterministic P3a-0 qst.lock for a strategy."""
+.\quant_strategy_tokenizer\cli.py:    """Build a P3a-1 directory-based .qstpkg package."""
+.\quant_strategy_tokenizer\cli.py:    """Unpack a P3a-1 .qstpkg directory to another directory."""
+.\quant_strategy_tokenizer\cli.py:    """Add one P4 artifact JSON file to a qstpkg directory."""
+.\quant_strategy_tokenizer\cli.py:    """Verify qstpkg contents including optional P4 artifacts."""
+.\quant_strategy_tokenizer\cli.py:    """Verify a strategy+lock pair or a P3a-1 .qstpkg directory."""
+.\quant_strategy_tokenizer\cli.py:    """Load a P4 MarketFrame through a local market adapter."""
+.\quant_strategy_tokenizer\cli.py:    """Load one adapter and report implemented P4 port protocols."""
+.\quant_strategy_tokenizer\cli.py:    """Compare two strategy YAML files by P0 hash layers."""
+.\quant_strategy_tokenizer\cli.py:    """Print a P2b-0 JSON diff report for two strategy YAML files."""
+.\quant_strategy_tokenizer\cli.py:    """Apply one P2b mutation operation to a strategy YAML file."""
+.\quant_strategy_tokenizer\cli.py:    """Fork a strategy. This is the only CLI path that emits qst-ir/0.3.1."""
+.\quant_strategy_tokenizer\cli.py:    """Print P2c-core Merkle fingerprints and execution plan debug data."""
+.\quant_strategy_tokenizer\cli.py:    """Expand a P2a-2 recipe generator to a concrete recipe YAML or JSON file."""
+.\quant_strategy_tokenizer\cli.py:    """Print P2c-extended opt-in kernel substitution eligibility."""
+.\tests\golden\test_p1_core_tokens.py:P1_CORE_TOKENS = {
+.\tests\golden\test_p1_core_tokens.py:    for token_id, version in P1_CORE_TOKENS:
+.\tests\ir\p1_fixtures.py:P1_PRETRADE_READY_YAML = """
+.\tests\ir\p1_fixtures.py:ir_version: qst-ir/0.3
+.\tests\ir\p1_fixtures.py:P1_MISSING_RISK_PATH_YAML = """
+.\tests\ir\p1_fixtures.py:ir_version: qst-ir/0.3
+.\quant_strategy_tokenizer\hash_v2\behavior_hash.py:    """Hash typed WP4 behavior material with required numeric policy and lifecycle."""
+.\quant_strategy_tokenizer\composition\generators\__init__.py:"""Built-in P2a-2 recipe generator sources."""
+.\quant_strategy_tokenizer\tokens\registry.py:P0 rule:
+.\quant_strategy_tokenizer\tokens\registry.py:    """Import all P0 built-in token modules exactly once."""
+.\quant_strategy_tokenizer\composition\generators\signals.dual_ema_cross.v1.yaml:  description: Dual EMA cross event generated from the P2a-2 deterministic DSL.
+.\tests\provenance\test_provenance_tag.py:def test_legacy_spike_manual_attacher_migrates_to_recipe_compiler() -> None:
+.\quant_strategy_tokenizer\artifacts\artifact_id.py:"""P4 artifact identity calculation."""
+.\quant_strategy_tokenizer\artifacts\adapter_manifest.py:"""Adapter manifest P4 artifact model."""
+.\tests\provenance\test_hash_ignores_provenance.py:P0_STRATEGY = ROOT / "strategies" / "kdj_cross_basic.qst.yaml"
+.\tests\provenance\test_hash_ignores_provenance.py:P1_STRATEGY = ROOT / "strategies" / "examples_kdj_with_ema_filter.qst.yaml"
+.\tests\provenance\test_hash_ignores_provenance.py:EXPECTED_P0_GRAPH_HASH = "sha256:2b84dcdcebf5af4d2bab65c872745b1d9ec872d181f69944e7ad3d9371d65947"
+.\tests\provenance\test_hash_ignores_provenance.py:EXPECTED_P0_PARAM_HASH = "sha256:3b5e14a46a17204bb5b771d339f4fc660f1e059755c0184a17f13312fb471c28"
+.\tests\provenance\test_hash_ignores_provenance.py:EXPECTED_P0_INSTANCE_HASH = "sha256:5cb1fe6e4d8ba9dd2230b4654e4cdb8411143c90ad1bcb5eb18fcb8c421ec85d"
+.\tests\provenance\test_hash_ignores_provenance.py:EXPECTED_P1_GRAPH_HASH = "sha256:e6da7fcfe5157b30011c7ae178cef3f4a4cd82e9946794d0709fbc7cd8ac7bfa"
+.\tests\provenance\test_hash_ignores_provenance.py:EXPECTED_P1_PARAM_HASH = "sha256:fb2820dd501cdfce9c058478235f7ba78d2849649c9ba237c144ebec3db52321"
+.\tests\provenance\test_hash_ignores_provenance.py:EXPECTED_P1_INSTANCE_HASH = "sha256:1bcc10844c6bc878e382a3b1dc8524780f34c8ac8d2c1ef603e3074fff3c74a3"
+.\tests\provenance\test_hash_ignores_provenance.py:    hashes = compute_hashes(load_strategy_file(P0_STRATEGY))
+.\tests\provenance\test_hash_ignores_provenance.py:    assert hashes.graph_hash == EXPECTED_P0_GRAPH_HASH
+.\tests\provenance\test_hash_ignores_provenance.py:    assert hashes.param_hash == EXPECTED_P0_PARAM_HASH
+.\tests\provenance\test_hash_ignores_provenance.py:    assert hashes.instance_hash == EXPECTED_P0_INSTANCE_HASH
+.\tests\provenance\test_hash_ignores_provenance.py:    hashes = compute_hashes(load_strategy_file(P1_STRATEGY))
+.\tests\provenance\test_hash_ignores_provenance.py:    assert hashes.graph_hash == EXPECTED_P1_GRAPH_HASH
+.\tests\provenance\test_hash_ignores_provenance.py:    assert hashes.param_hash == EXPECTED_P1_PARAM_HASH
+.\tests\provenance\test_hash_ignores_provenance.py:    assert hashes.instance_hash == EXPECTED_P1_INSTANCE_HASH
+.\tests\provenance\test_hash_ignores_provenance.py:    canonical = canonicalize(load_strategy_file(P0_STRATEGY))
+.\quant_strategy_tokenizer\composition\generator.py:"""Deterministic YAML recipe generator for P2a-2."""
+.\quant_strategy_tokenizer\composition\generator.py:    """Expand a built-in P2a-2 recipe generator."""
+.\tests\provenance\test_canonicalize_provenance.py:P0_STRATEGY = ROOT / "strategies" / "kdj_cross_basic.qst.yaml"
+.\tests\provenance\test_canonicalize_provenance.py:P1_STRATEGY = ROOT / "strategies" / "examples_kdj_with_ema_filter.qst.yaml"
+.\tests\provenance\test_canonicalize_provenance.py:    canonical = canonicalize(load_strategy_file(P1_STRATEGY))
+.\tests\provenance\test_canonicalize_provenance.py:    canonical = canonicalize(load_strategy_file(P0_STRATEGY))
+.\tests\provenance\test_canonicalize_provenance.py:    ir = load_strategy_file(P1_STRATEGY)
+.\tests\provenance\test_canonicalize_provenance.py:    canonical = canonicalize(load_strategy_file(P0_STRATEGY))
+.\tests\provenance\test_canonicalize_provenance.py:    canonical = canonicalize(load_strategy_file(P1_STRATEGY))
+.\quant_strategy_tokenizer\artifacts\backtest_evidence.py:"""Backtest evidence P4 artifacts."""
+.\quant_strategy_tokenizer\agent\api.py:    migrate_package as _migrate_package_v2,
+.\quant_strategy_tokenizer\agent\api.py:    migrate_strategy_file as _migrate_strategy_file_v2,
+.\quant_strategy_tokenizer\agent\api.py:    """Return a TagSpec with attachment or full P2a-3 verification."""
+.\quant_strategy_tokenizer\agent\api.py:    """Expand a built-in P2a-2 recipe generator."""
+.\quant_strategy_tokenizer\agent\api.py:    """Return a P2b-0 diff report for two strategies."""
+.\quant_strategy_tokenizer\agent\api.py:    """Apply one P2b mutation op."""
+.\quant_strategy_tokenizer\agent\api.py:    """Return P2c-core Merkle fingerprints and execution-plan debug data."""
+.\quant_strategy_tokenizer\agent\api.py:    """Build a P3a-0 deterministic qst.lock for a Strategy IR."""
+.\quant_strategy_tokenizer\agent\api.py:    """Verify a Strategy IR against a P3a-0 qst.lock."""
+.\quant_strategy_tokenizer\agent\api.py:    """Build a P3a-1 qstpkg package."""
+.\quant_strategy_tokenizer\agent\api.py:    """Unpack a P3a-1 qstpkg package."""
+.\quant_strategy_tokenizer\agent\api.py:    """Verify a P3a-1 qstpkg package."""
+.\quant_strategy_tokenizer\agent\api.py:def migrate_ir(strategy_path: str) -> MigrationResult:
+.\quant_strategy_tokenizer\agent\api.py:    """Migrate a legacy qst-ir/0.3 or 0.3.1 strategy to qst-ir/0.4."""
+.\quant_strategy_tokenizer\agent\api.py:    return _migrate_strategy_file_v2(strategy_path)
+.\quant_strategy_tokenizer\agent\api.py:def migrate_package(package_dir: str, output_dir: str) -> dict[str, Any]:
+.\quant_strategy_tokenizer\agent\api.py:    """Migrate a legacy qstpkg directory to a qst-ir/0.4 package snapshot."""
+.\quant_strategy_tokenizer\agent\api.py:    result = _migrate_package_v2(package_dir, output_dir)
+.\quant_strategy_tokenizer\agent\api.py:    """Add one P4 artifact JSON file to a qstpkg package."""
+.\quant_strategy_tokenizer\agent\api.py:    """Execute a strategy and extract a P4 SignalFrame."""
+.\quant_strategy_tokenizer\agent\api.py:    """Search P3 IndexRecord metadata."""
+.\quant_strategy_tokenizer\agent\api.py:    """Fork a strategy with P3b-1 derived_from lineage."""
+.\quant_strategy_tokenizer\agent\api.py:    """Return opt-in P2c-extended kernel substitution eligibility."""
+.\quant_strategy_tokenizer\agent\discover.py:            "token_system_v2_wp10": ["migrate_ir", "migrate_package"],
+.\quant_strategy_tokenizer\agent\discover.py:            "token_system_v2_wp10": ["migrate-ir", "migrate-package"],
+.\quant_strategy_tokenizer\detokenize\explain_emitter.py:            lines.append(f"  - Node '{node.id}' produces a noop plan in P0.")
+.\quant_strategy_tokenizer\agent\fork.py:"""P3b-1 strategy fork API."""
+.\quant_strategy_tokenizer\agent\fork.py:    IR_VERSION_P3_LINEAGE,
+.\quant_strategy_tokenizer\agent\fork.py:    The parent IR is not modified. The fork output is the only P3 command path
+.\quant_strategy_tokenizer\agent\fork.py:    that intentionally emits qst-ir/0.3.1.
+.\quant_strategy_tokenizer\agent\fork.py:            "ir_version": IR_VERSION_P3_LINEAGE,
+.\quant_strategy_tokenizer\artifacts\__init__.py:"""P4 artifact models."""
+.\quant_strategy_tokenizer\artifacts\execution_report.py:"""ExecutionReport P4 artifact."""
+.\quant_strategy_tokenizer\agent\index_record.py:"""IndexRecord: unified middle structure for P3 search."""
+.\quant_strategy_tokenizer\agent\index_record.py:    """Build P3b-0 index records on demand from public registries."""
+.\quant_strategy_tokenizer\adapters\mocks\backtest.py:    """Deterministic signal-level backtest adapter for P4b-1 smoke workflows."""
+.\quant_strategy_tokenizer\agent\search.py:"""Read-only P3b-0 search API."""
+.\quant_strategy_tokenizer\artifacts\decimal_string.py:"""Strict canonical decimal string support for P4 artifacts."""
+.\quant_strategy_tokenizer\artifacts\safety.py:"""P4 artifact safety helpers."""
+.\quant_strategy_tokenizer\agent\__init__.py:    migrate_ir,
+.\quant_strategy_tokenizer\agent\__init__.py:    migrate_package,
+.\quant_strategy_tokenizer\agent\__init__.py:    "migrate_ir",
+.\quant_strategy_tokenizer\agent\__init__.py:    "migrate_package",
+.\quant_strategy_tokenizer\execution\__init__.py:"""P2 execution planning API."""
+.\quant_strategy_tokenizer\package\__init__.py:"""P3a-1 qstpkg package support."""
+.\quant_strategy_tokenizer\artifacts\portfolio_snapshot.py:"""Portfolio snapshot P4 artifact."""
+.\quant_strategy_tokenizer\artifacts\base.py:"""Base P4 artifact models."""
+.\quant_strategy_tokenizer\artifacts\base.py:    """Content lineage for a P4 artifact."""
+.\quant_strategy_tokenizer\artifacts\base.py:    """Common fields shared by P4 artifact records."""
+.\quant_strategy_tokenizer\package\writer.py:"""Build P3a-1 qstpkg directory packages."""
+.\quant_strategy_tokenizer\adapters\mocks\market.py:    """Load P4 MarketFrame CSV files."""
+.\quant_strategy_tokenizer\adapters\mocks\market.py:    """Load P4 MarketFrame Parquet files."""
+.\quant_strategy_tokenizer\adapters\mocks\__init__.py:"""Built-in mock adapters for P4b-1."""
+.\quant_strategy_tokenizer\execution\kernel.py:"""Opt-in P2c-extended kernel substitution spike."""
+.\quant_strategy_tokenizer\execution\kernel.py:                description="P2c-extended spike fast-path for indicator.ewm/v1.",
+.\quant_strategy_tokenizer\package\verifier.py:"""Verify P3a-1 qstpkg directories."""
+.\quant_strategy_tokenizer\package\verifier.py:                f"Could not load migrated qst-ir/0.4 source: {type(exc).__name__}: {exc}",
+.\quant_strategy_tokenizer\package\verifier.py:    legacy_source = lock.get("legacy_source")
+.\quant_strategy_tokenizer\package\verifier.py:    elif isinstance(legacy_source, dict):
+.\quant_strategy_tokenizer\package\verifier.py:        expected = legacy_source.get("source_instance_hash")
+.\quant_strategy_tokenizer\package\verifier.py:                    "Migrated qst-lock/0.4 legacy source hash does not match derived_from.",
+.\quant_strategy_tokenizer\package\verifier.py:                    path="qst.lock.legacy_source.source_instance_hash",
+.\quant_strategy_tokenizer\decision_v2\migration.py:    """Mapping from a P1 Decision variant to a v0.4 DecisionKind or diagnostic."""
+.\quant_strategy_tokenizer\decision_v2\migration.py:    legacy_kind: LegacyDecisionKind
+.\quant_strategy_tokenizer\decision_v2\migration.py:    """Migration classification for legacy decision.reduce policies."""
+.\quant_strategy_tokenizer\decision_v2\migration.py:    legacy_policy: str
+.\quant_strategy_tokenizer\decision_v2\migration.py:    legacy_unknown_handling: str
+.\quant_strategy_tokenizer\decision_v2\migration.py:def map_legacy_decision_kind(kind: LegacyDecisionKind) -> LegacyDecisionMapping:
+.\quant_strategy_tokenizer\decision_v2\migration.py:    """Map one P1 Decision variant into v0.4 Decision Algebra material."""
+.\quant_strategy_tokenizer\decision_v2\migration.py:        return LegacyDecisionMapping(legacy_kind=kind, v04_kind="unknown")
+.\quant_strategy_tokenizer\decision_v2\migration.py:            legacy_kind=kind,
+.\quant_strategy_tokenizer\decision_v2\migration.py:    return LegacyDecisionMapping(legacy_kind=kind, v04_kind=kind)
+.\quant_strategy_tokenizer\decision_v2\migration.py:def classify_legacy_decision_reduce(
+.\quant_strategy_tokenizer\decision_v2\migration.py:    """Classify whether a legacy decision.reduce policy maps exactly to WP7."""
+.\quant_strategy_tokenizer\decision_v2\migration.py:            "Legacy error cannot be silently migrated into a DecisionKind.",
+.\quant_strategy_tokenizer\decision_v2\migration.py:        legacy_policy=policy,
+.\quant_strategy_tokenizer\decision_v2\migration.py:        legacy_unknown_handling=unknown_handling,
+.\quant_strategy_tokenizer\decision_v2\migration.py:        legacy_policy=policy,
+.\quant_strategy_tokenizer\decision_v2\migration.py:        legacy_unknown_handling=unknown_handling,
+.\quant_strategy_tokenizer\tokens\infrastructure\decision.py:    description="Reduce Decisions with P1 Block and Abstain priority semantics.",
+.\quant_strategy_tokenizer\package\reader.py:"""Read and unpack P3a-1 qstpkg directories."""
+.\quant_strategy_tokenizer\frames\base.py:"""Base frame helpers for P4 frame models."""
+.\quant_strategy_tokenizer\package\manifest.py:"""P3a-1 package manifest models."""
+.\quant_strategy_tokenizer\package\manifest.py:    """One package-internal P4 artifact file reference."""
+.\quant_strategy_tokenizer\package\manifest.py:    """Optional P4 additive artifact section for qstpkg manifests."""
+.\quant_strategy_tokenizer\package\artifacts.py:"""P4a-2 qstpkg artifact helpers."""
+.\quant_strategy_tokenizer\package\artifacts.py:    """Result of adding one P4 artifact to a qstpkg."""
+.\quant_strategy_tokenizer\package\artifacts.py:    """Copy one P4 artifact JSON file into a qstpkg and update its manifest."""
+.\quant_strategy_tokenizer\decision_v2\__init__.py:    classify_legacy_decision_reduce,
+.\quant_strategy_tokenizer\decision_v2\__init__.py:    map_legacy_decision_kind,
+.\quant_strategy_tokenizer\decision_v2\__init__.py:    "classify_legacy_decision_reduce",
+.\quant_strategy_tokenizer\decision_v2\__init__.py:    "map_legacy_decision_kind",
+.\quant_strategy_tokenizer\numeric_v2\policy.py:WP4 makes numeric behavior explicit before TokenSpec v2 lands. The model is
+.\quant_strategy_tokenizer\numeric_v2\policy.py:serializable hash material only; it does not change legacy execution behavior.
+.\quant_strategy_tokenizer\numeric_v2\policy.py:    """Return the WP4 example policy for deterministic semantic float64 tokens."""
+.\quant_strategy_tokenizer\frames\io\csv_io.py:"""CSV IO for P4a-1a frame models."""
+.\quant_strategy_tokenizer\mutation\__init__.py:"""P2b mutation API."""
+.\quant_strategy_tokenizer\lint\stateless.py:"""Best-effort AST-based lint for P0 stateless discipline.
+.\quant_strategy_tokenizer\migration_v2\core_registry.py:"""Deterministic target core registry hash for WP10 migration."""
+.\quant_strategy_tokenizer\migration_v2\core_registry.py:    """Return the registry hash binding legacy migration to the accepted core set."""
+.\quant_strategy_tokenizer\migration_v2\core_registry.py:    legacy_specs = [
+.\quant_strategy_tokenizer\migration_v2\core_registry.py:            "spec_hash": _legacy_spec_hash(to_plain(spec)),
+.\quant_strategy_tokenizer\migration_v2\core_registry.py:        "legacy_tokens": legacy_specs,
+.\quant_strategy_tokenizer\migration_v2\core_registry.py:def _legacy_spec_hash(payload: object) -> str:
+.\quant_strategy_tokenizer\mutation\repair.py:"""Convert validator repair hints into P2b-0 mutation ops."""
+.\quant_strategy_tokenizer\mutation\repair.py:    """Repair hint cannot be converted to a P2b-0 mutation op."""
+.\quant_strategy_tokenizer\mutation\repair.py:    raise RepairHintError("No supported P2b-0 repair hint op found")
+.\quant_strategy_tokenizer\migration_v2\package.py:"""qstpkg migration helpers for WP10."""
+.\quant_strategy_tokenizer\migration_v2\package.py:    migrate_strategy_file,
+.\quant_strategy_tokenizer\migration_v2\package.py:    """Result of migrating a legacy qstpkg directory."""
+.\quant_strategy_tokenizer\migration_v2\package.py:def migrate_package(package_dir: str | Path, output_dir: str | Path) -> PackageMigrationResult:
+.\quant_strategy_tokenizer\migration_v2\package.py:    """Migrate a legacy qstpkg directory to a v0.4 qstpkg snapshot."""
+.\quant_strategy_tokenizer\migration_v2\package.py:    migrated = migrate_strategy_file(source_package.source_path)
+.\quant_strategy_tokenizer\migration_v2\package.py:    if not migrated.ok or migrated.strategy is None:
+.\quant_strategy_tokenizer\migration_v2\package.py:        _write_json(target / "migration" / "report.json", migrated.model_dump(mode="json"))
+.\quant_strategy_tokenizer\migration_v2\package.py:            migration=migrated,
+.\quant_strategy_tokenizer\migration_v2\package.py:            migrated.strategy.model_dump(mode="json", exclude_none=True),
+.\quant_strategy_tokenizer\migration_v2\package.py:    canonical_target.write_bytes(canonical_bytes_v04(canonicalize_v04(migrated.strategy)))
+.\quant_strategy_tokenizer\migration_v2\package.py:    _write_json(lock_target, build_migration_lock_v04(migrated))
+.\quant_strategy_tokenizer\migration_v2\package.py:    _write_json(report_target, migrated.model_dump(mode="json"))
+.\quant_strategy_tokenizer\migration_v2\package.py:            name=migrated.strategy.strategy.id,
+.\quant_strategy_tokenizer\migration_v2\package.py:            version=migrated.strategy.strategy.version,
+.\quant_strategy_tokenizer\migration_v2\package.py:    return PackageMigrationResult(package_dir=target, migration=migrated, manifest=manifest)
+.\quant_strategy_tokenizer\qst_lock\builder.py:"""Build deterministic P3a-0 qst.lock files."""
+.\quant_strategy_tokenizer\mutation\ops.py:"""P2b-0 mutation operation models."""
+.\quant_strategy_tokenizer\migration_v2\__init__.py:"""Token System v2 WP10 migration tooling."""
+.\quant_strategy_tokenizer\migration_v2\__init__.py:from quant_strategy_tokenizer.migration_v2.package import migrate_package
+.\quant_strategy_tokenizer\migration_v2\__init__.py:    migrate_strategy,
+.\quant_strategy_tokenizer\migration_v2\__init__.py:    migrate_strategy_file,
+.\quant_strategy_tokenizer\migration_v2\__init__.py:    "migrate_package",
+.\quant_strategy_tokenizer\migration_v2\__init__.py:    "migrate_strategy",
+.\quant_strategy_tokenizer\migration_v2\__init__.py:    "migrate_strategy_file",
+.\quant_strategy_tokenizer\provenance\attachment.py:    """Verify a tag against a TagSpec at P2a-1 attachment level."""
+.\quant_strategy_tokenizer\provenance\attachment.py:    """Compute the P2a-1 verification fields for a TagSpec."""
+.\quant_strategy_tokenizer\migration_v2\strategy.py:"""Legacy qst-ir/0.3 and 0.3.1 to qst-ir/0.4 migration."""
+.\quant_strategy_tokenizer\migration_v2\strategy.py:from quant_strategy_tokenizer.decision_v2 import classify_legacy_decision_reduce
+.\quant_strategy_tokenizer\migration_v2\strategy.py:from quant_strategy_tokenizer.ir.canonicalize import canonicalize as canonicalize_legacy
+.\quant_strategy_tokenizer\migration_v2\strategy.py:    """Structured result for WP10 strategy migration."""
+.\quant_strategy_tokenizer\migration_v2\strategy.py:def migrate_strategy_file(path: str | Path) -> MigrationResult:
+.\quant_strategy_tokenizer\migration_v2\strategy.py:    """Load and migrate a legacy strategy file."""
+.\quant_strategy_tokenizer\migration_v2\strategy.py:    return migrate_strategy(load_strategy_file(path))
+.\quant_strategy_tokenizer\migration_v2\strategy.py:def migrate_strategy(ir: StrategyIR | Mapping[str, Any]) -> MigrationResult:
+.\quant_strategy_tokenizer\migration_v2\strategy.py:    """Migrate a legacy strategy into the accepted qst-ir/0.4 shell."""
+.\quant_strategy_tokenizer\migration_v2\strategy.py:    legacy = ir if isinstance(ir, StrategyIR) else StrategyIR.model_validate(ir)
+.\quant_strategy_tokenizer\migration_v2\strategy.py:    source_hashes = compute_hashes(legacy)
+.\quant_strategy_tokenizer\migration_v2\strategy.py:    canonical = canonicalize_legacy(legacy)
+.\quant_strategy_tokenizer\migration_v2\strategy.py:        migrated_node = _migrate_node(node, diagnostics)
+.\quant_strategy_tokenizer\migration_v2\strategy.py:        if migrated_node is not None:
+.\quant_strategy_tokenizer\migration_v2\strategy.py:            nodes.append(migrated_node)
+.\quant_strategy_tokenizer\migration_v2\strategy.py:    migrated = StrategyIRV04(
+.\quant_strategy_tokenizer\migration_v2\strategy.py:            "legacy_externals": {
+.\quant_strategy_tokenizer\migration_v2\strategy.py:            source_ir_version=legacy.ir_version,  # type: ignore[arg-type]
+.\quant_strategy_tokenizer\migration_v2\strategy.py:            source_strategy=legacy.strategy,
+.\quant_strategy_tokenizer\migration_v2\strategy.py:            source_strategy_version=legacy.strategy_version,
+.\quant_strategy_tokenizer\migration_v2\strategy.py:    validation = validate_ir_v04(migrated)
+.\quant_strategy_tokenizer\migration_v2\strategy.py:            strategy=migrated,
+.\quant_strategy_tokenizer\migration_v2\strategy.py:    target_hashes = compute_hashes_v2(migrated)
+.\quant_strategy_tokenizer\migration_v2\strategy.py:        strategy=migrated,
+.\quant_strategy_tokenizer\migration_v2\strategy.py:    migrated = result.strategy
+.\quant_strategy_tokenizer\migration_v2\strategy.py:        for node in migrated.strategy.nodes
+.\quant_strategy_tokenizer\migration_v2\strategy.py:            "legacy_behavior_version": node.metadata.get("legacy_behavior_version"),
+.\quant_strategy_tokenizer\migration_v2\strategy.py:        for node in migrated.strategy.nodes
+.\quant_strategy_tokenizer\migration_v2\strategy.py:        "strategy": migrated.strategy.id,
+.\quant_strategy_tokenizer\migration_v2\strategy.py:        "strategy_version": migrated.strategy.version,
+.\quant_strategy_tokenizer\migration_v2\strategy.py:                    "source_instance_hash": migrated.derived_from.source_instance_hash
+.\quant_strategy_tokenizer\migration_v2\strategy.py:                    if migrated.derived_from
+.\quant_strategy_tokenizer\migration_v2\strategy.py:        "legacy_source": {
+.\quant_strategy_tokenizer\migration_v2\strategy.py:            "source_ir_version": migrated.derived_from.source_ir_version if migrated.derived_from else None,
+.\quant_strategy_tokenizer\migration_v2\strategy.py:                migrated.derived_from.source_instance_hash if migrated.derived_from else None
+.\quant_strategy_tokenizer\migration_v2\strategy.py:                migrated.derived_from.model_dump(mode="json") if migrated.derived_from else {}
+.\quant_strategy_tokenizer\migration_v2\strategy.py:def _migrate_node(node: GraphNode, diagnostics: list[Diagnostic]) -> NodeV04 | None:
+.\quant_strategy_tokenizer\migration_v2\strategy.py:        legacy_spec = registry.get(node.token, node.v).spec
+.\quant_strategy_tokenizer\migration_v2\strategy.py:    target_token = legacy_spec.id
+.\quant_strategy_tokenizer\migration_v2\strategy.py:    target_version = legacy_spec.version
+.\quant_strategy_tokenizer\migration_v2\strategy.py:    target_behavior_version = legacy_spec.behavior_version
+.\quant_strategy_tokenizer\migration_v2\strategy.py:        "legacy_token": legacy_spec.id,
+.\quant_strategy_tokenizer\migration_v2\strategy.py:        "legacy_version": legacy_spec.version,
+.\quant_strategy_tokenizer\migration_v2\strategy.py:        "legacy_behavior_version": legacy_spec.behavior_version,
+.\quant_strategy_tokenizer\migration_v2\strategy.py:        classification = classify_legacy_decision_reduce(
+.\quant_strategy_tokenizer\migration_v2\strategy.py:        metadata["legacy_decision_reduce"] = classification.model_dump(mode="json")
+.\quant_strategy_tokenizer\migration_v2\strategy.py:        metadata["legacy_provenance"] = [to_plain(tag) for tag in node.provenance]
+.\quant_strategy_tokenizer\migration_v2\strategy.py:        signature=_legacy_signature_for(node.token, node.v),
+.\quant_strategy_tokenizer\migration_v2\strategy.py:def _legacy_signature_for(token_id: str, version: int) -> PortSignature:
+.\quant_strategy_tokenizer\migration_v2\strategy.py:            name: InputSpec(type=parse_type_spec(_legacy_type_to_v04(type_name)))
+.\quant_strategy_tokenizer\migration_v2\strategy.py:            name: OutputSpec(type=parse_type_spec(_legacy_type_to_v04(type_name)))
+.\quant_strategy_tokenizer\migration_v2\strategy.py:def _legacy_type_to_v04(type_name: str) -> str:
+.\quant_strategy_tokenizer\mutation\mutate.py:"""P2b-0 mutation engine."""
+.\quant_strategy_tokenizer\mutation\mutate.py:    """Apply one P2b mutation op."""
+.\quant_strategy_tokenizer\qst_lock\canonical.py:"""Canonical JSON bytes for P3a-0 lock files."""
+.\quant_strategy_tokenizer\mutation\diff.py:"""P2b-0 strategy diff wrapper."""
+.\quant_strategy_tokenizer\qst_lock\io.py:"""Read and write P3a-0 qst.lock artifacts."""
+.\quant_strategy_tokenizer\runtime\trace.py:"""P0 runtime trace models and writer."""
+.\quant_strategy_tokenizer\runtime\trace.py:    """P0 trace."""
+.\quant_strategy_tokenizer\qst_lock\schema.py:"""P3a-0 qst.lock schema models."""
+.\quant_strategy_tokenizer\qst_lock\schema.py:    """Canonical P3a-0 qst.lock model."""
+.\quant_strategy_tokenizer\runtime\executor.py:"""Local in-memory P0 Strategy IR executor."""
+.\quant_strategy_tokenizer\qst_lock\verifier.py:"""P3a-0 qst.lock verifier."""
+.\quant_strategy_tokenizer\qst_lock\verifier.py:    """Verify a surface strategy against a P3a-0 qst.lock."""
+.\quant_strategy_tokenizer\provenance\tag.py:    """Normalize P2a-0 string attachers to the P2a-1 structured form."""
+.\quant_strategy_tokenizer\qst_lock\verify_result.py:"""Structured verification result models for P3a-0."""
+.\quant_strategy_tokenizer\qst_lock\verify_result.py:P3A0_LIMITATION_NOTE = (
+.\quant_strategy_tokenizer\qst_lock\verify_result.py:    "P3 verify checks structural and trace-semantic artifacts only; numerical "
+.\quant_strategy_tokenizer\qst_lock\verify_result.py:    """Structured result returned by all P3 verify paths."""
+.\quant_strategy_tokenizer\qst_lock\verify_result.py:    limitation_note: str = P3A0_LIMITATION_NOTE
+.\quant_strategy_tokenizer\qst_lock\version_policy.py:    """Return failures for P3a-0 qst version policy checks."""
+.\quant_strategy_tokenizer\qst_lock\version_policy.py:                    "in P3a-0"
+.\quant_strategy_tokenizer\qst_lock\__init__.py:"""P3a-0 deterministic qst.lock support."""
+.\quant_strategy_tokenizer\recipes\compiler.py:    """Recipe nesting exceeded P0 max depth."""
+.\quant_strategy_tokenizer\recipes\algorithms\__init__.py:"""Built-in P2 algorithm recipes."""
+.\quant_strategy_tokenizer\recipes\algorithms\dual_ema_cross.json:  "description": "Dual EMA cross event generated from the P2a-2 deterministic DSL."
+.\quant_strategy_tokenizer\recipes\registry.py:P0 rule:
+.\quant_strategy_tokenizer\recipes\registry.py:- No plugin recipe support in P0.
+.\quant_strategy_tokenizer\recipes\indicators\rma.json:  "description": "Recursive moving average accepting alpha and init only in P0."

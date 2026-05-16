@@ -1,0 +1,4 @@
+﻿HEAD 3013d1db5cd8ddb836f0b8a61dceeaeb0d6dc7a8
+origin/main 3013d1db5cd8ddb836f0b8a61dceeaeb0d6dc7a8
+tag cleanline-pre-reset-20260516
+created_utc 2026-05-16
