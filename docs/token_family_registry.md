@@ -73,3 +73,23 @@ All Stage 3A.2 helpers use deterministic reference semantics for conformance
 only. Window tokens are trailing-window tokens; centered windows remain unsafe
 temporal behavior. `data.shift` with negative periods is an unsafe-future
 operation unless a reference test explicitly opts in.
+
+## Stage 3A.3 Decision, Gate, and State Families
+
+Stage 3A.3 completes the accepted decision/state control surface:
+
+- `decision.*`: Decision Algebra monoids, fold policies, aggregators, and
+  `decision.lift_bool`.
+- `state.*`: delay, accumulate, edge detect, and closed-set FSM reference
+  helpers.
+- `gate.*`: cooldown, market freeze, circuit breaker, observe period, and slot
+  budget gate semantics.
+
+Decision monoids remain limited to `decision.unknown_propagating_and` and
+`decision.any_accept`. `decision.strict_and` and `decision.permissive_and` are
+fold policies, not monoids. `error` is never a DecisionKind; gate and state
+failures use diagnostics. For `state.fsm`, `failure_policy="raise"` means emit
+an error diagnostic in the reference helper, not raise a Python exception.
+
+Gate tokens are stateful reference semantics. They are not order management,
+portfolio risk enforcement, or broker/exchange execution.

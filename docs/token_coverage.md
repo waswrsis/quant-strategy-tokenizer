@@ -34,6 +34,17 @@ The series coverage fixes:
   zero-variance z-score output;
 - cross/threshold signal truth tables and current-bar-safe channel breakout.
 
+Stage 3A.3 adds decision/gate/state conformance coverage:
+
+- `decision.lift_bool` and Decision Algebra facade delegation;
+- monoid/fold/aggregator classification for decision tokens;
+- state helper facade coverage that preserves existing traces and diagnostics;
+- gate reference fixtures for cooldown, market freeze, circuit breaker, observe
+  period, and slot budget behavior.
+
+Gate helpers output `DecisionV2` values only. Diagnostics remain diagnostics and
+do not become a DecisionKind.
+
 ## Hash Impact
 
 | Object | Stage 3A impact |

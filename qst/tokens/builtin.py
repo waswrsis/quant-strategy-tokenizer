@@ -233,6 +233,26 @@ _THRESHOLD_PARAMS: dict[str, object] = {
         "inclusive": {"type": "boolean", "default": True},
     },
 }
+_COOLDOWN_GATE_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {"cooldown_events": {"type": "integer", "minimum": 1, "default": 1}},
+}
+_BREACH_THRESHOLD_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {"threshold": {"type": "integer", "minimum": 1, "default": 2}},
+}
+_OBSERVE_PERIOD_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {"window": {"type": "integer", "minimum": 1, "default": 3}},
+}
+_SLOT_BUDGET_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {"slot_budget": {"type": "integer", "minimum": 0, "default": 2}},
+}
 
 _TOKEN_DEFINITIONS: tuple[dict[str, Any], ...] = (
     # Math and boolean primitives.
@@ -312,8 +332,11 @@ _TOKEN_DEFINITIONS: tuple[dict[str, Any], ...] = (
     {"name": "indicator.channel_breakout", "family": "indicator", "category": "breakout", "inputs": {"high": _TS_FLOAT, "low": _TS_FLOAT, "close": _TS_FLOAT}, "outputs": {"value": _TS_BOOL}, "params_schema": _WINDOW_PARAMS, "numeric": "bool", "temporal": "uses previous trailing window only to avoid current-bar lookahead"},
     # Decision, gate, risk, and plan surface tokens.
     {"name": "decision.lift_bool", "family": "decision", "category": "decision_bridge", "inputs": {"series": _TS_BOOL}, "outputs": {"decision": _DECISION}, "numeric": "object"},
-    {"name": "gate.cooldown", "family": "gate", "category": "state_gate", "inputs": {"decision": _DECISION}, "outputs": {"decision": _DECISION}, "numeric": "object", "stateful": True},
-    {"name": "gate.circuit_breaker", "family": "gate", "category": "state_gate", "inputs": {"decision": _DECISION}, "outputs": {"decision": _DECISION}, "numeric": "object", "stateful": True},
+    {"name": "gate.cooldown", "family": "gate", "category": "state_gate", "inputs": {"decision": _DECISION}, "outputs": {"decision": _DECISION}, "params_schema": _COOLDOWN_GATE_PARAMS, "numeric": "object", "stateful": True, "failure_mode": "gate block emits DecisionKind block; errors remain diagnostics"},
+    {"name": "gate.market_freeze", "family": "gate", "category": "state_gate", "inputs": {"decision": _DECISION}, "outputs": {"decision": _DECISION}, "numeric": "object", "stateful": True, "failure_mode": "market freeze emits DecisionKind block; errors remain diagnostics"},
+    {"name": "gate.circuit_breaker", "family": "gate", "category": "state_gate", "inputs": {"decision": _DECISION}, "outputs": {"decision": _DECISION}, "params_schema": _BREACH_THRESHOLD_PARAMS, "numeric": "object", "stateful": True, "failure_mode": "breach threshold emits DecisionKind block; errors remain diagnostics"},
+    {"name": "gate.observe_period", "family": "gate", "category": "state_gate", "inputs": {"decision": _DECISION}, "outputs": {"decision": _DECISION}, "params_schema": _OBSERVE_PERIOD_PARAMS, "numeric": "object", "stateful": True, "failure_mode": "observe warmup emits DecisionKind block; errors remain diagnostics"},
+    {"name": "gate.slot_budget", "family": "gate", "category": "state_gate", "inputs": {"decision": _DECISION}, "outputs": {"decision": _DECISION}, "params_schema": _SLOT_BUDGET_PARAMS, "numeric": "object", "stateful": True, "failure_mode": "slot budget breach emits DecisionKind block; errors remain diagnostics"},
     {"name": "risk.position_cap", "family": "risk", "category": "risk_gate", "inputs": {"decision": _DECISION, "state": "State[object]"}, "outputs": {"decision": _DECISION}, "numeric": "object", "risk_level": "medium"},
     {"name": "risk.volatility_target", "family": "risk", "category": "weight_risk", "inputs": {"weights": _PANEL_DECIMAL, "volatility": _PANEL_FLOAT}, "outputs": {"weights": _PANEL_DECIMAL}, "numeric": "decimal", "panel_aware": True, "risk_level": "medium"},
     {"name": "risk.turnover_cap", "family": "risk", "category": "weight_risk", "inputs": {"weights": _PANEL_DECIMAL, "previous": _PANEL_DECIMAL}, "outputs": {"weights": _PANEL_DECIMAL}, "numeric": "decimal", "panel_aware": True, "risk_level": "medium"},

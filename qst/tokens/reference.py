@@ -208,6 +208,134 @@ def evaluate_cmp_token(name: str, *args: Any, inclusive: bool = True) -> bool:
     raise TokenReferenceError("QST_TOKEN_REFERENCE_UNSUPPORTED", f"Unsupported cmp token: {name}")
 
 
+def evaluate_decision_token(name: str, *args: Any, **params: Any) -> object:
+    """Evaluate Stage 3A.3 decision facade helpers."""
+
+    if name.startswith("core."):
+        name = name.removeprefix("core.")
+
+    if name == "decision.lift_bool":
+        (series,) = _expect_args("decision.lift_bool", args, 1)
+        accept_reason = str(params.get("accept_reason", "decision_lift_bool_accept"))
+        reject_reason = str(params.get("reject_reason", "decision_lift_bool_reject"))
+        from qst.decision import DecisionV2
+
+        return [
+            DecisionV2(
+                kind="accept" if value else "reject",
+                reasons=(accept_reason if value else reject_reason,),
+            )
+            for value in _bool_values(series)
+        ]
+
+    if name.startswith("decision."):
+        (decisions,) = _expect_args(name, args, 1)
+        from qst.decision import (
+            aggregate_decisions,
+            combine_decisions,
+            fold_decisions,
+            is_aggregator_id,
+            is_fold_policy_id,
+            is_monoid_id,
+        )
+
+        if is_monoid_id(name):
+            return combine_decisions(name, list(decisions), score_policy=params.get("score_policy"))
+        if is_fold_policy_id(name):
+            return fold_decisions(name, list(decisions), score_policy=params.get("score_policy"))
+        if is_aggregator_id(name):
+            return aggregate_decisions(name, list(decisions), params=params)
+
+    raise TokenReferenceError(
+        "QST_TOKEN_REFERENCE_UNSUPPORTED",
+        f"Unsupported decision token: {name}",
+    )
+
+
+def evaluate_state_token(name: str, *args: Any, **params: Any) -> object:
+    """Evaluate Stage 3A.3 state facade helpers."""
+
+    token = _local_name(name, "state.")
+
+    if token == "delay":
+        from qst.state import state_delay
+
+        (values,) = _expect_args(token, args, 1)
+        return state_delay(values, **params)
+
+    if token == "accumulate":
+        from qst.state import state_accumulate
+
+        (values,) = _expect_args(token, args, 1)
+        return state_accumulate(values, **params)
+
+    if token == "edge_detect":
+        from qst.state import state_edge_detect
+
+        (values,) = _expect_args(token, args, 1)
+        return state_edge_detect(values, **params)
+
+    if token == "fsm":
+        from qst.state import FSMDefinition, state_fsm
+
+        (events,) = _expect_args(token, args, 1)
+        active_params = dict(params)
+        raw_definition = active_params.pop("definition", None)
+        if raw_definition is None:
+            raise TokenReferenceError(
+                "QST_TOKEN_STATE_FSM_DEFINITION_MISSING",
+                "state.fsm facade requires a definition parameter.",
+            )
+        definition = (
+            raw_definition
+            if isinstance(raw_definition, FSMDefinition)
+            else FSMDefinition.model_validate(raw_definition)
+        )
+        return state_fsm(events, definition, **active_params)
+
+    raise TokenReferenceError("QST_TOKEN_REFERENCE_UNSUPPORTED", f"Unsupported state token: {name}")
+
+
+def evaluate_gate_token(name: str, values: Sequence[Any], **params: Any) -> list[Any]:
+    """Evaluate Stage 3A.3 gate facade helpers and return DecisionV2 outputs."""
+
+    token = _local_name(name, "gate.")
+
+    if token == "cooldown":
+        events = _string_values(values, field_name="gate.cooldown events")
+        return _cooldown_gate(events)
+
+    if token == "market_freeze":
+        events = _string_values(values, field_name="gate.market_freeze events")
+        return _market_freeze_gate(events)
+
+    if token == "circuit_breaker":
+        threshold = _coerce_int_param(params.get("threshold", 2), "threshold")
+        if threshold <= 0:
+            raise TokenReferenceError("QST_TOKEN_GATE_PARAM_INVALID", "threshold must be positive.")
+        breaches = [_coerce_gate_int(value) for value in values]
+        return _threshold_gate(breaches, threshold=threshold, reason="GATE_BLOCKED_CIRCUIT_BREAKER")
+
+    if token == "observe_period":
+        window = _coerce_int_param(params.get("window", 3), "window")
+        if window <= 0:
+            raise TokenReferenceError("QST_TOKEN_GATE_PARAM_INVALID", "window must be positive.")
+        ticks = [_coerce_gate_int(value) for value in values]
+        return _observe_period_gate(ticks, window=window)
+
+    if token == "slot_budget":
+        slot_budget = _coerce_int_param(params.get("slot_budget", 2), "slot_budget")
+        if slot_budget < 0:
+            raise TokenReferenceError(
+                "QST_TOKEN_GATE_PARAM_INVALID",
+                "slot_budget must be non-negative.",
+            )
+        consumed = [_coerce_gate_int(value) for value in values]
+        return _slot_budget_gate(consumed, slot_budget=slot_budget)
+
+    raise TokenReferenceError("QST_TOKEN_REFERENCE_UNSUPPORTED", f"Unsupported gate token: {name}")
+
+
 def evaluate_data_token(name: str, series: Sequence[SeriesRow], **params: Any) -> NumericSeries:
     """Evaluate Stage 3A.2 `data.*` series reference helpers."""
 
@@ -556,6 +684,109 @@ def evaluate_channel_breakout_token(
     return output
 
 
+def _cooldown_gate(events: Sequence[str]) -> list[Any]:
+    from qst.state import FSMDefinition, state_fsm
+
+    definition = FSMDefinition.model_validate(
+        {
+            "states": ["ready", "cooldown"],
+            "events": ["signal", "fill", "cooldown_expired"],
+            "initial_state": "ready",
+            "transitions": [
+                {"from_state": "ready", "event": "signal", "to_state": "ready"},
+                {"from_state": "ready", "event": "fill", "to_state": "cooldown"},
+                {"from_state": "ready", "event": "cooldown_expired", "to_state": "ready"},
+                {"from_state": "cooldown", "event": "signal", "to_state": "cooldown"},
+                {"from_state": "cooldown", "event": "fill", "to_state": "cooldown"},
+                {"from_state": "cooldown", "event": "cooldown_expired", "to_state": "ready"},
+            ],
+            "failure_policy": "raise",
+        }
+    )
+    result = state_fsm(events, definition)
+    return [
+        _gate_decision(
+            blocked=event == "signal" and state == "cooldown",
+            block_reason="GATE_BLOCKED_COOLDOWN",
+        )
+        for event, state in zip(events, result.outputs, strict=True)
+    ]
+
+
+def _market_freeze_gate(events: Sequence[str]) -> list[Any]:
+    from qst.state import FSMDefinition, state_fsm
+
+    definition = FSMDefinition.model_validate(
+        {
+            "states": ["active", "frozen"],
+            "events": ["signal", "freeze_on", "freeze_off"],
+            "initial_state": "active",
+            "transitions": [
+                {"from_state": "active", "event": "signal", "to_state": "active"},
+                {"from_state": "active", "event": "freeze_on", "to_state": "frozen"},
+                {"from_state": "active", "event": "freeze_off", "to_state": "active"},
+                {"from_state": "frozen", "event": "signal", "to_state": "frozen"},
+                {"from_state": "frozen", "event": "freeze_on", "to_state": "frozen"},
+                {"from_state": "frozen", "event": "freeze_off", "to_state": "active"},
+            ],
+            "failure_policy": "raise",
+        }
+    )
+    result = state_fsm(events, definition)
+    return [
+        _gate_decision(
+            blocked=event == "signal" and state == "frozen",
+            block_reason="GATE_BLOCKED_MARKET_FREEZE",
+        )
+        for event, state in zip(events, result.outputs, strict=True)
+    ]
+
+
+def _threshold_gate(values: Sequence[int], *, threshold: int, reason: str) -> list[Any]:
+    from qst.state import state_accumulate
+
+    result = state_accumulate(values, reducer="sum", initial=0)
+    return [
+        _gate_decision(blocked=int(output) >= threshold, block_reason=reason)
+        for output in result.outputs
+    ]
+
+
+def _observe_period_gate(ticks: Sequence[int], *, window: int) -> list[Any]:
+    from qst.state import state_accumulate
+
+    result = state_accumulate(ticks, reducer="sum", initial=0)
+    return [
+        _gate_decision(
+            blocked=int(output) < window,
+            block_reason="GATE_BLOCKED_OBSERVE_PERIOD",
+        )
+        for output in result.outputs
+    ]
+
+
+def _slot_budget_gate(consumed: Sequence[int], *, slot_budget: int) -> list[Any]:
+    from qst.state import state_accumulate
+
+    result = state_accumulate(consumed, reducer="sum", initial=0)
+    return [
+        _gate_decision(
+            blocked=int(output) > slot_budget,
+            block_reason="GATE_BLOCKED_SLOT_BUDGET",
+        )
+        for output in result.outputs
+    ]
+
+
+def _gate_decision(*, blocked: bool, block_reason: str) -> Any:
+    from qst.decision import DecisionV2
+
+    return DecisionV2(
+        kind="block" if blocked else "accept",
+        reasons=(block_reason if blocked else "GATE_ACCEPTED",),
+    )
+
+
 def _local_name(name: str, prefix: str) -> str:
     if name.startswith("core."):
         name = name.removeprefix("core.")
@@ -621,6 +852,38 @@ def _coerce_bool(value: Any) -> bool:
         raise TokenReferenceError(
             "QST_TOKEN_BOOL_TYPE_INVALID",
             "Boolean token input must be bool.",
+        )
+    return value
+
+
+def _bool_values(values: Any) -> list[bool]:
+    if isinstance(values, Sequence) and not isinstance(values, (str, bytes)):
+        if all(isinstance(item, tuple) and len(item) == 2 for item in values):
+            return [_coerce_bool(value) for _, value in _series_rows(cast(Sequence[SeriesRow], values))]
+        return [_coerce_bool(value) for value in values]
+    raise TokenReferenceError(
+        "QST_TOKEN_INPUT_TYPE_INVALID",
+        "Boolean series input must be a sequence.",
+    )
+
+
+def _string_values(values: Sequence[Any], *, field_name: str) -> list[str]:
+    output: list[str] = []
+    for value in values:
+        if not isinstance(value, str) or not value:
+            raise TokenReferenceError(
+                "QST_TOKEN_GATE_EVENT_INVALID",
+                f"{field_name} must contain non-empty string events.",
+            )
+        output.append(value)
+    return output
+
+
+def _coerce_gate_int(value: Any) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise TokenReferenceError(
+            "QST_TOKEN_GATE_INPUT_INVALID",
+            "Gate numeric inputs must be integers, not bool.",
         )
     return value
 
