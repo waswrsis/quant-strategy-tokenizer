@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pyarrow as pa
 
-from quant_strategy_tokenizer.frames import (
+from qst.frames import (
     FeatureFrame,
     FeatureRow,
     MarketFrame,
@@ -13,7 +13,7 @@ from quant_strategy_tokenizer.frames import (
     TraceLog,
     compute_frame_hash,
 )
-from quant_strategy_tokenizer.frames.io import arrow_table_to_frame, frame_to_arrow_table
+from qst.frames.io import arrow_table_to_frame, frame_to_arrow_table
 
 
 def test_arrow_roundtrip_preserves_frame_hash_for_all_frame_types() -> None:

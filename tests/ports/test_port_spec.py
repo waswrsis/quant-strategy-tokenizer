@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from quant_strategy_tokenizer.ports import (
+from qst.ports import (
     InputSpec,
     OutputSpec,
     PortSignature,

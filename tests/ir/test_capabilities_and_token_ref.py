@@ -3,9 +3,9 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from quant_strategy_tokenizer.hash import signature_hash_for_ports_v2
-from quant_strategy_tokenizer.ir import NodeV04, StrategyBodyV04, StrategyIRV04, validate_ir_v04
-from quant_strategy_tokenizer.ir.canonical import canonicalize_v04
+from qst.hash import signature_hash_for_ports_v2
+from qst.ir import NodeV04, StrategyBodyV04, StrategyIRV04, validate_ir_v04
+from qst.ir.canonical import canonicalize_v04
 
 
 def test_capabilities_default_to_core() -> None:

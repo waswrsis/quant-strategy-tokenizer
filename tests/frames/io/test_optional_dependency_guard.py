@@ -4,8 +4,8 @@ import importlib
 
 import pytest
 
-from quant_strategy_tokenizer.frames import MarketFrame
-from quant_strategy_tokenizer.frames.io import arrow_io, parquet_io
+from qst.frames import MarketFrame
+from qst.frames.io import arrow_io, parquet_io
 
 
 def _raise_for_pyarrow(name: str):  # type: ignore[no-untyped-def]

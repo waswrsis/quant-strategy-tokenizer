@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from quant_strategy_tokenizer.validation import Diagnostic, ValidationResult
+from qst.validation import Diagnostic, ValidationResult
 
 
 def test_validation_result_ok_ignores_warnings() -> None:

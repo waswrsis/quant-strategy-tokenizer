@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from quant_strategy_tokenizer.canonical_json import stable_json_bytes
-from quant_strategy_tokenizer.state import StateExecutionTrace, StatePolicy, StateTraceEvent
+from qst.canonical_json import stable_json_bytes
+from qst.state import StateExecutionTrace, StatePolicy, StateTraceEvent
 
 
 def test_state_policy_defaults_are_stable_and_canonical() -> None:

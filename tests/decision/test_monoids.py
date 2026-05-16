@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import itertools
 
-from quant_strategy_tokenizer.decision import (
+from qst.decision import (
     DecisionV2,
     combine_decisions,
     is_aggregator_id,

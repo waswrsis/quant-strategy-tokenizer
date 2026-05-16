@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from quant_strategy_tokenizer.artifacts import ProvenanceChain
+from qst.artifacts import ProvenanceChain
 
 
 def test_provenance_chain_parent_artifacts_are_sha256() -> None:

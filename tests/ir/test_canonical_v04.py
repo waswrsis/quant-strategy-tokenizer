@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from quant_strategy_tokenizer.ir import NodeV04, StrategyBodyV04, StrategyIRV04
-from quant_strategy_tokenizer.ir.canonical import canonical_bytes_v04, canonicalize_v04
+from qst.ir import NodeV04, StrategyBodyV04, StrategyIRV04
+from qst.ir.canonical import canonical_bytes_v04, canonicalize_v04
 
 
 def _strategy() -> StrategyIRV04:

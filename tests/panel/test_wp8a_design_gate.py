@@ -8,11 +8,11 @@ from typing import Any
 import pytest
 from jsonschema import Draft202012Validator, ValidationError
 
-from quant_strategy_tokenizer.ir import StrategyBodyV04, StrategyIRV04
-from quant_strategy_tokenizer.types import TypeSpec, parse_type_spec
+from qst.ir import StrategyBodyV04, StrategyIRV04
+from qst.types import TypeSpec, parse_type_spec
 
 ROOT = Path(__file__).resolve().parents[2]
-SCHEMA_DIR = ROOT / "docs" / "JSON_SCHEMAS"
+SCHEMA_DIR = ROOT / "docs" / "schemas"
 
 PANEL_SHELL_FIELDS = {
     "axes",
@@ -25,25 +25,25 @@ PANEL_SHELL_FIELDS = {
 }
 
 EXPECTED_SCHEMA_HASHES = {
-    "qst_panel_representation_0_4.schema.json": (
+    "panel_representation-0.4.schema.json": (
         "sha256:ed2fea8886b9a229b71b86ebaf5b4a717cf14e8e0cf4b23fcaebac192df66588"
     ),
-    "qst_panel_universe_mask_0_4.schema.json": (
+    "panel_universe_mask-0.4.schema.json": (
         "sha256:f171e4f4c1a0702835606c1100fc2bf0e93a31a632bb89c00aada8a0329f1e32"
     ),
-    "qst_panel_missing_policy_0_4.schema.json": (
+    "panel_missing_policy-0.4.schema.json": (
         "sha256:7ce719f73763b0d974d58bdb0d0ca2550c0b74cdbe93dff5d68bdbee23cbcbb6"
     ),
-    "qst_panel_group_spec_0_4.schema.json": (
+    "panel_group_spec-0.4.schema.json": (
         "sha256:b44d24f02e29cdc73a22becacbe392f761b24c734c0c31e2ea13364131209b4f"
     ),
-    "qst_panel_selection_weight_0_4.schema.json": (
+    "panel_selection_weight-0.4.schema.json": (
         "sha256:baff36b907bdf7fafe400bf881866af2b87444d3e3fc78cd14906837edac9155"
     ),
-    "qst_panel_temporal_state_0_4.schema.json": (
+    "panel_temporal_state-0.4.schema.json": (
         "sha256:1cedea73f3d006e533aa3586455fb88e6f64924e313b90a914353bfe39566362"
     ),
-    "qst_typespec_0_4.schema.json": (
+    "type_spec-0.4.schema.json": (
         "sha256:f181ce889c24abc36bb57cc5662b50669331b68f2000e7df0dbe6c42647207fd"
     ),
 }
@@ -89,7 +89,7 @@ def test_wp8a_schemas_are_valid_and_hash_pinned() -> None:
 
 def test_panel_representation_schema_accepts_sparse_logical() -> None:
     _validate(
-        "qst_panel_representation_0_4.schema.json",
+        "panel_representation-0.4.schema.json",
         {
             "schema_version": "qst-panel-representation/0.4",
             "kind": "sparse_logical",
@@ -108,20 +108,20 @@ def test_universe_mask_false_is_out_of_universe_not_missing() -> None:
         "false_semantics": "out_of_universe_not_missing",
     }
 
-    _validate("qst_panel_universe_mask_0_4.schema.json", instance)
+    _validate("panel_universe_mask-0.4.schema.json", instance)
 
     assert "ETH/USDT" not in instance["included"]
     assert instance["false_semantics"] == "out_of_universe_not_missing"
 
 
 def test_missing_policy_excludes_sparse_representation_and_nullable_decimal() -> None:
-    schema = _load_schema("qst_panel_missing_policy_0_4.schema.json")
+    schema = _load_schema("panel_missing_policy-0.4.schema.json")
 
     assert "sparse_logical" not in schema["properties"]["kind"]["enum"]
     assert schema["properties"]["kind"]["default"] == "error_on_missing"
 
     _validate(
-        "qst_panel_missing_policy_0_4.schema.json",
+        "panel_missing_policy-0.4.schema.json",
         {
             "schema_version": "qst-panel-missing-policy/0.4",
             "kind": "error_on_missing",
@@ -132,7 +132,7 @@ def test_missing_policy_excludes_sparse_representation_and_nullable_decimal() ->
 
     with pytest.raises(ValidationError):
         _validate(
-            "qst_panel_missing_policy_0_4.schema.json",
+            "panel_missing_policy-0.4.schema.json",
             {
                 "schema_version": "qst-panel-missing-policy/0.4",
                 "kind": "sparse_logical",
@@ -141,7 +141,7 @@ def test_missing_policy_excludes_sparse_representation_and_nullable_decimal() ->
         )
     with pytest.raises(ValidationError):
         _validate(
-            "qst_panel_missing_policy_0_4.schema.json",
+            "panel_missing_policy-0.4.schema.json",
             {
                 "schema_version": "qst-panel-missing-policy/0.4",
                 "kind": "propagate_missing",
@@ -151,7 +151,7 @@ def test_missing_policy_excludes_sparse_representation_and_nullable_decimal() ->
         )
     with pytest.raises(ValidationError):
         _validate(
-            "qst_panel_missing_policy_0_4.schema.json",
+            "panel_missing_policy-0.4.schema.json",
             {
                 "schema_version": "qst-panel-missing-policy/0.4",
                 "kind": "drop_missing",
@@ -162,12 +162,12 @@ def test_missing_policy_excludes_sparse_representation_and_nullable_decimal() ->
 
 
 def test_group_spec_static_mapping_and_field_ref_contracts() -> None:
-    schema = _load_schema("qst_panel_group_spec_0_4.schema.json")
+    schema = _load_schema("panel_group_spec-0.4.schema.json")
     for branch in schema["oneOf"]:
         assert branch["properties"]["missing_group_policy"]["default"] == "error"
 
     _validate(
-        "qst_panel_group_spec_0_4.schema.json",
+        "panel_group_spec-0.4.schema.json",
         {
             "schema_version": "qst-panel-group-spec/0.4",
             "kind": "static_mapping",
@@ -179,7 +179,7 @@ def test_group_spec_static_mapping_and_field_ref_contracts() -> None:
         },
     )
     _validate(
-        "qst_panel_group_spec_0_4.schema.json",
+        "panel_group_spec-0.4.schema.json",
         {
             "schema_version": "qst-panel-group-spec/0.4",
             "kind": "field_ref",
@@ -192,7 +192,7 @@ def test_group_spec_static_mapping_and_field_ref_contracts() -> None:
 
     with pytest.raises(ValidationError):
         _validate(
-            "qst_panel_group_spec_0_4.schema.json",
+            "panel_group_spec-0.4.schema.json",
             {
                 "schema_version": "qst-panel-group-spec/0.4",
                 "kind": "dynamic_mapping",
@@ -203,7 +203,7 @@ def test_group_spec_static_mapping_and_field_ref_contracts() -> None:
         )
     with pytest.raises(ValidationError):
         _validate(
-            "qst_panel_group_spec_0_4.schema.json",
+            "panel_group_spec-0.4.schema.json",
             {
                 "schema_version": "qst-panel-group-spec/0.4",
                 "kind": "static_mapping",
@@ -215,7 +215,7 @@ def test_group_spec_static_mapping_and_field_ref_contracts() -> None:
         )
     with pytest.raises(ValidationError):
         _validate(
-            "qst_panel_group_spec_0_4.schema.json",
+            "panel_group_spec-0.4.schema.json",
             {
                 "schema_version": "qst-panel-group-spec/0.4",
                 "kind": "field_ref",
@@ -250,12 +250,12 @@ def test_selection_panel_and_weight_panel_are_distinct_wire_concepts() -> None:
         },
     }
 
-    _validate("qst_panel_selection_weight_0_4.schema.json", selection)
-    _validate("qst_panel_selection_weight_0_4.schema.json", weight)
+    _validate("panel_selection_weight-0.4.schema.json", selection)
+    _validate("panel_selection_weight-0.4.schema.json", weight)
 
     invalid_selection = {**selection, "weight_kind": "raw"}
     with pytest.raises(ValidationError):
-        _validate("qst_panel_selection_weight_0_4.schema.json", invalid_selection)
+        _validate("panel_selection_weight-0.4.schema.json", invalid_selection)
 
 
 def test_temporal_join_residualize_and_panel_state_boundaries() -> None:
@@ -279,7 +279,7 @@ def test_temporal_join_residualize_and_panel_state_boundaries() -> None:
         },
     }
 
-    _validate("qst_panel_temporal_state_0_4.schema.json", instance)
+    _validate("panel_temporal_state-0.4.schema.json", instance)
 
     assert instance["residualize_v1"] == {
         "panel": "Panel[float]",
@@ -289,7 +289,7 @@ def test_temporal_join_residualize_and_panel_state_boundaries() -> None:
     }
     with pytest.raises(ValidationError):
         _validate(
-            "qst_panel_temporal_state_0_4.schema.json",
+            "panel_temporal_state-0.4.schema.json",
             {
                 **instance,
                 "panel_state": {
@@ -302,7 +302,7 @@ def test_temporal_join_residualize_and_panel_state_boundaries() -> None:
 
 def test_typespec_panel_shell_field_set_is_frozen() -> None:
     model_fields = set(TypeSpec.model_fields)
-    schema_properties = set(_load_schema("qst_typespec_0_4.schema.json")["properties"])
+    schema_properties = set(_load_schema("type_spec-0.4.schema.json")["properties"])
 
     assert PANEL_SHELL_FIELDS <= model_fields
     assert PANEL_SHELL_FIELDS <= schema_properties

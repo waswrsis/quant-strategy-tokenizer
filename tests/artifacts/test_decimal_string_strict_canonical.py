@@ -4,7 +4,7 @@ from decimal import Decimal
 
 import pytest
 
-from quant_strategy_tokenizer.artifacts.decimal_string import (
+from qst.artifacts.decimal_string import (
     normalize_to_canonical,
     validate_decimal_string,
 )

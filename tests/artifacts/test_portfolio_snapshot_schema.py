@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from quant_strategy_tokenizer.artifacts import PortfolioSnapshot, Position
+from qst.artifacts import PortfolioSnapshot, Position
 from tests.artifacts.schema_helpers import validate_schema
 
 
@@ -20,4 +20,4 @@ def test_portfolio_snapshot_schema_validates_model_dump() -> None:
         ],
     )
 
-    validate_schema("portfolio_snapshot.schema.json", snapshot.model_dump(mode="json"))
+    validate_schema("portfolio_snapshot-0.4.schema.json", snapshot.model_dump(mode="json"))

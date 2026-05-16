@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from quant_strategy_tokenizer.hash import signature_hash_for_ports_v2, signature_hash_v2
-from quant_strategy_tokenizer.ports import PortSignature
+from qst.hash import signature_hash_for_ports_v2, signature_hash_v2
+from qst.ports import PortSignature
 
 
 def test_signature_hash_supports_empty_payload() -> None:

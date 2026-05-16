@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from quant_strategy_tokenizer.decision import (
+from qst.decision import (
     FINAL_UNKNOWN_AS_ACCEPT_REASON,
     FINAL_UNKNOWN_AS_REJECT_REASON,
     DecisionV2,

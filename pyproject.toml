@@ -33,23 +33,23 @@ dev = [
 ]
 
 [project.scripts]
-qst = "quant_strategy_tokenizer.cli:app"
+qst = "qst.cli:app"
 
 [tool.hatch.build.targets.wheel]
-packages = ["quant_strategy_tokenizer"]
+packages = ["qst"]
 
 [tool.hatch.build]
 include = [
-    "quant_strategy_tokenizer/**/*.py",
-    "quant_strategy_tokenizer/**/*.json",
-    "quant_strategy_tokenizer/**/*.yaml",
-    "quant_strategy_tokenizer/py.typed",
+    "qst/**/*.py",
+    "qst/**/*.json",
+    "qst/**/*.yaml",
+    "qst/py.typed",
 ]
 
 [tool.mypy]
 strict = true
 python_version = "3.11"
-files = ["quant_strategy_tokenizer", "tests"]
+files = ["qst", "tests"]
 ignore_missing_imports = true
 warn_unused_ignores = false
 
@@ -72,7 +72,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["quant_strategy_tokenizer"]
+source = ["qst"]
 omit = [
-    "quant_strategy_tokenizer/cli.py",
+    "qst/cli.py",
 ]

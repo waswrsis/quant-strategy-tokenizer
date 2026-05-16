@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from quant_strategy_tokenizer.hash import behavior_hash_v2
+from qst.hash import behavior_hash_v2
 
 
 def test_behavior_hash_supports_empty_payload() -> None:

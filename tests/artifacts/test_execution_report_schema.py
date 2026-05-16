@@ -4,7 +4,7 @@ import pytest
 from jsonschema.exceptions import ValidationError as JsonSchemaValidationError
 from pydantic import ValidationError
 
-from quant_strategy_tokenizer.artifacts import ExecutionReport
+from qst.artifacts import ExecutionReport
 from tests.artifacts.schema_helpers import validate_schema, validator_for
 
 HASH = "sha256:" + "1" * 64
@@ -26,7 +26,7 @@ def test_execution_report_schema_validates_model_dump() -> None:
         venue="mock",
     )
 
-    validate_schema("execution_report.schema.json", report.model_dump(mode="json"))
+    validate_schema("execution_report-0.4.schema.json", report.model_dump(mode="json"))
 
 
 def test_non_trade_event_requires_qty_last_zero() -> None:
@@ -95,4 +95,4 @@ def test_execution_report_schema_rejects_negative_zero_decimal_string() -> None:
     }
 
     with pytest.raises(JsonSchemaValidationError):
-        validator_for("execution_report.schema.json").validate(payload)
+        validator_for("execution_report-0.4.schema.json").validate(payload)

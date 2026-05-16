@@ -4,7 +4,7 @@ import math
 
 import pytest
 
-from quant_strategy_tokenizer.canonical_json import stable_json_bytes
+from qst.canonical_json import stable_json_bytes
 
 
 def test_stable_json_bytes_are_order_stable() -> None:

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from quant_strategy_tokenizer.custom_runtime import (
+from qst.custom_runtime import (
     ApprovalRecord,
     ApprovalRequest,
     ApprovalStore,
@@ -18,16 +18,16 @@ from quant_strategy_tokenizer.custom_runtime import (
     audit_chain_hash_for_records,
     load_token_pack,
 )
-from quant_strategy_tokenizer.custom_runtime.audit import AuditRecord
-from quant_strategy_tokenizer.custom_runtime.implementation import (
+from qst.custom_runtime.audit import AuditRecord
+from qst.custom_runtime.implementation import (
     ImplementationRef,
     resolve_implementation_hash,
     source_tree_hash,
 )
-from quant_strategy_tokenizer.ir import TokenRefV04
+from qst.ir import TokenRefV04
 
 ROOT = Path(__file__).resolve().parents[2]
-PACK_DIR = ROOT / "tokenpacks" / "qst-tokenpack-kalman"
+PACK_DIR = ROOT / "examples" / "custom_token" / "kalman"
 TOKEN_REF = TokenRefV04(namespace="my_pack", name="kalman_ema", version=1, behavior_version=1)
 CURRENT_TIME = "2026-05-15T00:00:00Z"
 

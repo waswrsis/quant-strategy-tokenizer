@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from quant_strategy_tokenizer.ir import (
+from qst.ir import (
     CANONICAL_VERSION_V04,
     IR_VERSION_V04,
     NodeV04,

@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-from quant_strategy_tokenizer.hash import (
+from qst.hash import (
     BehaviorMaterialV2,
     behavior_hash_for_material_v2,
 )
-from quant_strategy_tokenizer.numeric import NumericPolicy, semantic_float64_policy
-from quant_strategy_tokenizer.token_evolution import TokenLifecycleStatus
+from qst.numeric import NumericPolicy, semantic_float64_policy
+from qst.token_evolution import TokenLifecycleStatus
 
 
 def test_behavior_material_requires_numeric_policy() -> None:

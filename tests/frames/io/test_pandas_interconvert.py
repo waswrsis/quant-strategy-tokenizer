@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from quant_strategy_tokenizer.frames import (
+from qst.frames import (
     FeatureFrame,
     FeatureRow,
     MarketFrame,
     OHLCVBar,
     compute_frame_hash,
 )
-from quant_strategy_tokenizer.frames.io import dataframe_to_frame, frame_to_dataframe
+from qst.frames.io import dataframe_to_frame, frame_to_dataframe
 
 
 def test_market_frame_pandas_roundtrip_preserves_decimal_strings_as_object_dtype() -> None:

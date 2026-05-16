@@ -11,3 +11,4 @@ build/
 *.egg-info/
 trace.json
 *.bak
+.local_audit/

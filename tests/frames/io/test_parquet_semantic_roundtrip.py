@@ -3,14 +3,14 @@ from __future__ import annotations
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from quant_strategy_tokenizer.frames import (
+from qst.frames import (
     FeatureFrame,
     FeatureRow,
     MarketFrame,
     OHLCVBar,
     compute_frame_hash,
 )
-from quant_strategy_tokenizer.frames.io import read_parquet_frame, write_parquet_frame
+from qst.frames.io import read_parquet_frame, write_parquet_frame
 
 
 def test_parquet_market_frame_semantic_roundtrip_preserves_hash_and_schema_order(tmp_path) -> None:  # type: ignore[no-untyped-def]

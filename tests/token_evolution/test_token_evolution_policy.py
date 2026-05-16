@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from quant_strategy_tokenizer.token_evolution import (
+from qst.token_evolution import (
     TOKEN_EVOLUTION_POLICY_SCHEMA_VERSION,
     TOKEN_LIFECYCLE_SCHEMA_VERSION,
     TokenLifecycleStatus,

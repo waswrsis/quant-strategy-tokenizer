@@ -1,51 +1,35 @@
 # Contributing
 
-QST is in a cleanline baseline. Contributions should preserve current
-`qst-ir/0.4` semantics unless an ADR explicitly changes them.
-
-## Ground Rules
-
-- Keep active code focused on the current IR, TokenSpec/TokenPack metadata,
-  reference semantics, validation, and custom-token boundaries.
-- Do not reintroduce retired compatibility loaders, migration commands, or old
-  runtime/package paths.
-- Keep generated caches out of the repository.
-- Use structured models and canonical JSON helpers instead of ad hoc string
-  manipulation.
-- Preserve deterministic hashes unless the change includes an ADR and updated
-  sentinel evidence.
+QST uses a current-only public tree. Contributions should preserve the active package name `qst`, the `.gkr.yaml` source suffix, and the internal `qst-ir/0.4` schema identity.
 
 ## Local Checks
 
-Run these before submitting substantial changes:
+Run the focused checks before opening changes:
 
 ```bash
-python -m compileall quant_strategy_tokenizer
+python -m compileall qst
 python -m ruff check .
-python -m mypy quant_strategy_tokenizer
-python -m quant_strategy_tokenizer.lint.stateless quant_strategy_tokenizer
+python -m mypy qst
 python -m pytest tests -q
-python -m quant_strategy_tokenizer.cli vocabulary --check
+python -m qst.cli vocabulary --check
+python -m qst.cli hash examples/strategies/kdj_cross_basic.gkr.yaml
+python -m qst.cli hash examples/strategies/kdj_with_ema_filter.gkr.yaml
 ```
 
-Useful smoke checks:
+For final verification, also run coverage:
 
 ```bash
-python - <<'PY'
-import quant_strategy_tokenizer
-import quant_strategy_tokenizer.ir
-import quant_strategy_tokenizer.tokens
-import quant_strategy_tokenizer.types
-import quant_strategy_tokenizer.validation
-import quant_strategy_tokenizer.custom_runtime
-print("import smoke ok")
-PY
-
-python -m quant_strategy_tokenizer.cli --help
-python -m quant_strategy_tokenizer.cli hash strategies/examples/kdj_cross_basic.qst.yaml
+python -m pytest --cov=qst --cov-fail-under=85 -q
 ```
+
+## Change Rules
+
+- Do not change canonical or hash semantics without an ADR.
+- Do not add broad runtime execution through the CLI.
+- Do not make custom-token approval portable.
+- Do not introduce business framework imports into `qst/`.
+- Keep examples under `examples/` and deterministic reference data under `tests/reference/`.
 
 ## Documentation
 
-Active docs describe the current cleanline system. Historical documents belong
-under `docs/archive/**` and must not define current behavior.
+Update [docs/architecture.md](docs/architecture.md), [docs/security.md](docs/security.md), or [docs/reference.md](docs/reference.md) when behavior, trust boundaries, or public file layout changes.

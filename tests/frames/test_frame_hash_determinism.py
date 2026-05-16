@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from quant_strategy_tokenizer.frames import (
+from qst.frames import (
     FeatureFrame,
     FeatureRow,
     MarketFrame,

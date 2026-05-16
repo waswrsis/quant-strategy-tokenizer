@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from quant_strategy_tokenizer.frames import (
+from qst.frames import (
     FeatureFrame,
     FeatureRow,
     MarketFrame,
@@ -11,7 +11,7 @@ from quant_strategy_tokenizer.frames import (
     TraceLog,
     compute_frame_hash,
 )
-from quant_strategy_tokenizer.frames.io import frame_from_json_bytes, frame_to_json_bytes
+from qst.frames.io import frame_from_json_bytes, frame_to_json_bytes
 
 
 def test_json_roundtrip_all_frame_types_preserves_hash_and_frame_hash_field() -> None:

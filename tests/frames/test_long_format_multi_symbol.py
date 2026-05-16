@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from quant_strategy_tokenizer.frames import MarketFrame, OHLCVBar
-from quant_strategy_tokenizer.frames.io import frame_to_csv_text
+from qst.frames import MarketFrame, OHLCVBar
+from qst.frames.io import frame_to_csv_text
 
 
 def test_multi_symbol_market_frame_serializes_sorted_long_format() -> None:

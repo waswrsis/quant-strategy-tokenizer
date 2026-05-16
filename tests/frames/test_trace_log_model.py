@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from quant_strategy_tokenizer.frames import TraceEvent, TraceLog
+from qst.frames import TraceEvent, TraceLog
 
 
 def test_trace_log_accepts_canonical_json_payload_and_sorts_events() -> None:

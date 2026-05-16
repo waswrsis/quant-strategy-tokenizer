@@ -5,7 +5,7 @@ import math
 import pytest
 from pydantic import ValidationError
 
-from quant_strategy_tokenizer.artifacts import ArtifactRef, BacktestEvidence, BacktestStats
+from qst.artifacts import ArtifactRef, BacktestEvidence, BacktestStats
 from tests.artifacts.schema_helpers import validate_schema
 
 HASH = "sha256:" + "2" * 64
@@ -18,7 +18,7 @@ def test_backtest_evidence_schema_validates_model_dump() -> None:
         equity_curve=ArtifactRef(path="artifacts/backtest/equity_curve.csv", hash=HASH),
     )
 
-    validate_schema("backtest_evidence.schema.json", evidence.model_dump(mode="json"))
+    validate_schema("backtest_evidence-0.4.schema.json", evidence.model_dump(mode="json"))
 
 
 @pytest.mark.parametrize("value", [math.nan, math.inf, -math.inf])

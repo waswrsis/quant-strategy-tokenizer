@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from quant_strategy_tokenizer.ports import (
+from qst.ports import (
     PortTemporalSpec,
     TemporalRuleResolutionError,
     resolve_temporal_rule,

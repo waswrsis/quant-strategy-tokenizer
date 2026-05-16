@@ -3,14 +3,14 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from quant_strategy_tokenizer.hash import (
+from qst.hash import (
     signature_hash_for_panel_ports_v2,
     signature_hash_for_ports_v2,
     token_pack_hash_for_pack_v2,
     token_spec_hash_for_spec_v2,
 )
-from quant_strategy_tokenizer.ir import NodeV04, StrategyBodyV04, StrategyIRV04, validate_ir_v04
-from quant_strategy_tokenizer.panel import (
+from qst.ir import NodeV04, StrategyBodyV04, StrategyIRV04, validate_ir_v04
+from qst.panel import (
     PanelPoint,
     PanelValue,
     SelectionPanelValue,
@@ -25,12 +25,12 @@ from quant_strategy_tokenizer.panel import (
     panel_zscore,
     selection_to_weights,
 )
-from quant_strategy_tokenizer.panel.token_pack import (
+from qst.panel.token_pack import (
     PANEL_OPS_PACK_ID,
     PANEL_OPS_PACK_VERSION,
     panel_ops_token_pack_v2,
 )
-from quant_strategy_tokenizer.tokens import TokenRegistryV2
+from qst.tokens import TokenRegistryV2
 
 SHA = "sha256:" + "0" * 64
 NON_PANEL_SIGNATURE_HASH = "sha256:faa375e10973332b887b9a8c98b1c996e87b08e419af07dd3b3d34431c61477a"

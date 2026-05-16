@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from quant_strategy_tokenizer.decision import DecisionV2
+from qst.decision import DecisionV2
 
 
 def test_decision_canonicalizes_reasons_and_score() -> None:

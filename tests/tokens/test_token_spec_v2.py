@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import pytest
 
-from quant_strategy_tokenizer.hash import token_spec_hash_for_spec_v2
-from quant_strategy_tokenizer.ir import TokenRefV04
-from quant_strategy_tokenizer.numeric import NumericPolicy, semantic_float64_policy
-from quant_strategy_tokenizer.token_evolution import TokenLifecycleStatus
-from quant_strategy_tokenizer.tokens import TOKEN_SPEC_SCHEMA_VERSION, TokenRiskSpec, TokenSpecV2
+from qst.hash import token_spec_hash_for_spec_v2
+from qst.ir import TokenRefV04
+from qst.numeric import NumericPolicy, semantic_float64_policy
+from qst.token_evolution import TokenLifecycleStatus
+from qst.tokens import TOKEN_SPEC_SCHEMA_VERSION, TokenRiskSpec, TokenSpecV2
 
 
 def make_spec(

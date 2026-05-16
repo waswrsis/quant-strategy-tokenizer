@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from quant_strategy_tokenizer.numeric import (
+from qst.numeric import (
     NUMERIC_POLICY_SCHEMA_VERSION,
     NumericPolicy,
     semantic_float64_policy,

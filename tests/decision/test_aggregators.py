@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from quant_strategy_tokenizer.decision import DecisionV2, aggregate_decisions
+from qst.decision import DecisionV2, aggregate_decisions
 
 
 def _d(kind: str, score: str | None = None) -> DecisionV2:

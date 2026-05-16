@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from quant_strategy_tokenizer.types import TypeSpec, ValueType, parse_type_spec
+from qst.types import TypeSpec, ValueType, parse_type_spec
 
 
 def test_shorthand_timeseries_float_parses_to_structured_type() -> None:

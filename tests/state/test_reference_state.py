@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from quant_strategy_tokenizer.state import (
+from qst.state import (
     StatePolicy,
     state_accumulate,
     state_delay,

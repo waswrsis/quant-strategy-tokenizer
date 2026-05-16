@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta, timezone
 import pytest
 from pydantic import ValidationError
 
-from quant_strategy_tokenizer.frames import MarketFrame, OHLCVBar
+from qst.frames import MarketFrame, OHLCVBar
 
 
 def _bar(timestamp: str, symbol: str = "BTC/USD") -> OHLCVBar:

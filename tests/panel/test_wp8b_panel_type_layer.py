@@ -8,13 +8,13 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from quant_strategy_tokenizer.hash import (
+from qst.hash import (
     signature_hash_for_panel_ports_v2,
     signature_hash_for_ports_v2,
 )
-from quant_strategy_tokenizer.ir import NodeV04, StrategyBodyV04, StrategyIRV04, validate_ir_v04
-from quant_strategy_tokenizer.ir.canonical import canonicalize_v04
-from quant_strategy_tokenizer.panel import (
+from qst.ir import NodeV04, StrategyBodyV04, StrategyIRV04, validate_ir_v04
+from qst.ir.canonical import canonicalize_v04
+from qst.panel import (
     GroupSpec,
     PanelMissingPolicy,
     PanelRepresentation,
@@ -22,11 +22,10 @@ from quant_strategy_tokenizer.panel import (
     UniverseMask,
     WeightPanelType,
 )
-from quant_strategy_tokenizer.types import TypeSpec, parse_type_spec
+from qst.types import TypeSpec, parse_type_spec
 
 ROOT = Path(__file__).resolve().parents[2]
-SCHEMA_DIR = ROOT / "docs" / "JSON_SCHEMAS"
-ADR = ROOT / "docs" / "ADR" / "2026-05-16_qst_cleanline_reset.md"
+SCHEMA_DIR = ROOT / "docs" / "schemas"
 SHA = "sha256:" + "0" * 64
 TYPESPEC_SCHEMA_HASH_WP8A = "sha256:f181ce889c24abc36bb57cc5662b50669331b68f2000e7df0dbe6c42647207fd"
 NON_PANEL_SIGNATURE_HASH = "sha256:faa375e10973332b887b9a8c98b1c996e87b08e419af07dd3b3d34431c61477a"
@@ -95,10 +94,9 @@ def _ir_with_node(node: NodeV04, *, capabilities: list[str] | None = None) -> St
 
 
 def test_schema_correction_adr_and_ir_schema_reserve_granular_capabilities() -> None:
-    schema = json.loads((SCHEMA_DIR / "qst_ir_0_4.schema.json").read_text(encoding="utf-8"))
+    schema = json.loads((SCHEMA_DIR / "ir-0.4.schema.json").read_text(encoding="utf-8"))
     capabilities = set(schema["properties"]["capabilities"]["items"]["enum"])
 
-    assert ADR.exists()
     assert {"panel_type", "panel_ops", "panel_weights", "panel_recipes"} <= capabilities
     assert "panel" not in capabilities
 
@@ -314,7 +312,7 @@ def test_non_panel_signature_hash_remains_pinned() -> None:
 
 
 def test_typespec_schema_and_model_shape_remain_unchanged_from_wp8a() -> None:
-    schema = json.loads((SCHEMA_DIR / "qst_typespec_0_4.schema.json").read_text(encoding="utf-8"))
+    schema = json.loads((SCHEMA_DIR / "type_spec-0.4.schema.json").read_text(encoding="utf-8"))
     panel_fields = {
         "axes",
         "universe",
@@ -325,7 +323,7 @@ def test_typespec_schema_and_model_shape_remain_unchanged_from_wp8a() -> None:
         "panel_capability_required",
     }
 
-    assert _schema_hash("qst_typespec_0_4.schema.json") == TYPESPEC_SCHEMA_HASH_WP8A
+    assert _schema_hash("type_spec-0.4.schema.json") == TYPESPEC_SCHEMA_HASH_WP8A
     assert panel_fields <= set(TypeSpec.model_fields)
     assert schema["properties"]["missing_policy"]["enum"] == ["unknown", "dense", "sparse"]
     assert schema["properties"]["selection_kind"]["enum"] == ["none", "static", "dynamic", "weighted"]

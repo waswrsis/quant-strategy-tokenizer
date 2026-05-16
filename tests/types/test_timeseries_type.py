@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from quant_strategy_tokenizer.types import IntrinsicTemporalSpec, TypeSpec, parse_type_spec
+from qst.types import IntrinsicTemporalSpec, TypeSpec, parse_type_spec
 
 
 def test_timeseries_float_with_intrinsic_temporal() -> None:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from quant_strategy_tokenizer.ir import (
+from qst.ir import (
     NodeV04,
     StrategyBodyV04,
     StrategyIRV04,

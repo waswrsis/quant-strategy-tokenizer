@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from quant_strategy_tokenizer.types import parse_type_spec
+from qst.types import parse_type_spec
 
 
 def test_panel_type_shell_parses_without_axis_semantics() -> None:

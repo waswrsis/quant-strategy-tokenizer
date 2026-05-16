@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from quant_strategy_tokenizer.state import ReducerRegistry, default_reducer_registry
+from qst.state import ReducerRegistry, default_reducer_registry
 
 
 def test_default_reducer_registry_order_is_deterministic() -> None:

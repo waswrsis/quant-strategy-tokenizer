@@ -5,7 +5,7 @@ import re
 
 import pytest
 
-from quant_strategy_tokenizer.hash import (
+from qst.hash import (
     HASH_V2_PATTERN,
     audit_chain_hash_v2,
     behavior_hash_v2,
@@ -20,7 +20,7 @@ from quant_strategy_tokenizer.hash import (
     token_pack_hash_v2,
     token_spec_hash_v2,
 )
-from quant_strategy_tokenizer.ir import NodeV04, StrategyBodyV04, StrategyIRV04
+from qst.ir import NodeV04, StrategyBodyV04, StrategyIRV04
 
 
 def _ir() -> StrategyIRV04:

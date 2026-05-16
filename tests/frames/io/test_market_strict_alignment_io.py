@@ -7,8 +7,8 @@ import pyarrow.parquet as pq
 import pytest
 from pydantic import ValidationError
 
-from quant_strategy_tokenizer.frames import MarketFrame, OHLCVBar, compute_frame_hash
-from quant_strategy_tokenizer.frames.io import (
+from qst.frames import MarketFrame, OHLCVBar, compute_frame_hash
+from qst.frames.io import (
     arrow_table_to_frame,
     dataframe_to_frame,
     frame_from_csv_text,

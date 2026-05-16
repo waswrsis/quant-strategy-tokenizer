@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from quant_strategy_tokenizer.frames import SignalFrame, SignalRow
+from qst.frames import SignalFrame, SignalRow
 
 
 def test_signal_frame_canonicalizes_rows_and_symbols() -> None:

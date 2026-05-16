@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from quant_strategy_tokenizer.hash import token_pack_hash_for_pack_v2
-from quant_strategy_tokenizer.tokens import TokenPackDependency, TokenPackManifestV2
+from qst.hash import token_pack_hash_for_pack_v2
+from qst.tokens import TokenPackDependency, TokenPackManifestV2
 from tests.tokens.test_token_spec_v2 import make_spec
 
 

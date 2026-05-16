@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from quant_strategy_tokenizer.validation import Diagnostic, ValidatorRegistry
+from qst.validation import Diagnostic, ValidatorRegistry
 
 
 def _diagnostic(code: str) -> Diagnostic:

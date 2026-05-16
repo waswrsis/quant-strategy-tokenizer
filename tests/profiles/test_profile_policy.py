@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import cast
 
-from quant_strategy_tokenizer.numeric import NumericPolicy, semantic_float64_policy
-from quant_strategy_tokenizer.profiles import PROFILE_POLICY_SCHEMA_VERSION, get_profile_policy
-from quant_strategy_tokenizer.profiles.policy import ProfileName
+from qst.numeric import NumericPolicy, semantic_float64_policy
+from qst.profiles import PROFILE_POLICY_SCHEMA_VERSION, get_profile_policy
+from qst.profiles.policy import ProfileName
 
 
 def test_default_profiles_are_stable() -> None:

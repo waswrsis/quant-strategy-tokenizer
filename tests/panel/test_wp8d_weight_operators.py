@@ -1,23 +1,23 @@
 from __future__ import annotations
 
-from quant_strategy_tokenizer.hash import (
+from qst.hash import (
     token_pack_hash_for_pack_v2,
     token_spec_hash_for_spec_v2,
 )
-from quant_strategy_tokenizer.ir import NodeV04, StrategyBodyV04, StrategyIRV04, validate_ir_v04
-from quant_strategy_tokenizer.panel import (
+from qst.ir import NodeV04, StrategyBodyV04, StrategyIRV04, validate_ir_v04
+from qst.panel import (
     WeightPanelValue,
     WeightPoint,
     weight_cap_per_symbol,
     weight_market_neutral,
     weight_normalize_gross,
 )
-from quant_strategy_tokenizer.panel.token_pack import (
+from qst.panel.token_pack import (
     PANEL_WEIGHTS_PACK_ID,
     PANEL_WEIGHTS_PACK_VERSION,
     panel_weights_token_pack_v2,
 )
-from quant_strategy_tokenizer.tokens import TokenRegistryV2
+from qst.tokens import TokenRegistryV2
 
 SHA = "sha256:" + "0" * 64
 

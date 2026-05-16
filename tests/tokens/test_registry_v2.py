@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from quant_strategy_tokenizer.hash import token_pack_hash_for_pack_v2
-from quant_strategy_tokenizer.token_evolution import TokenLifecycleStatus
-from quant_strategy_tokenizer.tokens import (
+from qst.hash import token_pack_hash_for_pack_v2
+from qst.token_evolution import TokenLifecycleStatus
+from qst.tokens import (
     TokenPackDependency,
     TokenPackManifestV2,
     TokenRegistryV2,

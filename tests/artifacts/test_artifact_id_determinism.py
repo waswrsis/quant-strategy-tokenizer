@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from quant_strategy_tokenizer.artifacts import ExecutionReport, compute_artifact_id
+from qst.artifacts import ExecutionReport, compute_artifact_id
 
 HASH_A = "sha256:" + "a" * 64
 HASH_B = "sha256:" + "b" * 64

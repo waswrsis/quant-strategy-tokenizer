@@ -1,17 +1,17 @@
 from __future__ import annotations
 
-from quant_strategy_tokenizer.hash import (
+from qst.hash import (
     token_pack_hash_for_pack_v2,
     token_spec_hash_for_spec_v2,
 )
-from quant_strategy_tokenizer.state import (
+from qst.state import (
     STATE_BASIC_PACK_ID,
     STATE_FSM_PACK_ID,
     STATE_FSM_PACK_VERSION,
     state_basic_token_pack_v2,
     state_fsm_token_pack_v2,
 )
-from quant_strategy_tokenizer.tokens import (
+from qst.tokens import (
     TokenLockSnapshotV04,
     TokenRegistryV2,
     token_lock_entry_from_spec,

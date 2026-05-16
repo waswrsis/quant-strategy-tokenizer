@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from quant_strategy_tokenizer.frames import FeatureFrame, FeatureRow
+from qst.frames import FeatureFrame, FeatureRow
 
 
 def test_feature_frame_sorts_feature_keys_rows_and_symbols() -> None:

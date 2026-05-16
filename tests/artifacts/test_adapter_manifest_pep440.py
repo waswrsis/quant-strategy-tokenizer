@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from quant_strategy_tokenizer.artifacts import AdapterManifest
+from qst.artifacts import AdapterManifest
 from tests.artifacts.schema_helpers import validate_schema
 
 
@@ -16,7 +16,7 @@ def test_adapter_manifest_schema_and_pep440_validation() -> None:
         supported_engines=["mock"],
     )
 
-    validate_schema("adapter_manifest.schema.json", manifest.model_dump(mode="json"))
+    validate_schema("adapter_manifest-0.4.schema.json", manifest.model_dump(mode="json"))
 
 
 def test_adapter_manifest_rejects_non_pep440_values() -> None:

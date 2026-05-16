@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from quant_strategy_tokenizer.frames import OHLCVBar
+from qst.frames import OHLCVBar
 
 
 @pytest.mark.parametrize("bad_value", ["1.0", "0.10", "-0", "1e-3", "+1.0", "001.0"])

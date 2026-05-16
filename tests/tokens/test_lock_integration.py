@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from quant_strategy_tokenizer.hash import (
+from qst.hash import (
     implementation_ref_hash_v2,
     runtime_environment_hash_v2,
     token_pack_hash_for_pack_v2,
     token_spec_hash_for_spec_v2,
 )
-from quant_strategy_tokenizer.tokens import (
+from qst.tokens import (
     TokenLockEntryV04,
     TokenLockSnapshotV04,
     TokenPackLockDependencyV04,

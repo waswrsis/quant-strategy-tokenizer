@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from quant_strategy_tokenizer.decision import (
+from qst.decision import (
     DECISION_ALGEBRA_PACK_ID,
     DECISION_ALGEBRA_PACK_VERSION,
     decision_algebra_token_pack_v2,
 )
-from quant_strategy_tokenizer.hash import (
+from qst.hash import (
     token_pack_hash_for_pack_v2,
     token_spec_hash_for_spec_v2,
 )
-from quant_strategy_tokenizer.tokens import TokenRegistryV2
+from qst.tokens import TokenRegistryV2
 
 
 def test_decision_algebra_token_pack_validates_and_resolves() -> None:
