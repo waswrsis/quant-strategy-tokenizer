@@ -3,7 +3,8 @@
 prompt_system_version: qst-stage-3c-v0.3.2.1
 construction_type: acceptance_evidence
 
-This evidence records the Stage 3C prompt-pack validation gates.
+This evidence records the Stage 3C prompt-pack validation gates. It is intentionally
+focused on commands and verifier outcomes rather than rendered browser snippets.
 
 The directory name `qst_stage_3c_v0_3_2` is the stable pack directory.
 The internal `qst-stage-3c-v0.3.2.1` value is the patch prompt-system version inside that pack.
@@ -16,9 +17,14 @@ Recorded command results:
 | --- | ---: | --- | --- | --- |
 | `python -m py_compile tools/validate_prompt_set.py` | `0` | no output | no output | pass |
 | `python -m py_compile tests/agent_prompts/test_validate_prompt_set.py` | `0` | no output | no output | pass |
-| `python tools/validate_prompt_set.py docs/agent/prompts/qst_stage_3c_v0_3_2` | `0` | `"result": "pass"`; all prompt checks pass | no output | pass |
-| `python tools/verify_prompt_remote_artifacts.py docs/agent/prompts/qst_stage_3c_v0_3_2` | `0` | `"result": "pass"`; local artifact format checks pass | no output | pass |
-| `python -m pytest tests/agent_prompts -q` | `0` | prompt validator tests pass | no output | pass |
+| `python tools/validate_prompt_set.py docs/agent/prompts/qst_stage_3c_v0_3_2` | `0` | `"result": "pass"`; all validator checks pass, including content completeness | no output | pass |
+| `python tools/verify_prompt_remote_artifacts.py docs/agent/prompts/qst_stage_3c_v0_3_2` | `0` | `"result": "pass"`; local artifact format checks pass for Python, Markdown, and golden YAML | no output | pass |
+| `python -m pytest tests/agent_prompts -q` | `0` | `14 passed` | no output | pass |
+| `python -m ruff check .` | `0` | `All checks passed!` | no output | pass |
+| `python -m mypy qst` | `0` | `Success: no issues found in 105 source files` | no output | pass |
+| `python -m pytest tests -q` | `0` | `429 passed` | no output | pass |
+| `python -m pytest --cov=qst --cov-fail-under=85 -q` | `0` | `429 passed`; total coverage remains above the configured floor | no output | pass |
+| `python -m qst.cli vocabulary --check` | `0` | `"ok": true`; zero diagnostics | no output | pass |
 
 ## CI Evidence
 
@@ -32,7 +38,9 @@ python tools/verify_prompt_remote_artifacts.py docs/agent/prompts/qst_stage_3c_v
 python -m pytest tests/agent_prompts -q
 ```
 
-CI must pass this job before Stage 3C prompt-pack acceptance is considered complete.
+CI must pass this job before Stage 3C prompt-pack acceptance is considered complete. The
+validator now rejects prompt files that are merely present but lack required sections or
+minimum useful content.
 
 ## Raw Artifact Evidence
 
@@ -53,34 +61,19 @@ The verifier records byte count, line count, compile/parse checks, and verdict f
 - Stage 3C acceptance docs
 - the three complete golden task YAML files
 
-## Recorded Remote Evidence
+## Recorded Local Artifact Evidence
 
-Recorded remote verification:
+The local artifact verifier passed on the updated prompt pack. It confirmed:
 
-- commit: `6d4847dfd5cf729f9b16d8df2f22e15e35d83a23`
-- CI run: `https://github.com/waswrsis/Quant-Strategy-Tokenizer/actions/runs/25972412726`
-- CI result: `success`
-- CI prompt-validation job: `success`
-- raw verifier command exit code: `0`
-- raw verifier result: `pass`
+- `tools/validate_prompt_set.py` compiles as Python.
+- `tests/agent_prompts/test_validate_prompt_set.py` compiles as Python.
+- prompt-pack `README.md`, `core/00_FOUNDATION.md`, `tasks/CLASSIFY_STRATEGY_INTENT.md`,
+  `validation/VALIDATE_PROMPT_SET.md`, and Stage 3C construction docs have H1 headings,
+  prompt-system version markers, enough lines, and acceptable line lengths.
+- `golden/01_ema_cross.intent.yaml`, `golden/12_custom_token_kalman_signal.intent.yaml`,
+  and `golden/13_event_stream_intraday.intent.yaml` parse as YAML mappings with expected
+  golden task structure.
 
-Raw verifier summary:
-
-| Artifact | Line count | Key check | Verdict |
-| --- | ---: | --- | --- |
-| `tools/validate_prompt_set.py` | 359 | Python compile | pass |
-| `tests/agent_prompts/test_validate_prompt_set.py` | 104 | Python compile | pass |
-| prompt-pack `README.md` | 17 | Markdown readability | pass |
-| `core/00_FOUNDATION.md` | 34 | Markdown readability | pass |
-| `tasks/CLASSIFY_STRATEGY_INTENT.md` | 16 | Markdown readability | pass |
-| `validation/VALIDATE_PROMPT_SET.md` | 25 | Markdown readability | pass |
-| `construction/STAGE_3C_PROMPT_ACCEPTANCE.md` | 30 | Markdown readability | pass |
-| `construction/STAGE_3C_PROMPT_ACCEPTANCE_EVIDENCE.md` | 63 | Markdown readability | pass |
-| `golden/01_ema_cross.intent.yaml` | 32 | YAML parse and schema | pass |
-| `golden/12_custom_token_kalman_signal.intent.yaml` | 31 | YAML parse and schema | pass |
-| `golden/13_event_stream_intraday.intent.yaml` | 32 | YAML parse and schema | pass |
-
-The final evidence-update commit must run the same CI prompt-validation gate.
 Reviewers can rerun the raw verifier against the final commit SHA using the command above.
 
 ## Acceptance Decision

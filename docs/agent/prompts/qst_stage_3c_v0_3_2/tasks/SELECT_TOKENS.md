@@ -4,6 +4,33 @@ prompt_system_version: qst-stage-3c-v0.3.2.1
 task_type: authoring
 foundation: core/00_FOUNDATION.md
 
-Use current vocabulary evidence from `builtin_token_packs()` or `qst vocabulary --check`.
+## Use When
 
-Do not invent token refs. Do not use reserved-design tokens as executable behavior. Check maturity, execution support, capabilities, and profile gates.
+Use after intent classification to map behavior to current token refs.
+
+## Inputs
+
+- User request and any attached strategy, diagnostic, report, or code context.
+- Repository evidence loaded through the smallest relevant reader or load profile.
+- Target profile when validation, execution support, or reserved-design status matters.
+
+## Procedure
+
+1. Restate the task in QST terms and identify the active profile or artifact.
+2. Read the current repository evidence before making token, schema, or runtime claims.
+3. Apply the relevant token surface, profile gate, security, and hash boundaries.
+4. Make the smallest safe change or produce the requested review.
+5. Run focused validation and report any skipped gates.
+
+Reserved design tokens are visible vocabulary boundaries, not executable behavior.
+
+## Output
+
+Return selected token refs, maturity, execution support, profile caveats, and rejected alternatives.
+
+## Guardrails
+
+- Use current repository evidence before making current-state claims.
+- Do not invent token refs, schema fields, capabilities, or runtime behavior.
+- Keep reserved design features non-executable and route unsupported behavior explicitly.
+- Treat validation, hash stability, and prompt success as engineering evidence only.

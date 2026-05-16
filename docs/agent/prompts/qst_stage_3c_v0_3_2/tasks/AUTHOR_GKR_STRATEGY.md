@@ -1,14 +1,34 @@
-# Author GKR Strategy
+# Author Gkr Strategy
 
 prompt_system_version: qst-stage-3c-v0.3.2.1
 task_type: authoring
 foundation: core/00_FOUNDATION.md
 
-Author only after classification and token selection.
+## Use When
 
-Rules:
+Use when creating a new editable GKR strategy source.
 
-- Use active source format discovered from repo.
-- Use current schema fields only.
-- Keep params canonical and visible.
-- Validate, repair diagnostics, canonicalize if requested, and hash when valid.
+## Inputs
+
+- User request and any attached strategy, diagnostic, report, or code context.
+- Repository evidence loaded through the smallest relevant reader or load profile.
+- Target profile when validation, execution support, or reserved-design status matters.
+
+## Procedure
+
+1. Restate the task in QST terms and identify the active profile or artifact.
+2. Read the current repository evidence before making token, schema, or runtime claims.
+3. Apply the relevant token surface, profile gate, security, and hash boundaries.
+4. Make the smallest safe change or produce the requested review.
+5. Run focused validation and report any skipped gates.
+
+## Output
+
+Return changed files, validation result, hash result, and limitations.
+
+## Guardrails
+
+- Use current repository evidence before making current-state claims.
+- Do not invent token refs, schema fields, capabilities, or runtime behavior.
+- Keep reserved design features non-executable and route unsupported behavior explicitly.
+- Treat validation, hash stability, and prompt success as engineering evidence only.

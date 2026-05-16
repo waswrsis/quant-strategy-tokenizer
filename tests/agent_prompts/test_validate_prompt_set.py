@@ -71,6 +71,54 @@ def test_stage3c_prompt_validator_detects_compressed_markdown(tmp_path: Path) ->
     assert "markdown_readability" in _issue_ids(result)
 
 
+def test_stage3c_prompt_validator_detects_incomplete_task_prompt(tmp_path: Path) -> None:
+    prompt_root = _copy_prompt_pack(tmp_path)
+    task = prompt_root / "tasks" / "SELECT_TOKENS.md"
+    task.write_text(
+        "# Select Tokens\n\n"
+        "prompt_system_version: qst-stage-3c-v0.3.2.1\n\n"
+        "## Use When\n\n"
+        "This file intentionally omits required task sections and useful detail.\n",
+        encoding="utf-8",
+    )
+    result = validate_prompt_set(prompt_root)
+
+    assert result["prompt_validation"]["result"] == "fail"
+    assert "content_completeness" in _issue_ids(result)
+
+
+def test_stage3c_prompt_validator_detects_incomplete_reader_prompt(tmp_path: Path) -> None:
+    prompt_root = _copy_prompt_pack(tmp_path)
+    reader = prompt_root / "readers" / "READ_TOKEN_SYSTEM.md"
+    reader.write_text(
+        "# Token System\n\n"
+        "prompt_system_version: qst-stage-3c-v0.3.2.1\n\n"
+        "## Purpose\n\n"
+        "This reader is too thin to guide repository inspection.\n",
+        encoding="utf-8",
+    )
+    result = validate_prompt_set(prompt_root)
+
+    assert result["prompt_validation"]["result"] == "fail"
+    assert "content_completeness" in _issue_ids(result)
+
+
+def test_stage3c_prompt_validator_detects_incomplete_schema_prompt(tmp_path: Path) -> None:
+    prompt_root = _copy_prompt_pack(tmp_path)
+    schema = prompt_root / "schemas" / "STRATEGY_INTENT_SCHEMA.md"
+    schema.write_text(
+        "# Strategy Intent Schema\n\n"
+        "prompt_system_version: qst-stage-3c-v0.3.2.1\n\n"
+        "## Purpose\n\n"
+        "This schema omits required fields and validation rules.\n",
+        encoding="utf-8",
+    )
+    result = validate_prompt_set(prompt_root)
+
+    assert result["prompt_validation"]["result"] == "fail"
+    assert "content_completeness" in _issue_ids(result)
+
+
 def test_stage3c_prompt_validator_detects_invalid_golden_yaml(tmp_path: Path) -> None:
     prompt_root = _copy_prompt_pack(tmp_path)
     golden = prompt_root / "golden" / "01_ema_cross.intent.yaml"

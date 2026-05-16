@@ -1,8 +1,33 @@
-# Read Token System
+# Token System
 
 prompt_system_version: qst-stage-3c-v0.3.2.1
-reader_type: token
+reader_type: repository_reader
 
-Read TokenSpec, TokenSurfaceSpec, TokenPack, registry, built-in packs, and token conformance tests.
+## Purpose
 
-Token selection must use current `builtin_token_packs()` evidence. `accepted` does not mean broadly executable; check `execution_support`.
+Use this reader when the task depends on current repository evidence about TokenSpec, TokenSurfaceSpec, TokenPack, vocabulary, and token contracts.
+The reader gathers facts; it does not decide or edit by itself.
+
+## Read
+
+- Active code, docs, tests, schemas, examples, or CI files that define TokenSpec, TokenSurfaceSpec, TokenPack, vocabulary, and token contracts.
+- Adjacent tests that prove the behavior or boundary.
+- Reference artifacts only when they are part of the current product surface.
+
+## Extract
+
+- Stable facts that can be tied to file paths or command output.
+- Contradictions between implementation, tests, and docs.
+- Missing tests, stale claims, or unsupported capability wording.
+
+## Report
+
+Return a concise module report with inspected files, facts learned, and remaining risk.
+If stale information appears, route the task through `tasks/REPAIR_STALE_INFORMATION.md`.
+
+## Guardrails
+
+- Use current repository evidence before making current-state claims.
+- Do not invent token refs, schema fields, capabilities, or runtime behavior.
+- Keep reserved design features non-executable and route unsupported behavior explicitly.
+- Treat validation, hash stability, and prompt success as engineering evidence only.

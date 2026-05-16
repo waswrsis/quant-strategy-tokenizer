@@ -93,6 +93,7 @@ def validate_prompt_set(root: Path) -> dict[str, Any]:
         _check_required_files(root),
         _check_version_consistency(root),
         _check_markdown_readability(root),
+        _check_content_completeness(root),
         _check_stale_information(root),
         _check_cross_references(root),
         _check_load_profiles(root),
@@ -142,6 +143,29 @@ def _check_markdown_readability(root: Path) -> Check:
                     f"{rel_path}:{line_number} line length {len(line)} exceeds {MAX_MARKDOWN_LINE_LENGTH}"
                 )
     return Check("markdown_readability", "Markdown prompts are readable multi-line files", tuple(issues))
+
+
+def _check_content_completeness(root: Path) -> Check:
+    issues: list[str] = []
+    groups: tuple[tuple[str, tuple[str, ...], int], ...] = (
+        ("core", ("## Purpose", "## Operating Rules", "## Required Output"), 90),
+        ("load_profiles", ("## Use When", "## Load Order", "## Stop Conditions", "## Output"), 90),
+        ("readers", ("## Purpose", "## Read", "## Extract", "## Report"), 90),
+        ("tasks", ("## Use When", "## Inputs", "## Procedure", "## Output", "## Guardrails"), 90),
+        ("schemas", ("## Purpose", "## Required Fields", "## Validation Rules", "## Output"), 80),
+        ("validation", ("## Purpose", "## Required Checks", "## Execution", "## Output"), 80),
+    )
+    for directory, required_sections, minimum_words in groups:
+        for path in sorted((root / directory).glob("*.md")):
+            text = path.read_text(encoding="utf-8")
+            rel_path = _rel(root, path)
+            for section in required_sections:
+                if section not in text:
+                    issues.append(f"{rel_path} missing content section {section}")
+            word_count = len(re.findall(r"[A-Za-z0-9_]+", text))
+            if word_count < minimum_words:
+                issues.append(f"{rel_path} has only {word_count} words; minimum is {minimum_words}")
+    return Check("content_completeness", "prompt files contain required sections and useful content", tuple(issues))
 
 
 def _check_stale_information(root: Path) -> Check:

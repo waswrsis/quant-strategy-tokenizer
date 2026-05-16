@@ -1,16 +1,24 @@
-# Prompt Pack Index
+# Stage 3C Prompt Index
 
 prompt_system_version: qst-stage-3c-v0.3.2.1
-layer: index
 
-Entry points:
+## Core
 
-- `core/00_FOUNDATION.md`
-- `core/01_REPO_CONTEXT_PROTOCOL.md`
-- `load_profiles/PROFILE_STRATEGY_AUTHORING.md`
-- `tasks/CLASSIFY_STRATEGY_INTENT.md`
-- `tasks/AUTHOR_GKR_STRATEGY.md`
-- `validation/VALIDATE_PROMPT_SET.md`
-- `construction/STAGE_3C_PROMPT_ACCEPTANCE.md`
+Start with `core/00_FOUNDATION.md`, then apply repo context, input security, behavior,
+reporting, escalation, and handoff rules as needed.
 
-Use `tools/validate_prompt_set.py` to verify this pack.
+## Load Profiles
+
+Load profiles select the smallest useful context set for strategy authoring, token work,
+hash review, custom runtime review, documentation, prompt maintenance, or full audit.
+
+## Readers And Tasks
+
+Readers gather evidence. Tasks transform evidence into authoring, repair, audit, docs,
+tests, prompt updates, or handoff output. Do not skip readers when the task depends on
+current repository facts.
+
+## Validation
+
+Run `validation/VALIDATE_PROMPT_SET.md` and the repository validator before treating this
+prompt pack as accepted.

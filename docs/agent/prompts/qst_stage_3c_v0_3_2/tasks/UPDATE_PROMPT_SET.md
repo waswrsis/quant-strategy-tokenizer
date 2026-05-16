@@ -1,9 +1,34 @@
 # Update Prompt Set
 
 prompt_system_version: qst-stage-3c-v0.3.2.1
-task_type: prompts
+task_type: prompt_maintenance
 foundation: core/00_FOUNDATION.md
 
-Keep one active prompt system. Update versioned prompt files consistently and run prompt validation.
+## Use When
 
-Do not add stale current-state facts or duplicate active prompt entrypoints.
+Use when changing the Stage 3C prompt pack.
+
+## Inputs
+
+- User request and any attached strategy, diagnostic, report, or code context.
+- Repository evidence loaded through the smallest relevant reader or load profile.
+- Target profile when validation, execution support, or reserved-design status matters.
+
+## Procedure
+
+1. Restate the task in QST terms and identify the active profile or artifact.
+2. Read the current repository evidence before making token, schema, or runtime claims.
+3. Apply the relevant token surface, profile gate, security, and hash boundaries.
+4. Make the smallest safe change or produce the requested review.
+5. Run focused validation and report any skipped gates.
+
+## Output
+
+Return prompt files changed, validator result, and acceptance evidence status.
+
+## Guardrails
+
+- Use current repository evidence before making current-state claims.
+- Do not invent token refs, schema fields, capabilities, or runtime behavior.
+- Keep reserved design features non-executable and route unsupported behavior explicitly.
+- Treat validation, hash stability, and prompt success as engineering evidence only.
