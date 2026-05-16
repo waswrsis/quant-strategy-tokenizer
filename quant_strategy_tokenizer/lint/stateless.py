@@ -1,4 +1,4 @@
-"""Best-effort AST-based lint for P0 stateless discipline.
+"""Best-effort AST-based lint for stateless discipline.
 
 This is a guardrail, not a formal effect system. False positives can be
 disabled locally with:

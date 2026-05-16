@@ -4,9 +4,9 @@ import json
 from pathlib import Path
 from typing import Any
 
-from quant_strategy_tokenizer.hash_v2 import expected_artifact_hash_v2
-from quant_strategy_tokenizer.ir_v04 import load_ir_v04_file
-from quant_strategy_tokenizer.state_v2 import (
+from quant_strategy_tokenizer.hash import expected_artifact_hash_v2
+from quant_strategy_tokenizer.ir import load_ir_v04_file
+from quant_strategy_tokenizer.state import (
     diagnostics_state_pv_a_v04,
     load_state_pv_a_fixture,
     trace_state_pv_a_v04,

@@ -91,27 +91,6 @@
         }
       }
     },
-    "legacy_source": {
-      "type": ["object", "null"],
-      "additionalProperties": false,
-      "properties": {
-        "source_ir_version": {
-          "enum": ["qst-ir/0.3", "qst-ir/0.3.1"]
-        },
-        "source_instance_hash": {
-          "$ref": "#/$defs/hash"
-        },
-        "target_core_registry_hash": {
-          "$ref": "#/$defs/hash"
-        },
-        "migration_lineage": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
-        }
-      }
-    },
     "tokens": {
       "type": "array",
       "items": {

@@ -1,4 +1,4 @@
-"""Adapter manifest P4 artifact model."""
+"""Adapter manifest artifact model."""
 
 from __future__ import annotations
 

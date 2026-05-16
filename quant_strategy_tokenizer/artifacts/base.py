@@ -1,4 +1,4 @@
-"""Base P4 artifact models."""
+"""Base artifact models."""
 
 from __future__ import annotations
 
@@ -7,11 +7,11 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from quant_strategy_tokenizer.artifacts.safety import POSIXRelativePath
-from quant_strategy_tokenizer.qst_lock.schema import HashString
+from quant_strategy_tokenizer.hash.common import HashString
 
 
 class ProvenanceChain(BaseModel):
-    """Content lineage for a P4 artifact."""
+    """Content lineage for a artifact."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -30,7 +30,7 @@ class AdapterIdentity(BaseModel):
 
 
 class QSTArtifact(BaseModel):
-    """Common fields shared by P4 artifact records."""
+    """Common fields shared by artifact records."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 

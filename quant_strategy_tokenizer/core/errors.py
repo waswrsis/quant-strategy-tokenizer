@@ -1,4 +1,4 @@
-"""Stable error kinds for QST P0."""
+"""Stable error kinds for QST."""
 
 from __future__ import annotations
 

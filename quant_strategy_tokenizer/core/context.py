@@ -1,4 +1,4 @@
-"""Execution context for local P0 runs."""
+"""Execution context for local runs."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import Path
 
 @dataclass(frozen=True)
 class ExecutionContext:
-    """Runtime context passed through the P0 executor."""
+    """Runtime context passed through the local executor."""
 
     run_id: str
     trace_path: Path | None = None

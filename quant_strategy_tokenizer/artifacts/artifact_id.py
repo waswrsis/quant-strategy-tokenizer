@@ -1,4 +1,4 @@
-"""P4 artifact identity calculation."""
+"""artifact identity calculation."""
 
 from __future__ import annotations
 

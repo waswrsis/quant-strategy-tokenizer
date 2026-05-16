@@ -1,4 +1,4 @@
-"""P4 artifact safety helpers."""
+"""artifact safety helpers."""
 
 from __future__ import annotations
 

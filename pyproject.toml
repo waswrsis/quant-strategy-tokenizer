@@ -35,13 +35,6 @@ dev = [
 [project.scripts]
 qst = "quant_strategy_tokenizer.cli:app"
 
-[project.entry-points."quant_strategy_tokenizer.adapters"]
-mock-csv-market = "quant_strategy_tokenizer.adapters.mocks:CsvMarketAdapter"
-mock-parquet-market = "quant_strategy_tokenizer.adapters.mocks:ParquetMarketAdapter"
-mock-backtest = "quant_strategy_tokenizer.adapters.mocks:MockBacktestAdapter"
-mock-execution = "quant_strategy_tokenizer.adapters.mocks:MockExecutionAdapter"
-mock-experiment = "quant_strategy_tokenizer.adapters.mocks:MockExperimentAdapter"
-
 [tool.hatch.build.targets.wheel]
 packages = ["quant_strategy_tokenizer"]
 

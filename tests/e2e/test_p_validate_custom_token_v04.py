@@ -3,14 +3,14 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from quant_strategy_tokenizer.custom_runtime_v2.p_validate import (
+from quant_strategy_tokenizer.custom_runtime.p_validate import (
     diagnostics_custom_pv_d_v04,
     load_custom_pv_d_fixture,
     trace_custom_pv_d_v04,
 )
-from quant_strategy_tokenizer.hash_v2 import expected_artifact_hash_v2
-from quant_strategy_tokenizer.ir_v04.loader import load_ir_v04_file
-from quant_strategy_tokenizer.ir_v04.validator import validate_ir_v04
+from quant_strategy_tokenizer.hash import expected_artifact_hash_v2
+from quant_strategy_tokenizer.ir.loader import load_ir_v04_file
+from quant_strategy_tokenizer.ir.validator import validate_ir_v04
 
 ROOT = Path(__file__).resolve().parents[2]
 STRATEGY = ROOT / "strategies" / "v04" / "p_validate" / "custom_token_kalman.qst.yaml"

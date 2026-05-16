@@ -1,9 +1,4 @@
-"""Public canonical JSON serialization.
-
-This module intentionally preserves the byte semantics used by the P3 lock
-writer. P4 artifacts and future frame hashes use this public API instead of
-importing qst_lock internals.
-"""
+"""Public canonical JSON serialization for current QST payloads."""
 
 from __future__ import annotations
 
@@ -47,8 +42,8 @@ def _canonicalize_value(value: Any, *, depth: int) -> Any:
 def stable_json_bytes(value: Any) -> bytes:
     """Return deterministic UTF-8 JSON bytes.
 
-    The output must remain byte-compatible with the P3 canonical lock bytes for
-    every value accepted by the P3 implementation.
+    The output is intentionally small and deterministic: sorted object keys,
+    compact separators, UTF-8, and no NaN/Infinity.
     """
 
     canonical = _canonicalize_value(value, depth=0)

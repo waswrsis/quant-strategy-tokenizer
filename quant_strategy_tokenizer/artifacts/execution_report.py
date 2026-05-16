@@ -1,4 +1,4 @@
-"""ExecutionReport P4 artifact."""
+"""ExecutionReport artifact."""
 
 from __future__ import annotations
 

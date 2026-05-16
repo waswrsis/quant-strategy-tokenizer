@@ -1,4 +1,4 @@
-"""CSV IO for P4a-1a frame models."""
+"""CSV IO for frame models."""
 
 from __future__ import annotations
 

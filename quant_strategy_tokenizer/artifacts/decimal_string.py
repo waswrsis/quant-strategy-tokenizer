@@ -1,4 +1,4 @@
-"""Strict canonical decimal string support for P4 artifacts."""
+"""Strict canonical decimal string support for artifacts."""
 
 from __future__ import annotations
 

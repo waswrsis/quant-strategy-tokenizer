@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://qst.local/schemas/artifact_base.schema.json",
-  "title": "QST P4 Artifact Common Definitions",
+  "title": "QST Artifact Common Definitions",
   "$defs": {
     "Sha256": {
       "type": "string",

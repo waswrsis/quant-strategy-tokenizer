@@ -1,4 +1,4 @@
-"""P4 artifact models."""
+"""artifact models."""
 
 from .adapter_manifest import AdapterManifest
 from .artifact_id import compute_artifact_id

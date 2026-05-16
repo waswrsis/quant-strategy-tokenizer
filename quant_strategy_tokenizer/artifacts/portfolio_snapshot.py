@@ -1,4 +1,4 @@
-"""Portfolio snapshot P4 artifact."""
+"""Portfolio snapshot artifact."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Base frame helpers for P4 frame models."""
+"""Base frame helpers for frame models."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from typing import Annotated
 from pydantic import AfterValidator, BaseModel, ConfigDict
 
 from quant_strategy_tokenizer.canonical_json import stable_json_bytes
-from quant_strategy_tokenizer.qst_lock.schema import HashString
+from quant_strategy_tokenizer.hash.common import HashString
 
 _SYMBOL_PATTERN = re.compile(r"^[A-Z0-9]+/[A-Z0-9]+$")
 

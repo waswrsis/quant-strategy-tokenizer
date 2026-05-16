@@ -1,21 +1,19 @@
-# QST Error Codes
+# Error Codes
 
-This document lists stable validation and runtime error kinds used by P0 and P1-core.
+QST diagnostics are structured objects with `code`, `severity`, `phase`,
+`message`, and optional remediation fields. Stable codes are preferred for
+validator and runtime boundaries.
 
-| Code | Layer | Meaning | Typical repair |
-|---|---|---|---|
-| `missing_token` | validation | A graph node references an unknown token id/version. | Use a registered token or add a compatible token version. |
-| `missing_input` | validation/runtime | A node input or external reference cannot be resolved. | Wire the missing upstream output or provide the external input. |
-| `type_mismatch` | validation | A node receives a value that does not match its declared token input type. | Insert the expected conversion token, often `decision.lift_bool`. |
-| `cycle_detected` | validation/recipe | The graph or recipe expansion contains a cycle. | Break the dependency cycle. |
-| `params_schema` | validation | Token params do not match the token parameter schema. | Provide the required params with compatible types. |
-| `validation_failed` | runtime | Runtime refused to execute because canonical validation failed. | Inspect validation failures and repair hints. |
-| `executor_exception` | runtime | A token executor raised an exception. | Inspect the trace node warning or exception text. |
-| `missing_risk_path` | validation | A guarded profile has `plan.order_intent` without an upstream `risk.*` token. | Insert `risk.position_cap` or `risk.notional_cap` before `plan.order_intent`. |
-| `profile_violation` | validation | The strategy envelope/profile is inconsistent with P1-core rules. | Adjust `_envelope.profile` or strategy wiring. |
-| `purity_violation` | validation | A token has purity above the active profile policy. | Change profile or replace the token with a safer equivalent. |
-| `future_data_violation` | validation | A strict profile uses token metadata marked as future-data dependent. | Replace with a trailing-window token. |
-| `unsafe_temporal_window` | validation | A strict profile uses centered, full-sample, mixed, or unknown temporal window metadata. | Use a trailing window or change to research/paper. |
-| `future_data_warning` | validation warning | Research/paper profile sees future-data metadata. | Keep only for research or replace before promotion. |
+Representative current code families:
 
-P1-core keeps P0 repair hints compatible. In particular, `strategies/broken_no_lift.qst.yaml` must continue to produce a `type_mismatch` failure with a repair hint suggesting `decision.lift_bool`.
+- `QST_V2_TEMPORAL_*`: temporal rule and requirement diagnostics.
+- `QST_V2_PANEL_*`: panel type-layer and panel/state boundary diagnostics.
+- `QST_V2_CAPABILITY_*`: capability gating diagnostics.
+- `QST_V2_LOCK_*`: current token lock metadata diagnostics.
+- `QST_V2_CUSTOM_TOKEN_*`: custom-token runtime and output validation diagnostics.
+- `QST_V2_EXECUTION_GRANT_*`: short-lived grant validation diagnostics.
+- `QST_V2_DISTRIBUTION_*`: installed distribution integrity diagnostics.
+
+Use exact codes in tests when behavior is part of the public boundary. Human
+message text may evolve, but code, phase, and severity should remain stable
+unless a change is documented.

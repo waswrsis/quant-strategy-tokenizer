@@ -1,4 +1,4 @@
-"""Backtest evidence P4 artifacts."""
+"""Backtest evidence artifacts."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
 from quant_strategy_tokenizer.artifacts.base import QSTArtifact
 from quant_strategy_tokenizer.artifacts.safety import POSIXRelativePath
-from quant_strategy_tokenizer.qst_lock.schema import HashString
+from quant_strategy_tokenizer.hash.common import HashString
 
 
 def _validate_finite(value: float) -> float:

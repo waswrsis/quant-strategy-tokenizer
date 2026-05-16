@@ -4,8 +4,8 @@ import json
 from pathlib import Path
 from typing import Any
 
-from quant_strategy_tokenizer.hash_v2 import expected_artifact_hash_v2
-from quant_strategy_tokenizer.ir_v04 import (
+from quant_strategy_tokenizer.hash import expected_artifact_hash_v2
+from quant_strategy_tokenizer.ir import (
     load_ir_v04_file,
     trace_temporal_validation_v04,
     validate_temporal_v04,

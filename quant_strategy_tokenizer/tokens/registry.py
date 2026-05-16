@@ -1,194 +1,298 @@
-"""Token registry.
-
-P0 rule:
-- Token modules are imported lazily by get_registry().
-- Registry is frozen after built-in tokens are loaded.
-- Production code only reads through get_registry().
-"""
+"""Token System v2 registry and TokenPack dependency validation."""
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any, Literal
 
-from .spec import TemporalSpec, TokenSpec
+from pydantic import BaseModel, ConfigDict, Field
 
-DEFAULT_TEMPORAL: dict[str, Any] = {
-    "uses_future_data": False,
-    "window_mode": "none",
-    "output_available_at": "same_bar_close",
-    "max_lookback": None,
-}
-DEFAULT_FAILURE_POLICY: dict[str, Any] = {
-    "on_missing_input": "error",
-    "on_insufficient_data": "unknown",
-    "on_param_violation": "error",
-}
+from quant_strategy_tokenizer.hash.token_pack_hash import token_pack_hash_for_pack_v2
+from quant_strategy_tokenizer.hash.token_spec_hash import token_spec_hash_for_spec_v2
+from quant_strategy_tokenizer.tokens.pack import TokenPackDependency, TokenPackManifestV2
+from quant_strategy_tokenizer.tokens.spec import TokenSpecV2
+from quant_strategy_tokenizer.validation import Diagnostic, Severity, ValidationResult
+
+
+class RegistryTokenRecord(BaseModel):
+    """Resolved registry token record."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    spec: TokenSpecV2
+    pack_id: str
+    pack_origin_tier: str
+    token_spec_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    token_pack_hash: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
 
 
 @dataclass(frozen=True)
-class RegisteredToken:
-    """Runtime token object: serializable spec plus Python executor."""
+class TokenPackDependencyResolution:
+    """Result of deterministic TokenPack dependency resolution."""
 
-    spec: TokenSpec
-    executor: Callable[..., Any]
-
-
-class Registry:
-    """Mutable-until-frozen token registry."""
-
-    def __init__(self) -> None:
-        self._tokens: dict[tuple[str, int], RegisteredToken] = {}
-        self._frozen = False
-
-    @property
-    def is_frozen(self) -> bool:
-        return self._frozen
-
-    def register(self, registered: RegisteredToken) -> None:
-        if self._frozen:
-            raise RuntimeError(
-                f"Registry frozen; cannot register {registered.spec.id}/v{registered.spec.version}"
-            )
-
-        spec = registered.spec
-        key = (spec.id, spec.version)
-
-        if key in self._tokens:
-            raise ValueError(f"Token {spec.id}/v{spec.version} already registered")
-
-        overlap = set(spec.inputs) & set(spec.params_schema)
-        if overlap:
-            raise ValueError(f"Token {spec.id}: input/param name collision: {sorted(overlap)}")
-
-        self._tokens[key] = registered
-
-    def freeze(self) -> None:
-        self._frozen = True
-
-    def get(self, token_id: str, version: int = 1) -> RegisteredToken:
-        try:
-            return self._tokens[(token_id, version)]
-        except KeyError:
-            raise KeyError(f"Token {token_id}/v{version} not found") from None
-
-    def list_tokens(
-        self,
-        layer: Literal["computation", "infrastructure"] | None = None,
-        lifecycle: str | None = None,
-    ) -> list[TokenSpec]:
-        specs = [registered.spec for registered in self._tokens.values()]
-        filtered = [
-            spec
-            for spec in specs
-            if (layer is None or spec.layer == layer)
-            and (lifecycle is None or spec.lifecycle == lifecycle)
-        ]
-        return sorted(filtered, key=lambda spec: (spec.layer, spec.category, spec.id, spec.version))
+    ordered_packs: tuple[TokenPackManifestV2, ...]
+    result: ValidationResult
 
 
-_REGISTRY = Registry()
-_BUILTINS_LOADED = False
+class TokenRegistryV2(BaseModel):
+    """Resolved v2 token registry built from TokenPack manifests."""
 
+    model_config = ConfigDict(extra="forbid", frozen=True)
 
-def _load_builtin_tokens() -> None:
-    """Import all P0 built-in token modules exactly once."""
+    records: tuple[RegistryTokenRecord, ...]
+    resolution_log: tuple[str, ...]
+    result: ValidationResult
 
-    global _BUILTINS_LOADED
+    @classmethod
+    def from_packs(cls, packs: Iterable[TokenPackManifestV2]) -> TokenRegistryV2:
+        """Build a registry from token packs without reading removed registry internals."""
 
-    if _BUILTINS_LOADED:
-        return
+        sorted_packs = _sort_packs(tuple(packs))
+        diagnostics = list(validate_token_pack_dependencies(sorted_packs).result.diagnostics)
+        records: dict[tuple[str, str, int, int], RegistryTokenRecord] = {}
+        resolution_log: list[str] = []
 
-    from quant_strategy_tokenizer.tokens.computation import (
-        compare,  # noqa: F401
-        data,  # noqa: F401
-        logic,  # noqa: F401
-        math,  # noqa: F401
-        norm,  # noqa: F401
-        smooth,  # noqa: F401
-        window,  # noqa: F401
-    )
-    from quant_strategy_tokenizer.tokens.infrastructure import (
-        decision,  # noqa: F401
-        plan,  # noqa: F401
-        risk,  # noqa: F401
-        state,  # noqa: F401
-    )
+        for pack in sorted_packs:
+            pack_hash = token_pack_hash_for_pack_v2(pack)
+            if "core" in pack.namespaces and pack.origin_tier != "core":
+                diagnostics.append(
+                    _diagnostic(
+                        "QST_V2_CORE_NAMESPACE_SHADOWED",
+                        "error",
+                        f"Pack {pack.pack_id} cannot declare the core namespace.",
+                    )
+                )
 
-    _BUILTINS_LOADED = True
+            if pack.attestation_kind in {"qst_verified", "signed_pack"}:
+                diagnostics.append(
+                    _diagnostic(
+                        "QST_V2_ATTESTATION_NOT_SELF_TRUSTED",
+                        "warning",
+                        f"Pack {pack.pack_id} attestation {pack.attestation_kind} is only a claim.",
+                    )
+                )
 
+            for spec in pack.tokens:
+                spec_hash = token_spec_hash_for_spec_v2(spec)
+                key = spec.ref_key
+                record = RegistryTokenRecord(
+                    spec=spec,
+                    pack_id=pack.pack_id,
+                    pack_origin_tier=pack.origin_tier,
+                    token_spec_hash=spec_hash,
+                    token_pack_hash=pack_hash,
+                )
 
-def get_registry() -> Registry:
-    """Return the frozen built-in registry."""
+                if spec.token_ref.namespace == "core" and pack.origin_tier != "core":
+                    diagnostics.append(
+                        _diagnostic(
+                            "QST_V2_CORE_NAMESPACE_SHADOWED",
+                            "error",
+                            f"Token {spec.token_id} cannot shadow core namespace.",
+                        )
+                    )
 
-    _load_builtin_tokens()
-    if not _REGISTRY.is_frozen:
-        _REGISTRY.freeze()
-    return _REGISTRY
+                if spec.attestation_kind in {"qst_verified", "signed_pack"}:
+                    diagnostics.append(
+                        _diagnostic(
+                            "QST_V2_ATTESTATION_NOT_SELF_TRUSTED",
+                            "warning",
+                            f"Token {spec.token_id} attestation {spec.attestation_kind} is only a claim.",
+                        )
+                    )
 
+                existing = records.get(key)
+                if existing is None:
+                    records[key] = record
+                    resolution_log.append(f"register {spec.token_id} from {pack.pack_id}")
+                    continue
 
-def get_mutable_registry_for_bootstrap() -> Registry:
-    """Internal use only: used by @token during import-time registration."""
+                if existing.token_spec_hash == spec_hash:
+                    resolution_log.append(f"dedupe {spec.token_id} from {pack.pack_id}")
+                    continue
 
-    return _REGISTRY
+                override = _choose_project_local_override(existing, record)
+                if override is not None:
+                    records[key] = override
+                    resolution_log.append(f"override {spec.token_id} with {override.pack_id}")
+                    diagnostics.append(
+                        _diagnostic(
+                            "QST_V2_PROJECT_LOCAL_OVERRIDE",
+                            "warning",
+                            f"Project-local pack {override.pack_id} overrides {spec.token_id}.",
+                        )
+                    )
+                    continue
 
+                diagnostics.append(
+                    _diagnostic(
+                        "QST_V2_TOKEN_REF_CONFLICT",
+                        "error",
+                        f"Duplicate token_ref {spec.token_id} has different token_spec_hash.",
+                    )
+                )
 
-def token(
-    *,
-    id: str,
-    layer: Literal["computation", "infrastructure"],
-    category: str,
-    inputs: dict[str, str],
-    outputs: dict[str, str],
-    version: int = 1,
-    behavior_version: int = 1,
-    state_tag: Literal["stateless", "lti_recursive", "nonlinear_recursive", "discrete_fsm"] = "stateless",
-    purity: Literal[
-        "pure",
-        "contextual_read",
-        "external_read",
-        "external_write",
-        "forbidden",
-    ] = "pure",
-    params_schema: dict[str, Any] | None = None,
-    temporal: dict[str, Any] | None = None,
-    failure_policy: dict[str, Any] | None = None,
-    contracts: list[dict[str, Any]] | None = None,
-    usage_examples: list[dict[str, Any]] | None = None,
-    lifecycle: Literal[
-        "experimental",
-        "core_candidate",
-        "core_stable",
-        "deprecated",
-        "removed",
-    ] = "core_candidate",
-    description: str = "",
-) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-    """Register a token executor and return it unchanged."""
-
-    def wrapper(executor: Callable[..., Any]) -> Callable[..., Any]:
-        spec = TokenSpec(
-            id=id,
-            version=version,
-            behavior_version=behavior_version,
-            layer=layer,
-            category=category,
-            state_tag=state_tag,
-            purity=purity,
-            inputs=inputs,
-            outputs=outputs,
-            params_schema=params_schema or {},
-            temporal=TemporalSpec.model_validate(temporal or DEFAULT_TEMPORAL),
-            failure_policy=failure_policy or DEFAULT_FAILURE_POLICY,
-            behavior_contract=contracts or [],
-            usage_examples=usage_examples or [],
-            lifecycle=lifecycle,
-            description=description,
+        return cls(
+            records=tuple(sorted(records.values(), key=lambda record: record.spec.ref_key)),
+            resolution_log=tuple(resolution_log),
+            result=ValidationResult(diagnostics=diagnostics),
         )
 
-        registered = RegisteredToken(spec=spec, executor=executor)
-        get_mutable_registry_for_bootstrap().register(registered)
-        return executor
+    def get(self, token_id: str, *, version: int = 1, behavior_version: int = 1) -> RegistryTokenRecord:
+        """Resolve a token by token_id/version/behavior_version."""
 
-    return wrapper
+        for record in self.records:
+            if (
+                record.spec.token_id == token_id
+                and record.spec.version == version
+                and record.spec.behavior_version == behavior_version
+            ):
+                return record
+        raise KeyError(f"Token {token_id}/v{version}/bv{behavior_version} not found")
+
+
+def validate_token_pack_dependencies(
+    packs: Iterable[TokenPackManifestV2],
+) -> TokenPackDependencyResolution:
+    """Validate and resolve TokenPack dependency graph deterministically."""
+
+    sorted_packs = _sort_packs(tuple(packs))
+    diagnostics: list[Diagnostic] = []
+    by_id: dict[str, list[TokenPackManifestV2]] = defaultdict(list)
+    for pack in sorted_packs:
+        by_id[pack.pack_id].append(pack)
+
+    selected_edges: dict[str, set[str]] = defaultdict(set)
+    for pack in sorted_packs:
+        for dependency in pack.dependencies:
+            candidates = by_id.get(dependency.pack_id, [])
+            if not candidates:
+                diagnostics.append(
+                    _dependency_diagnostic("QST_V2_TOKEN_PACK_DEP_MISSING", pack, dependency)
+                )
+                continue
+            matching = [candidate for candidate in candidates if dependency.matches(candidate.version)]
+            if not matching:
+                diagnostics.append(
+                    _dependency_diagnostic("QST_V2_TOKEN_PACK_DEP_VERSION_MISMATCH", pack, dependency)
+                )
+                continue
+            selected = _select_dependency_candidate(matching)
+            selected_hash = token_pack_hash_for_pack_v2(selected)
+            if dependency.token_pack_hash is not None and selected_hash != dependency.token_pack_hash:
+                diagnostics.append(
+                    _dependency_diagnostic("QST_V2_TOKEN_PACK_DEP_HASH_MISMATCH", pack, dependency)
+                )
+                continue
+            selected_edges[pack.pack_id].add(selected.pack_id)
+
+    for cycle in _find_cycles(selected_edges):
+        diagnostics.append(
+            _diagnostic(
+                "QST_V2_TOKEN_PACK_DEP_CYCLE",
+                "error",
+                f"TokenPack dependency cycle: {' -> '.join(cycle)}",
+            )
+        )
+
+    return TokenPackDependencyResolution(
+        ordered_packs=tuple(_topological_pack_order(sorted_packs, selected_edges)),
+        result=ValidationResult(diagnostics=diagnostics),
+    )
+
+
+def _sort_packs(packs: tuple[TokenPackManifestV2, ...]) -> tuple[TokenPackManifestV2, ...]:
+    return tuple(
+        sorted(
+            packs,
+            key=lambda pack: (pack.pack_id, pack.parsed_version, token_pack_hash_for_pack_v2(pack)),
+        )
+    )
+
+
+def _select_dependency_candidate(candidates: list[TokenPackManifestV2]) -> TokenPackManifestV2:
+    return sorted(
+        candidates,
+        key=lambda pack: (pack.parsed_version, token_pack_hash_for_pack_v2(pack)),
+        reverse=True,
+    )[0]
+
+
+def _choose_project_local_override(
+    existing: RegistryTokenRecord,
+    candidate: RegistryTokenRecord,
+) -> RegistryTokenRecord | None:
+    if candidate.spec.token_ref.namespace == "core":
+        return None
+    if candidate.pack_origin_tier == "user_local":
+        return candidate
+    if existing.pack_origin_tier == "user_local":
+        return existing
+    return None
+
+
+def _find_cycles(edges: dict[str, set[str]]) -> list[tuple[str, ...]]:
+    cycles: set[tuple[str, ...]] = set()
+
+    def visit(node: str, path: tuple[str, ...]) -> None:
+        if node in path:
+            index = path.index(node)
+            cycle = (*path[index:], node)
+            rotations = [cycle[i:-1] + cycle[:i] + (cycle[i],) for i in range(len(cycle) - 1)]
+            cycles.add(min(rotations))
+            return
+        for next_node in sorted(edges.get(node, set())):
+            visit(next_node, (*path, node))
+
+    for node in sorted(edges):
+        visit(node, ())
+    return sorted(cycles)
+
+
+def _topological_pack_order(
+    packs: tuple[TokenPackManifestV2, ...],
+    edges: dict[str, set[str]],
+) -> list[TokenPackManifestV2]:
+    pack_by_id = {pack.pack_id: pack for pack in packs}
+    visited: set[str] = set()
+    visiting: set[str] = set()
+    ordered_ids: list[str] = []
+
+    def visit(pack_id: str) -> None:
+        if pack_id in visited or pack_id in visiting:
+            return
+        visiting.add(pack_id)
+        for dependency_id in sorted(edges.get(pack_id, set())):
+            visit(dependency_id)
+        visiting.remove(pack_id)
+        visited.add(pack_id)
+        ordered_ids.append(pack_id)
+
+    for pack in packs:
+        visit(pack.pack_id)
+    return [pack_by_id[pack_id] for pack_id in ordered_ids if pack_id in pack_by_id]
+
+
+def _dependency_diagnostic(
+    code: str,
+    pack: TokenPackManifestV2,
+    dependency: TokenPackDependency,
+) -> Diagnostic:
+    return _diagnostic(
+        code,
+        "error",
+        (
+            f"Pack {pack.pack_id} dependency {dependency.pack_id}"
+            f" constraint {dependency.version_constraint or '<any>'} failed."
+        ),
+    )
+
+
+def _diagnostic(code: str, severity: Severity, message: str) -> Diagnostic:
+    return Diagnostic(
+        code=code,
+        severity=severity,
+        phase="token_registry",
+        message=message,
+    )

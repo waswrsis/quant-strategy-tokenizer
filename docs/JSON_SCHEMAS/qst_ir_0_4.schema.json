@@ -41,38 +41,9 @@
         }
       }
     },
-    "metadata": {"type": "object"},
-    "derived_from": {
-      "oneOf": [{"$ref": "#/$defs/migration_lineage"}, {"type": "null"}]
-    }
+    "metadata": {"type": "object"}
   },
   "$defs": {
-    "hash": {
-      "type": "string",
-      "pattern": "^sha256:[0-9a-f]{64}$"
-    },
-    "migration_lineage": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "kind",
-        "source_ir_version",
-        "source_instance_hash",
-        "source_strategy",
-        "source_strategy_version",
-        "target_core_registry_hash",
-        "migration_tool_version"
-      ],
-      "properties": {
-        "kind": {"const": "ir_migration"},
-        "source_ir_version": {"enum": ["qst-ir/0.3", "qst-ir/0.3.1"]},
-        "source_instance_hash": {"$ref": "#/$defs/hash"},
-        "source_strategy": {"type": "string", "minLength": 1},
-        "source_strategy_version": {"type": "integer", "minimum": 1},
-        "target_core_registry_hash": {"$ref": "#/$defs/hash"},
-        "migration_tool_version": {"const": "qst-migrate/0.4.0"}
-      }
-    },
     "node": {
       "type": "object",
       "additionalProperties": false,
