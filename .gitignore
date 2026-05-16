@@ -10,5 +10,6 @@ dist/
 build/
 *.egg-info/
 trace.json
+!tests/reference/strategies/*/trace.json
 *.bak
 .local_audit/
