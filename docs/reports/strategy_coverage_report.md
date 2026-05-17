@@ -8,10 +8,10 @@ profitability, or portfolio optimizer coverage.
 
 ## Summary
 
-- Pattern count: `105`
-- Frontier pattern count: `100`
+- Pattern count: `110`
+- Frontier pattern count: `105`
 - Dogfood pattern count: `5`
-- Total frontier weight: `517.0`
+- Total frontier weight: `542.0`
 - Check result: `pass`
 
 ## Benchmark Groups
@@ -20,32 +20,32 @@ profitability, or portfolio optimizer coverage.
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | dogfood | 5 | 25.0 | 0 | 3 | 1 | 1 | 0 |
 | external_benchmark | 20 | 102.0 | 9 | 2 | 3 | 4 | 2 |
-| internal_matrix | 80 | 415.0 | 46 | 12 | 12 | 7 | 3 |
+| internal_matrix | 85 | 440.0 | 54 | 12 | 9 | 7 | 3 |
 
 ## Classification Summary
 
 | Classification | Count | Weight |
 | --- | ---: | ---: |
-| custom_token_required | 16 | 84.0 |
+| custom_token_required | 13 | 68.0 |
 | non_goal | 5 | 19.0 |
 | partially_supported | 17 | 88.0 |
 | reserved | 12 | 47.0 |
-| supported | 55 | 304.0 |
+| supported | 63 | 345.0 |
 
 ## Metrics
 
 | Metric | Value |
 | --- | ---: |
-| direct_builtin_coverage | 0.1412 |
-| routable_record_coverage_raw | 0.8820 |
-| routable_record_coverage_discounted | 0.8056 |
-| custom_token_route_share | 0.1732 |
+| direct_builtin_coverage | 0.1827 |
+| routable_record_coverage_raw | 0.8875 |
+| routable_record_coverage_discounted | 0.8293 |
+| custom_token_route_share | 0.1310 |
 | false_supported_rate_mechanical | 0.0000 |
 | false_supported_rate_semantic | 0.0000 |
 | false_supported_rate_boundary | 0.0000 |
 | boundary_false_supported_count | 0 |
 | kernel_gap_count | 20 |
-| token_bloat_index | 0.2200 |
+| token_bloat_index | 0.1810 |
 
 ## Next Best Expansions
 
@@ -59,8 +59,25 @@ profitability, or portfolio optimizer coverage.
 | numeric_determinism_gap | kernel | 25.0 | 3 | 8.3333 |
 | built-in Kalman signal | token | 6.0 | 1 | 6.0 |
 | factor.sector_neutral_rank recipe | token | 6.0 | 1 | 6.0 |
-| indicator.macd | token | 6.0 | 1 | 6.0 |
 | pair_spread_model | token | 6.0 | 1 | 6.0 |
+| bollinger_bandwidth recipe | token | 5.0 | 1 | 5.0 |
+
+## Core rule token batch
+
+PR6 adds accepted record/reference token coverage for common indicator, signal,
+and decision-rule patterns. These rows remain record-layer evidence and do not
+claim broad runtime execution, broker/exchange behavior, or profitability.
+
+| Row | Classification | Mechanical status | Example | Required tokens |
+| --- | --- | --- | --- | --- |
+| int_020_macd_trend | supported | pass | tests/coverage_cases/core_rule/macd_trend.partial.gkr.yaml | indicator.macd, signal.greater_than, decision.long_flat |
+| int_021_atr_filter | supported | pass | tests/coverage_cases/core_rule/atr_filter.partial.gkr.yaml | indicator.atr, signal.less_than, decision.long_flat |
+| int_022_linear_regression_slope | supported | pass | tests/coverage_cases/core_rule/linear_regression_slope.partial.gkr.yaml | indicator.linear_regression_slope, decision.signal_to_decision |
+| int_081_signal_composition | supported | pending | pending | signal.and, signal.or, signal.not, signal.between, signal.outside_band |
+| int_082_decision_long_short_rule | supported | pass | tests/coverage_cases/core_rule/long_short_decision.partial.gkr.yaml | indicator.donchian_channel, signal.breakout_up, signal.breakout_down, decision.long_short |
+| int_083_entry_exit_gate_record | supported | pending | pending | decision.entry_exit_to_position, decision.gate_decision |
+| int_084_beta_residual_timeseries | supported | pass | tests/coverage_cases/core_rule/beta_residual_timeseries.partial.gkr.yaml | indicator.beta, indicator.residual, signal.zscore_revert, decision.long_flat |
+| int_085_donchian_volatility_rule | supported | pending | pending | indicator.donchian_channel, indicator.volatility, signal.breakout_up, signal.breakout_down |
 
 ## Dogfood
 

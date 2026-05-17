@@ -16,6 +16,16 @@ from validate_strategy_coverage_matrix import (
 
 DOGFOOD_MVP_TARGET = 1
 DOGFOOD_PUBLICATION_TARGET = 5
+CORE_RULE_ROW_IDS = {
+    "int_020_macd_trend",
+    "int_021_atr_filter",
+    "int_022_linear_regression_slope",
+    "int_081_signal_composition",
+    "int_082_decision_long_short_rule",
+    "int_083_entry_exit_gate_record",
+    "int_084_beta_residual_timeseries",
+    "int_085_donchian_volatility_rule",
+}
 
 
 @dataclass(frozen=True)
@@ -87,6 +97,7 @@ def build_report(matrix: dict[str, Any], *, repo_root: Path | None = None) -> di
             "metrics": metrics,
             "dogfood": _dogfood_summary(dogfood_patterns),
             "dogfood_target": _dogfood_target_summary(dogfood_patterns),
+            "core_rule_token_batch": _core_rule_summary(frontier_patterns),
             "next_best_expansions": _next_best_expansions(missing_tokens, kernel_gaps),
             "validation": validation_payload(validation_issues, validation_summary)[
                 "strategy_coverage_matrix_validation"
@@ -219,6 +230,30 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.extend(
         [
             "",
+            "## Core rule token batch",
+            "",
+            "PR6 adds accepted record/reference token coverage for common indicator, signal,",
+            "and decision-rule patterns. These rows remain record-layer evidence and do not",
+            "claim broad runtime execution, broker/exchange behavior, or profitability.",
+            "",
+            "| Row | Classification | Mechanical status | Example | Required tokens |",
+            "| --- | --- | --- | --- | --- |",
+        ]
+    )
+    for row in frontier["core_rule_token_batch"]["rows"]:
+        lines.append(
+            "| {id} | {classification} | {mechanical_status} | {example} | {required_tokens} |".format(
+                id=row["id"],
+                classification=row["classification"],
+                mechanical_status=row["mechanical_status"],
+                example=row["example"] or "pending",
+                required_tokens=", ".join(row["required_tokens"]),
+            )
+        )
+
+    lines.extend(
+        [
+            "",
             "## Dogfood",
             "",
             f"- Status: `{frontier['dogfood']['status']}`",
@@ -320,6 +355,33 @@ def _dogfood_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "classifications": classifications,
         "weight": _weight_sum(rows),
         "rows": [_dogfood_row_summary(row) for row in rows],
+    }
+
+
+def _core_rule_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    selected = [row for row in rows if row.get("id") in CORE_RULE_ROW_IDS]
+    selected.sort(key=lambda row: str(row.get("id", "")))
+    return {
+        "count": len(selected),
+        "rows": [_core_rule_row_summary(row) for row in selected],
+    }
+
+
+def _core_rule_row_summary(row: dict[str, Any]) -> dict[str, Any]:
+    evidence = row.get("evidence")
+    evidence_map = evidence if isinstance(evidence, dict) else {}
+    false_supported = row.get("false_supported")
+    false_map = false_supported if isinstance(false_supported, dict) else {}
+    examples = evidence_map.get("examples")
+    required_tokens = evidence_map.get("required_tokens")
+    return {
+        "id": str(row.get("id", "")),
+        "classification": str(row.get("expected_classification", "")),
+        "mechanical_status": str(false_map.get("mechanical_status", "")),
+        "example": str(examples[0]) if isinstance(examples, list) and examples else "",
+        "required_tokens": [str(token) for token in required_tokens]
+        if isinstance(required_tokens, list)
+        else [],
     }
 
 

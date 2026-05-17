@@ -245,6 +245,55 @@ def evaluate_decision_token(name: str, *args: Any, **params: Any) -> object:
             for value in _bool_values(series)
         ]
 
+    if name == "decision.long_flat":
+        (series,) = _expect_args(name, args, 1)
+        return _bool_series_to_decisions(
+            _bool_series(series),
+            true_kind="accept",
+            false_kind="reject",
+            true_reason="DECISION_LONG",
+            false_reason="DECISION_FLAT",
+        )
+
+    if name == "decision.long_short":
+        long_signal, short_signal = _expect_args(name, args, 2)
+        return _long_short_decisions(_bool_series(long_signal), _bool_series(short_signal))
+
+    if name == "decision.entry_exit_to_position":
+        entry_signal, exit_signal = _expect_args(name, args, 2)
+        return _entry_exit_decisions(_bool_series(entry_signal), _bool_series(exit_signal))
+
+    if name == "decision.signal_to_decision":
+        (series,) = _expect_args(name, args, 1)
+        threshold = _coerce_number(params.get("threshold", 0))
+        return _numeric_series_to_decisions(
+            _numeric_series(series),
+            threshold=threshold,
+            accept_reason=str(params.get("accept_reason", "SIGNAL_ACCEPTED")),
+            reject_reason=str(params.get("reject_reason", "SIGNAL_REJECTED")),
+        )
+
+    if name == "decision.rank_to_selection":
+        (panel,) = _expect_args(name, args, 1)
+        side = str(params.get("side", "top"))
+        selection_params = {key: value for key, value in params.items() if key != "side"}
+        if side == "bottom":
+            return evaluate_panel_token("panel.bottom_k", panel, **selection_params)
+        if side != "top":
+            raise TokenReferenceError(
+                "QST_TOKEN_DECISION_SIDE_INVALID",
+                "decision.rank_to_selection side must be 'top' or 'bottom'.",
+            )
+        return evaluate_panel_token("panel.top_k", panel, **selection_params)
+
+    if name == "decision.selection_to_weight":
+        (selection,) = _expect_args(name, args, 1)
+        return evaluate_panel_token("selection.to_weights", selection, **params)
+
+    if name == "decision.gate_decision":
+        decision_values, gate_values = _expect_args(name, args, 2)
+        return _gate_decisions(list(decision_values), list(gate_values))
+
     if name.startswith("decision."):
         (decisions,) = _expect_args(name, args, 1)
         from qst.decision import (
@@ -606,7 +655,7 @@ def evaluate_window_token(name: str, series: Sequence[SeriesRow], **params: Any)
     return output
 
 
-def evaluate_signal_token(name: str, *args: Any, **params: Any) -> BoolSeries | NumericSeries:
+def evaluate_signal_token(name: str, *args: Any, **params: Any) -> object:
     """Evaluate Stage 3A.2 `signal.*`, `norm.*`, and `smooth.*` helpers."""
 
     if name.startswith("core."):
@@ -649,6 +698,44 @@ def evaluate_signal_token(name: str, *args: Any, **params: Any) -> BoolSeries | 
                     passed = numeric_value <= threshold if inclusive else numeric_value < threshold
                 output.append((timestamp, passed))
             return output
+
+        if token in {"greater_than", "less_than"}:
+            left, right = _expect_args(token, args, 2)
+            return _compare_series(left, right, op="gt" if token == "greater_than" else "lt")
+
+        if token in {"and", "or"}:
+            left, right = _expect_args(token, args, 2)
+            return _combine_bool_series(left, right, op=token)
+
+        if token == "not":
+            (series,) = _expect_args(token, args, 1)
+            return [(timestamp, not value) for timestamp, value in _bool_series(series)]
+
+        if token in {"between", "outside_band"}:
+            value, lower, upper = _expect_args(token, args, 3)
+            return _band_signal(value, lower, upper, outside=token == "outside_band", inclusive=bool(params.get("inclusive", True)))
+
+        if token in {"breakout_up", "breakout_down"}:
+            series, band = _expect_args(token, args, 2)
+            return _breakout_signal(series, band, direction="up" if token == "breakout_up" else "down")
+
+        if token == "zscore_revert":
+            (series,) = _expect_args(token, args, 1)
+            threshold = _coerce_number(params.get("threshold", 2))
+            if threshold <= 0:
+                raise TokenReferenceError(
+                    "QST_TOKEN_SIGNAL_THRESHOLD_INVALID",
+                    "signal.zscore_revert threshold must be positive.",
+                )
+            return _zscore_revert_signal(series, threshold=threshold)
+
+        if token == "rank_top_k":
+            (panel,) = _expect_args(token, args, 1)
+            return evaluate_panel_token("panel.top_k", panel, **params)
+
+        if token == "rank_bottom_k":
+            (panel,) = _expect_args(token, args, 1)
+            return evaluate_panel_token("panel.bottom_k", panel, **params)
 
     if name.startswith("norm."):
         token = name.removeprefix("norm.")
@@ -700,7 +787,12 @@ def evaluate_signal_token(name: str, *args: Any, **params: Any) -> BoolSeries | 
     raise TokenReferenceError("QST_TOKEN_REFERENCE_UNSUPPORTED", f"Unsupported signal token: {name}")
 
 
-def evaluate_indicator_token(name: str, series: Sequence[SeriesRow], **params: Any) -> object:
+def evaluate_indicator_token(
+    name: str,
+    series: Sequence[SeriesRow],
+    *args: Sequence[SeriesRow],
+    **params: Any,
+) -> object:
     """Evaluate Stage 3A.2 `indicator.*` reference helpers."""
 
     token = _local_name(name, "indicator.")
@@ -708,6 +800,15 @@ def evaluate_indicator_token(name: str, series: Sequence[SeriesRow], **params: A
 
     if token == "sma":
         return evaluate_window_token("window.mean", rows, **params)
+
+    if token == "rolling_mean":
+        return evaluate_window_token("window.mean", rows, **params)
+
+    if token == "rolling_std":
+        return evaluate_window_token("window.std", rows, **params)
+
+    if token == "rolling_zscore":
+        return evaluate_window_token("window.zscore", rows, **params)
 
     if token == "ema":
         window, _ = _window_params(params)
@@ -762,6 +863,34 @@ def evaluate_indicator_token(name: str, series: Sequence[SeriesRow], **params: A
             lower.append((timestamp, mean_value - width * std))
         return {"middle": middle, "upper": upper, "lower": lower}
 
+    if token == "bollinger_band":
+        return evaluate_indicator_token("indicator.bollinger", rows, **params)
+
+    if token == "macd":
+        return _macd_indicator(rows, **params)
+
+    if token == "atr":
+        low, close = _expect_args(token, tuple(args), 2)
+        return _atr_indicator(rows, low, close, **params)
+
+    if token == "donchian_channel":
+        (low,) = _expect_args(token, tuple(args), 1)
+        return _donchian_channel_indicator(rows, low, **params)
+
+    if token == "volatility":
+        return _volatility_indicator(rows, **params)
+
+    if token == "linear_regression_slope":
+        return _linear_regression_slope_indicator(rows, **params)
+
+    if token == "beta":
+        (benchmark,) = _expect_args(token, tuple(args), 1)
+        return _beta_indicator(rows, benchmark, **params)
+
+    if token == "residual":
+        (benchmark,) = _expect_args(token, tuple(args), 1)
+        return _residual_indicator(rows, benchmark, **params)
+
     raise TokenReferenceError("QST_TOKEN_REFERENCE_UNSUPPORTED", f"Unsupported indicator token: {name}")
 
 
@@ -795,6 +924,333 @@ def evaluate_channel_breakout_token(
         previous_high = max(row[1] for row in previous)
         previous_low = min(row[2] for row in previous)
         output.append((timestamp, close_value > previous_high or close_value < previous_low))
+    return output
+
+
+def _macd_indicator(rows: NumericSeries, **params: Any) -> dict[str, NumericSeries]:
+    fast_window = _coerce_int_param(params.get("fast_window", 12), "fast_window")
+    slow_window = _coerce_int_param(params.get("slow_window", 26), "slow_window")
+    signal_window = _coerce_int_param(params.get("signal_window", 9), "signal_window")
+    if fast_window <= 0 or slow_window <= 0 or signal_window <= 0 or fast_window >= slow_window:
+        raise TokenReferenceError(
+            "QST_TOKEN_INDICATOR_PARAM_INVALID",
+            "indicator.macd requires 0 < fast_window < slow_window and signal_window > 0.",
+        )
+    fast = dict(_ema_rows(rows, fast_window))
+    slow_rows = _ema_rows(rows, slow_window)
+    macd_rows = [(timestamp, fast[timestamp] - slow_value) for timestamp, slow_value in slow_rows]
+    signal_rows = _ema_rows(macd_rows, signal_window)
+    signal_by_timestamp = dict(signal_rows)
+    histogram = [
+        (timestamp, macd_value - signal_by_timestamp[timestamp])
+        for timestamp, macd_value in macd_rows
+        if timestamp in signal_by_timestamp
+    ]
+    return {"macd": macd_rows, "signal": signal_rows, "histogram": histogram}
+
+
+def _ema_rows(rows: NumericSeries, window: int) -> NumericSeries:
+    if window <= 0:
+        raise TokenReferenceError("QST_TOKEN_WINDOW_INVALID", "EMA window must be positive.")
+    alpha = 2 / (window + 1)
+    output: NumericSeries = []
+    previous: float | None = None
+    for timestamp, value in rows:
+        previous = value if previous is None else alpha * value + (1 - alpha) * previous
+        output.append((timestamp, previous))
+    return output
+
+
+def _atr_indicator(
+    high: NumericSeries,
+    low: Sequence[SeriesRow],
+    close: Sequence[SeriesRow],
+    **params: Any,
+) -> NumericSeries:
+    window, _ = _window_params(params)
+    high_rows, low_rows = _align_numeric_pair(high, low)
+    high_rows, close_rows = _align_numeric_pair(high_rows, close)
+    low_by_timestamp = dict(low_rows)
+    close_by_timestamp = dict(close_rows)
+    aligned = [
+        (timestamp, high_value, low_by_timestamp[timestamp], close_by_timestamp[timestamp])
+        for timestamp, high_value in high_rows
+    ]
+    true_ranges: NumericSeries = []
+    previous_close: float | None = None
+    for timestamp, high_value, low_value, close_value in aligned:
+        if high_value < low_value:
+            raise TokenReferenceError(
+                "QST_TOKEN_INDICATOR_RANGE_INVALID",
+                "indicator.atr requires high >= low.",
+            )
+        candidates = [high_value - low_value]
+        if previous_close is not None:
+            candidates.extend((abs(high_value - previous_close), abs(low_value - previous_close)))
+        true_ranges.append((timestamp, max(candidates)))
+        previous_close = close_value
+    if len(true_ranges) < window:
+        return []
+    output: NumericSeries = []
+    atr = sum(value for _, value in true_ranges[:window]) / window
+    output.append((true_ranges[window - 1][0], atr))
+    for timestamp, tr_value in true_ranges[window:]:
+        atr = (atr * (window - 1) + tr_value) / window
+        output.append((timestamp, atr))
+    return output
+
+
+def _donchian_channel_indicator(
+    high: NumericSeries,
+    low: Sequence[SeriesRow],
+    **params: Any,
+) -> dict[str, NumericSeries]:
+    window, _ = _window_params(params)
+    high_rows, low_rows = _align_numeric_pair(high, low)
+    low_by_timestamp = dict(low_rows)
+    aligned = [(timestamp, high_value, low_by_timestamp[timestamp]) for timestamp, high_value in high_rows]
+    upper: NumericSeries = []
+    lower: NumericSeries = []
+    for index in range(window, len(aligned)):
+        previous = aligned[index - window : index]
+        timestamp = aligned[index][0]
+        upper.append((timestamp, max(row[1] for row in previous)))
+        lower.append((timestamp, min(row[2] for row in previous)))
+    return {"upper": upper, "lower": lower}
+
+
+def _volatility_indicator(rows: NumericSeries, **params: Any) -> NumericSeries:
+    returns = evaluate_data_token("data.pct_change", rows)
+    return cast(NumericSeries, evaluate_window_token("window.std", returns, **params))
+
+
+def _linear_regression_slope_indicator(rows: NumericSeries, **params: Any) -> NumericSeries:
+    window, _ = _window_params(params)
+    output: NumericSeries = []
+    for index in range(window - 1, len(rows)):
+        values = [value for _, value in rows[index - window + 1 : index + 1]]
+        output.append((rows[index][0], _ols_slope(values)))
+    return output
+
+
+def _beta_indicator(
+    series: NumericSeries,
+    benchmark: Sequence[SeriesRow],
+    **params: Any,
+) -> NumericSeries:
+    return [(timestamp, beta) for timestamp, beta, _, _ in _rolling_beta_fit(series, benchmark, **params)]
+
+
+def _residual_indicator(
+    series: NumericSeries,
+    benchmark: Sequence[SeriesRow],
+    **params: Any,
+) -> NumericSeries:
+    return [
+        (timestamp, y_value - (alpha + beta * x_value))
+        for timestamp, beta, alpha, (x_value, y_value) in _rolling_beta_fit(series, benchmark, **params)
+    ]
+
+
+def _rolling_beta_fit(
+    series: NumericSeries,
+    benchmark: Sequence[SeriesRow],
+    **params: Any,
+) -> list[tuple[str, float, float, tuple[float, float]]]:
+    window, _ = _window_params(params)
+    series_rows, benchmark_rows = _align_numeric_pair(series, benchmark)
+    benchmark_by_timestamp = dict(benchmark_rows)
+    aligned = [(timestamp, benchmark_by_timestamp[timestamp], value) for timestamp, value in series_rows]
+    output: list[tuple[str, float, float, tuple[float, float]]] = []
+    for index in range(window - 1, len(aligned)):
+        current_window = aligned[index - window + 1 : index + 1]
+        xs = [row[1] for row in current_window]
+        ys = [row[2] for row in current_window]
+        mean_x = sum(xs) / len(xs)
+        mean_y = sum(ys) / len(ys)
+        var_x = sum((x - mean_x) ** 2 for x in xs)
+        if var_x == 0:
+            raise TokenReferenceError(
+                "QST_TOKEN_INDICATOR_ZERO_VARIANCE",
+                "indicator.beta/residual require nonzero benchmark variance.",
+            )
+        beta = sum((x - mean_x) * (y - mean_y) for x, y in zip(xs, ys, strict=True)) / var_x
+        alpha = mean_y - beta * mean_x
+        timestamp, current_x, current_y = aligned[index]
+        output.append((timestamp, beta, alpha, (current_x, current_y)))
+    return output
+
+
+def _ols_slope(values: Sequence[float]) -> float:
+    if len(values) < 2:
+        raise TokenReferenceError(
+            "QST_TOKEN_INDICATOR_INSUFFICIENT_OBSERVATIONS",
+            "linear regression slope requires at least two observations.",
+        )
+    xs = list(range(len(values)))
+    mean_x = sum(xs) / len(xs)
+    mean_y = sum(values) / len(values)
+    var_x = sum((x - mean_x) ** 2 for x in xs)
+    if var_x == 0:
+        raise TokenReferenceError(
+            "QST_TOKEN_INDICATOR_ZERO_VARIANCE",
+            "linear regression slope requires nonzero x variance.",
+        )
+    return sum((x - mean_x) * (y - mean_y) for x, y in zip(xs, values, strict=True)) / var_x
+
+
+def _compare_series(left: Any, right: Any, *, op: Literal["gt", "lt"]) -> BoolSeries:
+    left_rows, right_rows = _align_numeric_pair(left, right)
+    right_by_timestamp = dict(right_rows)
+    if op == "gt":
+        return [(timestamp, value > right_by_timestamp[timestamp]) for timestamp, value in left_rows]
+    return [(timestamp, value < right_by_timestamp[timestamp]) for timestamp, value in left_rows]
+
+
+def _combine_bool_series(left: Any, right: Any, *, op: str) -> BoolSeries:
+    left_rows, right_rows = _align_bool_pair(left, right)
+    right_by_timestamp = dict(right_rows)
+    if op == "and":
+        return [(timestamp, value and right_by_timestamp[timestamp]) for timestamp, value in left_rows]
+    return [(timestamp, value or right_by_timestamp[timestamp]) for timestamp, value in left_rows]
+
+
+def _band_signal(value: Any, lower: Any, upper: Any, *, outside: bool, inclusive: bool) -> BoolSeries:
+    value_rows, lower_rows = _align_numeric_pair(value, lower)
+    value_rows, upper_rows = _align_numeric_pair(value_rows, upper)
+    lower_by_timestamp = dict(lower_rows)
+    upper_by_timestamp = dict(upper_rows)
+    output: BoolSeries = []
+    for timestamp, numeric_value in value_rows:
+        low = lower_by_timestamp[timestamp]
+        high = upper_by_timestamp[timestamp]
+        if low > high:
+            raise TokenReferenceError(
+                "QST_TOKEN_SIGNAL_BAND_INVALID",
+                "signal.between/outside_band require lower <= upper.",
+            )
+        inside = low <= numeric_value <= high if inclusive else low < numeric_value < high
+        output.append((timestamp, not inside if outside else inside))
+    return output
+
+
+def _breakout_signal(series: Any, band: Any, *, direction: Literal["up", "down"]) -> BoolSeries:
+    rows, band_rows = _align_numeric_pair(series, band)
+    band_by_timestamp = dict(band_rows)
+    if direction == "up":
+        return [(timestamp, value > band_by_timestamp[timestamp]) for timestamp, value in rows]
+    return [(timestamp, value < band_by_timestamp[timestamp]) for timestamp, value in rows]
+
+
+def _zscore_revert_signal(series: Any, *, threshold: float) -> BoolSeries:
+    rows = _numeric_series(series)
+    output: BoolSeries = []
+    for index in range(1, len(rows)):
+        timestamp, current = rows[index]
+        previous = rows[index - 1][1]
+        same_side = previous == 0 or current == 0 or previous * current > 0
+        output.append((timestamp, abs(previous) >= threshold and abs(current) < abs(previous) and same_side))
+    return output
+
+
+def _bool_series_to_decisions(
+    rows: BoolSeries,
+    *,
+    true_kind: Literal["accept", "reject", "unknown", "block"],
+    false_kind: Literal["accept", "reject", "unknown", "block"],
+    true_reason: str,
+    false_reason: str,
+) -> list[Any]:
+    from qst.decision import DecisionV2
+
+    return [
+        DecisionV2(kind=true_kind if value else false_kind, reasons=(true_reason if value else false_reason,))
+        for _, value in rows
+    ]
+
+
+def _numeric_series_to_decisions(
+    rows: NumericSeries,
+    *,
+    threshold: float,
+    accept_reason: str,
+    reject_reason: str,
+) -> list[Any]:
+    from qst.decision import DecisionV2
+
+    return [
+        DecisionV2(
+            kind="accept" if value >= threshold else "reject",
+            reasons=(accept_reason if value >= threshold else reject_reason,),
+        )
+        for _, value in rows
+    ]
+
+
+def _long_short_decisions(long_signal: BoolSeries, short_signal: BoolSeries) -> list[Any]:
+    from qst.decision import DecisionV2
+
+    long_rows, short_rows = _align_bool_pair(long_signal, short_signal)
+    short_by_timestamp = dict(short_rows)
+    output: list[DecisionV2] = []
+    for timestamp, long_value in long_rows:
+        short_value = short_by_timestamp[timestamp]
+        if long_value and short_value:
+            output.append(DecisionV2(kind="block", reasons=("DECISION_LONG_SHORT_CONFLICT",)))
+        elif long_value:
+            output.append(DecisionV2(kind="accept", reasons=("DECISION_LONG",)))
+        elif short_value:
+            output.append(DecisionV2(kind="accept", reasons=("DECISION_SHORT",)))
+        else:
+            output.append(DecisionV2(kind="reject", reasons=("DECISION_FLAT",)))
+    return output
+
+
+def _entry_exit_decisions(entry_signal: BoolSeries, exit_signal: BoolSeries) -> list[Any]:
+    from qst.decision import DecisionV2
+
+    entry_rows, exit_rows = _align_bool_pair(entry_signal, exit_signal)
+    exit_by_timestamp = dict(exit_rows)
+    in_position = False
+    output: list[DecisionV2] = []
+    for timestamp, entry_value in entry_rows:
+        exit_value = exit_by_timestamp[timestamp]
+        if entry_value and exit_value:
+            output.append(DecisionV2(kind="block", reasons=("DECISION_ENTRY_EXIT_CONFLICT",)))
+            continue
+        if exit_value:
+            in_position = False
+            output.append(DecisionV2(kind="reject", reasons=("DECISION_EXIT",)))
+            continue
+        if entry_value:
+            in_position = True
+            output.append(DecisionV2(kind="accept", reasons=("DECISION_ENTRY",)))
+            continue
+        output.append(
+            DecisionV2(
+                kind="accept" if in_position else "reject",
+                reasons=("DECISION_HOLD_LONG" if in_position else "DECISION_FLAT",),
+            )
+        )
+    return output
+
+
+def _gate_decisions(decision_values: list[Any], gate_values: list[Any]) -> list[Any]:
+    from qst.decision import DecisionV2
+
+    if len(decision_values) != len(gate_values):
+        raise TokenReferenceError(
+            "QST_TOKEN_DECISION_INPUT_LENGTH_MISMATCH",
+            "decision.gate_decision inputs must have the same length.",
+        )
+    output: list[DecisionV2] = []
+    for decision_raw, gate_raw in zip(decision_values, gate_values, strict=True):
+        decision = decision_raw if isinstance(decision_raw, DecisionV2) else DecisionV2.model_validate(decision_raw)
+        gate = gate_raw if isinstance(gate_raw, DecisionV2) else DecisionV2.model_validate(gate_raw)
+        if gate.kind == "block":
+            output.append(DecisionV2(kind="block", reasons=(*decision.reasons, *gate.reasons)))
+        else:
+            output.append(decision)
     return output
 
 
@@ -1176,6 +1632,46 @@ def _bool_values(values: Any) -> list[bool]:
         "QST_TOKEN_INPUT_TYPE_INVALID",
         "Boolean series input must be a sequence.",
     )
+
+
+def _bool_series(values: Any) -> BoolSeries:
+    if isinstance(values, Sequence) and not isinstance(values, (str, bytes)):
+        if all(isinstance(item, tuple) and len(item) == 2 for item in values):
+            return [
+                (timestamp, _coerce_bool(value))
+                for timestamp, value in _series_rows(cast(Sequence[SeriesRow], values))
+            ]
+        return [(str(index), _coerce_bool(value)) for index, value in enumerate(values)]
+    raise TokenReferenceError(
+        "QST_TOKEN_INPUT_TYPE_INVALID",
+        "Boolean series input must be a sequence.",
+    )
+
+
+def _align_numeric_pair(left: Any, right: Any) -> tuple[NumericSeries, NumericSeries]:
+    left_rows = _numeric_series(left)
+    right_rows = _numeric_series(right)
+    right_by_timestamp = dict(right_rows)
+    left_output: NumericSeries = []
+    right_output: NumericSeries = []
+    for timestamp, value in left_rows:
+        if timestamp in right_by_timestamp:
+            left_output.append((timestamp, value))
+            right_output.append((timestamp, right_by_timestamp[timestamp]))
+    return left_output, right_output
+
+
+def _align_bool_pair(left: Any, right: Any) -> tuple[BoolSeries, BoolSeries]:
+    left_rows = _bool_series(left)
+    right_rows = _bool_series(right)
+    right_by_timestamp = dict(right_rows)
+    left_output: BoolSeries = []
+    right_output: BoolSeries = []
+    for timestamp, value in left_rows:
+        if timestamp in right_by_timestamp:
+            left_output.append((timestamp, value))
+            right_output.append((timestamp, right_by_timestamp[timestamp]))
+    return left_output, right_output
 
 
 def _string_values(values: Sequence[Any], *, field_name: str) -> list[str]:

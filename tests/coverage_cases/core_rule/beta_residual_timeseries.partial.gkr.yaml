@@ -1,0 +1,36 @@
+schema_version: qst-ir-schema/0.4
+ir_version: qst-ir/0.4
+canonical_version: qst-canonical/0.4
+capabilities: [core]
+strategy:
+  id: pr6_beta_residual_timeseries_partial
+  version: 1
+  nodes:
+  - id: beta
+    token_ref: {namespace: core, name: indicator.beta, version: 1, behavior_version: 1}
+    inputs: {series: $externals.asset.return, benchmark: $externals.benchmark.return}
+    params: {window: 30}
+    signature: {outputs: {value: {type: "TimeSeries[float]"}}}
+  - id: residual
+    token_ref: {namespace: core, name: indicator.residual, version: 1, behavior_version: 1}
+    inputs: {series: $externals.asset.return, benchmark: $externals.benchmark.return}
+    params: {window: 30}
+    signature: {outputs: {value: {type: "TimeSeries[float]"}}}
+  - id: residual_revert
+    token_ref: {namespace: core, name: signal.zscore_revert, version: 1, behavior_version: 1}
+    inputs: {zscore: residual.value}
+    params: {threshold: 2}
+    signature: {outputs: {value: {type: "TimeSeries[bool]"}}}
+  - id: decision
+    token_ref: {namespace: core, name: decision.long_flat, version: 1, behavior_version: 1}
+    inputs: {series: residual_revert.value}
+    params: {}
+    signature: {outputs: {decision: {type: Decision}}}
+  outputs:
+    decision: decision.decision
+metadata:
+  coverage_case: pr6_beta_residual_timeseries
+  scope: record_layer_partial_evidence
+  limitations:
+    - beta and residual are deterministic reference semantics only
+    - no portfolio optimizer or execution

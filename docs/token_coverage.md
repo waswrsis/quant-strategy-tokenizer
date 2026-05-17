@@ -77,6 +77,32 @@ Stage 3A.6 locks demo and acceptance coverage:
   `08_market_neutral_rank`, and `12_custom_token_kalman_signal`;
 - demo artifacts are conformance evidence, not runtime execution logs.
 
+PR6 adds a core rule token batch for common indicator, signal, and decision-rule
+records:
+
+- `indicator.macd`, `indicator.atr`, `indicator.donchian_channel`,
+  `indicator.volatility`, `indicator.linear_regression_slope`,
+  `indicator.beta`, and `indicator.residual` now have accepted reference-helper
+  coverage.
+- `signal.greater_than`, `signal.less_than`, boolean signal composition,
+  band/breakout triggers, z-score reversion triggers, and rank top/bottom-k
+  selection helpers are covered by token conformance tests.
+- `decision.long_flat`, `decision.long_short`, entry/exit position records,
+  signal-to-decision mapping, selection-to-weight routing, and gate-decision
+  dominance are covered without adding new `DecisionKind` values.
+
+PR6 moves the MACD, ATR, and linear-regression-slope coverage rows from
+custom-token route to supported record evidence, and adds five internal matrix
+rows for signal composition, long/short decision rules, entry/exit gate records,
+beta/residual time-series records, and Donchian/volatility rule records.
+
+PR6 candidate GKR files live under `tests/coverage_cases/core_rule/` with hash
+sentinels. They are coverage-case evidence only and do not change the accepted
+12 public demo set under `examples/strategies/`.
+
+`indicator.kdj` remains custom-token-required because it is outside the selected
+PR6 Section 19 core rule batch.
+
 ## Hash Impact
 
 | Object | Stage 3A impact |

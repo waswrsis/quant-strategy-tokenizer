@@ -238,6 +238,35 @@ _BOLLINGER_PARAMS: dict[str, object] = {
         "width": {"type": "number", "default": 2},
     },
 }
+_MACD_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "fast_window": {"type": "integer", "minimum": 1, "default": 12},
+        "slow_window": {"type": "integer", "minimum": 1, "default": 26},
+        "signal_window": {"type": "integer", "minimum": 1, "default": 9},
+    },
+}
+_ZSCORE_REVERT_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {"threshold": {"type": "number", "default": 2}},
+}
+_PANEL_RANK_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["k"],
+    "properties": {"k": {"type": "integer", "minimum": 1}},
+}
+_SIGNAL_TO_DECISION_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "threshold": {"type": "number", "default": 0},
+        "accept_reason": {"type": "string", "default": "SIGNAL_ACCEPTED"},
+        "reject_reason": {"type": "string", "default": "SIGNAL_REJECTED"},
+    },
+}
 _THRESHOLD_PARAMS: dict[str, object] = {
     "type": "object",
     "additionalProperties": False,
@@ -371,8 +400,38 @@ _TOKEN_DEFINITIONS: tuple[dict[str, Any], ...] = (
     {"name": "indicator.rsi", "family": "indicator", "category": "oscillator", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "params_schema": _WINDOW_PARAMS},
     {"name": "indicator.bollinger", "family": "indicator", "category": "band", "inputs": {"series": _TS_FLOAT}, "outputs": {"middle": _TS_FLOAT, "upper": _TS_FLOAT, "lower": _TS_FLOAT}, "params_schema": _BOLLINGER_PARAMS},
     {"name": "indicator.channel_breakout", "family": "indicator", "category": "breakout", "inputs": {"high": _TS_FLOAT, "low": _TS_FLOAT, "close": _TS_FLOAT}, "outputs": {"value": _TS_BOOL}, "params_schema": _WINDOW_PARAMS, "numeric": "bool", "temporal": "uses previous trailing window only to avoid current-bar lookahead"},
+    {"name": "indicator.rolling_mean", "family": "indicator", "category": "rolling_stat", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "params_schema": _WINDOW_PARAMS},
+    {"name": "indicator.rolling_std", "family": "indicator", "category": "rolling_stat", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "params_schema": _WINDOW_PARAMS},
+    {"name": "indicator.rolling_zscore", "family": "indicator", "category": "rolling_stat", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "params_schema": _WINDOW_PARAMS},
+    {"name": "indicator.macd", "family": "indicator", "category": "trend", "inputs": {"series": _TS_FLOAT}, "outputs": {"macd": _TS_FLOAT, "signal": _TS_FLOAT, "histogram": _TS_FLOAT}, "params_schema": _MACD_PARAMS, "stateful": True},
+    {"name": "indicator.bollinger_band", "family": "indicator", "category": "band", "inputs": {"series": _TS_FLOAT}, "outputs": {"middle": _TS_FLOAT, "upper": _TS_FLOAT, "lower": _TS_FLOAT}, "params_schema": _BOLLINGER_PARAMS},
+    {"name": "indicator.atr", "family": "indicator", "category": "volatility", "inputs": {"high": _TS_FLOAT, "low": _TS_FLOAT, "close": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "params_schema": _WINDOW_PARAMS, "failure_mode": "missing high/low/close or invalid window emits diagnostic error"},
+    {"name": "indicator.donchian_channel", "family": "indicator", "category": "breakout", "inputs": {"high": _TS_FLOAT, "low": _TS_FLOAT}, "outputs": {"upper": _TS_FLOAT, "lower": _TS_FLOAT}, "params_schema": _WINDOW_PARAMS, "temporal": "uses previous trailing window only to avoid current-bar lookahead"},
+    {"name": "indicator.volatility", "family": "indicator", "category": "volatility", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "params_schema": _WINDOW_PARAMS, "temporal": "rolling population standard deviation of percentage returns"},
+    {"name": "indicator.linear_regression_slope", "family": "indicator", "category": "regression", "inputs": {"series": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "params_schema": _WINDOW_PARAMS, "failure_mode": "insufficient observations emits diagnostic error"},
+    {"name": "indicator.beta", "family": "indicator", "category": "regression", "inputs": {"series": _TS_FLOAT, "benchmark": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "params_schema": _WINDOW_PARAMS, "failure_mode": "zero benchmark variance emits diagnostic error"},
+    {"name": "indicator.residual", "family": "indicator", "category": "regression", "inputs": {"series": _TS_FLOAT, "benchmark": _TS_FLOAT}, "outputs": {"value": _TS_FLOAT}, "params_schema": _WINDOW_PARAMS, "failure_mode": "zero benchmark variance emits diagnostic error"},
+    {"name": "signal.greater_than", "family": "signal", "category": "comparison_signal", "inputs": {"a": _TS_FLOAT, "b": _TS_FLOAT}, "outputs": {"value": _TS_BOOL}, "numeric": "bool"},
+    {"name": "signal.less_than", "family": "signal", "category": "comparison_signal", "inputs": {"a": _TS_FLOAT, "b": _TS_FLOAT}, "outputs": {"value": _TS_BOOL}, "numeric": "bool"},
+    {"name": "signal.and", "family": "signal", "category": "boolean_signal", "inputs": {"a": _TS_BOOL, "b": _TS_BOOL}, "outputs": {"value": _TS_BOOL}, "numeric": "bool"},
+    {"name": "signal.or", "family": "signal", "category": "boolean_signal", "inputs": {"a": _TS_BOOL, "b": _TS_BOOL}, "outputs": {"value": _TS_BOOL}, "numeric": "bool"},
+    {"name": "signal.not", "family": "signal", "category": "boolean_signal", "inputs": {"x": _TS_BOOL}, "outputs": {"value": _TS_BOOL}, "numeric": "bool"},
+    {"name": "signal.between", "family": "signal", "category": "band_signal", "inputs": {"x": _TS_FLOAT, "lower": _TS_FLOAT, "upper": _TS_FLOAT}, "outputs": {"value": _TS_BOOL}, "params_schema": _BETWEEN_PARAMS, "numeric": "bool"},
+    {"name": "signal.outside_band", "family": "signal", "category": "band_signal", "inputs": {"x": _TS_FLOAT, "lower": _TS_FLOAT, "upper": _TS_FLOAT}, "outputs": {"value": _TS_BOOL}, "numeric": "bool"},
+    {"name": "signal.breakout_up", "family": "signal", "category": "breakout", "inputs": {"series": _TS_FLOAT, "upper": _TS_FLOAT}, "outputs": {"value": _TS_BOOL}, "numeric": "bool"},
+    {"name": "signal.breakout_down", "family": "signal", "category": "breakout", "inputs": {"series": _TS_FLOAT, "lower": _TS_FLOAT}, "outputs": {"value": _TS_BOOL}, "numeric": "bool"},
+    {"name": "signal.zscore_revert", "family": "signal", "category": "mean_reversion", "inputs": {"zscore": _TS_FLOAT}, "outputs": {"value": _TS_BOOL}, "params_schema": _ZSCORE_REVERT_PARAMS, "numeric": "bool"},
+    {"name": "signal.rank_top_k", "family": "signal", "category": "panel_signal", "inputs": {"panel": _PANEL_FLOAT}, "outputs": {"selection": "Panel[bool]"}, "params_schema": _PANEL_RANK_PARAMS, "numeric": "bool", "panel_aware": True},
+    {"name": "signal.rank_bottom_k", "family": "signal", "category": "panel_signal", "inputs": {"panel": _PANEL_FLOAT}, "outputs": {"selection": "Panel[bool]"}, "params_schema": _PANEL_RANK_PARAMS, "numeric": "bool", "panel_aware": True},
     # Decision, gate, risk, and plan surface tokens.
     {"name": "decision.lift_bool", "family": "decision", "category": "decision_bridge", "inputs": {"series": _TS_BOOL}, "outputs": {"decision": _DECISION}, "numeric": "object"},
+    {"name": "decision.long_flat", "family": "decision", "category": "rule_decision", "inputs": {"series": _TS_BOOL}, "outputs": {"decision": _DECISION}, "numeric": "object"},
+    {"name": "decision.long_short", "family": "decision", "category": "rule_decision", "inputs": {"long_signal": _TS_BOOL, "short_signal": _TS_BOOL}, "outputs": {"decision": _DECISION}, "numeric": "object"},
+    {"name": "decision.entry_exit_to_position", "family": "decision", "category": "rule_decision", "inputs": {"entry": _TS_BOOL, "exit": _TS_BOOL}, "outputs": {"decision": _DECISION}, "numeric": "object", "stateful": True},
+    {"name": "decision.signal_to_decision", "family": "decision", "category": "rule_decision", "inputs": {"score": _TS_FLOAT}, "outputs": {"decision": _DECISION}, "params_schema": _SIGNAL_TO_DECISION_PARAMS, "numeric": "object"},
+    {"name": "decision.rank_to_selection", "family": "decision", "category": "selection_decision", "inputs": {"panel": _PANEL_FLOAT}, "outputs": {"selection": "Panel[bool]"}, "params_schema": _PANEL_RANK_PARAMS, "numeric": "object", "panel_aware": True},
+    {"name": "decision.selection_to_weight", "family": "decision", "category": "selection_decision", "inputs": {"selection": "Panel[bool]"}, "outputs": {"weights": _PANEL_DECIMAL}, "numeric": "decimal", "panel_aware": True},
+    {"name": "decision.gate_decision", "family": "decision", "category": "rule_decision", "inputs": {"decision": _DECISION, "gate": _DECISION}, "outputs": {"decision": _DECISION}, "numeric": "object"},
     {"name": "gate.cooldown", "family": "gate", "category": "state_gate", "inputs": {"decision": _DECISION}, "outputs": {"decision": _DECISION}, "params_schema": _COOLDOWN_GATE_PARAMS, "numeric": "object", "stateful": True, "failure_mode": "gate block emits DecisionKind block; errors remain diagnostics"},
     {"name": "gate.market_freeze", "family": "gate", "category": "state_gate", "inputs": {"decision": _DECISION}, "outputs": {"decision": _DECISION}, "numeric": "object", "stateful": True, "failure_mode": "market freeze emits DecisionKind block; errors remain diagnostics"},
     {"name": "gate.circuit_breaker", "family": "gate", "category": "state_gate", "inputs": {"decision": _DECISION}, "outputs": {"decision": _DECISION}, "params_schema": _BREACH_THRESHOLD_PARAMS, "numeric": "object", "stateful": True, "failure_mode": "breach threshold emits DecisionKind block; errors remain diagnostics"},

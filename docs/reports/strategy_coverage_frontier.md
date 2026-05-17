@@ -13,21 +13,25 @@ percentage.
 - PR 4 baseline commit: `6bb4f2e839be26eb7ba2725e90355fbf6fc047d2`
 - PR 4 scope: original failure strategy dogfood MVP case
 - Dogfood target scope: five-case dogfood publication-target evidence set
-- Runtime, token, IR, hash, schema, CI, prompt, and example behavior changes: none
+- PR 6 scope: Section 19 core rule token batch coverage evidence
+- Runtime, IR, hash, schema, CI, prompt, and public example behavior changes: none
+- Token surface changes: PR6 accepted reference-helper tokens only; no broad runtime execution
 
 ## Current Command Evidence
 
 | Command | Exit code | Output summary |
 | --- | ---: | --- |
-| `git status --short` | 0 | PR4 construction edits present before final commit |
+| `git status --short` | 0 | PR6 construction edits present before final commit |
 | `git rev-parse --abbrev-ref HEAD` | 0 | `main` |
-| `git rev-parse HEAD` | 0 | `6bb4f2e839be26eb7ba2725e90355fbf6fc047d2` before dogfood target-set commit |
+| `git rev-parse HEAD` | 0 | `25202c83cf0eb4f20e4fe82467c13259c64f04cc` before PR6 commit |
 | `python -m qst.cli --help` | 0 | CLI exposes `vocabulary`, `validate`, `hash`, `canonicalize`, `write-json`, and `token` |
-| `python -m qst.cli vocabulary --check` | 0 | `ok: true`; 6 packs; 120 tokens; zero diagnostics |
-| `python -m pytest tests -q` | 0 | `460 passed` |
-| `python -m pytest --cov=qst --cov-fail-under=85 -q` | 0 | `460 passed`; total code coverage `88.63%` |
+| `python -m qst.cli vocabulary --check` | 0 | `ok: true`; 6 packs; 150 tokens; zero diagnostics |
+| `python -m pytest tests -q` | 0 | `473 passed` |
+| `python -m pytest --cov=qst --cov-fail-under=85 -q` | 0 | `473 passed`; total code coverage `89.12%` |
 | `python tools/validate_strategy_coverage_matrix.py docs/reports/strategy_coverage_matrix.yaml` | 0 | validation `pass`; zero issues |
 | `python tools/report_strategy_coverage.py docs/reports/strategy_coverage_matrix.yaml --check` | 0 | report check `pass`; zero issues |
+| `python -m pytest tests/token_conformance -q` | 0 | `48 passed` |
+| `python -m pytest tests/coverage_cases -q` | 0 | `27 passed` |
 | `python -m qst.cli validate tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.partial.gkr.yaml` | 0 | PR4 dogfood candidate validates |
 | `python -m qst.cli hash tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.partial.gkr.yaml` | 0 | PR4 dogfood hashes recorded |
 | `python -m qst.cli canonicalize tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.partial.gkr.yaml --output .local_audit/original_failure_strategy_dogfood.canonical.json` | 0 | canonical artifact generated locally |
@@ -53,11 +57,14 @@ percentage.
 - `tests/coverage_cases/dogfood/cross_sectional_factor_panel.partial.gkr.yaml`
 - `tests/coverage_cases/dogfood/custom_ml_score_signal.intent.yaml`
 - `tests/coverage_cases/dogfood/reserved_event_stream_orderbook.intent.yaml`
+- `tests/coverage_cases/core_rule/*.partial.gkr.yaml`
+- `tests/coverage_cases/core_rule/*.hashes.json`
 
 PR 2 created the seed data. PR 3 adds validator/report tooling and a checked-in generated
 report. PR 4 adds the first dogfood MVP case and candidate partial GKR. The dogfood
 target set completes the five-case publication-target evidence set while keeping dogfood
-excluded from headline frontier metrics.
+excluded from headline frontier metrics. PR 6 adds core rule token batch candidate
+records under `tests/coverage_cases/core_rule/` without changing public demo acceptance.
 
 ## Existing Examples
 
@@ -129,14 +136,28 @@ PR 2 adds matrix v0 with seed rows. PR 3 validates that matrix and generates
 | Metric | Value | Evidence |
 | --- | ---: | --- |
 | Schema version | `qst-strategy-coverage/0.3` | `docs/reports/strategy_coverage_matrix.yaml` |
-| Total patterns | 105 | matrix v0 plus dogfood target set |
-| Internal matrix rows | 80 | matrix v0 |
+| Total patterns | 110 | matrix v0 plus dogfood target set and PR6 core rule rows |
+| Internal matrix rows | 85 | matrix v0 plus PR6 core rule rows |
 | External benchmark rows | 20 | matrix v0 plus `external_benchmark_sources.md` |
 | Dogfood rows | 5 | MVP and publication-target dogfood set |
 | Reserved plus non-goal rows | >= 10 | matrix v0 sanity check |
 | External stratification | complete for PR 2 required categories | matrix v0 sanity check |
 | Validator result | pass | `tools/validate_strategy_coverage_matrix.py` |
 | Report check result | pass | `tools/report_strategy_coverage.py --check` |
+
+PR6 registers eight core rule coverage rows:
+
+- `int_020_macd_trend`
+- `int_021_atr_filter`
+- `int_022_linear_regression_slope`
+- `int_081_signal_composition`
+- `int_082_decision_long_short_rule`
+- `int_083_entry_exit_gate_record`
+- `int_084_beta_residual_timeseries`
+- `int_085_donchian_volatility_rule`
+
+The PR6 rows are record/reference evidence. They do not add broad runtime execution,
+broker/exchange behavior, backtesting, optimizer execution, or profitability claims.
 
 The PR 3 report tool now computes:
 
@@ -158,16 +179,16 @@ Current generated metrics from `docs/reports/strategy_coverage_report.md`:
 
 | Metric | Value |
 | --- | ---: |
-| direct_builtin_coverage | 0.1412 |
-| routable_record_coverage_raw | 0.8820 |
-| routable_record_coverage_discounted | 0.8056 |
-| custom_token_route_share | 0.1732 |
+| direct_builtin_coverage | 0.1827 |
+| routable_record_coverage_raw | 0.8875 |
+| routable_record_coverage_discounted | 0.8293 |
+| custom_token_route_share | 0.1310 |
 | false_supported_rate_mechanical | 0.0000 |
 | false_supported_rate_semantic | 0.0000 |
 | false_supported_rate_boundary | 0.0000 |
 | boundary_false_supported_count | 0 |
 | kernel_gap_count | 20 |
-| token_bloat_index | 0.2200 |
+| token_bloat_index | 0.1810 |
 
 ## External Benchmark Seed
 

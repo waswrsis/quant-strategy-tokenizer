@@ -1,0 +1,26 @@
+schema_version: qst-ir-schema/0.4
+ir_version: qst-ir/0.4
+canonical_version: qst-canonical/0.4
+capabilities: [core]
+strategy:
+  id: pr6_linear_regression_slope_partial
+  version: 1
+  nodes:
+  - id: slope
+    token_ref: {namespace: core, name: indicator.linear_regression_slope, version: 1, behavior_version: 1}
+    inputs: {series: $externals.market.close}
+    params: {window: 20}
+    signature: {outputs: {value: {type: "TimeSeries[float]"}}}
+  - id: decision
+    token_ref: {namespace: core, name: decision.signal_to_decision, version: 1, behavior_version: 1}
+    inputs: {score: slope.value}
+    params: {threshold: 0, accept_reason: positive_slope, reject_reason: non_positive_slope}
+    signature: {outputs: {decision: {type: Decision}}}
+  outputs:
+    decision: decision.decision
+metadata:
+  coverage_case: int_022_linear_regression_slope
+  scope: record_layer_partial_evidence
+  limitations:
+    - OLS reference semantics only
+    - no model fitting runtime beyond token conformance helper

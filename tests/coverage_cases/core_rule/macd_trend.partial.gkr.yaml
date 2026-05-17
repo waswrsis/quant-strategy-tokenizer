@@ -1,0 +1,35 @@
+schema_version: qst-ir-schema/0.4
+ir_version: qst-ir/0.4
+canonical_version: qst-canonical/0.4
+capabilities: [core]
+strategy:
+  id: pr6_macd_trend_partial
+  version: 1
+  nodes:
+  - id: macd
+    token_ref: {namespace: core, name: indicator.macd, version: 1, behavior_version: 1}
+    inputs: {series: $externals.market.close}
+    params: {fast_window: 12, slow_window: 26, signal_window: 9}
+    signature:
+      outputs:
+        macd: {type: "TimeSeries[float]"}
+        signal: {type: "TimeSeries[float]"}
+        histogram: {type: "TimeSeries[float]"}
+  - id: macd_above_signal
+    token_ref: {namespace: core, name: signal.greater_than, version: 1, behavior_version: 1}
+    inputs: {a: macd.macd, b: macd.signal}
+    params: {}
+    signature: {outputs: {value: {type: "TimeSeries[bool]"}}}
+  - id: decision
+    token_ref: {namespace: core, name: decision.long_flat, version: 1, behavior_version: 1}
+    inputs: {series: macd_above_signal.value}
+    params: {}
+    signature: {outputs: {decision: {type: Decision}}}
+  outputs:
+    decision: decision.decision
+metadata:
+  coverage_case: int_020_macd_trend
+  scope: record_layer_partial_evidence
+  limitations:
+    - no strategy runtime execution
+    - no broker or exchange execution

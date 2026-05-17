@@ -1,0 +1,39 @@
+schema_version: qst-ir-schema/0.4
+ir_version: qst-ir/0.4
+canonical_version: qst-canonical/0.4
+capabilities: [core]
+strategy:
+  id: pr6_long_short_decision_partial
+  version: 1
+  nodes:
+  - id: channel
+    token_ref: {namespace: core, name: indicator.donchian_channel, version: 1, behavior_version: 1}
+    inputs: {high: $externals.market.high, low: $externals.market.low}
+    params: {window: 20}
+    signature:
+      outputs:
+        upper: {type: "TimeSeries[float]"}
+        lower: {type: "TimeSeries[float]"}
+  - id: breakout_long
+    token_ref: {namespace: core, name: signal.breakout_up, version: 1, behavior_version: 1}
+    inputs: {series: $externals.market.close, upper: channel.upper}
+    params: {}
+    signature: {outputs: {value: {type: "TimeSeries[bool]"}}}
+  - id: breakout_short
+    token_ref: {namespace: core, name: signal.breakout_down, version: 1, behavior_version: 1}
+    inputs: {series: $externals.market.close, lower: channel.lower}
+    params: {}
+    signature: {outputs: {value: {type: "TimeSeries[bool]"}}}
+  - id: decision
+    token_ref: {namespace: core, name: decision.long_short, version: 1, behavior_version: 1}
+    inputs: {long_signal: breakout_long.value, short_signal: breakout_short.value}
+    params: {}
+    signature: {outputs: {decision: {type: Decision}}}
+  outputs:
+    decision: decision.decision
+metadata:
+  coverage_case: pr6_long_short_decision
+  scope: record_layer_partial_evidence
+  limitations:
+    - long/short side is reason metadata on DecisionV2
+    - no order routing or position execution

@@ -134,3 +134,50 @@ in every profile.
 `score.calibrate` remains experimental metadata-only until an accepted reference
 helper or runtime contract exists. `score.zscore` remains an accepted reference
 helper.
+
+## PR6 Core Rule Token Batch
+
+PR6 extends the accepted record/reference surface for common rule strategies
+without changing IR, canonical/hash algorithms, strategy validation semantics,
+or public demo behavior.
+
+Indicator additions:
+
+- `indicator.rolling_mean`, `indicator.rolling_std`, and
+  `indicator.rolling_zscore` as accepted aliases over trailing window
+  reference semantics.
+- `indicator.macd`, with EMA fast/slow/signal windows and deterministic
+  semantic-float64 output.
+- `indicator.bollinger_band`, `indicator.atr`, `indicator.donchian_channel`,
+  and `indicator.volatility` for accepted volatility/channel records.
+- `indicator.linear_regression_slope`, `indicator.beta`, and
+  `indicator.residual` for trailing OLS reference records with stable
+  diagnostics for insufficient observations and zero-variance inputs.
+
+Signal additions:
+
+- numeric and boolean rule composition through `signal.greater_than`,
+  `signal.less_than`, `signal.and`, `signal.or`, `signal.not`,
+  `signal.between`, and `signal.outside_band`;
+- breakout and mean-reversion triggers through `signal.breakout_up`,
+  `signal.breakout_down`, and `signal.zscore_revert`;
+- cross-sectional selection records through `signal.rank_top_k` and
+  `signal.rank_bottom_k`.
+
+Decision additions:
+
+- `decision.long_flat`, `decision.long_short`,
+  `decision.entry_exit_to_position`, `decision.signal_to_decision`,
+  `decision.rank_to_selection`, `decision.selection_to_weight`, and
+  `decision.gate_decision`.
+
+These decision helpers preserve existing `DecisionKind` values. Long/short side
+and position intent are represented through reasons or state records, not by
+adding new decision kinds. `decision.gate_decision` keeps `block` dominant and
+otherwise preserves the input decision.
+
+All PR6 additions are `accepted` with `execution_support=reference_helper`.
+They are conformance/reference helpers only; they do not create broad GKR
+runtime execution, a backtester, broker/exchange behavior, optimizer execution,
+or production execution. `indicator.kdj` remains outside PR6 and stays on the
+custom-token route.
