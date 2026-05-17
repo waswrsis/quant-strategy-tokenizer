@@ -1,6 +1,6 @@
 # Classify Strategy Intent
 
-prompt_system_version: qst-stage-3c-v0.3.2.2
+prompt_system_version: qst-stage-3c-v0.3.2.3
 task_type: authoring
 foundation: core/00_FOUNDATION.md
 
@@ -28,9 +28,12 @@ Use before selecting tokens for a strategy request.
    - custom logic
    - external/runtime requirements
 3. Check external/runtime requirements before token selection.
-4. Check current vocabulary and examples through repository evidence.
-5. Classify using exactly one allowed classification.
-6. Produce a strategy intent record.
+4. Check current vocabulary, examples, strategy_coverage_matrix, external_benchmark rows,
+   dogfood_case evidence, and coverage reports through repository evidence.
+5. Record false_supported_rate risk when a request resembles a supported row but lacks
+   mechanical, semantic, or boundary evidence.
+6. Classify using exactly one allowed classification.
+7. Produce a strategy intent record.
 
 ## Classification Rules
 
@@ -75,6 +78,12 @@ strategy_intent:
   missing_tokens:
   missing_types:
   blockers:
+  coverage_evidence:
+    coverage_row:
+    external_benchmark:
+    dogfood_case:
+    false_supported_rate:
+    kernel_gap:
   next_task:
 ```
 

@@ -1,6 +1,6 @@
 # QST Stage 3C Agent Prompt Pack
 
-prompt_system_version: qst-stage-3c-v0.3.2.2
+prompt_system_version: qst-stage-3c-v0.3.2.3
 
 ## Purpose
 
@@ -11,12 +11,13 @@ off evidence without relying on stale project memory.
 ## Versioning
 
 The directory name remains `qst_stage_3c_v0_3_2` for stable links. The active patch
-prompt-system version is `qst-stage-3c-v0.3.2.2`.
+prompt-system version is `qst-stage-3c-v0.3.2.3`.
 
-Previous version: `qst-stage-3c-v0.3.2.1`. It installed the safety shell, validation
-shell, and artifact gates. The active version adds operational guidance for repo context,
-strategy classification, token selection, GKR authoring, diagnostic repair, profile gate
-review, and custom-token routing.
+Previous version: `qst-stage-3c-v0.3.2.2`. It installed operational guidance for repo
+context, strategy classification, token selection, GKR authoring, diagnostic repair,
+profile gate review, and custom-token routing. The active version adds Coverage Frontier
+awareness for matrix, dogfood, external benchmark, false-supported, custom-route, and
+kernel-gap evidence.
 
 ## How To Use
 

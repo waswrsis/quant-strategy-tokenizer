@@ -1,6 +1,6 @@
 # Gate Review
 
-prompt_system_version: qst-stage-3c-v0.3.2.2
+prompt_system_version: qst-stage-3c-v0.3.2.3
 task_type: review
 foundation: core/00_FOUNDATION.md
 
@@ -19,9 +19,12 @@ Use when maturity or execution support changes across profiles.
 1. Read the repository profile policy and current validator behavior.
 2. For every selected token, record maturity and execution_support.
 3. Apply the target profile.
-4. Identify custom token authorization requirements.
-5. Reject reserved-design executable use.
-6. Output pass, warning, or error.
+4. Read `docs/reports/strategy_coverage_report.md` when coverage-frontier evidence is
+   relevant, including custom_token_route_share and false_supported_rate.
+5. Identify custom token authorization requirements and whether the route would push the
+   request beyond the custom token route cap.
+6. Reject reserved-design executable use and non_goal runtime requests.
+7. Output pass, warning, or error.
 
 Reserved design tokens are visible vocabulary boundaries, not executable behavior.
 
@@ -53,6 +56,12 @@ profile_gate:
       evidence:
   blockers:
   warnings:
+  coverage_frontier:
+    strategy_coverage_report:
+    custom_token_route_share:
+    false_supported_rate:
+    reserved:
+    non_goal:
   required_changes:
 ```
 

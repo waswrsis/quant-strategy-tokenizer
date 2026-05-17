@@ -1,6 +1,6 @@
 # Custom Token Routing
 
-prompt_system_version: qst-stage-3c-v0.3.2.2
+prompt_system_version: qst-stage-3c-v0.3.2.3
 task_type: security
 foundation: core/00_FOUNDATION.md
 
@@ -18,14 +18,16 @@ Use for any request involving custom Python entry points or external code.
 
 1. Restate why custom token routing is needed.
 2. Verify whether the request is metadata-only, approval, grant, or execution.
-3. For verification, inspect metadata and integrity records only.
-4. Do not import custom Python during verification.
-5. Do not execute custom Python during verification.
-6. Do not approve trust or create grants unless the user explicitly requested that step.
-7. For execution, require explicit user request, verification pass, profile authorization,
+3. Check `docs/reports/strategy_coverage_report.md` for custom_token_route_share and the
+   custom token route cap before recommending more custom-token surface area.
+4. For verification, inspect metadata and integrity records only.
+5. Do not import custom Python during verification.
+6. Do not execute custom Python during verification.
+7. Do not approve trust or create grants unless the user explicitly requested that step.
+8. For execution, require explicit user request, verification pass, profile authorization,
    local approval, execution grant, current UTC time, run id, user-approved inputs, and
    output validation.
-8. Report sandbox status and residual risks.
+9. Report sandbox status and residual risks.
 
 Boundary words: verify, approve, execute, and must not execute code during verification.
 
@@ -41,6 +43,10 @@ custom_token_routing:
     command:
     status:
     code_executed: false
+  coverage_frontier:
+    strategy_coverage_report:
+    custom_token_route_share:
+    custom_token_route_cap:
   approve:
     required:
     status:

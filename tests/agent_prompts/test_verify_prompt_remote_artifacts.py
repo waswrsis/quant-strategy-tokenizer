@@ -60,7 +60,7 @@ def test_prompt_artifact_verifier_detects_compressed_markdown(tmp_path: Path, mo
     repo, prompt = _copy_repo_subset(tmp_path)
     monkeypatch.chdir(repo)
     (prompt / "core" / "00_FOUNDATION.md").write_text(
-        "# QST Agent Foundation prompt_system_version: qst-stage-3c-v0.3.2.2 compressed",
+        "# QST Agent Foundation prompt_system_version: qst-stage-3c-v0.3.2.3 compressed",
         encoding="utf-8",
     )
     result = verify_prompt_artifacts(prompt)

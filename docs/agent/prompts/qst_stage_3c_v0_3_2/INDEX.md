@@ -1,6 +1,6 @@
 # Stage 3C Prompt Index
 
-prompt_system_version: qst-stage-3c-v0.3.2.2
+prompt_system_version: qst-stage-3c-v0.3.2.3
 
 ## Core
 
@@ -26,5 +26,5 @@ prompt pack as accepted.
 ## Active Version
 
 Directory path: `qst_stage_3c_v0_3_2`.
-Active prompt-system version: `qst-stage-3c-v0.3.2.2`.
-Previous version: `qst-stage-3c-v0.3.2.1`.
+Active prompt-system version: `qst-stage-3c-v0.3.2.3`.
+Previous version: `qst-stage-3c-v0.3.2.2`.

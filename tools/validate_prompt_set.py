@@ -9,7 +9,7 @@ from typing import Any
 
 import yaml
 
-PROMPT_VERSION = "qst-stage-3c-v0.3.2.2"
+PROMPT_VERSION = "qst-stage-3c-v0.3.2.3"
 ALLOWED_CLASSIFICATIONS = {
     "supported",
     "partially_supported",
@@ -77,6 +77,10 @@ SEMANTIC_ANCHORS: dict[str, tuple[tuple[str, tuple[str, ...]], ...]] = {
         ("hash command", ("qst hash",)),
         ("canonical command", ("canonicalize",)),
         ("repo context output", ("repo_context",)),
+        ("coverage matrix", ("strategy_coverage_matrix", "strategy_coverage_matrix.yaml")),
+        ("coverage report tool", ("report_strategy_coverage.py",)),
+        ("coverage report check", ("--check",)),
+        ("dogfood evidence", ("dogfood_target_set", "dogfood_case")),
     ),
     "tasks/CLASSIFY_STRATEGY_INTENT.md": (
         ("supported classification", ("supported",)),
@@ -88,6 +92,10 @@ SEMANTIC_ANCHORS: dict[str, tuple[tuple[str, tuple[str, ...]], ...]] = {
         ("exchange boundary", ("exchange",)),
         ("live execution boundary", ("live execution",)),
         ("event stream boundary", ("eventstream", "event stream")),
+        ("coverage matrix", ("strategy_coverage_matrix",)),
+        ("external benchmark", ("external_benchmark",)),
+        ("dogfood case", ("dogfood_case",)),
+        ("false-supported risk", ("false_supported_rate",)),
     ),
     "tasks/SELECT_TOKENS.md": (
         ("selected token output", ("selected_token_ref",)),
@@ -95,6 +103,10 @@ SEMANTIC_ANCHORS: dict[str, tuple[tuple[str, tuple[str, ...]], ...]] = {
         ("execution support output", ("execution_support",)),
         ("rejected candidates", ("rejected_candidates",)),
         ("missing tokens", ("missing_tokens",)),
+        ("coverage row evidence", ("coverage_row", "strategy_coverage_matrix")),
+        ("kernel gap routing", ("kernel_gap",)),
+        ("custom-token pressure", ("custom_token_route_share",)),
+        ("reserved/non-goal rejection", ("reserved", "non_goal")),
     ),
     "tasks/AUTHOR_GKR_STRATEGY.md": (
         ("strategy source", (".gkr.yaml",)),
@@ -103,6 +115,9 @@ SEMANTIC_ANCHORS: dict[str, tuple[tuple[str, tuple[str, ...]], ...]] = {
         ("hash command", ("qst hash",)),
         ("canonical command", ("canonicalize",)),
         ("repair route", ("repair_gkr_diagnostics",)),
+        ("dogfood candidate evidence", ("dogfood candidate", "dogfood_case")),
+        ("record-layer boundary", ("record-layer evidence",)),
+        ("no runtime claim", ("runtime/backtest/profitability",)),
     ),
     "tasks/REPAIR_GKR_DIAGNOSTICS.md": (
         ("schema diagnostic", ("schema_error",)),
@@ -111,6 +126,19 @@ SEMANTIC_ANCHORS: dict[str, tuple[tuple[str, tuple[str, ...]], ...]] = {
         ("type diagnostic", ("type_error",)),
         ("temporal diagnostic", ("temporal_error",)),
         ("attempt limit", ("3 attempts", "max 3", "maximum 3")),
+        ("missing token route", ("missing_token",)),
+        ("kernel gap route", ("kernel_gap",)),
+        ("reserved route", ("reserved_design",)),
+        ("non-goal route", ("non_goal_runtime",)),
+        ("custom-token route", ("custom_token_required",)),
+        ("no fake time series", ("time-series fake", "fake with time series")),
+    ),
+    "tasks/PROFILE_GATE_REVIEW.md": (
+        ("custom-token share", ("custom_token_route_share",)),
+        ("false-supported rate", ("false_supported_rate",)),
+        ("reserved boundary", ("reserved",)),
+        ("non-goal boundary", ("non_goal",)),
+        ("coverage report", ("strategy_coverage_report",)),
     ),
     "tasks/CUSTOM_TOKEN_ROUTING.md": (
         ("verify boundary", ("verify",)),
@@ -119,6 +147,9 @@ SEMANTIC_ANCHORS: dict[str, tuple[tuple[str, tuple[str, ...]], ...]] = {
         ("execute boundary", ("execute",)),
         ("no execute boundary", ("must not execute",)),
         ("no import boundary", ("must not import", "do not import")),
+        ("custom-token share", ("custom_token_route_share",)),
+        ("route cap", ("custom token route cap", "custom-token route cap")),
+        ("coverage report", ("strategy_coverage_report",)),
     ),
 }
 

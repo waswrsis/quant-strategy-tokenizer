@@ -34,6 +34,9 @@ def test_repo_context_protocol_has_operational_commands() -> None:
         "examples/strategies",
         "tests/reference",
         "repo_context",
+        "strategy_coverage_matrix",
+        "report_strategy_coverage.py --check",
+        "dogfood_case",
     ):
         assert anchor in text
 
@@ -51,6 +54,10 @@ def test_classify_intent_has_boundary_rules() -> None:
         "exchange",
         "live execution",
         "eventstream",
+        "strategy_coverage_matrix",
+        "external_benchmark",
+        "dogfood_case",
+        "false_supported_rate",
     ):
         assert anchor in text
 
@@ -65,6 +72,10 @@ def test_select_tokens_has_selection_output_fields() -> None:
         "profile_status",
         "rejected_candidates",
         "missing_tokens",
+        "coverage_row",
+        "kernel_gap",
+        "custom_token_route_share",
+        "non_goal",
     ):
         assert anchor in text
 
@@ -79,6 +90,9 @@ def test_author_gkr_has_validate_hash_canonical_flow() -> None:
         "qst hash",
         "canonicalize",
         "repair_gkr_diagnostics",
+        "dogfood_case",
+        "record-layer evidence",
+        "runtime/backtest/profitability",
     ):
         assert anchor in text
 
@@ -93,6 +107,12 @@ def test_repair_diagnostics_has_classes_and_attempt_limit() -> None:
         "type_error",
         "temporal_error",
         "3 attempts",
+        "missing_token",
+        "kernel_gap",
+        "reserved_design",
+        "non_goal_runtime",
+        "custom_token_required",
+        "time-series fake",
     ):
         assert anchor in text
 
@@ -107,5 +127,21 @@ def test_custom_token_routing_preserves_boundary_terms() -> None:
         "execute",
         "must not execute",
         "do not import",
+        "custom_token_route_share",
+        "custom token route cap",
+        "strategy_coverage_report",
+    ):
+        assert anchor in text
+
+
+def test_profile_gate_review_has_coverage_frontier_controls() -> None:
+    text = _text("tasks/PROFILE_GATE_REVIEW.md")
+
+    for anchor in (
+        "strategy_coverage_report",
+        "custom_token_route_share",
+        "false_supported_rate",
+        "reserved",
+        "non_goal",
     ):
         assert anchor in text

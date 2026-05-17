@@ -1,6 +1,6 @@
 # 01 Repo Context Protocol
 
-prompt_system_version: qst-stage-3c-v0.3.2.2
+prompt_system_version: qst-stage-3c-v0.3.2.3
 layer: core
 
 ## Purpose
@@ -24,6 +24,8 @@ qst vocabulary --check
 find docs -maxdepth 3 -type f | sort
 find examples/strategies -maxdepth 3 -type f | sort
 find tests/reference -maxdepth 4 -type f | sort
+python tools/validate_strategy_coverage_matrix.py docs/reports/strategy_coverage_matrix.yaml
+python tools/report_strategy_coverage.py docs/reports/strategy_coverage_matrix.yaml --check
 ```
 
 For strategy authoring tasks, also inspect one current example and run smoke commands
@@ -34,6 +36,21 @@ qst validate examples/strategies/01_ema_cross/strategy.gkr.yaml
 qst hash examples/strategies/01_ema_cross/strategy.gkr.yaml
 qst canonicalize examples/strategies/01_ema_cross/strategy.gkr.yaml --output /tmp/qst_agent_probe.canonical.json
 ```
+
+For strategy classification, authoring, repair, and review tasks, also inspect Coverage
+Frontier evidence when present:
+
+- `docs/reports/strategy_coverage_matrix.yaml`
+- `docs/reports/strategy_coverage_report.md`
+- `docs/reports/dogfood_target_set.md`
+- `docs/reports/original_failure_strategy_dogfood.md`
+- `tests/coverage_cases/dogfood/`
+
+Treat coverage rows and dogfood_case records as routing evidence. They do not change QST
+semantics and do not prove runtime, backtest, broker, exchange, profitability, or
+production execution coverage.
+Use `report_strategy_coverage.py --check` as the coverage report gate shorthand when
+summarizing this evidence.
 
 If a command cannot be run, record it explicitly:
 
@@ -80,6 +97,14 @@ repo_context:
     vocabulary_command:
     status:
     diagnostics:
+  coverage_frontier:
+    strategy_coverage_matrix:
+    strategy_coverage_report:
+    dogfood_case:
+    external_benchmark:
+    custom_token_route_share:
+    false_supported_rate:
+    kernel_gap_count:
   validation_smoke:
     command:
     result:

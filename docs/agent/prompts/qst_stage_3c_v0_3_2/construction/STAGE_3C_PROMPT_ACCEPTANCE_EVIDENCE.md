@@ -1,14 +1,14 @@
 # Stage 3C Prompt Acceptance Evidence
 
-prompt_system_version: qst-stage-3c-v0.3.2.2
+prompt_system_version: qst-stage-3c-v0.3.2.3
 construction_type: acceptance_evidence
 
 This evidence records the Stage 3C prompt-pack validation gates. It is intentionally
 focused on commands and verifier outcomes rather than rendered browser snippets.
 
 The directory name `qst_stage_3c_v0_3_2` is the stable pack directory.
-The active internal patch prompt-system version is `qst-stage-3c-v0.3.2.2`.
-Previous version: `qst-stage-3c-v0.3.2.1`.
+The active internal patch prompt-system version is `qst-stage-3c-v0.3.2.3`.
+Previous version: `qst-stage-3c-v0.3.2.2`.
 
 ## Local Evidence
 
@@ -20,13 +20,34 @@ Recorded command results:
 | `python -m py_compile tests/agent_prompts/test_validate_prompt_set.py` | `0` | no output | no output | pass |
 | `python tools/validate_prompt_set.py docs/agent/prompts/qst_stage_3c_v0_3_2` | `0` | `"result": "pass"`; all validator checks pass, including content completeness | no output | pass |
 | `python tools/verify_prompt_remote_artifacts.py docs/agent/prompts/qst_stage_3c_v0_3_2` | `0` | `"result": "pass"`; local artifact format checks pass for Python, Markdown, and golden YAML | no output | pass |
-| `python -m pytest tests/agent_prompts -q` | `0` | `26 passed` | no output | pass |
+| `python -m pytest tests/agent_prompts -q` | `0` | `27 passed` | no output | pass |
 | `python -m pytest tests/agent_prompts/test_prompt_semantic_anchors.py -q` | `0` | semantic anchor tests pass | no output | pass |
 | `python -m ruff check .` | `0` | `All checks passed!` | no output | pass |
 | `python -m mypy qst` | `0` | `Success: no issues found in 105 source files` | no output | pass |
 | `python -m pytest tests -q` | `0` | `441 passed` | no output | pass |
 | `python -m pytest --cov=qst --cov-fail-under=85 -q` | `0` | `441 passed`; total coverage remains above the configured floor | no output | pass |
 | `python -m qst.cli vocabulary --check` | `0` | `"ok": true`; zero diagnostics | no output | pass |
+
+## Coverage Frontier PR5 Evidence
+
+This patch aligns the prompt pack with Coverage Frontier evidence without changing QST
+runtime, token, IR, canonical, hash, schema, example, or matrix semantics.
+
+| Command | Exit code | Stdout excerpt | Stderr excerpt | Verdict |
+| --- | ---: | --- | --- | --- |
+| `python tools/validate_strategy_coverage_matrix.py docs/reports/strategy_coverage_matrix.yaml` | `0` | validation `pass`; `pattern_count: 105`; `dogfood_count: 5` | no output | pass |
+| `python tools/report_strategy_coverage.py docs/reports/strategy_coverage_matrix.yaml --check` | `0` | `dogfood_publication_target: pass`; `custom_token_route_share: 0.1732`; `kernel_gap_count: 20` | no output | pass |
+| `python -m pytest tests/coverage_cases -q` | `0` | `24 passed` | no output | pass |
+
+New semantic anchors require the active prompt pack to mention:
+
+- `strategy_coverage_matrix`
+- `external_benchmark`
+- `dogfood_case`
+- `custom_token_route_share`
+- `false_supported_rate`
+- `kernel_gap`
+- reserved/non-goal routing
 
 Additional artifact-format gates passed locally:
 

@@ -1,6 +1,6 @@
 # Strategy Authoring
 
-prompt_system_version: qst-stage-3c-v0.3.2.2
+prompt_system_version: qst-stage-3c-v0.3.2.3
 profile_type: load_profile
 
 ## Use When
@@ -45,6 +45,8 @@ Before token selection or GKR authoring:
 - load `core/01_REPO_CONTEXT_PROTOCOL.md`
 - produce `repo_context`
 - record commands not run and why
+- record coverage-frontier evidence when strategy coverage, benchmark, dogfood, token
+  expansion, reserved boundary, or custom-token routing decisions are involved
 
 If `repo_context.token_surface` is unavailable, stop after classification and report the
 missing evidence instead of inventing token refs.

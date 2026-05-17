@@ -1,6 +1,6 @@
 # Author Gkr Strategy
 
-prompt_system_version: qst-stage-3c-v0.3.2.2
+prompt_system_version: qst-stage-3c-v0.3.2.3
 task_type: authoring
 foundation: core/00_FOUNDATION.md
 
@@ -24,16 +24,21 @@ Use when creating a new editable GKR strategy source.
 ## Procedure
 
 1. Inspect the closest example strategy under `examples/strategies/<case>/strategy.gkr.yaml`.
-2. Build a deterministic node plan.
-3. Use stable node ids.
-4. Use only selected token refs.
-5. Use explicit params and explicit input links.
-6. Add only required capabilities.
-7. Write or patch the `.gkr.yaml` source.
-8. Run `qst validate <strategy.gkr.yaml>`.
-9. If validation passes, run `qst hash <strategy.gkr.yaml>`.
-10. If validation passes, run `qst canonicalize <strategy.gkr.yaml> --output <tmp canonical path>`.
-11. If validation fails, route to `tasks/REPAIR_GKR_DIAGNOSTICS.md`.
+2. Inspect dogfood candidate GKR files when the request resembles a dogfood_case.
+3. Build a deterministic node plan.
+4. Use stable node ids.
+5. Use only selected token refs.
+6. Use explicit params and explicit input links.
+7. Add only required capabilities.
+8. Write or patch the `.gkr.yaml` source.
+9. Run `qst validate <strategy.gkr.yaml>`.
+10. If validation passes, run `qst hash <strategy.gkr.yaml>`.
+11. If validation passes, run `qst canonicalize <strategy.gkr.yaml> --output <tmp canonical path>`.
+12. If validation fails, route to `tasks/REPAIR_GKR_DIAGNOSTICS.md`.
+
+Candidate GKR files are record-layer evidence. They are not runtime/backtest/profitability
+evidence and do not imply broker, exchange, live execution, optimizer, or production
+execution support.
 
 ## Output
 
@@ -67,6 +72,10 @@ gkr_authoring:
     output:
   repair_needed:
   limitations:
+  coverage_evidence:
+    dogfood_case:
+    coverage_row:
+    record_layer_only:
 ```
 
 ## Guardrails

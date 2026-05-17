@@ -1,6 +1,6 @@
 # Write Docs
 
-prompt_system_version: qst-stage-3c-v0.3.2.2
+prompt_system_version: qst-stage-3c-v0.3.2.3
 task_type: documentation
 foundation: core/00_FOUNDATION.md
 

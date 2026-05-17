@@ -1,6 +1,6 @@
 # Validation Diagnostics
 
-prompt_system_version: qst-stage-3c-v0.3.2.2
+prompt_system_version: qst-stage-3c-v0.3.2.3
 reader_type: repository_reader
 
 ## Purpose
