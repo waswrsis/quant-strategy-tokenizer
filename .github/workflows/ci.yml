@@ -42,6 +42,21 @@ jobs:
       - run: python tools/verify_prompt_remote_artifacts.py docs/agent/prompts/qst_stage_3c_v0_3_2
       - run: python -m pytest tests/agent_prompts -q
 
+  coverage-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -e ".[dev]"
+      - run: python -m py_compile tools/validate_strategy_coverage_matrix.py
+      - run: python -m py_compile tools/report_strategy_coverage.py
+      - run: python tools/validate_strategy_coverage_matrix.py docs/reports/strategy_coverage_matrix.yaml
+      - run: python tools/report_strategy_coverage.py docs/reports/strategy_coverage_matrix.yaml --check
+      - run: python tools/report_strategy_coverage.py docs/reports/strategy_coverage_matrix.yaml --json
+      - run: python -m pytest tests/coverage_cases -q
+
   test:
     runs-on: ubuntu-latest
     strategy:

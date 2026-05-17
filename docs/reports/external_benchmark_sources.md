@@ -120,6 +120,27 @@ confidence: high
 
 used_by: `ext_005_pairs_trade`, `ext_010_market_neutral_factor`
 
+### src-time-series-momentum
+
+source_type: `public_literature`
+
+title: Time-series momentum pattern
+
+reference: Moskowitz, Ooi, and Pedersen, "Time Series Momentum", Journal of Financial
+Economics, 2012.
+
+extraction_date: 2026-05-17
+
+extraction_method: Intent summary only. Extracted own-return momentum over a lookback
+window as a record-layer trend-following concept. No portfolio construction recipe or
+dataset is copied.
+
+license_notes: Bibliographic reference only; no source code copied.
+
+confidence: medium
+
+used_by: `ext_003_time_series_momentum`
+
 ### src-bollinger-bands
 
 source_type: `public_reference`

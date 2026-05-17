@@ -1,35 +1,42 @@
 # QST Strategy Coverage Frontier
 
-This is the PR 2 baseline and protocol report for Coverage Frontier v0.3. It is not a
+This is the PR 3 baseline and protocol report for Coverage Frontier v0.3. It is not a
 final coverage frontier claim and does not publish a single strategy coverage percentage.
 
 ## Repo
 
 - Branch: `main`
 - PR 1 baseline commit: `8a483dc469e2966ab0b315a3e284728b6a3378c9`
-- PR 2 scope: matrix v0 and stratified external benchmark seed
+- PR 2 baseline commit: `d2d6b77060b99dba332da6ac2bd748397f6f9d7a`
+- PR 3 scope: matrix validator and coverage report tool
 - Runtime, token, IR, hash, schema, CI, prompt, and example behavior changes: none
 
 ## Current Command Evidence
 
 | Command | Exit code | Output summary |
 | --- | ---: | --- |
-| `git status --short` | 0 | clean before PR 2 edits |
+| `git status --short` | 0 | clean before PR 3 edits |
 | `git rev-parse --abbrev-ref HEAD` | 0 | `main` |
-| `git rev-parse HEAD` | 0 | `8a483dc469e2966ab0b315a3e284728b6a3378c9` |
+| `git rev-parse HEAD` | 0 | `d2d6b77060b99dba332da6ac2bd748397f6f9d7a` |
 | `python -m qst.cli --help` | 0 | CLI exposes `vocabulary`, `validate`, `hash`, `canonicalize`, `write-json`, and `token` |
 | `python -m qst.cli vocabulary --check` | 0 | `ok: true`; 6 packs; 120 tokens; zero diagnostics |
-| `python -m pytest tests -q` | 0 | `441 passed` |
-| `python -m pytest --cov=qst --cov-fail-under=85 -q` | 0 | `441 passed`; total code coverage `88.63%` |
+| `python -m pytest tests -q` | 0 | `452 passed` |
+| `python -m pytest --cov=qst --cov-fail-under=85 -q` | 0 | `452 passed`; total code coverage `88.63%` |
+| `python tools/validate_strategy_coverage_matrix.py docs/reports/strategy_coverage_matrix.yaml` | 0 | validation `pass`; zero issues |
+| `python tools/report_strategy_coverage.py docs/reports/strategy_coverage_matrix.yaml --check` | 0 | report check `pass`; zero issues |
 
-## PR 2 Evidence Files
+## Coverage Evidence Files
 
 - `docs/reports/strategy_coverage_matrix.yaml`
 - `docs/reports/external_benchmark_sources.md`
+- `docs/reports/strategy_coverage_report.md`
 - `tests/coverage_cases/external/README.md`
 - `tests/coverage_cases/external/external_benchmark_seed.yaml`
+- `tools/validate_strategy_coverage_matrix.py`
+- `tools/report_strategy_coverage.py`
 
-These files create seed data only. PR 3 owns validator and report tooling.
+PR 2 created the seed data. PR 3 adds validator/report tooling and a checked-in generated
+report.
 
 ## Existing Examples
 
@@ -95,7 +102,8 @@ Reference groups:
 
 ## Matrix Baseline
 
-PR 2 adds matrix v0 with seed rows, not a final frontier percentage.
+PR 2 adds matrix v0 with seed rows. PR 3 validates that matrix and generates
+`docs/reports/strategy_coverage_report.md`. This is still not a final frontier percentage.
 
 | Metric | Value | Evidence |
 | --- | ---: | --- |
@@ -106,8 +114,10 @@ PR 2 adds matrix v0 with seed rows, not a final frontier percentage.
 | Dogfood rows | 1 | provisional placeholder only |
 | Reserved plus non-goal rows | >= 10 | matrix v0 sanity check |
 | External stratification | complete for PR 2 required categories | matrix v0 sanity check |
+| Validator result | pass | `tools/validate_strategy_coverage_matrix.py` |
+| Report check result | pass | `tools/report_strategy_coverage.py --check` |
 
-The matrix can support these future PR 3 report metrics:
+The PR 3 report tool now computes:
 
 - intent routing by coverage class
 - direct built-in record coverage
@@ -117,8 +127,25 @@ The matrix can support these future PR 3 report metrics:
 - false-supported review queue
 - kernel-gap review queue
 
-The matrix does not yet publish a single coverage percentage because PR 3 has not added
-the validator/report tool and semantic false-supported review is still pending.
+The report still does not publish a single final coverage percentage because semantic
+false-supported review is pending and the dogfood case is intentionally deferred to PR 4.
+
+## Report Metrics
+
+Current generated metrics from `docs/reports/strategy_coverage_report.md`:
+
+| Metric | Value |
+| --- | ---: |
+| direct_builtin_coverage | 0.1412 |
+| routable_record_coverage_raw | 0.8820 |
+| routable_record_coverage_discounted | 0.8056 |
+| custom_token_route_share | 0.1732 |
+| false_supported_rate_mechanical | 0.0000 |
+| false_supported_rate_semantic | 0.0000 |
+| false_supported_rate_boundary | 0.0000 |
+| boundary_false_supported_count | 0 |
+| kernel_gap_count | 21 |
+| token_bloat_index | 0.2200 |
 
 ## External Benchmark Seed
 
@@ -162,7 +189,8 @@ PR 1 added protocol files:
 - `docs/coverage/custom_token_route_policy.md`
 - `docs/coverage/kernel_gap_decision_protocol.md`
 
-PR 2 registers the first matrix and external seed against those protocols.
+PR 2 registers the first matrix and external seed against those protocols. PR 3 adds the
+validator and report tool for the matrix.
 
 ## Boundary Statement
 
@@ -172,5 +200,4 @@ portfolio optimizer coverage.
 
 ## Next Work
 
-- PR 3: matrix validator and coverage report tool.
 - PR 4: original failure dogfood case.
