@@ -212,7 +212,28 @@ def render_markdown(report: dict[str, Any]) -> str:
             "",
             f"- Status: `{frontier['dogfood']['status']}`",
             f"- Classifications: `{', '.join(frontier['dogfood']['classifications'])}`",
-            "- PR 4 owns detailed dogfood evidence and candidate GKR.",
+            "",
+            "| Row | Status | Classification | Candidate GKR | Evidence report | Limitations |",
+            "| --- | --- | --- | --- | --- | --- |",
+        ]
+    )
+    for row in frontier["dogfood"]["rows"]:
+        limitations = "; ".join(row["limitations"]) if row["limitations"] else "none"
+        lines.append(
+            "| {id} | {status} | {classification} | {candidate_gkr} | {report} | {limitations} |".format(
+                id=row["id"],
+                status=row["status"],
+                classification=row["classification"],
+                candidate_gkr=row["candidate_gkr"] or "not recorded",
+                report=row["report"] or "not recorded",
+                limitations=limitations,
+            )
+        )
+    lines.extend(
+        [
+            "",
+            "Dogfood rows remain excluded from headline frontier percentages until the",
+            "frontier publication target dogfood set is complete or explicitly deferred.",
             "",
             "## Validation",
             "",
@@ -280,6 +301,24 @@ def _dogfood_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "status": ", ".join(statuses) if statuses else "missing",
         "classifications": classifications,
         "weight": _weight_sum(rows),
+        "rows": [_dogfood_row_summary(row) for row in rows],
+    }
+
+
+def _dogfood_row_summary(row: dict[str, Any]) -> dict[str, Any]:
+    evidence = row.get("dogfood_evidence")
+    evidence_map = evidence if isinstance(evidence, dict) else {}
+    boundary = row.get("boundary")
+    boundary_map = boundary if isinstance(boundary, dict) else {}
+    limitations = boundary_map.get("limitations")
+    return {
+        "id": str(row.get("id", "")),
+        "status": str(row.get("status", "")),
+        "classification": str(row.get("expected_classification", "")),
+        "candidate_gkr": _optional_string(evidence_map.get("candidate_gkr")),
+        "intent_fixture": _optional_string(evidence_map.get("intent_fixture")),
+        "report": _optional_string(evidence_map.get("report")),
+        "limitations": [str(item) for item in limitations] if isinstance(limitations, list) else [],
     }
 
 
@@ -388,6 +427,10 @@ def _custom_discount(matrix: dict[str, Any]) -> float:
 
 def _number(value: object, default: float) -> float:
     return float(value) if isinstance(value, int | float) else default
+
+
+def _optional_string(value: object) -> str:
+    return value if isinstance(value, str) else ""
 
 
 def _ratio(numerator: float, denominator: float) -> float:

@@ -4,7 +4,7 @@ import math
 
 import pytest
 
-from qst.canonical_json import stable_json_bytes
+from qst.canonical_json import MAX_CANONICAL_DEPTH, stable_json_bytes
 
 
 def test_stable_json_bytes_are_order_stable() -> None:
@@ -31,9 +31,9 @@ def test_stable_json_bytes_reject_invalid_json_values(value: object) -> None:
         stable_json_bytes(value)
 
 
-def test_stable_json_bytes_reject_depth_over_eight() -> None:
+def test_stable_json_bytes_reject_depth_over_limit() -> None:
     value: object = "leaf"
-    for _ in range(10):
+    for _ in range(MAX_CANONICAL_DEPTH + 2):
         value = {"x": value}
 
     with pytest.raises(ValueError, match="depth"):

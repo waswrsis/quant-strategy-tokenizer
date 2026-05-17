@@ -1,0 +1,69 @@
+schema_version: qst-ir-schema/0.4
+ir_version: qst-ir/0.4
+canonical_version: qst-canonical/0.4
+capabilities: [core, panel_type, panel_ops, panel_weights]
+strategy:
+  id: original_multi_asset_mean_reversion_grid_partial
+  version: 1
+  nodes:
+  - id: mean_reversion_zscore
+    token_ref: {namespace: core, name: panel.zscore, version: 1, behavior_version: 1}
+    inputs: {panel: $externals.panel.mean_reversion_score}
+    params: {}
+    signature: {outputs: {panel: {type: "Panel[float]"}}}
+    metadata:
+      panel_type_by_output:
+        panel: &panel_type
+          kind: panel
+          universe_mask:
+            universe_ref: tests/coverage_cases/dogfood/original_grid_universe.json
+          missing_policy: {kind: error_on_missing}
+  - id: select_mean_reversion_longs
+    token_ref: {namespace: core, name: panel.bottom_k, version: 1, behavior_version: 1}
+    inputs: {panel: mean_reversion_zscore.panel}
+    params: {k: 2}
+    signature: {outputs: {selection: {type: "Panel[bool]"}}}
+    metadata: {panel_type_by_output: {selection: *panel_type}}
+  - id: raw_equal_long_weights
+    token_ref: {namespace: core, name: selection.to_weights, version: 1, behavior_version: 1}
+    inputs: {selection: select_mean_reversion_longs.selection}
+    params: {method: equal_long}
+    signature: {outputs: {weights: {type: "Panel[decimal]"}}}
+    metadata:
+      panel_type_by_output:
+        weights: &weight_type
+          kind: weight_panel
+          universe_mask:
+            universe_ref: tests/coverage_cases/dogfood/original_grid_universe.json
+          missing_policy: {kind: error_on_missing}
+          weight_panel:
+            weight_kind: raw
+            weights_ref: tests/coverage_cases/dogfood/original_grid_raw_weights.json
+            weights_hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  - id: capped_symbol_weights
+    token_ref: {namespace: core, name: weight.cap_per_symbol, version: 1, behavior_version: 1}
+    inputs: {weights: raw_equal_long_weights.weights}
+    params: {max_abs_weight: "0.12"}
+    signature:
+      inputs: {weights: {type: "Panel[decimal]"}}
+      outputs: {weights: {type: "Panel[decimal]"}}
+    metadata: {panel_type_by_output: {weights: *weight_type}}
+  - id: entry_slot_count
+    token_ref: {namespace: core, name: state.accumulate, version: 1, behavior_version: 1}
+    inputs: {x: $externals.timeseries.entry_attempt}
+    params: {reducer: sum, initial: 0}
+    signature:
+      inputs: {x: {type: "TimeSeries[int]"}}
+      outputs: {y: {type: "TimeSeries[int]"}}
+  outputs:
+    candidate_weights: capped_symbol_weights.weights
+    slots_used: entry_slot_count.y
+metadata:
+  coverage_case: dog_001_original_multi_asset_mean_reversion_grid
+  dogfood_scope: partial_record_only
+  source: docs/project_history/PROJECT_EXPERIENCE.md
+  limitations:
+    - staged grid add ladder is not represented
+    - VWAP add optimizer is not represented
+    - BTC-led regime model is not represented
+    - live order lifecycle and account feedback are out of scope

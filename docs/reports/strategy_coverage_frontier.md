@@ -1,6 +1,6 @@
 # QST Strategy Coverage Frontier
 
-This is the PR 3 baseline and protocol report for Coverage Frontier v0.3. It is not a
+This is the PR 4 baseline and protocol report for Coverage Frontier v0.3. It is not a
 final coverage frontier claim and does not publish a single strategy coverage percentage.
 
 ## Repo
@@ -8,22 +8,26 @@ final coverage frontier claim and does not publish a single strategy coverage pe
 - Branch: `main`
 - PR 1 baseline commit: `8a483dc469e2966ab0b315a3e284728b6a3378c9`
 - PR 2 baseline commit: `d2d6b77060b99dba332da6ac2bd748397f6f9d7a`
-- PR 3 scope: matrix validator and coverage report tool
+- PR 3 baseline commit: `d451391561f9b605fccf3f509335b00375f20b02`
+- PR 4 scope: original failure strategy dogfood MVP case
 - Runtime, token, IR, hash, schema, CI, prompt, and example behavior changes: none
 
 ## Current Command Evidence
 
 | Command | Exit code | Output summary |
 | --- | ---: | --- |
-| `git status --short` | 0 | clean before PR 3 edits |
+| `git status --short` | 0 | PR4 construction edits present before final commit |
 | `git rev-parse --abbrev-ref HEAD` | 0 | `main` |
-| `git rev-parse HEAD` | 0 | `d2d6b77060b99dba332da6ac2bd748397f6f9d7a` |
+| `git rev-parse HEAD` | 0 | `d451391561f9b605fccf3f509335b00375f20b02` |
 | `python -m qst.cli --help` | 0 | CLI exposes `vocabulary`, `validate`, `hash`, `canonicalize`, `write-json`, and `token` |
 | `python -m qst.cli vocabulary --check` | 0 | `ok: true`; 6 packs; 120 tokens; zero diagnostics |
-| `python -m pytest tests -q` | 0 | `452 passed` |
-| `python -m pytest --cov=qst --cov-fail-under=85 -q` | 0 | `452 passed`; total code coverage `88.63%` |
+| `python -m pytest tests -q` | 0 | `460 passed` |
+| `python -m pytest --cov=qst --cov-fail-under=85 -q` | 0 | `460 passed`; total code coverage `88.63%` |
 | `python tools/validate_strategy_coverage_matrix.py docs/reports/strategy_coverage_matrix.yaml` | 0 | validation `pass`; zero issues |
 | `python tools/report_strategy_coverage.py docs/reports/strategy_coverage_matrix.yaml --check` | 0 | report check `pass`; zero issues |
+| `python -m qst.cli validate tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.partial.gkr.yaml` | 0 | PR4 dogfood candidate validates |
+| `python -m qst.cli hash tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.partial.gkr.yaml` | 0 | PR4 dogfood hashes recorded |
+| `python -m qst.cli canonicalize tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.partial.gkr.yaml --output .local_audit/original_failure_strategy_dogfood.canonical.json` | 0 | canonical artifact generated locally |
 
 ## Coverage Evidence Files
 
@@ -34,9 +38,12 @@ final coverage frontier claim and does not publish a single strategy coverage pe
 - `tests/coverage_cases/external/external_benchmark_seed.yaml`
 - `tools/validate_strategy_coverage_matrix.py`
 - `tools/report_strategy_coverage.py`
+- `docs/reports/original_failure_strategy_dogfood.md`
+- `tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.intent.yaml`
+- `tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.partial.gkr.yaml`
 
 PR 2 created the seed data. PR 3 adds validator/report tooling and a checked-in generated
-report.
+report. PR 4 adds the first dogfood MVP case and candidate partial GKR.
 
 ## Existing Examples
 
@@ -111,7 +118,7 @@ PR 2 adds matrix v0 with seed rows. PR 3 validates that matrix and generates
 | Total patterns | 101 | matrix v0 |
 | Internal matrix rows | 80 | matrix v0 |
 | External benchmark rows | 20 | matrix v0 plus `external_benchmark_sources.md` |
-| Dogfood rows | 1 | provisional placeholder only |
+| Dogfood rows | 1 | PR4 MVP dogfood case |
 | Reserved plus non-goal rows | >= 10 | matrix v0 sanity check |
 | External stratification | complete for PR 2 required categories | matrix v0 sanity check |
 | Validator result | pass | `tools/validate_strategy_coverage_matrix.py` |
@@ -128,7 +135,8 @@ The PR 3 report tool now computes:
 - kernel-gap review queue
 
 The report still does not publish a single final coverage percentage because semantic
-false-supported review is pending and the dogfood case is intentionally deferred to PR 4.
+false-supported review is pending and the full frontier publication dogfood target set is
+not complete.
 
 ## Report Metrics
 
@@ -144,7 +152,7 @@ Current generated metrics from `docs/reports/strategy_coverage_report.md`:
 | false_supported_rate_semantic | 0.0000 |
 | false_supported_rate_boundary | 0.0000 |
 | boundary_false_supported_count | 0 |
-| kernel_gap_count | 21 |
+| kernel_gap_count | 23 |
 | token_bloat_index | 0.2200 |
 
 ## External Benchmark Seed
@@ -169,15 +177,42 @@ The external seed covers at least one pattern for each required PR 2 category:
 The seed records strategy intent and source references only. It is not an executable test
 suite and does not copy proprietary strategy code.
 
-## Dogfood Placeholder
+## Dogfood MVP
 
-The matrix includes one provisional dogfood row:
+The matrix includes one PR4 dogfood MVP row:
 
 - `dog_001_original_multi_asset_mean_reversion_grid`
 
-It exists only to wire the matrix for PR 3 and PR 4. It does not count as final frontier
-publication evidence. PR 4 owns the detailed dogfood artifact, candidate GKR, diagnostics,
-false-supported review, and final routing decision.
+Artifacts:
+
+- Report: `docs/reports/original_failure_strategy_dogfood.md`
+- Intent fixture: `tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.intent.yaml`
+- Candidate GKR: `tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.partial.gkr.yaml`
+
+Classification:
+
+- `partially_supported`
+
+Expressible record shell:
+
+- `panel.zscore`
+- `panel.bottom_k`
+- `selection.to_weights`
+- `weight.cap_per_symbol`
+- `state.accumulate`
+
+Known gaps:
+
+- staged grid add ladder
+- VWAP add optimizer
+- BTC-led regime or Markov model
+- position-liquidity collapse function
+- live order lifecycle, broker/exchange execution, and account-level feedback runtime
+
+The candidate GKR validates and has hash/canonical command evidence, so the dogfood row
+now satisfies the MVP `>=1 case` requirement. It still does not satisfy the future frontier
+publication target by itself; later work must add the broader target set or record an
+explicit deferral rationale.
 
 ## Protocol Baseline
 
@@ -190,7 +225,8 @@ PR 1 added protocol files:
 - `docs/coverage/kernel_gap_decision_protocol.md`
 
 PR 2 registers the first matrix and external seed against those protocols. PR 3 adds the
-validator and report tool for the matrix.
+validator and report tool for the matrix. PR 4 wires the first original-failure dogfood
+case into the matrix and report.
 
 ## Boundary Statement
 
@@ -200,4 +236,5 @@ portfolio optimizer coverage.
 
 ## Next Work
 
-- PR 4: original failure dogfood case.
+- PR 5 or follow-up: expand the dogfood target set or record an explicit frontier
+  publication deferral rationale.

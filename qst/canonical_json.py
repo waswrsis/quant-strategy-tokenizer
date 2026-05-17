@@ -7,7 +7,10 @@ import math
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-MAX_CANONICAL_DEPTH = 8
+# Current qst-ir/0.4 Panel signatures include nested TypeSpec universe metadata.
+# The limit remains finite, but it must allow accepted Panel/Weight records to
+# serialize through the public canonicalize CLI.
+MAX_CANONICAL_DEPTH = 12
 
 
 def _canonicalize_value(value: Any, *, depth: int) -> Any:

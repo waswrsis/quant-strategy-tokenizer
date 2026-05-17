@@ -5,9 +5,9 @@ metadata:
   scope: "record_validation_hash_agent_authoring"
   runtime_scope: "out_of_scope"
   benchmark_kind: "mixed"
-  repo_head: "8a483dc469e2966ab0b315a3e284728b6a3378c9"
+  repo_head: "d451391561f9b605fccf3f509335b00375f20b02"
   updated_at: "2026-05-17"
-  note: "PR 2 seed matrix. Validator and report tooling are intentionally deferred to PR 3."
+  note: "PR 4 matrix with original failure dogfood MVP case."
 
 thresholds:
   intent_routing_min: 0.80
@@ -143,4 +143,66 @@ patterns:
   - {id: "ext_019_distribution_var", name: "External distribution VaR", benchmark_group: "external_benchmark", category: "custom_model", status: "active", market_weight: {source_frequency: 2, implementation_relevance: 1, user_relevance: 1, final: 4, evidence: ["docs/reports/external_benchmark_sources.md#src-value-at-risk"]}, description: "Distribution or quantile risk model.", expected_classification: "reserved", coverage: *coverage_reserved, evidence: {required_tokens: ["distribution.quantile"], examples: [], tests: []}, false_supported: *false_reserved, gaps: {missing_tokens: [], missing_types: ["Distribution"], kernel_gaps: [{category: "numeric_determinism_gap", description: "Distribution TypeSpec not accepted.", preferred_solution: "reserved_design"}]}, boundary: {reserved_reason: "Requires Distribution type/runtime.", non_goal_reason: null, limitations: []}}
   - {id: "ext_020_portfolio_optimizer", name: "External portfolio optimizer", benchmark_group: "external_benchmark", category: "weight_record", status: "active", market_weight: {source_frequency: 3, implementation_relevance: 1, user_relevance: 1, final: 5, evidence: ["docs/reports/external_benchmark_sources.md#src-portfolio-optimization"]}, description: "Mean-variance allocation with solver.", expected_classification: "reserved", coverage: *coverage_reserved, evidence: {required_tokens: ["optimizer.mean_variance"], examples: [], tests: []}, false_supported: *false_reserved, gaps: {missing_tokens: [], missing_types: [], kernel_gaps: [{category: "numeric_determinism_gap", description: "Solver determinism contract missing.", preferred_solution: "reserved_design"}]}, boundary: {reserved_reason: "Requires optimizer solver contract/runtime.", non_goal_reason: null, limitations: []}}
 
-  - {id: "dog_001_original_multi_asset_mean_reversion_grid", name: "Original multi-asset mean reversion grid", benchmark_group: "dogfood", category: "dogfood", status: "provisional", market_weight: {source_frequency: 1, implementation_relevance: 2, user_relevance: 2, final: 5, evidence: ["docs/reports/strategy_coverage_frontier.md"]}, description: "Mandatory original failure dogfood placeholder for PR 4.", expected_classification: "partially_supported", coverage: *coverage_partial, evidence: {required_tokens: ["panel.zscore", "selection.to_weights", "state.fsm"], examples: [], tests: []}, false_supported: {mechanical_status: "pending", semantic_status: "pending", boundary_status: "pending"}, gaps: {missing_tokens: ["grid recipe"], missing_types: ["Instrument metadata"], kernel_gaps: [{category: "panel_type_gap", description: "Detailed dogfood analysis deferred to PR 4.", preferred_solution: "deferred"}]}, boundary: {reserved_reason: null, non_goal_reason: null, limitations: ["PR 4 owns detailed dogfood evidence and candidate GKR."]}}
+  - id: "dog_001_original_multi_asset_mean_reversion_grid"
+    name: "Original multi-asset mean reversion grid"
+    benchmark_group: "dogfood"
+    category: "dogfood"
+    status: "dogfood_mvp"
+    market_weight:
+      source_frequency: 1
+      implementation_relevance: 2
+      user_relevance: 2
+      final: 5
+      evidence:
+        - "docs/reports/original_failure_strategy_dogfood.md"
+        - "docs/project_history/PROJECT_EXPERIENCE.md"
+    description: "Original multi-asset crypto mean-reversion grid reduced to a partial QST record shell."
+    expected_classification: "partially_supported"
+    coverage: *coverage_partial
+    evidence:
+      required_tokens:
+        - "panel.zscore"
+        - "panel.bottom_k"
+        - "selection.to_weights"
+        - "weight.cap_per_symbol"
+        - "state.accumulate"
+      examples:
+        - "tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.partial.gkr.yaml"
+      tests:
+        - "tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.intent.yaml"
+        - "tests/coverage_cases/test_original_failure_dogfood.py"
+    dogfood_evidence:
+      report: "docs/reports/original_failure_strategy_dogfood.md"
+      intent_fixture: "tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.intent.yaml"
+      candidate_gkr: "tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.partial.gkr.yaml"
+      canonical_artifact_policy: "local_audit_only"
+    false_supported:
+      mechanical_status: "pass"
+      semantic_status: "pending"
+      boundary_status: "pass"
+    gaps:
+      missing_tokens:
+        - "grid recipe"
+        - "VWAP add optimizer"
+        - "BTC regime model"
+        - "position liquidity collapse model"
+      missing_types:
+        - "Instrument metadata"
+        - "Order lifecycle state"
+        - "Account feedback state"
+      kernel_gaps:
+        - category: "recipe_gap"
+          description: "Staged grid adding is strategy-specific recipe behavior, not an accepted built-in token."
+          preferred_solution: "future recipe or custom token route"
+        - category: "regime_model_gap"
+          description: "BTC-led regime and Markov gating are not accepted built-in model surfaces."
+          preferred_solution: "custom token route or future accepted regime token"
+        - category: "runtime_feedback_gap"
+          description: "Open orders, fills, account PnL feedback, and live lifecycle state require runtime/adapter support."
+          preferred_solution: "out of scope for coverage frontier record layer"
+    boundary:
+      reserved_reason: null
+      non_goal_reason: null
+      limitations:
+        - "Partial record shell only; no staged grid add execution."
+        - "No VWAP add optimizer, BTC-led regime model, live order lifecycle, broker/exchange execution, or account feedback runtime."

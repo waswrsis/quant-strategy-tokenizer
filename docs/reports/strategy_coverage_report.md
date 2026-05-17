@@ -44,7 +44,7 @@ profitability, or portfolio optimizer coverage.
 | false_supported_rate_semantic | 0.0000 |
 | false_supported_rate_boundary | 0.0000 |
 | boundary_false_supported_count | 0 |
-| kernel_gap_count | 21 |
+| kernel_gap_count | 23 |
 | token_bloat_index | 0.2200 |
 
 ## Next Best Expansions
@@ -64,9 +64,15 @@ profitability, or portfolio optimizer coverage.
 
 ## Dogfood
 
-- Status: `provisional`
+- Status: `dogfood_mvp`
 - Classifications: `partially_supported`
-- PR 4 owns detailed dogfood evidence and candidate GKR.
+
+| Row | Status | Classification | Candidate GKR | Evidence report | Limitations |
+| --- | --- | --- | --- | --- | --- |
+| dog_001_original_multi_asset_mean_reversion_grid | dogfood_mvp | partially_supported | tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.partial.gkr.yaml | docs/reports/original_failure_strategy_dogfood.md | Partial record shell only; no staged grid add execution.; No VWAP add optimizer, BTC-led regime model, live order lifecycle, broker/exchange execution, or account feedback runtime. |
+
+Dogfood rows remain excluded from headline frontier percentages until the
+frontier publication target dogfood set is complete or explicitly deferred.
 
 ## Validation
 

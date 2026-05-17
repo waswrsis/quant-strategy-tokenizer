@@ -1,0 +1,96 @@
+schema_version: "qst-dogfood-intent/0.1"
+dogfood_case:
+  id: "dog_001_original_multi_asset_mean_reversion_grid"
+  name: "Original multi-asset mean reversion grid"
+  source:
+    document: "docs/project_history/PROJECT_EXPERIENCE.md"
+    extracted_background:
+      - "multi-asset mean-reversion system for cryptocurrencies"
+      - "grid-like staged adding"
+      - "short volatility or short gamma"
+      - "BTC regime, Markov state, NO-TRADE gating"
+      - "slot budget, market freeze, openOrders cache, CircuitBreaker"
+      - "BTC/Symbol VWAP, BTC-neutral, entry vote, degraded mode, structured audit"
+  strategy_intent:
+    summary: "Select mean-reversion candidates across crypto assets, allocate capped long weights, and keep a slot-count record while explicitly deferring full grid execution."
+    universe: ["BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT"]
+    data_requirements:
+      - "panel mean-reversion score"
+      - "entry attempt time series"
+      - "BTC regime or leadership signal"
+      - "VWAP reference for staged adds"
+    state_requirements:
+      - "entry slot count"
+      - "market freeze"
+      - "circuit breaker"
+      - "open order cache"
+    risk_weight_requirements:
+      - "raw equal-long selection weights"
+      - "per-symbol cap"
+      - "position-liquidity boundary"
+  expected_classification: "partially_supported"
+  expressible_components:
+    - component: "panel mean-reversion score"
+      candidate_token: "panel.zscore"
+    - component: "bottom-k contrarian selection"
+      candidate_token: "panel.bottom_k"
+    - component: "raw equal-long weights"
+      candidate_token: "selection.to_weights"
+    - component: "per-symbol weight cap"
+      candidate_token: "weight.cap_per_symbol"
+    - component: "entry slot count record"
+      candidate_token: "state.accumulate"
+  non_expressible_components:
+    - "staged grid add ladder"
+    - "VWAP add optimizer"
+    - "BTC-led regime or Markov state model"
+    - "position-liquidity collapse function"
+    - "live order lifecycle"
+    - "broker/exchange execution"
+    - "account-level PnL feedback runtime"
+  candidate_gkr:
+    path: "tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.partial.gkr.yaml"
+    status: "validates"
+    scope: "partial record shell"
+  validation_evidence:
+    validate:
+      command: "python -m qst.cli validate tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.partial.gkr.yaml"
+      exit_code: 0
+      result: "pass"
+    hash:
+      command: "python -m qst.cli hash tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.partial.gkr.yaml"
+      graph_hash: "sha256:4efaf0f8b3d562c85f93a8ed65506d3c2b49efa1f9227ec7264b780ecb4df82e"
+      param_hash: "sha256:07ecc5baa7f4c8ec77dec2fdaaeb95d0b98444340891d9baa311616b2204b5d8"
+      instance_hash: "sha256:64cb286d01db4fd9245d5bc27f0b16dd0f4ae5b6500b97f43e5fa06d9d022a39"
+    canonicalize:
+      command: "python -m qst.cli canonicalize tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.partial.gkr.yaml --output .local_audit/original_failure_strategy_dogfood.canonical.json"
+      exit_code: 0
+      artifact_policy: "local_only_not_committed"
+  required_tokens:
+    - "panel.zscore"
+    - "panel.bottom_k"
+    - "selection.to_weights"
+    - "weight.cap_per_symbol"
+    - "state.accumulate"
+  missing_tokens:
+    - "grid recipe"
+    - "VWAP add optimizer"
+    - "BTC regime model"
+    - "position liquidity collapse model"
+  missing_types:
+    - "Instrument metadata"
+    - "Order lifecycle state"
+    - "Account feedback state"
+  kernel_gaps:
+    - category: "recipe_gap"
+      description: "Staged grid adding is strategy-specific recipe behavior, not an accepted built-in token."
+      preferred_solution: "future recipe or custom token route"
+    - category: "regime_model_gap"
+      description: "BTC-led regime and Markov gating are not accepted built-in model surfaces."
+      preferred_solution: "custom token route or future accepted regime token"
+    - category: "runtime_feedback_gap"
+      description: "Open orders, fills, account PnL feedback, and live lifecycle state require runtime/adapter support."
+      preferred_solution: "out of scope for coverage frontier record layer"
+  verdict:
+    classification: "partially_supported"
+    reason: "QST can record the panel/weight/state shell, but it cannot express full staged grid execution, VWAP add optimization, live order lifecycle, or account feedback runtime."
