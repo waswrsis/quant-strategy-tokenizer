@@ -1,0 +1,45 @@
+schema_version: qst-ir-schema/0.4
+ir_version: qst-ir/0.4
+canonical_version: qst-canonical/0.4
+capabilities: [core, panel_type, panel_ops]
+strategy:
+  id: pr8_sector_neutral_rank_partial
+  version: 1
+  nodes:
+  - id: sector_neutral_rank
+    token_ref: {namespace: core, name: factor.sector_neutral_rank, version: 1, behavior_version: 1}
+    inputs: {panel: $externals.panel.factor_score}
+    params: {group_spec_ref: examples/groups/sector.json}
+    signature:
+      inputs: {panel: {type: "Panel[float]"}}
+      outputs: {ranked: {type: "Panel[int]"}}
+    metadata:
+      panel_type_by_output:
+        ranked: &ranked_panel_type
+          kind: panel
+          universe_mask:
+            universe_ref: examples/universe/sector_neutral.json
+            members: [BTC/USDT, ETH/USDT, SOL/USDT]
+            included: [BTC/USDT, ETH/USDT, SOL/USDT]
+          missing_policy: {kind: error_on_missing}
+          group_spec:
+            kind: static_mapping
+            group_id: sector
+            mapping_ref: examples/groups/sector.json
+            mapping_hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  - id: selected_sector_rank
+    token_ref: {namespace: core, name: selection.top_k, version: 1, behavior_version: 1}
+    inputs: {panel: sector_neutral_rank.ranked}
+    params: {k: 2}
+    signature:
+      inputs: {panel: {type: "Panel[int]"}}
+      outputs: {selection: {type: "Panel[bool]"}}
+    metadata: {panel_type_by_output: {selection: *ranked_panel_type}}
+  outputs:
+    selection: selected_sector_rank.selection
+metadata:
+  coverage_case: pr8_sector_neutral_rank
+  scope: record_layer_partial_evidence
+  limitations:
+    - group metadata must be explicit
+    - no sector inference, optimizer, rebalance scheduler, broker, or execution claim

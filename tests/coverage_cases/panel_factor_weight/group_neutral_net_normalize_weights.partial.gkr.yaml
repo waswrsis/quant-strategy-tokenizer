@@ -1,0 +1,65 @@
+schema_version: qst-ir-schema/0.4
+ir_version: qst-ir/0.4
+canonical_version: qst-canonical/0.4
+capabilities: [core, panel_type, panel_weights]
+strategy:
+  id: pr8_group_neutral_net_normalize_weights_partial
+  version: 1
+  nodes:
+  - id: raw_weights
+    token_ref: {namespace: core, name: weight.rank_weight, version: 1, behavior_version: 1}
+    inputs: {ranked: $externals.panel.factor_rank}
+    params: {side: long, target_gross: "1"}
+    signature:
+      inputs: {ranked: {type: "Panel[float]"}}
+      outputs: {weights: {type: "Panel[decimal]"}}
+    metadata:
+      panel_type_by_output:
+        weights: &weight_type
+          kind: weight_panel
+          universe_mask:
+            universe_ref: examples/universe/group_neutral.json
+            members: [BTC/USDT, ETH/USDT, SOL/USDT]
+            included: [BTC/USDT, ETH/USDT, SOL/USDT]
+          missing_policy: {kind: error_on_missing}
+          group_spec:
+            kind: static_mapping
+            group_id: sector
+            mapping_ref: examples/groups/sector.json
+            mapping_hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
+          weight_panel:
+            weight_kind: raw
+            weights_ref: tests/coverage_cases/panel_factor_weight/rank_weights.json
+            weights_hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  - id: group_neutral
+    token_ref: {namespace: core, name: weight.group_neutral_weight, version: 1, behavior_version: 1}
+    inputs: {weights: raw_weights.weights}
+    params: {group_spec_ref: examples/groups/sector.json}
+    signature:
+      inputs: {weights: {type: "Panel[decimal]"}}
+      outputs: {weights: {type: "Panel[decimal]"}}
+    metadata: {panel_type_by_output: {weights: *weight_type}}
+  - id: clipped
+    token_ref: {namespace: core, name: weight.max_weight_clip, version: 1, behavior_version: 1}
+    inputs: {weights: group_neutral.weights}
+    params: {max_abs_weight: "0.5"}
+    signature:
+      inputs: {weights: {type: "Panel[decimal]"}}
+      outputs: {weights: {type: "Panel[decimal]"}}
+    metadata: {panel_type_by_output: {weights: *weight_type}}
+  - id: net_normalized
+    token_ref: {namespace: core, name: weight.normalize_net, version: 1, behavior_version: 1}
+    inputs: {weights: clipped.weights}
+    params: {target_net: "0"}
+    signature:
+      inputs: {weights: {type: "Panel[decimal]"}}
+      outputs: {weights: {type: "Panel[decimal]"}}
+    metadata: {panel_type_by_output: {weights: *weight_type}}
+  outputs:
+    weights: net_normalized.weights
+metadata:
+  coverage_case: pr8_group_neutral_net_normalize_weights
+  scope: record_layer_partial_evidence
+  limitations:
+    - explicit group metadata required
+    - no sector inference, optimizer, rebalance scheduler, broker, or execution claim

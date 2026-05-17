@@ -50,14 +50,14 @@ def test_kernel_gap_review_covers_active_gap_categories() -> None:
 def test_beta_neutral_row_retires_stale_numeric_gap() -> None:
     row = _rows_by_id(_matrix())["int_050_beta_neutral_signal"]
 
-    assert row["expected_classification"] == "partially_supported"
-    assert row["coverage"]["partial_record_possible"] is True
+    assert row["expected_classification"] == "supported"
+    assert row["coverage"]["direct_builtin_possible"] is True
     assert "custom_token_route" not in row
-    assert row["evidence"]["required_tokens"] == ["indicator.beta", "indicator.residual"]
+    assert row["evidence"]["required_tokens"] == ["factor.beta_neutral_signal", "decision.signal_to_decision"]
     assert row["evidence"]["examples"] == [
-        "tests/coverage_cases/core_rule/beta_residual_timeseries.partial.gkr.yaml"
+        "tests/coverage_cases/panel_factor_weight/beta_neutral_signal.partial.gkr.yaml"
     ]
-    assert row["gaps"]["missing_tokens"] == ["factor.beta_neutral_signal recipe"]
+    assert row["gaps"]["missing_tokens"] == []
     assert row["gaps"]["kernel_gaps"] == []
     assert "portfolio construction" in " ".join(row["boundary"]["limitations"])
 
@@ -92,9 +92,9 @@ def test_pr7_matrix_counts_are_stable() -> None:
     matrix = _matrix()
     report = coverage_report.build_report(matrix, repo_root=ROOT)["coverage_frontier"]
 
-    assert report["pattern_count"] == 110
-    assert report["benchmark_groups"]["internal_matrix"]["count"] == 85
+    assert report["pattern_count"] == 115
+    assert report["benchmark_groups"]["internal_matrix"]["count"] == 90
     assert report["benchmark_groups"]["external_benchmark"]["count"] == 20
     assert report["benchmark_groups"]["dogfood"]["count"] == 5
-    assert report["metrics"]["kernel_gap_count"] == 19
+    assert report["metrics"]["kernel_gap_count"] == 18
     assert report["check"]["result"] == "pass"

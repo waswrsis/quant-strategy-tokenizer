@@ -1,0 +1,64 @@
+schema_version: qst-ir-schema/0.4
+ir_version: qst-ir/0.4
+canonical_version: qst-canonical/0.4
+capabilities: [core, panel_type, panel_ops, panel_weights]
+strategy:
+  id: pr8_equal_rank_market_neutral_weights_partial
+  version: 1
+  nodes:
+  - id: cross_sectional_rank
+    token_ref: {namespace: core, name: panel.cross_sectional_rank, version: 1, behavior_version: 1}
+    inputs: {panel: $externals.panel.factor_score}
+    params: {order: descending}
+    signature: {outputs: {ranked: {type: "Panel[int]"}}}
+    metadata:
+      panel_type_by_output:
+        ranked: &panel_type
+          kind: panel
+          universe_mask:
+            universe_ref: examples/universe/rank_weight.json
+            members: [BTC/USDT, ETH/USDT, SOL/USDT]
+            included: [BTC/USDT, ETH/USDT, SOL/USDT]
+          missing_policy: {kind: error_on_missing}
+  - id: selected
+    token_ref: {namespace: core, name: selection.top_k, version: 1, behavior_version: 1}
+    inputs: {panel: cross_sectional_rank.ranked}
+    params: {k: 2}
+    signature: {outputs: {selection: {type: "Panel[bool]"}}}
+    metadata: {panel_type_by_output: {selection: *panel_type}}
+  - id: equal_weights
+    token_ref: {namespace: core, name: weight.equal_weight, version: 1, behavior_version: 1}
+    inputs: {selection: selected.selection}
+    params: {method: equal_long}
+    signature:
+      inputs: {selection: {type: "Panel[bool]"}}
+      outputs: {weights: {type: "Panel[decimal]"}}
+    metadata:
+      panel_type_by_output:
+        weights: &weight_type
+          kind: weight_panel
+          universe_mask:
+            universe_ref: examples/universe/rank_weight.json
+            members: [BTC/USDT, ETH/USDT, SOL/USDT]
+            included: [BTC/USDT, ETH/USDT, SOL/USDT]
+          missing_policy: {kind: error_on_missing}
+          weight_panel:
+            weight_kind: raw
+            weights_ref: tests/coverage_cases/panel_factor_weight/equal_weights.json
+            weights_hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  - id: market_neutral_weights
+    token_ref: {namespace: core, name: weight.market_neutral_weight, version: 1, behavior_version: 1}
+    inputs: {weights: equal_weights.weights}
+    params: {target_gross: "1"}
+    signature:
+      inputs: {weights: {type: "Panel[decimal]"}}
+      outputs: {weights: {type: "Panel[decimal]"}}
+    metadata: {panel_type_by_output: {weights: *weight_type}}
+  outputs:
+    weights: market_neutral_weights.weights
+metadata:
+  coverage_case: pr8_equal_rank_market_neutral_weights
+  scope: record_layer_partial_evidence
+  limitations:
+    - market-neutral weight record only
+    - no optimizer, rebalance scheduler, broker, or execution claim

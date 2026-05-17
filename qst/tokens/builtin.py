@@ -166,6 +166,7 @@ _EVENT_OBJECT_SINGLE = "Event[object]"
 _DECISION = "Decision"
 _PLAN = "Plan"
 _PANEL_FLOAT = "Panel[float]"
+_PANEL_BOOL = "Panel[bool]"
 _PANEL_DECIMAL = "Panel[decimal]"
 
 _EMPTY_INPUT_POLICY = (
@@ -257,6 +258,42 @@ _PANEL_RANK_PARAMS: dict[str, object] = {
     "additionalProperties": False,
     "required": ["k"],
     "properties": {"k": {"type": "integer", "minimum": 1}},
+}
+_GROUP_NEUTRAL_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["group_spec_ref"],
+    "properties": {
+        "group_spec_ref": {"type": "string", "minLength": 1},
+        "missing_group_policy": {
+            "enum": ["error", "drop", "assign_unknown"],
+            "default": "error",
+        },
+    },
+}
+_RANK_WEIGHT_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "side": {"enum": ["long", "short"], "default": "long"},
+        "target_gross": {"type": "string", "default": "1"},
+    },
+}
+_INVERSE_VOL_WEIGHT_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {"target_gross": {"type": "string", "default": "1"}},
+}
+_NET_NORMALIZE_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {"target_net": {"type": "string", "default": "0"}},
+}
+_MAX_WEIGHT_CLIP_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["max_abs_weight"],
+    "properties": {"max_abs_weight": {"type": "string"}},
 }
 _SIGNAL_TO_DECISION_PARAMS: dict[str, object] = {
     "type": "object",
@@ -423,6 +460,23 @@ _TOKEN_DEFINITIONS: tuple[dict[str, Any], ...] = (
     {"name": "signal.zscore_revert", "family": "signal", "category": "mean_reversion", "inputs": {"zscore": _TS_FLOAT}, "outputs": {"value": _TS_BOOL}, "params_schema": _ZSCORE_REVERT_PARAMS, "numeric": "bool"},
     {"name": "signal.rank_top_k", "family": "signal", "category": "panel_signal", "inputs": {"panel": _PANEL_FLOAT}, "outputs": {"selection": "Panel[bool]"}, "params_schema": _PANEL_RANK_PARAMS, "numeric": "bool", "panel_aware": True},
     {"name": "signal.rank_bottom_k", "family": "signal", "category": "panel_signal", "inputs": {"panel": _PANEL_FLOAT}, "outputs": {"selection": "Panel[bool]"}, "params_schema": _PANEL_RANK_PARAMS, "numeric": "bool", "panel_aware": True},
+    # PR8 panel, factor, and weight record aliases.
+    {"name": "panel.cross_sectional_rank", "family": "panel", "category": "panel_operator_alias", "inputs": {"panel": _PANEL_FLOAT}, "outputs": {"ranked": "Panel[int]"}, "panel_aware": True, "usage_notes": ("Alias for panel.rank reference semantics.",)},
+    {"name": "panel.zscore_by_universe", "family": "panel", "category": "panel_operator_alias", "inputs": {"panel": _PANEL_FLOAT}, "outputs": {"panel": _PANEL_FLOAT}, "panel_aware": True, "usage_notes": ("Alias for panel.zscore over the active universe.",)},
+    {"name": "panel.neutralize_group", "family": "panel", "category": "panel_operator_alias", "inputs": {"panel": _PANEL_FLOAT}, "outputs": {"panel": _PANEL_FLOAT}, "params_schema": _GROUP_NEUTRAL_PARAMS, "panel_aware": True, "failure_mode": "missing explicit group metadata emits diagnostic error", "usage_notes": ("Alias for panel.group_demean; group metadata must be explicit.",)},
+    {"name": "selection.top_k", "family": "panel", "category": "selection_operator_alias", "inputs": {"panel": _PANEL_FLOAT}, "outputs": {"selection": _PANEL_BOOL}, "params_schema": _PANEL_RANK_PARAMS, "numeric": "bool", "panel_aware": True, "usage_notes": ("Alias for panel.top_k selection reference semantics.",)},
+    {"name": "selection.bottom_k", "family": "panel", "category": "selection_operator_alias", "inputs": {"panel": _PANEL_FLOAT}, "outputs": {"selection": _PANEL_BOOL}, "params_schema": _PANEL_RANK_PARAMS, "numeric": "bool", "panel_aware": True, "usage_notes": ("Alias for panel.bottom_k selection reference semantics.",)},
+    {"name": "factor.sector_neutral_rank", "family": "factor", "category": "sector_neutral_factor", "inputs": {"panel": _PANEL_FLOAT}, "outputs": {"ranked": "Panel[int]"}, "params_schema": _GROUP_NEUTRAL_PARAMS, "panel_aware": True, "failure_mode": "missing explicit group metadata emits diagnostic error", "usage_notes": ("Demean within explicit groups, then rank cross-sectionally.", "Does not infer sector metadata.")},
+    {"name": "factor.residualize", "family": "factor", "category": "factor_residualization", "inputs": {"panel": _PANEL_FLOAT, "factor": _TS_FLOAT}, "outputs": {"panel": _PANEL_FLOAT}, "panel_aware": True, "usage_notes": ("Alias over panel.residualize reference semantics.",)},
+    {"name": "factor.beta_neutral_signal", "family": "factor", "category": "beta_neutral_signal_record", "inputs": {"series": _TS_FLOAT, "benchmark": _TS_FLOAT}, "outputs": {"score": _TS_FLOAT}, "params_schema": _WINDOW_PARAMS, "panel_aware": True, "failure_mode": "zero benchmark variance emits diagnostic error", "usage_notes": ("Beta/residual signal record only; no portfolio beta-neutral construction.",)},
+    {"name": "weight.equal_weight", "family": "weight", "category": "weight_record", "inputs": {"selection": _PANEL_BOOL}, "outputs": {"weights": _PANEL_DECIMAL}, "numeric": "decimal", "panel_aware": True, "usage_notes": ("Alias for equal-long selection.to_weights reference semantics.",)},
+    {"name": "weight.rank_weight", "family": "weight", "category": "weight_record", "inputs": {"ranked": _PANEL_FLOAT}, "outputs": {"weights": _PANEL_DECIMAL}, "params_schema": _RANK_WEIGHT_PARAMS, "numeric": "decimal", "panel_aware": True, "usage_notes": ("Transforms positive ranks into deterministic raw weights; no optimizer.",)},
+    {"name": "weight.inverse_vol_weight", "family": "weight", "category": "weight_record", "inputs": {"volatility": _PANEL_FLOAT}, "outputs": {"weights": _PANEL_DECIMAL}, "params_schema": _INVERSE_VOL_WEIGHT_PARAMS, "numeric": "decimal", "panel_aware": True, "failure_mode": "missing, bool, non-finite, or nonpositive volatility emits diagnostic error", "usage_notes": ("Inverse volatility transform only; no rebalance or optimizer engine.",)},
+    {"name": "weight.vol_target_weight", "family": "weight", "category": "weight_record", "inputs": {"weights": _PANEL_DECIMAL, "volatility": _PANEL_FLOAT}, "outputs": {"weights": _PANEL_DECIMAL}, "params_schema": _VOLATILITY_TARGET_PARAMS, "numeric": "decimal", "panel_aware": True, "usage_notes": ("Wrapper over risk.volatility_target scaling semantics; no portfolio engine.",)},
+    {"name": "weight.market_neutral_weight", "family": "weight", "category": "weight_record", "inputs": {"weights": _PANEL_DECIMAL}, "outputs": {"weights": _PANEL_DECIMAL}, "numeric": "decimal", "panel_aware": True, "usage_notes": ("Alias for weight.market_neutral reference semantics.",)},
+    {"name": "weight.group_neutral_weight", "family": "weight", "category": "weight_record", "inputs": {"weights": _PANEL_DECIMAL}, "outputs": {"weights": _PANEL_DECIMAL}, "params_schema": _GROUP_NEUTRAL_PARAMS, "numeric": "decimal", "panel_aware": True, "failure_mode": "missing explicit group metadata emits diagnostic error", "usage_notes": ("Neutralizes net exposure within explicit groups only.", "Does not infer sector metadata or optimize exposures.")},
+    {"name": "weight.max_weight_clip", "family": "weight", "category": "weight_record", "inputs": {"weights": _PANEL_DECIMAL}, "outputs": {"weights": _PANEL_DECIMAL}, "params_schema": _MAX_WEIGHT_CLIP_PARAMS, "numeric": "decimal", "panel_aware": True, "usage_notes": ("Alias for weight.cap_per_symbol clip-no-redistribute semantics.",)},
+    {"name": "weight.normalize_net", "family": "weight", "category": "weight_record", "inputs": {"weights": _PANEL_DECIMAL}, "outputs": {"weights": _PANEL_DECIMAL}, "params_schema": _NET_NORMALIZE_PARAMS, "numeric": "decimal", "panel_aware": True, "usage_notes": ("Adds a deterministic per-timestamp net shift; no gross normalization or optimizer.",)},
     # Decision, gate, risk, and plan surface tokens.
     {"name": "decision.lift_bool", "family": "decision", "category": "decision_bridge", "inputs": {"series": _TS_BOOL}, "outputs": {"decision": _DECISION}, "numeric": "object"},
     {"name": "decision.long_flat", "family": "decision", "category": "rule_decision", "inputs": {"series": _TS_BOOL}, "outputs": {"decision": _DECISION}, "numeric": "object"},

@@ -1,22 +1,23 @@
 # Token Surface Acceptance
 
 Stage 3B accepts the token surface as registry-driven evidence, not a hand-written token list.
-PR6 extends the accepted record/reference token surface with the core rule token batch.
+PR8 extends the accepted record/reference token surface with the panel/factor/weight coverage batch.
 
 ## Baseline
 
 - Stage 3A baseline commit: `14099e8154423e1d0b6bc639a1211b13f0a87ece`
 - Baseline tag: `stage-3a-token-surface-complete-20260516`
 - PR6 scope: Section 19 core rule token batch
+- PR8 scope: Panel/factor/weight record token batch
 - Built-in TokenPacks: `6`
-- Built-in tokens: `150`
+- Built-in tokens: `166`
 - Registry result: `ok`
 
 ## Pack Summary
 
 | Pack | Version | Tokens | TokenPack Hash |
 |---|---:|---:|---|
-| qst-tokenpack-core-surface | 0.1.0 | 126 | `sha256:6ff7ff143b94e903a407f5599e7fee979af8f68d0d555ac7f25951b0ea0c396f` |
+| qst-tokenpack-core-surface | 0.1.0 | 142 | `sha256:8d30e651d46e1cf82f82cfb719c7534f639503da3cbc89ef3ca3da59b6594707` |
 | qst-tokenpack-decision-algebra | 0.1.0 | 7 | `sha256:01e109dc96ef027fabff5fa8bcac8d8773e5c2a257462add3fb6050ba85c2794` |
 | qst-tokenpack-panel-ops | 0.1.0 | 10 | `sha256:2b555101b1f2aa0e891f0b0657e99df2a3cc0ecb5314a204dac3169e494466b4` |
 | qst-tokenpack-panel-weights | 0.1.0 | 3 | `sha256:5328a726a59d4204cdaa29996c436f212188a984b78b3f1bd36c17c4c67d6cf0` |
@@ -34,28 +35,29 @@ PR6 extends the accepted record/reference token surface with the core rule token
 - `distribution`: 3
 - `event`: 3
 - `execution`: 5
+- `factor`: 3
 - `gate`: 5
 - `indicator`: 16
 - `math`: 21
 - `optimizer`: 1
-- `panel`: 9
+- `panel`: 14
 - `risk`: 3
 - `signal`: 19
 - `state`: 4
 - `time`: 1
-- `weight`: 4
+- `weight`: 12
 - `window`: 7
 
 ## Maturity Counts
 
-- `accepted`: 139
+- `accepted`: 155
 - `experimental`: 2
 - `reserved_design`: 9
 
 ## Execution Support Counts
 
 - `metadata_only`: 13
-- `reference_helper`: 137
+- `reference_helper`: 153
 
 ## Inventory
 
@@ -107,6 +109,9 @@ PR6 extends the accepted record/reference token surface with the core rule token
 | core.execution.cancel_order | qst-tokenpack-core-surface | execution | derived | reserved_design | metadata_only | validation_only | reserved | accepted |
 | core.execution.fill_report | qst-tokenpack-core-surface | execution | derived | reserved_design | metadata_only | validation_only | reserved | accepted |
 | core.execution.submit_order | qst-tokenpack-core-surface | execution | derived | reserved_design | metadata_only | validation_only | reserved | accepted |
+| core.factor.beta_neutral_signal | qst-tokenpack-core-surface | factor | derived | accepted | reference_helper | reference_semantics | semantic_float64 | accepted |
+| core.factor.residualize | qst-tokenpack-core-surface | factor | derived | accepted | reference_helper | reference_semantics | semantic_float64 | accepted |
+| core.factor.sector_neutral_rank | qst-tokenpack-core-surface | factor | derived | accepted | reference_helper | reference_semantics | semantic_float64 | accepted |
 | core.gate.circuit_breaker | qst-tokenpack-core-surface | gate | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
 | core.gate.cooldown | qst-tokenpack-core-surface | gate | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
 | core.gate.market_freeze | qst-tokenpack-core-surface | gate | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
@@ -154,6 +159,9 @@ PR6 extends the accepted record/reference token surface with the core rule token
 | core.math.where | qst-tokenpack-core-surface | math | derived | accepted | reference_helper | reference_semantics | semantic_float64 | accepted |
 | core.norm.range_position | qst-tokenpack-core-surface | signal | derived | accepted | reference_helper | reference_semantics | semantic_float64 | accepted |
 | core.optimizer.mean_variance | qst-tokenpack-core-surface | optimizer | derived | experimental | metadata_only | validation_only | annotation_only | accepted |
+| core.panel.cross_sectional_rank | qst-tokenpack-core-surface | panel | derived | accepted | reference_helper | reference_semantics | semantic_float64 | accepted |
+| core.panel.neutralize_group | qst-tokenpack-core-surface | panel | derived | accepted | reference_helper | reference_semantics | semantic_float64 | accepted |
+| core.panel.zscore_by_universe | qst-tokenpack-core-surface | panel | derived | accepted | reference_helper | reference_semantics | semantic_float64 | accepted |
 | core.plan.noop | qst-tokenpack-core-surface | execution | derived | accepted | metadata_only | validation_only | annotation_only | accepted |
 | core.plan.order_intent | qst-tokenpack-core-surface | execution | derived | accepted | metadata_only | validation_only | annotation_only | accepted |
 | core.risk.position_cap | qst-tokenpack-core-surface | risk | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
@@ -161,6 +169,8 @@ PR6 extends the accepted record/reference token surface with the core rule token
 | core.risk.volatility_target | qst-tokenpack-core-surface | risk | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
 | core.score.calibrate | qst-tokenpack-core-surface | continuous_score | derived | experimental | metadata_only | validation_only | annotation_only | accepted |
 | core.score.zscore | qst-tokenpack-core-surface | continuous_score | derived | accepted | reference_helper | reference_semantics | semantic_float64 | accepted |
+| core.selection.bottom_k | qst-tokenpack-core-surface | panel | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
+| core.selection.top_k | qst-tokenpack-core-surface | panel | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
 | core.signal.and | qst-tokenpack-core-surface | signal | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
 | core.signal.between | qst-tokenpack-core-surface | signal | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
 | core.signal.breakout_down | qst-tokenpack-core-surface | signal | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
@@ -180,6 +190,14 @@ PR6 extends the accepted record/reference token surface with the core rule token
 | core.signal.zscore_revert | qst-tokenpack-core-surface | signal | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
 | core.smooth.linear_recursive | qst-tokenpack-core-surface | signal | derived | accepted | reference_helper | reference_semantics | semantic_float64 | accepted |
 | core.time.session_filter | qst-tokenpack-core-surface | time | derived | accepted | reference_helper | reference_semantics | semantic_float64 | accepted |
+| core.weight.equal_weight | qst-tokenpack-core-surface | weight | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
+| core.weight.group_neutral_weight | qst-tokenpack-core-surface | weight | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
+| core.weight.inverse_vol_weight | qst-tokenpack-core-surface | weight | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
+| core.weight.market_neutral_weight | qst-tokenpack-core-surface | weight | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
+| core.weight.max_weight_clip | qst-tokenpack-core-surface | weight | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
+| core.weight.normalize_net | qst-tokenpack-core-surface | weight | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
+| core.weight.rank_weight | qst-tokenpack-core-surface | weight | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
+| core.weight.vol_target_weight | qst-tokenpack-core-surface | weight | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
 | core.window.count | qst-tokenpack-core-surface | window | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
 | core.window.max | qst-tokenpack-core-surface | window | derived | accepted | reference_helper | reference_semantics | semantic_float64 | accepted |
 | core.window.mean | qst-tokenpack-core-surface | window | derived | accepted | reference_helper | reference_semantics | semantic_float64 | accepted |
@@ -214,4 +232,4 @@ PR6 extends the accepted record/reference token surface with the core rule token
 
 ## Decision
 
-All built-in tokens are present in deterministic registry order and carry `surface`, `contract`, `maturity`, `execution_support`, and deterministic capability metadata. Reserved-design tokens are accepted as vocabulary-visible boundaries only. PR6 additions are accepted reference-helper tokens only and do not imply broad runtime execution.
+All built-in tokens are present in deterministic registry order and carry `surface`, `contract`, `maturity`, `execution_support`, and deterministic capability metadata. Reserved-design tokens are accepted as vocabulary-visible boundaries only. PR6 and PR8 additions are accepted reference-helper tokens only and do not imply broad runtime execution, optimizer/rebalance execution, broker/exchange behavior, or production execution.

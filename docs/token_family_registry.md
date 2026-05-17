@@ -5,7 +5,7 @@ Stage 3A organizes public tokens by family:
 ```text
 math, bool, compare, data, time, align, window, signal, indicator,
 decision, gate, state, panel, weight, risk, optimizer, execution,
-event, distribution, continuous_score
+event, distribution, continuous_score, factor
 ```
 
 Each built-in token must declare:
@@ -181,3 +181,39 @@ They are conformance/reference helpers only; they do not create broad GKR
 runtime execution, a backtester, broker/exchange behavior, optimizer execution,
 or production execution. `indicator.kdj` remains outside PR6 and stays on the
 custom-token route.
+
+## PR8 Panel / Factor / Weight Batch
+
+PR8 extends the accepted record/reference surface for panel aliases, factor
+records, and deterministic weight transforms. It does not change panel runtime
+semantics, create a rebalance engine, or introduce broker/exchange execution.
+
+Panel and selection additions:
+
+- `panel.cross_sectional_rank`, `panel.zscore_by_universe`, and
+  `panel.neutralize_group` as canonical Section 21 aliases over accepted
+  `panel.rank`, `panel.zscore`, and `panel.group_demean` semantics.
+- `selection.top_k` and `selection.bottom_k` as selection aliases over
+  accepted top/bottom-k panel reference behavior.
+
+Factor additions:
+
+- `factor.sector_neutral_rank` ranks explicitly supplied group-neutral records.
+  The helper requires group metadata and never infers sector or instrument
+  classification.
+- `factor.residualize` delegates to accepted residualization semantics.
+- `factor.beta_neutral_signal` records residualized/beta-aware signal evidence.
+  It is not a complete beta-neutral portfolio construction engine.
+
+Weight additions:
+
+- `weight.equal_weight`, `weight.rank_weight`, `weight.inverse_vol_weight`,
+  `weight.vol_target_weight`, `weight.market_neutral_weight`,
+  `weight.group_neutral_weight`, `weight.max_weight_clip`, and
+  `weight.normalize_net`.
+
+All PR8 additions are `accepted` with `execution_support=reference_helper`.
+Weight helpers reject bool and non-finite numeric material. Group-neutral factor
+and weight helpers require explicit group metadata. These helpers are
+conformance/reference helpers only and do not imply optimizer execution,
+rebalance scheduling, order routing, live trading, backtesting, or profitability.

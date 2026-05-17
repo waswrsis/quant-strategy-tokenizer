@@ -18,6 +18,7 @@ EXPECTED_STAGE3A_FAMILIES = {
     "distribution",
     "event",
     "execution",
+    "factor",
     "gate",
     "indicator",
     "math",

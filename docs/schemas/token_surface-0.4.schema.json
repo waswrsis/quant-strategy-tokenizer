@@ -20,7 +20,7 @@
     "family": {
       "enum": [
         "math", "bool", "compare", "data", "time", "align", "window", "signal",
-        "indicator", "decision", "gate", "state", "panel", "weight", "risk",
+        "indicator", "factor", "decision", "gate", "state", "panel", "weight", "risk",
         "optimizer", "execution", "event", "distribution", "continuous_score"
       ]
     },

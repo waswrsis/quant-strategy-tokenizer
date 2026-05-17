@@ -6,7 +6,6 @@ Stage 3B classifies coverage gaps so the next stage does not blindly add vocabul
 
 | Priority | Gap Type | Gap | Evidence | Recommended Next Step |
 |---|---|---|---|---|
-| P1 | Token Gap | weight.inverse_vol | Inverse-vol weighting is common and fits current WeightPanel semantics. | Candidate Stage 3A patch token. |
 | P1 | Derived/Recipe Gap | trailing stop | Current state/window/decision primitives can express it but no canonical recipe exists. | Strategy Pattern Demonstrations or recipe surface. |
 | P1 | Derived/Recipe Gap | rebalance band | Needs a canonical composition, not a new primitive type. | Strategy Pattern Demonstrations. |
 | P1 | Type Gap | EventStream[T] | event.* is correctly reserved; no EventStream TypeSpec/runtime exists. | Extended TypeSpec if event-driven use cases become priority. |
@@ -20,7 +19,7 @@ Stage 3B classifies coverage gaps so the next stage does not blindly add vocabul
 
 ## Decision
 
-No P0 gap blocks the accepted Stage 3A token surface. P1 gaps cluster around authoring patterns and a small number of convenience tokens; deeper gaps are TypeSpec/data-model/runtime boundaries and should not be solved by adding metadata-only tokens.
+No P0 gap blocks the accepted Stage 3A token surface. P1 gaps cluster around authoring patterns and recipe demonstrations; deeper gaps are TypeSpec/data-model/runtime boundaries and should not be solved by adding metadata-only tokens.
 
 ## Retired Gaps
 
@@ -28,3 +27,5 @@ No P0 gap blocks the accepted Stage 3A token surface. P1 gaps cluster around aut
 |---|---|---|
 | `indicator.macd` | PR6 core rule token batch | `tests/coverage_cases/core_rule/macd_trend.partial.gkr.yaml` |
 | beta estimator determinism for `int_050_beta_neutral_signal` | PR7 kernel gap review | `tests/coverage_cases/core_rule/beta_residual_timeseries.partial.gkr.yaml` |
+| `weight.inverse_vol` convenience gap | PR8 panel/factor/weight batch | `tests/coverage_cases/panel_factor_weight/inverse_vol_weight.partial.gkr.yaml` |
+| sector-neutral rank metadata gap | PR8 panel/factor/weight batch | `tests/coverage_cases/panel_factor_weight/sector_neutral_rank.partial.gkr.yaml` |

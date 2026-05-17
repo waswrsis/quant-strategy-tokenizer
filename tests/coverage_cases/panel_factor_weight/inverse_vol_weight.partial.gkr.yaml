@@ -1,0 +1,36 @@
+schema_version: qst-ir-schema/0.4
+ir_version: qst-ir/0.4
+canonical_version: qst-canonical/0.4
+capabilities: [core, panel_type, panel_weights]
+strategy:
+  id: pr8_inverse_vol_weight_partial
+  version: 1
+  nodes:
+  - id: inverse_vol_weights
+    token_ref: {namespace: core, name: weight.inverse_vol_weight, version: 1, behavior_version: 1}
+    inputs: {volatility: $externals.panel.realized_volatility}
+    params: {target_gross: "1"}
+    signature:
+      inputs: {volatility: {type: "Panel[float]"}}
+      outputs: {weights: {type: "Panel[decimal]"}}
+    metadata:
+      panel_type_by_output:
+        weights:
+          kind: weight_panel
+          universe_mask:
+            universe_ref: examples/universe/inverse_vol.json
+            members: [BTC/USDT, ETH/USDT, SOL/USDT]
+            included: [BTC/USDT, ETH/USDT, SOL/USDT]
+          missing_policy: {kind: error_on_missing}
+          weight_panel:
+            weight_kind: raw
+            weights_ref: tests/coverage_cases/panel_factor_weight/inverse_vol_weights.json
+            weights_hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  outputs:
+    weights: inverse_vol_weights.weights
+metadata:
+  coverage_case: pr8_inverse_vol_weight
+  scope: record_layer_partial_evidence
+  limitations:
+    - inverse-volatility record only
+    - no rebalance engine, optimizer, broker, or execution claim

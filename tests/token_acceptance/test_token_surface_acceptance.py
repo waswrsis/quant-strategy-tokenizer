@@ -46,7 +46,7 @@ def test_stage3b_all_builtin_tokens_have_public_surface_metadata() -> None:
 def test_stage3b_surface_acceptance_report_covers_every_builtin_token() -> None:
     report = (REPORT_ROOT / "token_surface_acceptance.md").read_text(encoding="utf-8")
 
-    assert "Built-in tokens: `150`" in report
+    assert f"Built-in tokens: `{EXPECTED_TOKEN_COUNT}`" in report
     assert "Registry result: `ok`" in report
     for spec in all_specs():
         assert f"| {spec.token_id} |" in report

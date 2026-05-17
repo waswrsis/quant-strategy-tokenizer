@@ -5,11 +5,10 @@ from __future__ import annotations
 from pydantic import ValidationError
 
 from qst.ir.schema import NodeV04, StrategyIRV04
-from qst.panel import (
+from qst.panel.model import PanelTypeLayerSpec, parse_panel_type_by_output
+from qst.panel.operators import (
     PANEL_OPERATOR_TOKENS,
     WEIGHT_OPERATOR_TOKENS,
-    PanelTypeLayerSpec,
-    parse_panel_type_by_output,
 )
 from qst.validation import Diagnostic
 
@@ -19,6 +18,25 @@ PANEL_WEIGHTS_CAPABILITY = "panel_weights"
 PANEL_OPERATOR_PREFIXES = ("panel.", "selection.", "weight.")
 PANEL_WEIGHT_OPERATOR_PREFIX = "weight."
 DEFERRED_WEIGHT_TOKENS = {"weight.equal", "weight.long_short", "weight.normalize_net"}
+PR8_PANEL_OPERATOR_ALIASES = {
+    "panel.cross_sectional_rank",
+    "panel.zscore_by_universe",
+    "panel.neutralize_group",
+    "selection.top_k",
+    "selection.bottom_k",
+}
+PR8_WEIGHT_SOURCE_TOKENS = {
+    "weight.equal_weight",
+    "weight.rank_weight",
+    "weight.inverse_vol_weight",
+}
+PR8_WEIGHT_TRANSFORM_TOKENS = {
+    "weight.market_neutral_weight",
+    "weight.group_neutral_weight",
+    "weight.max_weight_clip",
+    "weight.normalize_net",
+}
+PR8_WEIGHT_MIXED_INPUT_TOKENS = {"weight.vol_target_weight"}
 
 
 def validate_panel_type_layer_v04(ir: StrategyIRV04) -> list[Diagnostic]:
@@ -130,7 +148,7 @@ def _validate_panel_operator_gate(
     if name is None or not name.startswith(PANEL_OPERATOR_PREFIXES):
         return []
     if name.startswith(PANEL_WEIGHT_OPERATOR_PREFIX):
-        if name in DEFERRED_WEIGHT_TOKENS:
+        if name in DEFERRED_WEIGHT_TOKENS and name not in PR8_WEIGHT_TRANSFORM_TOKENS:
             return [
                 _diagnostic(
                     "QST_V2_WEIGHT_OPERATOR_DEFERRED",
@@ -139,7 +157,13 @@ def _validate_panel_operator_gate(
                     f"Weight operator token {name!r} is deferred beyond WP8d-v1.",
                 )
             ]
-        if name not in WEIGHT_OPERATOR_TOKENS:
+        accepted_weight_token = (
+            name in WEIGHT_OPERATOR_TOKENS
+            or name in PR8_WEIGHT_SOURCE_TOKENS
+            or name in PR8_WEIGHT_TRANSFORM_TOKENS
+            or name in PR8_WEIGHT_MIXED_INPUT_TOKENS
+        )
+        if not accepted_weight_token:
             return [
                 _diagnostic(
                     "QST_V2_WEIGHT_OPERATOR_NOT_ACCEPTED",
@@ -157,8 +181,12 @@ def _validate_panel_operator_gate(
                     f"Weight operator token {name!r} requires the panel_weights capability.",
                 )
             ]
+        if name in PR8_WEIGHT_SOURCE_TOKENS:
+            return _validate_weight_source_signature(node)
+        if name in PR8_WEIGHT_MIXED_INPUT_TOKENS:
+            return _validate_weight_mixed_signature(node, weight_output_refs)
         return _validate_weight_operator_signature(node, weight_output_refs)
-    if name in PANEL_OPERATOR_TOKENS:
+    if name in PANEL_OPERATOR_TOKENS or name in PR8_PANEL_OPERATOR_ALIASES:
         if has_panel_ops_capability:
             return []
         return [
@@ -218,6 +246,61 @@ def _weight_output_refs(ir: StrategyIRV04) -> set[str]:
     return refs
 
 
+def _validate_weight_source_signature(node: NodeV04) -> list[Diagnostic]:
+    diagnostics: list[Diagnostic] = []
+    panel_inputs = [
+        input_name
+        for input_name, input_spec in node.signature.inputs.items()
+        if input_spec.type.kind == "Panel"
+    ]
+    if not panel_inputs:
+        diagnostics.append(
+            _diagnostic(
+                "QST_V2_WEIGHT_SOURCE_INPUT_REQUIRED",
+                node,
+                None,
+                "PR8 weight source tokens require at least one Panel input.",
+            )
+        )
+    diagnostics.extend(_validate_weight_outputs(node))
+    return diagnostics
+
+
+def _validate_weight_mixed_signature(node: NodeV04, weight_output_refs: set[str]) -> list[Diagnostic]:
+    diagnostics: list[Diagnostic] = []
+    weights_input = node.signature.inputs.get("weights")
+    if weights_input is None or weights_input.type.kind != "Panel":
+        diagnostics.append(
+            _diagnostic(
+                "QST_V2_WEIGHT_INPUT_NOT_WEIGHT_PANEL",
+                node,
+                "weights",
+                "Mixed weight transforms require a weights Panel[decimal] input.",
+            )
+        )
+    elif weights_input.type.value_type is None or weights_input.type.value_type.name != "decimal":
+        diagnostics.append(
+            _diagnostic(
+                "QST_V2_WEIGHT_INPUT_NOT_WEIGHT_PANEL",
+                node,
+                "weights",
+                "Mixed weight transform weights input must use Panel[decimal].",
+            )
+        )
+    raw_ref = node.inputs.get("weights")
+    if not isinstance(raw_ref, str) or raw_ref not in weight_output_refs:
+        diagnostics.append(
+            _diagnostic(
+                "QST_V2_WEIGHT_INPUT_METADATA_REQUIRED",
+                node,
+                "weights",
+                "Mixed weight transform weights input must reference weight_panel metadata.",
+            )
+        )
+    diagnostics.extend(_validate_weight_outputs(node))
+    return diagnostics
+
+
 def _validate_weight_operator_signature(node: NodeV04, weight_output_refs: set[str]) -> list[Diagnostic]:
     diagnostics: list[Diagnostic] = []
     weight_inputs = [
@@ -256,6 +339,12 @@ def _validate_weight_operator_signature(node: NodeV04, weight_output_refs: set[s
                 )
             )
 
+    diagnostics.extend(_validate_weight_outputs(node))
+    return diagnostics
+
+
+def _validate_weight_outputs(node: NodeV04) -> list[Diagnostic]:
+    diagnostics: list[Diagnostic] = []
     parsed_outputs: dict[str, PanelTypeLayerSpec] = {}
     raw_outputs = node.metadata.get("panel_type_by_output")
     if raw_outputs is not None:

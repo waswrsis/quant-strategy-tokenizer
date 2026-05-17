@@ -7,7 +7,7 @@ strategy runtime and are intentionally not called by IR validation.
 from __future__ import annotations
 
 import math
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from decimal import Decimal
 from typing import Any, Literal, cast, overload
 
@@ -424,24 +424,24 @@ def evaluate_panel_token(name: str, *args: Any, **params: Any) -> object:
     if name == "panel.mask":
         panel, mask = _expect_args(name, args, 2)
         return panel_mask(panel, mask)
-    if name == "panel.rank":
+    if name in {"panel.rank", "panel.cross_sectional_rank"}:
         (panel,) = _expect_args(name, args, 1)
         return panel_rank(panel, **params)
-    if name == "panel.zscore":
+    if name in {"panel.zscore", "panel.zscore_by_universe"}:
         (panel,) = _expect_args(name, args, 1)
         return panel_zscore(panel, **params)
-    if name == "panel.top_k":
+    if name in {"panel.top_k", "selection.top_k"}:
         (panel,) = _expect_args(name, args, 1)
         return panel_top_k(panel, **params)
-    if name == "panel.bottom_k":
+    if name in {"panel.bottom_k", "selection.bottom_k"}:
         (panel,) = _expect_args(name, args, 1)
         return panel_bottom_k(panel, **params)
     if name == "panel.demean":
         (panel,) = _expect_args(name, args, 1)
         return panel_demean(panel, **params)
-    if name == "panel.group_demean":
+    if name in {"panel.group_demean", "panel.neutralize_group"}:
         (panel,) = _expect_args(name, args, 1)
-        return panel_group_demean(panel, **params)
+        return panel_group_demean(panel, **_strip_group_spec_ref(params))
     if name == "panel.winsorize":
         (panel,) = _expect_args(name, args, 1)
         return panel_winsorize(panel, **params)
@@ -455,6 +455,36 @@ def evaluate_panel_token(name: str, *args: Any, **params: Any) -> object:
     raise TokenReferenceError("QST_TOKEN_REFERENCE_UNSUPPORTED", f"Unsupported panel token: {name}")
 
 
+def evaluate_factor_token(name: str, *args: Any, **params: Any) -> object:
+    """Evaluate PR8 factor record helpers for conformance tests only."""
+
+    if name.startswith("core."):
+        name = name.removeprefix("core.")
+
+    if name == "factor.sector_neutral_rank":
+        (panel,) = _expect_args(name, args, 1)
+        groups = _required_groups(params)
+        cleaned_params = _strip_group_spec_ref(params)
+        cleaned_params.pop("groups", None)
+        neutral = cast(
+            Any,
+            evaluate_panel_token("panel.group_demean", panel, groups=groups, **cleaned_params),
+        )
+        if getattr(neutral, "diagnostics", None) and not neutral.diagnostics.ok:
+            return neutral
+        return evaluate_panel_token("panel.rank", neutral.panel, order=params.get("order", "descending"))
+
+    if name == "factor.residualize":
+        (panel,) = _expect_args(name, args, 1)
+        return evaluate_panel_token("panel.residualize", panel, **params)
+
+    if name == "factor.beta_neutral_signal":
+        series, benchmark = _expect_args(name, args, 2)
+        return evaluate_indicator_token("indicator.residual", series, benchmark, **params)
+
+    raise TokenReferenceError("QST_TOKEN_REFERENCE_UNSUPPORTED", f"Unsupported factor token: {name}")
+
+
 def evaluate_weight_token(name: str, *args: Any, **params: Any) -> object:
     """Evaluate Stage 3A.4 weight facade helpers for conformance tests only."""
 
@@ -462,20 +492,57 @@ def evaluate_weight_token(name: str, *args: Any, **params: Any) -> object:
         name = name.removeprefix("core.")
 
     from qst.panel import (
+        PanelValue,
+        SelectionPanelValue,
+        WeightPanelValue,
+        selection_to_weights,
         weight_cap_per_symbol,
         weight_market_neutral,
         weight_normalize_gross,
     )
 
-    if name == "weight.normalize_gross":
+    if name == "weight.equal_weight":
+        (selection,) = _expect_args(name, args, 1)
+        selection_panel = (
+            selection
+            if isinstance(selection, SelectionPanelValue)
+            else SelectionPanelValue.model_validate(selection)
+        )
+        return selection_to_weights(selection_panel, method=params.get("method", "equal_long"))
+    if name == "weight.rank_weight":
+        (ranked,) = _expect_args(name, args, 1)
+        panel = ranked if isinstance(ranked, PanelValue) else PanelValue.model_validate(ranked)
+        return _weight_rank_weight(panel, **params)
+    if name == "weight.inverse_vol_weight":
+        (volatility,) = _expect_args(name, args, 1)
+        panel = volatility if isinstance(volatility, PanelValue) else PanelValue.model_validate(volatility)
+        return _weight_inverse_vol_weight(panel, **params)
+    if name == "weight.vol_target_weight":
+        weights, volatility = _expect_args(name, args, 2)
+        return evaluate_risk_token("risk.volatility_target", weights, volatility, **params)
+    if name in {"weight.normalize_gross"}:
         (weights,) = _expect_args(name, args, 1)
         return weight_normalize_gross(weights, **params)
-    if name == "weight.cap_per_symbol":
+    if name in {"weight.cap_per_symbol", "weight.max_weight_clip"}:
         (weights,) = _expect_args(name, args, 1)
-        return weight_cap_per_symbol(weights, **params)
-    if name == "weight.market_neutral":
+        active_params = dict(params)
+        if "max_abs_weight" not in active_params and "max_abs_weight" not in params:
+            raise TokenReferenceError(
+                "QST_TOKEN_WEIGHT_PARAM_MISSING",
+                "weight.max_weight_clip requires max_abs_weight.",
+            )
+        return weight_cap_per_symbol(weights, **active_params)
+    if name in {"weight.market_neutral", "weight.market_neutral_weight"}:
         (weights,) = _expect_args(name, args, 1)
         return weight_market_neutral(weights, **params)
+    if name == "weight.group_neutral_weight":
+        (weights,) = _expect_args(name, args, 1)
+        weight_panel = weights if isinstance(weights, WeightPanelValue) else WeightPanelValue.model_validate(weights)
+        return _weight_group_neutral(weight_panel, groups=_required_groups(params))
+    if name == "weight.normalize_net":
+        (weights,) = _expect_args(name, args, 1)
+        weight_panel = weights if isinstance(weights, WeightPanelValue) else WeightPanelValue.model_validate(weights)
+        return _weight_normalize_net(weight_panel, target_net=params.get("target_net", "0"))
 
     raise TokenReferenceError("QST_TOKEN_REFERENCE_UNSUPPORTED", f"Unsupported weight token: {name}")
 
@@ -1355,6 +1422,184 @@ def _gate_decision(*, blocked: bool, block_reason: str) -> Any:
         kind="block" if blocked else "accept",
         reasons=(block_reason if blocked else "GATE_ACCEPTED",),
     )
+
+
+def _strip_group_spec_ref(params: dict[str, Any]) -> dict[str, Any]:
+    return {
+        key: value
+        for key, value in params.items()
+        if key not in {"group_spec_ref", "order"}
+    }
+
+
+def _required_groups(params: dict[str, Any]) -> Mapping[str, str]:
+    groups = params.get("groups")
+    if not isinstance(groups, Mapping) or not groups:
+        raise TokenReferenceError(
+            "QST_TOKEN_FACTOR_GROUPS_REQUIRED",
+            "Factor/group neutral helpers require explicit groups metadata.",
+        )
+    output: dict[str, str] = {}
+    for symbol, group in groups.items():
+        if not isinstance(symbol, str) or not isinstance(group, str) or not symbol or not group:
+            raise TokenReferenceError(
+                "QST_TOKEN_FACTOR_GROUPS_INVALID",
+                "groups must map non-empty symbol strings to non-empty group strings.",
+            )
+        output[symbol] = group
+    return output
+
+
+def _weight_rank_weight(panel: Any, **params: Any) -> Any:
+    from qst.panel import PanelOperatorResult, WeightPanelValue, WeightPoint
+
+    target_gross = _coerce_decimal_param(params.get("target_gross", "1"), "target_gross")
+    if target_gross < 0:
+        raise TokenReferenceError(
+            "QST_TOKEN_WEIGHT_PARAM_INVALID",
+            "weight.rank_weight target_gross must be non-negative.",
+        )
+    side = str(params.get("side", "long"))
+    if side not in {"long", "short"}:
+        raise TokenReferenceError("QST_TOKEN_WEIGHT_SIDE_INVALID", "side must be 'long' or 'short'.")
+    sign = Decimal("1") if side == "long" else Decimal("-1")
+    output: list[WeightPoint] = []
+    for timestamp, rows in _panel_rows_by_time(panel).items():
+        active = [row for row in rows if row.in_universe]
+        ranks = [_coerce_decimal_value(row.value, f"{row.symbol} rank") for row in active]
+        if any(rank <= 0 for rank in ranks):
+            raise TokenReferenceError(
+                "QST_TOKEN_WEIGHT_RANK_INVALID",
+                "weight.rank_weight requires positive rank values.",
+            )
+        scores = [Decimal(len(ranks)) - rank + Decimal("1") for rank in ranks]
+        score_sum = sum(scores, Decimal("0"))
+        for row, score in zip(active, scores, strict=True):
+            weight = Decimal("0") if score_sum == 0 else sign * target_gross * score / score_sum
+            output.append(
+                WeightPoint(
+                    timestamp=timestamp,
+                    symbol=row.symbol,
+                    weight=_canonical_decimal(weight),
+                    in_universe=row.in_universe,
+                )
+            )
+        output.extend(
+            WeightPoint(timestamp=row.timestamp, symbol=row.symbol, weight="0", in_universe=False)
+            for row in rows
+            if not row.in_universe
+        )
+    return PanelOperatorResult(
+        weights=WeightPanelValue(rows=tuple(output), weight_kind="raw", normalized=False),
+        trace={"operator_id": "weight.rank_weight", "target_gross": _canonical_decimal(target_gross), "side": side},
+    )
+
+
+def _weight_inverse_vol_weight(panel: Any, **params: Any) -> Any:
+    from qst.panel import PanelOperatorResult, WeightPanelValue, WeightPoint
+
+    target_gross = _coerce_decimal_param(params.get("target_gross", "1"), "target_gross")
+    if target_gross < 0:
+        raise TokenReferenceError(
+            "QST_TOKEN_WEIGHT_PARAM_INVALID",
+            "weight.inverse_vol_weight target_gross must be non-negative.",
+        )
+    output: list[WeightPoint] = []
+    for timestamp, rows in _panel_rows_by_time(panel).items():
+        active = [row for row in rows if row.in_universe]
+        vols = [_coerce_decimal_value(row.value, f"{row.symbol} volatility") for row in active]
+        if any(vol <= 0 for vol in vols):
+            raise TokenReferenceError(
+                "QST_TOKEN_WEIGHT_VOLATILITY_NONPOSITIVE",
+                "weight.inverse_vol_weight requires positive volatility values.",
+            )
+        inverse = [Decimal("1") / vol for vol in vols]
+        inverse_sum = sum(inverse, Decimal("0"))
+        for row, inv_value in zip(active, inverse, strict=True):
+            weight = Decimal("0") if inverse_sum == 0 else target_gross * inv_value / inverse_sum
+            output.append(
+                WeightPoint(
+                    timestamp=timestamp,
+                    symbol=row.symbol,
+                    weight=_canonical_decimal(weight),
+                    in_universe=row.in_universe,
+                )
+            )
+        output.extend(
+            WeightPoint(timestamp=row.timestamp, symbol=row.symbol, weight="0", in_universe=False)
+            for row in rows
+            if not row.in_universe
+        )
+    return PanelOperatorResult(
+        weights=WeightPanelValue(rows=tuple(output), weight_kind="raw", normalized=False),
+        trace={"operator_id": "weight.inverse_vol_weight", "target_gross": _canonical_decimal(target_gross)},
+    )
+
+
+def _weight_group_neutral(weights: Any, *, groups: Mapping[str, str]) -> Any:
+    from qst.panel import PanelOperatorResult, WeightPanelValue, WeightPoint
+
+    output: list[WeightPoint] = []
+    for _timestamp, rows in _weight_rows_by_time(weights).items():
+        active = [row for row in rows if row.in_universe]
+        by_group: dict[str, list[Any]] = {}
+        for row in active:
+            group = groups.get(row.symbol)
+            if group is None:
+                raise TokenReferenceError(
+                    "QST_TOKEN_FACTOR_GROUP_MISSING",
+                    f"Missing group for symbol {row.symbol!r}.",
+                )
+            by_group.setdefault(group, []).append(row)
+        for group_rows in by_group.values():
+            mean = sum((_coerce_decimal_value(row.weight, row.symbol) for row in group_rows), Decimal("0")) / Decimal(
+                len(group_rows)
+            )
+            for row in group_rows:
+                output.append(row.model_copy(update={"weight": _canonical_decimal(_coerce_decimal_value(row.weight, row.symbol) - mean)}))
+        output.extend(row.model_copy(update={"weight": "0"}) for row in rows if not row.in_universe)
+    return PanelOperatorResult(
+        weights=WeightPanelValue(rows=tuple(output), weight_kind="raw", normalized=False),
+        trace={"operator_id": "weight.group_neutral_weight", "group_count": len(set(groups.values()))},
+    )
+
+
+def _weight_normalize_net(weights: Any, *, target_net: Any) -> Any:
+    from qst.panel import PanelOperatorResult, WeightPanelValue
+
+    target = _coerce_decimal_param(target_net, "target_net")
+    output = []
+    for _timestamp, rows in _weight_rows_by_time(weights).items():
+        active = [row for row in rows if row.in_universe]
+        inactive = [row for row in rows if not row.in_universe]
+        if not active:
+            output.extend(inactive)
+            continue
+        net = sum((_coerce_decimal_value(row.weight, row.symbol) for row in active), Decimal("0"))
+        shift = (target - net) / Decimal(len(active))
+        output.extend(
+            row.model_copy(update={"weight": _canonical_decimal(_coerce_decimal_value(row.weight, row.symbol) + shift)})
+            for row in active
+        )
+        output.extend(inactive)
+    return PanelOperatorResult(
+        weights=WeightPanelValue(rows=tuple(output), weight_kind="normalized", normalized=True),
+        trace={"operator_id": "weight.normalize_net", "target_net": _canonical_decimal(target)},
+    )
+
+
+def _panel_rows_by_time(panel: Any) -> dict[str, list[Any]]:
+    grouped: dict[str, list[Any]] = {}
+    for row in panel.rows:
+        grouped.setdefault(row.timestamp, []).append(row)
+    return {timestamp: sorted(rows, key=lambda row: row.symbol) for timestamp, rows in sorted(grouped.items())}
+
+
+def _weight_rows_by_time(weights: Any) -> dict[str, list[Any]]:
+    grouped: dict[str, list[Any]] = {}
+    for row in weights.rows:
+        grouped.setdefault(row.timestamp, []).append(row)
+    return {timestamp: sorted(rows, key=lambda row: row.symbol) for timestamp, rows in sorted(grouped.items())}
 
 
 def _risk_position_cap(decisions: Any, positions: Any, **params: Any) -> TokenReferenceResult:

@@ -8,10 +8,10 @@ profitability, or portfolio optimizer coverage.
 
 ## Summary
 
-- Pattern count: `110`
-- Frontier pattern count: `105`
+- Pattern count: `115`
+- Frontier pattern count: `110`
 - Dogfood pattern count: `5`
-- Total frontier weight: `542.0`
+- Total frontier weight: `567.0`
 - Check result: `pass`
 
 ## Benchmark Groups
@@ -20,32 +20,32 @@ profitability, or portfolio optimizer coverage.
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | dogfood | 5 | 25.0 | 0 | 3 | 1 | 1 | 0 |
 | external_benchmark | 20 | 102.0 | 9 | 2 | 3 | 4 | 2 |
-| internal_matrix | 85 | 440.0 | 54 | 13 | 8 | 7 | 3 |
+| internal_matrix | 90 | 465.0 | 62 | 11 | 7 | 7 | 3 |
 
 ## Classification Summary
 
 | Classification | Count | Weight |
 | --- | ---: | ---: |
-| custom_token_required | 12 | 63.0 |
+| custom_token_required | 11 | 58.0 |
 | non_goal | 5 | 19.0 |
-| partially_supported | 18 | 93.0 |
+| partially_supported | 16 | 82.0 |
 | reserved | 12 | 47.0 |
-| supported | 63 | 345.0 |
+| supported | 71 | 386.0 |
 
 ## Metrics
 
 | Metric | Value |
 | --- | ---: |
-| direct_builtin_coverage | 0.1827 |
-| routable_record_coverage_raw | 0.8875 |
-| routable_record_coverage_discounted | 0.8339 |
-| custom_token_route_share | 0.1206 |
+| direct_builtin_coverage | 0.2381 |
+| routable_record_coverage_raw | 0.8924 |
+| routable_record_coverage_discounted | 0.8457 |
+| custom_token_route_share | 0.1047 |
 | false_supported_rate_mechanical | 0.0000 |
 | false_supported_rate_semantic | 0.0000 |
 | false_supported_rate_boundary | 0.0000 |
 | boundary_false_supported_count | 0 |
-| kernel_gap_count | 19 |
-| token_bloat_index | 0.1810 |
+| kernel_gap_count | 18 |
+| token_bloat_index | 0.1455 |
 
 ## Next Best Expansions
 
@@ -58,9 +58,9 @@ profitability, or portfolio optimizer coverage.
 | fsm_state_gap | kernel | 26.0 | 3 | 8.6667 |
 | numeric_determinism_gap | kernel | 20.0 | 3 | 6.6667 |
 | built-in Kalman signal | token | 6.0 | 1 | 6.0 |
-| factor.sector_neutral_rank recipe | token | 6.0 | 1 | 6.0 |
 | pair_spread_model | token | 6.0 | 1 | 6.0 |
 | bollinger_bandwidth recipe | token | 5.0 | 1 | 5.0 |
+| gate.drawdown recipe | token | 5.0 | 1 | 5.0 |
 
 ## Core rule token batch
 
@@ -78,6 +78,24 @@ claim broad runtime execution, broker/exchange behavior, or profitability.
 | int_083_entry_exit_gate_record | supported | pending | pending | decision.entry_exit_to_position, decision.gate_decision |
 | int_084_beta_residual_timeseries | supported | pass | tests/coverage_cases/core_rule/beta_residual_timeseries.partial.gkr.yaml | indicator.beta, indicator.residual, signal.zscore_revert, decision.long_flat |
 | int_085_donchian_volatility_rule | supported | pending | pending | indicator.donchian_channel, indicator.volatility, signal.breakout_up, signal.breakout_down |
+
+## Panel / Factor / Weight Batch
+
+PR8 adds accepted record/reference token coverage for panel aliases,
+factor records, and deterministic weight transforms. These rows remain
+record-layer evidence and do not claim optimizer, rebalance, broker,
+exchange, live execution, or profitability coverage.
+
+| Row | Classification | Mechanical status | Example | Required tokens |
+| --- | --- | --- | --- | --- |
+| int_041_inverse_vol_weight | supported | pass | tests/coverage_cases/panel_factor_weight/inverse_vol_weight.partial.gkr.yaml | weight.inverse_vol_weight |
+| int_049_sector_neutral_rank | supported | pass | tests/coverage_cases/panel_factor_weight/sector_neutral_rank.partial.gkr.yaml | factor.sector_neutral_rank, selection.top_k |
+| int_050_beta_neutral_signal | supported | pass | tests/coverage_cases/panel_factor_weight/beta_neutral_signal.partial.gkr.yaml | factor.beta_neutral_signal, decision.signal_to_decision |
+| int_086_panel_alias_records | supported | pass | tests/coverage_cases/panel_factor_weight/sector_neutral_rank.partial.gkr.yaml | panel.cross_sectional_rank, panel.zscore_by_universe, panel.neutralize_group, selection.top_k, selection.bottom_k |
+| int_087_equal_rank_weight_records | supported | pass | tests/coverage_cases/panel_factor_weight/equal_rank_market_neutral_weights.partial.gkr.yaml | weight.equal_weight, weight.rank_weight, weight.market_neutral_weight |
+| int_088_group_neutral_weight_record | supported | pass | tests/coverage_cases/panel_factor_weight/group_neutral_net_normalize_weights.partial.gkr.yaml | weight.group_neutral_weight, weight.max_weight_clip, weight.normalize_net |
+| int_089_inverse_volatility_weight_record | supported | pass | tests/coverage_cases/panel_factor_weight/inverse_vol_weight.partial.gkr.yaml | weight.inverse_vol_weight |
+| int_090_weight_vol_target_wrapper | supported | pending | pending | weight.vol_target_weight, risk.volatility_target |
 
 ## Dogfood
 

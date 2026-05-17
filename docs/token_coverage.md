@@ -103,6 +103,30 @@ sentinels. They are coverage-case evidence only and do not change the accepted
 `indicator.kdj` remains custom-token-required because it is outside the selected
 PR6 Section 19 core rule batch.
 
+PR8 adds accepted panel/factor/weight record coverage:
+
+- `panel.cross_sectional_rank`, `panel.zscore_by_universe`, and
+  `panel.neutralize_group` provide canonical aliases over existing panel rank,
+  z-score, and group-neutralization helpers.
+- `selection.top_k` and `selection.bottom_k` expose selection aliases for
+  panel top/bottom-k reference semantics.
+- `factor.sector_neutral_rank`, `factor.residualize`, and
+  `factor.beta_neutral_signal` provide explicit factor records. Group or sector
+  metadata must be supplied by the strategy record; QST does not infer
+  instrument sector classifications.
+- `weight.equal_weight`, `weight.rank_weight`, `weight.inverse_vol_weight`,
+  `weight.vol_target_weight`, `weight.market_neutral_weight`,
+  `weight.group_neutral_weight`, `weight.max_weight_clip`, and
+  `weight.normalize_net` provide deterministic weight record transforms.
+
+PR8 moves inverse-vol weighting, sector-neutral rank, and beta-neutral signal
+coverage to supported record evidence where explicit metadata and candidate GKR
+files exist. Candidate GKR files live under
+`tests/coverage_cases/panel_factor_weight/` with hash sentinels. These are
+coverage-case records only; they do not change the accepted 12 public demos and
+do not claim a rebalance engine, optimizer, broker/exchange execution,
+backtesting, or profitability.
+
 ## Hash Impact
 
 | Object | Stage 3A impact |

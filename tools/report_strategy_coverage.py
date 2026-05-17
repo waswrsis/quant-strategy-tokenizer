@@ -26,6 +26,16 @@ CORE_RULE_ROW_IDS = {
     "int_084_beta_residual_timeseries",
     "int_085_donchian_volatility_rule",
 }
+PANEL_FACTOR_WEIGHT_ROW_IDS = {
+    "int_041_inverse_vol_weight",
+    "int_049_sector_neutral_rank",
+    "int_050_beta_neutral_signal",
+    "int_086_panel_alias_records",
+    "int_087_equal_rank_weight_records",
+    "int_088_group_neutral_weight_record",
+    "int_089_inverse_volatility_weight_record",
+    "int_090_weight_vol_target_wrapper",
+}
 
 
 @dataclass(frozen=True)
@@ -98,6 +108,7 @@ def build_report(matrix: dict[str, Any], *, repo_root: Path | None = None) -> di
             "dogfood": _dogfood_summary(dogfood_patterns),
             "dogfood_target": _dogfood_target_summary(dogfood_patterns),
             "core_rule_token_batch": _core_rule_summary(frontier_patterns),
+            "panel_factor_weight_batch": _panel_factor_weight_summary(frontier_patterns),
             "next_best_expansions": _next_best_expansions(missing_tokens, kernel_gaps),
             "validation": validation_payload(validation_issues, validation_summary)[
                 "strategy_coverage_matrix_validation"
@@ -254,6 +265,31 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.extend(
         [
             "",
+            "## Panel / Factor / Weight Batch",
+            "",
+            "PR8 adds accepted record/reference token coverage for panel aliases,",
+            "factor records, and deterministic weight transforms. These rows remain",
+            "record-layer evidence and do not claim optimizer, rebalance, broker,",
+            "exchange, live execution, or profitability coverage.",
+            "",
+            "| Row | Classification | Mechanical status | Example | Required tokens |",
+            "| --- | --- | --- | --- | --- |",
+        ]
+    )
+    for row in frontier["panel_factor_weight_batch"]["rows"]:
+        lines.append(
+            "| {id} | {classification} | {mechanical_status} | {example} | {required_tokens} |".format(
+                id=row["id"],
+                classification=row["classification"],
+                mechanical_status=row["mechanical_status"],
+                example=row["example"] or "pending",
+                required_tokens=", ".join(row["required_tokens"]),
+            )
+        )
+
+    lines.extend(
+        [
+            "",
             "## Dogfood",
             "",
             f"- Status: `{frontier['dogfood']['status']}`",
@@ -360,6 +396,15 @@ def _dogfood_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
 
 def _core_rule_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     selected = [row for row in rows if row.get("id") in CORE_RULE_ROW_IDS]
+    selected.sort(key=lambda row: str(row.get("id", "")))
+    return {
+        "count": len(selected),
+        "rows": [_core_rule_row_summary(row) for row in selected],
+    }
+
+
+def _panel_factor_weight_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    selected = [row for row in rows if row.get("id") in PANEL_FACTOR_WEIGHT_ROW_IDS]
     selected.sort(key=lambda row: str(row.get("id", "")))
     return {
         "count": len(selected),

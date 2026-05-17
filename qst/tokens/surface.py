@@ -16,6 +16,7 @@ TokenFamily = Literal[
     "window",
     "signal",
     "indicator",
+    "factor",
     "decision",
     "gate",
     "state",

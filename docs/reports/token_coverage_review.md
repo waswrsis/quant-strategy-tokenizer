@@ -24,12 +24,12 @@ Stage 3B reviews common strategy patterns against the Stage 3A token surface. Re
 | cross-sectional bottom-k | covered with accepted tokens | panel, selection | none | Use demo 09. |
 | market neutral rank | covered with accepted tokens | panel, weight | portfolio runtime | Use demo 08; no optimizer implied. |
 | factor residualization | covered with accepted tokens | panel.residualize | none | Use demo 09. |
-| group neutralization | covered with accepted tokens | panel.group_demean | group metadata | Accepted when GroupSpec metadata is present. |
+| group neutralization | covered with accepted tokens | panel.group_demean, factor.sector_neutral_rank | explicit group metadata | PR8 accepts records when GroupSpec metadata is present. |
 | risk stop | requires runtime/adapter | risk, decision | position/order state | External boundary unless modeled as custom token. |
 | trailing stop | Derived/Recipe Gap | state, window, decision | canonical recipe | P1 recipe/demo candidate. |
 | turnover control | covered with accepted tokens | risk.turnover_cap | rebalance runtime | Use demo 11 as validation artifact. |
 | rebalance band | Derived/Recipe Gap | risk, state, weight | canonical recipe | P1 recipe/demo candidate. |
-| inverse vol weighting | Token Gap | weight, risk | weight.inverse_vol | P1 token candidate; no optimizer needed. |
+| inverse vol weighting | covered with accepted tokens | weight.inverse_vol_weight | none | PR8 record evidence covers inverse-vol weighting without optimizer/rebalance execution. |
 | vol target weighting | covered with accepted tokens | risk.volatility_target | portfolio runtime | Use demo 10. |
 | optimizer portfolio | covered with experimental tokens | optimizer.mean_variance | solver determinism/runtime | Do not promote before solver contract. |
 | execution feedback | requires reserved_design family | execution.* | execution runtime/adapter | Stage 3B classifies as future boundary. |
@@ -41,4 +41,4 @@ Stage 3B reviews common strategy patterns against the Stage 3A token surface. Re
 
 ## Decision
 
-Most scalar/time-series/state/panel/risk examples are covered with accepted tokens. PR6 retires the MACD token gap, and PR7 retires the stale beta-estimator numeric determinism gap. The largest remaining P0/P1 gaps are recipe demonstrations, selected convenience tokens such as inverse-vol weighting, and future type/data-model boundaries for event, distribution, and instrument metadata.
+Most scalar/time-series/state/panel/risk examples are covered with accepted tokens. PR6 retires the MACD token gap, PR7 retires the stale beta-estimator numeric determinism gap, and PR8 retires inverse-vol weighting plus current sector-neutral rank evidence when explicit group metadata is supplied. The largest remaining P0/P1 gaps are recipe demonstrations and future type/data-model boundaries for event, distribution, and instrument metadata.

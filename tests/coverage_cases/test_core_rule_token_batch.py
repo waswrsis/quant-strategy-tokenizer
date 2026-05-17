@@ -59,8 +59,8 @@ def test_pr6_matrix_counts_and_core_rule_rows_are_registered() -> None:
     matrix = _matrix()
     report = coverage_report.build_report(matrix, repo_root=ROOT)["coverage_frontier"]
 
-    assert report["pattern_count"] == 110
-    assert report["benchmark_groups"]["internal_matrix"]["count"] == 85
+    assert report["pattern_count"] == 115
+    assert report["benchmark_groups"]["internal_matrix"]["count"] == 90
     assert report["benchmark_groups"]["external_benchmark"]["count"] == 20
     assert report["benchmark_groups"]["dogfood"]["count"] == 5
 

@@ -1,0 +1,26 @@
+schema_version: qst-ir-schema/0.4
+ir_version: qst-ir/0.4
+canonical_version: qst-canonical/0.4
+capabilities: [core]
+strategy:
+  id: pr8_beta_neutral_signal_partial
+  version: 1
+  nodes:
+  - id: beta_neutral_score
+    token_ref: {namespace: core, name: factor.beta_neutral_signal, version: 1, behavior_version: 1}
+    inputs: {series: $externals.asset.return, benchmark: $externals.benchmark.return}
+    params: {window: 30}
+    signature: {outputs: {score: {type: "TimeSeries[float]"}}}
+  - id: decision
+    token_ref: {namespace: core, name: decision.signal_to_decision, version: 1, behavior_version: 1}
+    inputs: {score: beta_neutral_score.score}
+    params: {threshold: 0}
+    signature: {outputs: {decision: {type: Decision}}}
+  outputs:
+    decision: decision.decision
+metadata:
+  coverage_case: pr8_beta_neutral_signal
+  scope: record_layer_partial_evidence
+  limitations:
+    - beta-neutral score is residual reference evidence only
+    - no portfolio construction, optimizer, rebalance, broker, or execution claim
