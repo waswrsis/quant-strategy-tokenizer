@@ -127,6 +127,10 @@ coverage-case records only; they do not change the accepted 12 public demos and
 do not claim a rebalance engine, optimizer, broker/exchange execution,
 backtesting, or profitability.
 
+PR10 also retires the stale `int_040_net_normalize` custom-token route because
+`weight.normalize_net` is now accepted record/reference evidence. The custom
+governance review records this as a stale-route cleanup, not as a new token.
+
 PR9 adds accepted state/gate/risk record coverage:
 
 - `gate.volatility_regime`, `gate.drawdown`, `gate.time_window`,
@@ -144,6 +148,19 @@ record evidence. Candidate GKR files live under
 record-layer only: it does not add broker/exchange execution, live stop orders,
 position lifecycle runtime, a rebalance engine, Calendar/EventStream TypeSpec,
 backtesting, or profitability claims.
+
+## Custom-Token Governance Coverage
+
+PR10 adds governance evidence for active `custom_token_required` rows:
+
+- `tests/coverage_cases/custom_token_governance/custom_token_routes.yaml`
+- `docs/reports/custom_token_governance_review.md`
+
+KDJ, Kalman, score calibration, pair-spread, ML-score, panel-factor, sentiment,
+and dogfood custom-ML rows remain custom-token routes unless a future token batch
+adds accepted built-in semantics. The governance evidence preserves verify,
+approve, grant, execute, and output-validation separation and does not execute
+custom code.
 
 ## Hash Impact
 

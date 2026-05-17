@@ -1,0 +1,155 @@
+schema_version: "qst-custom-token-governance/0.1"
+
+policy:
+  source: "docs/coverage/custom_token_route_policy.md"
+  custom_token_route_cap: 0.40
+  custom_token_discount: 0.5
+  discount_status: "provisional"
+  verification_boundary: "metadata_and_integrity_only"
+  approval_boundary: "explicit_local_approval_required"
+  grant_boundary: "short_lived_execution_grant_required"
+  execution_boundary: "not_approved_not_granted_not_executed"
+
+routes:
+  - pattern_id: "int_012_custom_kalman"
+    route_class: "reference_custom_token"
+    reason: "Kalman signal remains external/custom logic; PR10 does not create a built-in Kalman token."
+    missing_tokens: ["built-in Kalman signal"]
+    missing_types: []
+    input_ports: ["series"]
+    output_ports: ["signal"]
+    future_builtin_candidate: true
+    remain_custom_route: true
+    execution_boundary: "not_approved_not_granted_not_executed"
+    evidence:
+      - "examples/strategies/12_custom_token_kalman_signal/strategy.gkr.yaml"
+      - "tests/reference/strategies/12_custom_token_kalman_signal/hashes.json"
+
+  - pattern_id: "int_013_kdj_cross_basic"
+    route_class: "technical_indicator_candidate"
+    reason: "KDJ is the highest next-best token candidate, but PR10 records governance only."
+    missing_tokens: ["indicator.kdj"]
+    missing_types: []
+    input_ports: ["high", "low", "close"]
+    output_ports: ["decision_signal"]
+    future_builtin_candidate: true
+    remain_custom_route: true
+    execution_boundary: "not_approved_not_granted_not_executed"
+    evidence:
+      - "examples/strategies/kdj_cross_basic.gkr.yaml"
+
+  - pattern_id: "int_014_kdj_with_ema_filter"
+    route_class: "technical_indicator_candidate"
+    reason: "EMA filter is built in; KDJ component remains custom-token routed."
+    missing_tokens: ["indicator.kdj"]
+    missing_types: []
+    input_ports: ["high", "low", "close"]
+    output_ports: ["decision_signal"]
+    future_builtin_candidate: true
+    remain_custom_route: true
+    execution_boundary: "not_approved_not_granted_not_executed"
+    evidence:
+      - "examples/strategies/kdj_with_ema_filter.gkr.yaml"
+
+  - pattern_id: "int_052_score_calibrate"
+    route_class: "experimental_score_boundary"
+    reason: "score.calibrate is experimental metadata-only and has no accepted reference semantics."
+    missing_tokens: ["accepted score.calibrate semantics"]
+    missing_types: []
+    input_ports: ["score"]
+    output_ports: ["calibrated_score"]
+    future_builtin_candidate: true
+    remain_custom_route: true
+    execution_boundary: "not_approved_not_granted_not_executed"
+    evidence:
+      - "docs/token_coverage.md"
+
+  - pattern_id: "int_053_custom_ml_score"
+    route_class: "external_model"
+    reason: "ML model implementation is external code and must remain behind custom-token governance."
+    missing_tokens: []
+    missing_types: []
+    input_ports: ["features"]
+    output_ports: ["score"]
+    future_builtin_candidate: false
+    remain_custom_route: true
+    execution_boundary: "not_approved_not_granted_not_executed"
+    evidence:
+      - "docs/reports/token_coverage_review.md"
+
+  - pattern_id: "int_054_custom_panel_factor"
+    route_class: "external_factor"
+    reason: "Panel factor transform is external/proprietary logic."
+    missing_tokens: []
+    missing_types: []
+    input_ports: ["panel"]
+    output_ports: ["panel_score"]
+    future_builtin_candidate: false
+    remain_custom_route: true
+    execution_boundary: "not_approved_not_granted_not_executed"
+    evidence:
+      - "docs/reports/token_coverage_review.md"
+
+  - pattern_id: "ext_005_pairs_trade"
+    route_class: "strategy_specific_model"
+    reason: "Spread construction and cointegration model are strategy-specific."
+    missing_tokens: ["pair_spread_model"]
+    missing_types: []
+    input_ports: ["asset_a", "asset_b"]
+    output_ports: ["spread_score"]
+    future_builtin_candidate: true
+    remain_custom_route: true
+    execution_boundary: "not_approved_not_granted_not_executed"
+    evidence:
+      - "docs/reports/external_benchmark_sources.md#src-pairs-trade"
+
+  - pattern_id: "ext_013_ml_classifier_signal"
+    route_class: "external_model"
+    reason: "Classifier implementation is external model code."
+    missing_tokens: []
+    missing_types: []
+    input_ports: ["features"]
+    output_ports: ["signal"]
+    future_builtin_candidate: false
+    remain_custom_route: true
+    execution_boundary: "not_approved_not_granted_not_executed"
+    evidence:
+      - "docs/reports/external_benchmark_sources.md#src-ml-trading"
+
+  - pattern_id: "ext_014_sentiment_signal"
+    route_class: "external_data_model"
+    reason: "Sentiment extraction depends on external text/news data and model logic."
+    missing_tokens: []
+    missing_types: ["Text/News input"]
+    input_ports: ["news_or_text"]
+    output_ports: ["score"]
+    future_builtin_candidate: false
+    remain_custom_route: true
+    execution_boundary: "not_approved_not_granted_not_executed"
+    evidence:
+      - "docs/reports/external_benchmark_sources.md#src-sentiment-trading"
+
+  - pattern_id: "dog_004_custom_ml_score_signal"
+    route_class: "dogfood_external_model"
+    reason: "Dogfood ML score is external code and is intentionally not converted into a built-in token."
+    missing_tokens: ["built-in ML score model"]
+    missing_types: ["Model artifact"]
+    input_ports: ["features"]
+    output_ports: ["score"]
+    future_builtin_candidate: false
+    remain_custom_route: true
+    execution_boundary: "not_approved_not_granted_not_executed"
+    evidence:
+      - "tests/coverage_cases/dogfood/custom_ml_score_signal.intent.yaml"
+      - "docs/reports/dogfood_target_set.md"
+
+stale_route_reviews:
+  - pattern_id: "int_040_net_normalize"
+    previous_classification: "custom_token_required"
+    new_classification: "supported"
+    reason: "PR8 added accepted weight.normalize_net reference-helper semantics."
+    replacement_tokens: ["weight.normalize_net"]
+    replacement_evidence:
+      - "tests/coverage_cases/panel_factor_weight/group_neutral_net_normalize_weights.partial.gkr.yaml"
+      - "tests/coverage_cases/panel_factor_weight/group_neutral_net_normalize_weights.hashes.json"
+    execution_boundary: "record_layer_only_no_runtime_execution"

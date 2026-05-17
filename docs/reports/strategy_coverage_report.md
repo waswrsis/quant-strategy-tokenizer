@@ -20,32 +20,62 @@ profitability, or portfolio optimizer coverage.
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | dogfood | 5 | 25.0 | 0 | 3 | 1 | 1 | 0 |
 | external_benchmark | 20 | 102.0 | 11 | 0 | 3 | 4 | 2 |
-| internal_matrix | 95 | 490.0 | 76 | 2 | 7 | 7 | 3 |
+| internal_matrix | 95 | 490.0 | 77 | 2 | 6 | 7 | 3 |
 
 ## Classification Summary
 
 | Classification | Count | Weight |
 | --- | ---: | ---: |
-| custom_token_required | 11 | 58.0 |
+| custom_token_required | 10 | 54.0 |
 | non_goal | 5 | 19.0 |
 | partially_supported | 5 | 25.0 |
 | reserved | 12 | 47.0 |
-| supported | 87 | 468.0 |
+| supported | 88 | 472.0 |
 
 ## Metrics
 
 | Metric | Value |
 | --- | ---: |
-| direct_builtin_coverage | 0.3666 |
+| direct_builtin_coverage | 0.3733 |
 | routable_record_coverage_raw | 0.8970 |
-| routable_record_coverage_discounted | 0.8522 |
-| custom_token_route_share | 0.0998 |
+| routable_record_coverage_discounted | 0.8556 |
+| custom_token_route_share | 0.0923 |
 | false_supported_rate_mechanical | 0.0000 |
 | false_supported_rate_semantic | 0.0000 |
 | false_supported_rate_boundary | 0.0000 |
 | boundary_false_supported_count | 0 |
 | kernel_gap_count | 12 |
-| token_bloat_index | 0.0609 |
+| token_bloat_index | 0.0522 |
+
+## Custom Token Governance
+
+PR10 records governance evidence for active custom-token routes. These routes
+remain record-layer classification evidence only; verification may inspect
+metadata and integrity, but it does not approve, grant, or execute custom code.
+
+- Route share: `0.0923`
+- Route cap: `0.4000`
+- Discount: `0.5000` (`provisional`)
+- Active custom routes: `10`
+- Missing governance rows: `0`
+- Stale route findings: `0`
+
+| Row | Reason | Missing tokens | Future built-in candidate | Remain custom route |
+| --- | --- | --- | --- | --- |
+| dog_004_custom_ml_score_signal | The score model is external code and cannot be represented as an accepted built-in token. | built-in ML score model | false | true |
+| ext_005_pairs_trade | Spread construction/cointegration model is strategy-specific. | pair_spread_model | true | true |
+| ext_013_ml_classifier_signal | Model implementation is external code. | none | false | true |
+| ext_014_sentiment_signal | Sentiment extraction is external model/data logic. | none | false | true |
+| int_012_custom_kalman | Kalman signal is external/custom logic. | built-in Kalman signal | true | true |
+| int_013_kdj_cross_basic | KDJ signal has no accepted built-in token. | indicator.kdj | true | true |
+| int_014_kdj_with_ema_filter | KDJ component is custom; EMA filter is built-in. | indicator.kdj | true | true |
+| int_052_score_calibrate | score.calibrate is experimental metadata-only. | accepted score.calibrate semantics | true | true |
+| int_053_custom_ml_score | Model implementation is external code. | none | false | true |
+| int_054_custom_panel_factor | Factor logic is external/proprietary. | none | false | true |
+
+| Retired stale route | Replacement evidence |
+| --- | --- |
+| int_040_net_normalize | tests/coverage_cases/panel_factor_weight/group_neutral_net_normalize_weights.partial.gkr.yaml, tests/coverage_cases/panel_factor_weight/group_neutral_net_normalize_weights.hashes.json |
 
 ## Next Best Expansions
 
@@ -59,7 +89,6 @@ profitability, or portfolio optimizer coverage.
 | bollinger_bandwidth recipe | token | 5.0 | 1 | 5.0 |
 | risk.rebalance_calendar | token | 5.0 | 1 | 5.0 |
 | accepted score.calibrate semantics | token | 4.0 | 1 | 4.0 |
-| weight.normalize_net | token | 4.0 | 1 | 4.0 |
 
 ## Core rule token batch
 

@@ -253,3 +253,19 @@ Gate helpers return `DecisionV2` records where `block` is a decision kind and
 errors remain diagnostics. Risk helpers reject bool and non-finite numeric
 material and never imply broker, exchange, backtest, live execution, or
 portfolio/account runtime support.
+
+## PR10 Custom-Token Governance
+
+PR10 does not add token refs. It records governance evidence for
+`custom_token_required` coverage rows and enforces that each route has a reason,
+input/output ports, and verify/approve/grant/execute separation.
+
+Governance evidence:
+
+- `docs/reports/custom_token_governance_review.md`
+- `tests/coverage_cases/custom_token_governance/custom_token_routes.yaml`
+
+`int_040_net_normalize` is no longer a custom-token route because
+`weight.normalize_net` is accepted PR8 record evidence. `indicator.kdj`, built-in
+Kalman signal, pair-spread model, score calibration, ML-score, panel-factor, and
+sentiment routes remain custom-token or future-token candidates.

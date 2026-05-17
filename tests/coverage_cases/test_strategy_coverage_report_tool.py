@@ -87,6 +87,7 @@ def test_markdown_writer_creates_expected_sections(tmp_path: Path) -> None:
     assert "## Benchmark Groups" in text
     assert "## Metrics" in text
     assert "## Next Best Expansions" in text
+    assert "## Custom Token Governance" in text
     assert "## Panel / Factor / Weight Batch" in text
     assert "## State / Gate / Risk Batch" in text
     assert "direct_builtin_coverage" in text

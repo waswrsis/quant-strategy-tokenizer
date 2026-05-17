@@ -41,6 +41,8 @@ KERNEL_GAP_FIELDS = ("category", "description", "preferred_solution")
 MARKET_WEIGHT_FIELDS = ("source_frequency", "implementation_relevance", "user_relevance", "final")
 SOURCE_REF_RE = re.compile(r"^docs/reports/external_benchmark_sources\.md#(src-[a-z0-9-]+)$")
 SOURCE_HEADING_RE = re.compile(r"^### (src-[a-z0-9-]+)\s*$", re.MULTILINE)
+CUSTOM_GOVERNANCE_MANIFEST = Path("tests/coverage_cases/custom_token_governance/custom_token_routes.yaml")
+CUSTOM_GOVERNANCE_SCHEMA_VERSION = "qst-custom-token-governance/0.1"
 
 
 @dataclass(frozen=True)
@@ -94,6 +96,8 @@ def validate_matrix(
     patterns_raw = matrix.get("patterns")
     patterns = patterns_raw if isinstance(patterns_raw, list) else []
     source_ids = _external_source_ids(root)
+    governance_manifest = _load_custom_token_governance_manifest(root)
+    governance_routes = _custom_governance_routes(governance_manifest)
 
     ids: set[str] = set()
     groups: dict[str, int] = {}
@@ -141,6 +145,7 @@ def validate_matrix(
 
         _validate_market_weight(row, row_path, add)
         _validate_classification_contract(row, row_path, classification, add)
+        _validate_custom_governance(row, row_path, classification, governance_routes, add)
         _validate_kernel_gaps(row, row_path, add)
 
     if groups.get("external_benchmark", 0) < 20:
@@ -167,6 +172,12 @@ def validate_matrix(
         "dogfood_count": dogfood_count,
     }
     return issues, summary
+
+
+def load_custom_token_governance_manifest(repo_root: Path | None = None) -> dict[str, Any]:
+    """Load the optional PR10 custom-token governance manifest."""
+    root = repo_root or Path.cwd()
+    return _load_custom_token_governance_manifest(root)
 
 
 def _validate_top_level(matrix: dict[str, Any], add: Any) -> None:
@@ -274,6 +285,70 @@ def _validate_classification_contract(
             )
 
 
+def _validate_custom_governance(
+    row: dict[str, Any],
+    row_path: str,
+    classification: str,
+    governance_routes: dict[str, dict[str, Any]],
+    add: Any,
+) -> None:
+    if classification != "custom_token_required":
+        return
+    row_id = _string(row.get("id"))
+    route = row.get("custom_token_route")
+    route_map = route if isinstance(route, dict) else {}
+    governance = governance_routes.get(row_id)
+    if not isinstance(governance, dict):
+        add(
+            "custom_route_governance_missing",
+            f"{row_path}.custom_token_route",
+            "custom-token rows must be listed in the custom-token governance manifest",
+        )
+        return
+    if not _string(governance.get("reason")):
+        add(
+            "custom_governance_missing_reason",
+            f"{row_path}.custom_token_governance.reason",
+            "custom-token governance route must include a reason",
+        )
+    if not _non_empty_list(governance.get("input_ports")):
+        add(
+            "custom_governance_missing_input_ports",
+            f"{row_path}.custom_token_governance.input_ports",
+            "custom-token governance route must include input ports",
+        )
+    if not _non_empty_list(governance.get("output_ports")):
+        add(
+            "custom_governance_missing_output_ports",
+            f"{row_path}.custom_token_governance.output_ports",
+            "custom-token governance route must include output ports",
+        )
+    if governance.get("remain_custom_route") is not True:
+        add(
+            "custom_governance_not_marked_active",
+            f"{row_path}.custom_token_governance.remain_custom_route",
+            "active custom-token routes must be explicitly marked remain_custom_route: true",
+        )
+    if governance.get("execution_boundary") != "not_approved_not_granted_not_executed":
+        add(
+            "custom_governance_execution_boundary_missing",
+            f"{row_path}.custom_token_governance.execution_boundary",
+            "custom-token governance must preserve the no approval/grant/execution boundary",
+        )
+    if _non_empty_list(route_map.get("input_ports")) and governance.get("input_ports") != route_map.get("input_ports"):
+        add(
+            "custom_governance_input_ports_mismatch",
+            f"{row_path}.custom_token_governance.input_ports",
+            "custom-token governance input ports must match matrix route ports",
+        )
+    if _non_empty_list(route_map.get("output_ports")) and governance.get("output_ports") != route_map.get("output_ports"):
+        add(
+            "custom_governance_output_ports_mismatch",
+            f"{row_path}.custom_token_governance.output_ports",
+            "custom-token governance output ports must match matrix route ports",
+        )
+
+
 def _validate_kernel_gaps(row: dict[str, Any], row_path: str, add: Any) -> None:
     gaps = row.get("gaps")
     if not isinstance(gaps, dict):
@@ -336,6 +411,30 @@ def _external_source_ids(repo_root: Path) -> set[str]:
     if not path.exists():
         return set()
     return set(SOURCE_HEADING_RE.findall(path.read_text(encoding="utf-8")))
+
+
+def _load_custom_token_governance_manifest(repo_root: Path) -> dict[str, Any]:
+    path = repo_root / CUSTOM_GOVERNANCE_MANIFEST
+    if not path.exists():
+        return {}
+    loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+    return loaded if isinstance(loaded, dict) else {}
+
+
+def _custom_governance_routes(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    if manifest.get("schema_version") != CUSTOM_GOVERNANCE_SCHEMA_VERSION:
+        return {}
+    routes = manifest.get("routes")
+    if not isinstance(routes, list):
+        return {}
+    result: dict[str, dict[str, Any]] = {}
+    for route in routes:
+        if not isinstance(route, dict):
+            continue
+        pattern_id = _string(route.get("pattern_id"))
+        if pattern_id:
+            result[pattern_id] = route
+    return result
 
 
 def _string(value: object) -> str:

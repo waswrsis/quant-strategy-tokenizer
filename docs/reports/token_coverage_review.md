@@ -30,6 +30,7 @@ Stage 3B reviews common strategy patterns against the Stage 3A token surface. Re
 | turnover control | covered with accepted tokens | risk.turnover_cap | rebalance runtime | Use demo 11 as validation artifact. |
 | rebalance band | covered with accepted tokens | gate.rebalance, risk.turnover_limit_record | rebalance scheduler/runtime | PR9 record evidence covers threshold and turnover records only. |
 | inverse vol weighting | covered with accepted tokens | weight.inverse_vol_weight | none | PR8 record evidence covers inverse-vol weighting without optimizer/rebalance execution. |
+| net normalize weighting | covered with accepted tokens | weight.normalize_net | none | PR10 retires the stale custom-token route using PR8 record evidence. |
 | vol target weighting | covered with accepted tokens | risk.volatility_target | portfolio runtime | Use demo 10. |
 | optimizer portfolio | covered with experimental tokens | optimizer.mean_variance | solver determinism/runtime | Do not promote before solver contract. |
 | execution feedback | requires reserved_design family | execution.* | execution runtime/adapter | Stage 3B classifies as future boundary. |
@@ -41,4 +42,4 @@ Stage 3B reviews common strategy patterns against the Stage 3A token surface. Re
 
 ## Decision
 
-Most scalar/time-series/state/panel/risk examples are covered with accepted tokens. PR6 retires the MACD token gap, PR7 retires the stale beta-estimator numeric determinism gap, PR8 retires inverse-vol weighting plus current sector-neutral rank evidence when explicit group metadata is supplied, and PR9 retires current hold/stop/drawdown/rebalance-band record gaps. The largest remaining P0/P1 gaps are future type/data-model/runtime boundaries for Calendar, EventStream, Distribution, optimizer solver determinism, and instrument metadata.
+Most scalar/time-series/state/panel/risk examples are covered with accepted tokens. PR6 retires the MACD token gap, PR7 retires the stale beta-estimator numeric determinism gap, PR8 retires inverse-vol weighting plus current sector-neutral rank evidence when explicit group metadata is supplied, PR9 retires current hold/stop/drawdown/rebalance-band record gaps, and PR10 retires the stale net-normalize custom-token route while adding custom-token governance evidence. The largest remaining P0/P1 gaps are future type/data-model/runtime boundaries for Calendar, EventStream, Distribution, optimizer solver determinism, and instrument metadata.

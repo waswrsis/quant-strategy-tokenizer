@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from validate_strategy_coverage_matrix import (
+    load_custom_token_governance_manifest,
     load_matrix,
     validate_matrix,
     validation_payload,
@@ -123,6 +124,11 @@ def build_report(matrix: dict[str, Any], *, repo_root: Path | None = None) -> di
             "metrics": metrics,
             "dogfood": _dogfood_summary(dogfood_patterns),
             "dogfood_target": _dogfood_target_summary(dogfood_patterns),
+            "custom_token_governance": _custom_token_governance_summary(
+                patterns,
+                matrix,
+                repo_root=repo_root,
+            ),
             "core_rule_token_batch": _core_rule_summary(frontier_patterns),
             "panel_factor_weight_batch": _panel_factor_weight_summary(frontier_patterns),
             "state_gate_risk_batch": _state_gate_risk_summary(frontier_patterns),
@@ -171,6 +177,21 @@ def check_report(report: dict[str, Any], matrix: dict[str, Any]) -> list[CheckIs
             CheckIssue(
                 "dogfood_publication_target_missing",
                 "dogfood publication target requires at least five dogfood rows",
+            )
+        )
+    custom_governance = frontier["custom_token_governance"]
+    if custom_governance["missing_governance_rows"]:
+        issues.append(
+            CheckIssue(
+                "custom_token_governance_missing",
+                "custom-token rows are missing governance manifest entries",
+            )
+        )
+    if custom_governance["stale_route_count"] > 0:
+        issues.append(
+            CheckIssue(
+                "stale_custom_token_route_present",
+                "stale custom-token route rows remain in the active matrix",
             )
         )
     return issues
@@ -238,6 +259,47 @@ def render_markdown(report: dict[str, Any]) -> str:
     )
     for key, value in metrics.items():
         lines.append(f"| {key} | {_format_metric(value)} |")
+
+    custom_governance = frontier["custom_token_governance"]
+    lines.extend(
+        [
+            "",
+            "## Custom Token Governance",
+            "",
+            "PR10 records governance evidence for active custom-token routes. These routes",
+            "remain record-layer classification evidence only; verification may inspect",
+            "metadata and integrity, but it does not approve, grant, or execute custom code.",
+            "",
+            f"- Route share: `{_format_metric(metrics['custom_token_route_share'])}`",
+            f"- Route cap: `{_format_metric(custom_governance['route_cap'])}`",
+            f"- Discount: `{_format_metric(custom_governance['discount'])}` (`{custom_governance['discount_status']}`)",
+            f"- Active custom routes: `{custom_governance['active_route_count']}`",
+            f"- Missing governance rows: `{len(custom_governance['missing_governance_rows'])}`",
+            f"- Stale route findings: `{custom_governance['stale_route_count']}`",
+            "",
+            "| Row | Reason | Missing tokens | Future built-in candidate | Remain custom route |",
+            "| --- | --- | --- | --- | --- |",
+        ]
+    )
+    for row in custom_governance["rows"]:
+        lines.append(
+            "| {id} | {reason} | {missing_tokens} | {future_builtin_candidate} | {remain_custom_route} |".format(
+                id=row["id"],
+                reason=row["reason"],
+                missing_tokens=", ".join(row["missing_tokens"]) or "none",
+                future_builtin_candidate=str(row["future_builtin_candidate"]).lower(),
+                remain_custom_route=str(row["remain_custom_route"]).lower(),
+            )
+        )
+    lines.extend(
+        [
+            "",
+            "| Retired stale route | Replacement evidence |",
+            "| --- | --- |",
+        ]
+    )
+    for row in custom_governance["stale_route_reviews"]:
+        lines.append(f"| {row['pattern_id']} | {row['replacement_evidence']} |")
 
     lines.extend(
         [
@@ -434,6 +496,81 @@ def _dogfood_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "classifications": classifications,
         "weight": _weight_sum(rows),
         "rows": [_dogfood_row_summary(row) for row in rows],
+    }
+
+
+def _custom_token_governance_summary(
+    rows: list[dict[str, Any]],
+    matrix: dict[str, Any],
+    *,
+    repo_root: Path | None,
+) -> dict[str, Any]:
+    manifest = load_custom_token_governance_manifest(repo_root)
+    route_rows = [row for row in rows if row.get("expected_classification") == "custom_token_required"]
+    routes = {
+        str(route.get("pattern_id")): route
+        for route in manifest.get("routes", [])
+        if isinstance(route, dict) and route.get("pattern_id")
+    }
+    stale_reviews = [
+        review
+        for review in manifest.get("stale_route_reviews", [])
+        if isinstance(review, dict) and review.get("pattern_id")
+    ]
+    thresholds = matrix.get("thresholds") if isinstance(matrix.get("thresholds"), dict) else {}
+    policy = matrix.get("coverage_policy") if isinstance(matrix.get("coverage_policy"), dict) else {}
+    discount = policy.get("custom_token_discount") if isinstance(policy.get("custom_token_discount"), dict) else {}
+    summaries = []
+    missing_governance = []
+    for row in sorted(route_rows, key=lambda item: str(item.get("id", ""))):
+        row_id = str(row.get("id", ""))
+        route = row.get("custom_token_route") if isinstance(row.get("custom_token_route"), dict) else {}
+        governance = routes.get(row_id)
+        gaps = row.get("gaps") if isinstance(row.get("gaps"), dict) else {}
+        if not governance:
+            missing_governance.append(row_id)
+        summaries.append(
+            {
+                "id": row_id,
+                "reason": str(route.get("reason", "")),
+                "input_ports": [str(item) for item in route.get("input_ports", [])]
+                if isinstance(route.get("input_ports"), list)
+                else [],
+                "output_ports": [str(item) for item in route.get("output_ports", [])]
+                if isinstance(route.get("output_ports"), list)
+                else [],
+                "missing_tokens": [str(item) for item in gaps.get("missing_tokens", [])]
+                if isinstance(gaps.get("missing_tokens"), list)
+                else [],
+                "missing_types": [str(item) for item in gaps.get("missing_types", [])]
+                if isinstance(gaps.get("missing_types"), list)
+                else [],
+                "future_builtin_candidate": bool(governance.get("future_builtin_candidate"))
+                if governance
+                else False,
+                "remain_custom_route": bool(governance.get("remain_custom_route")) if governance else False,
+            }
+        )
+    active_row_ids = {str(row.get("id", "")) for row in route_rows}
+    stale_route_count = sum(1 for row_id in active_row_ids if row_id.startswith("int_040"))
+    return {
+        "manifest_schema_version": manifest.get("schema_version", ""),
+        "route_cap": _number(thresholds.get("custom_token_route_max"), 0.0),
+        "discount": _number(discount.get("value"), 0.5),
+        "discount_status": str(discount.get("status", "")),
+        "active_route_count": len(route_rows),
+        "missing_governance_rows": missing_governance,
+        "stale_route_count": stale_route_count,
+        "rows": summaries,
+        "stale_route_reviews": [
+            {
+                "pattern_id": str(review.get("pattern_id", "")),
+                "replacement_evidence": ", ".join(str(item) for item in review.get("replacement_evidence", []))
+                if isinstance(review.get("replacement_evidence"), list)
+                else "",
+            }
+            for review in stale_reviews
+        ],
     }
 
 

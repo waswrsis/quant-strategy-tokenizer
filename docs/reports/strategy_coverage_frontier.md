@@ -17,6 +17,7 @@ percentage.
 - PR 7 scope: kernel gap review and beta numeric-gap retirement
 - PR 8 scope: panel/factor/weight record token batch coverage evidence
 - PR 9 scope: state/gate/risk record token batch coverage evidence
+- PR 10 scope: custom-token route governance, cap enforcement, and stale-route cleanup
 - Runtime, IR, hash, schema, CI, prompt, and public example behavior changes: none
 - Token surface changes: PR6, PR8, and PR9 accepted reference-helper tokens only; no broad runtime execution
 
@@ -24,17 +25,19 @@ percentage.
 
 | Command | Exit code | Output summary |
 | --- | ---: | --- |
-| `git status --short` | 0 | PR9 construction edits present before final commit |
+| `git status --short` | 0 | PR10 construction edits present before final commit |
 | `git rev-parse --abbrev-ref HEAD` | 0 | `main` |
-| `git rev-parse HEAD` | 0 | `88b6d60` before PR9 commit |
+| `git rev-parse HEAD` | 0 | `a7ab948` before PR10 commit |
 | `python -m qst.cli --help` | 0 | CLI exposes `vocabulary`, `validate`, `hash`, `canonicalize`, `write-json`, and `token` |
 | `python -m qst.cli vocabulary --check` | 0 | `ok: true`; 6 packs; 179 tokens; zero diagnostics |
-| `python -m pytest tests -q` | 0 | `486 passed` |
-| `python -m pytest --cov=qst --cov-fail-under=85 -q` | 0 | `486 passed`; total code coverage `88.93%` |
+| `python -m pytest tests -q` | 0 | `501 passed` |
+| `python -m pytest --cov=qst --cov-fail-under=85 -q` | 0 | `501 passed`; total code coverage `88.89%` |
 | `python tools/validate_strategy_coverage_matrix.py docs/reports/strategy_coverage_matrix.yaml` | 0 | validation `pass`; zero issues |
 | `python tools/report_strategy_coverage.py docs/reports/strategy_coverage_matrix.yaml --check` | 0 | report check `pass`; zero issues |
 | `python -m pytest tests/token_conformance -q` | 0 | `53 passed` |
-| `python -m pytest tests/coverage_cases -q` | 0 | `35 passed` |
+| `python -m pytest tests/coverage_cases -q` | 0 | `44 passed` |
+| `python -m pytest tests/custom_runtime -q` | 0 | `16 passed` |
+| `python -m pytest tests/e2e/test_reference_custom_token_v04.py -q` | 0 | `4 passed` |
 | `python -m qst.cli validate tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.partial.gkr.yaml` | 0 | PR4 dogfood candidate validates |
 | `python -m qst.cli hash tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.partial.gkr.yaml` | 0 | PR4 dogfood hashes recorded |
 | `python -m qst.cli canonicalize tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.partial.gkr.yaml --output .local_audit/original_failure_strategy_dogfood.canonical.json` | 0 | canonical artifact generated locally |
@@ -70,6 +73,8 @@ percentage.
 - `tests/coverage_cases/state_gate_risk/*.partial.gkr.yaml`
 - `tests/coverage_cases/state_gate_risk/*.hashes.json`
 - `docs/reports/kernel_gap_review.md`
+- `docs/reports/custom_token_governance_review.md`
+- `tests/coverage_cases/custom_token_governance/custom_token_routes.yaml`
 
 PR 2 created the seed data. PR 3 adds validator/report tooling and a checked-in generated
 report. PR 4 adds the first dogfood MVP case and candidate partial GKR. The dogfood
@@ -85,6 +90,9 @@ PR 9 adds state/gate/risk candidate records and retires current hold, stop,
 drawdown, exposure, turnover, and rebalance-band record gaps while keeping
 Calendar/EventStream, Distribution, optimizer solver, broker/exchange, and
 runtime execution boundaries deferred.
+PR 10 records custom-token route governance evidence, enforces route manifest
+coverage for active custom rows, and retires the stale `int_040_net_normalize`
+custom route now covered by `weight.normalize_net` record evidence.
 
 ## Existing Examples
 
@@ -244,16 +252,34 @@ Current generated metrics from `docs/reports/strategy_coverage_report.md`:
 
 | Metric | Value |
 | --- | ---: |
-| direct_builtin_coverage | 0.3666 |
+| direct_builtin_coverage | 0.3733 |
 | routable_record_coverage_raw | 0.8970 |
-| routable_record_coverage_discounted | 0.8522 |
-| custom_token_route_share | 0.0998 |
+| routable_record_coverage_discounted | 0.8556 |
+| custom_token_route_share | 0.0923 |
 | false_supported_rate_mechanical | 0.0000 |
 | false_supported_rate_semantic | 0.0000 |
 | false_supported_rate_boundary | 0.0000 |
 | boundary_false_supported_count | 0 |
 | kernel_gap_count | 12 |
-| token_bloat_index | 0.0609 |
+| token_bloat_index | 0.0522 |
+
+## Custom Token Governance
+
+PR10 adds `docs/reports/custom_token_governance_review.md` and the route manifest
+at `tests/coverage_cases/custom_token_governance/custom_token_routes.yaml`.
+
+Current governance status:
+
+- active custom routes: 10
+- missing governance rows: 0
+- stale custom route findings: 0
+- route cap: 0.40
+- current custom_token_route_share: 0.0923
+
+`indicator.kdj`, built-in Kalman signal, pair-spread model, score calibration,
+and external model routes remain future token/governance candidates. PR10 does
+not convert them into built-in tokens and does not execute, approve, or grant
+custom code.
 
 ## External Benchmark Seed
 
@@ -335,7 +361,8 @@ PR 1 added protocol files:
 PR 2 registers the first matrix and external seed against those protocols. PR 3 adds the
 validator and report tool for the matrix. PR 4 wires the first original-failure dogfood
 case into the matrix and report. The dogfood target set expands that evidence to five
-cases.
+cases. PR10 adds custom-token governance evidence and keeps the provisional custom route
+discount/cap machine-checkable.
 
 ## Boundary Statement
 
@@ -346,4 +373,6 @@ portfolio optimizer coverage.
 ## Next Work
 
 - Resume the planned Coverage Frontier sequence with prompt minimum alignment or the next
-  token/kernel evidence PR. Dogfood target-set expansion is complete.
+  token/kernel evidence PR. PR10 leaves `indicator.kdj` as the highest-efficiency
+  next-best token candidate and leaves reserved/non-goal boundary hardening for the
+  next planned stage.
