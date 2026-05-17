@@ -8,9 +8,9 @@ profitability, or portfolio optimizer coverage.
 
 ## Summary
 
-- Pattern count: `101`
+- Pattern count: `105`
 - Frontier pattern count: `100`
-- Dogfood pattern count: `1`
+- Dogfood pattern count: `5`
 - Total frontier weight: `517.0`
 - Check result: `pass`
 
@@ -18,7 +18,7 @@ profitability, or portfolio optimizer coverage.
 
 | Group | Count | Weight | Supported | Partial | Custom | Reserved | Non-goal |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| dogfood | 1 | 5.0 | 0 | 1 | 0 | 0 | 0 |
+| dogfood | 5 | 25.0 | 0 | 3 | 1 | 1 | 0 |
 | external_benchmark | 20 | 102.0 | 9 | 2 | 3 | 4 | 2 |
 | internal_matrix | 80 | 415.0 | 46 | 12 | 12 | 7 | 3 |
 
@@ -26,10 +26,10 @@ profitability, or portfolio optimizer coverage.
 
 | Classification | Count | Weight |
 | --- | ---: | ---: |
-| custom_token_required | 15 | 79.0 |
+| custom_token_required | 16 | 84.0 |
 | non_goal | 5 | 19.0 |
-| partially_supported | 15 | 78.0 |
-| reserved | 11 | 42.0 |
+| partially_supported | 17 | 88.0 |
+| reserved | 12 | 47.0 |
 | supported | 55 | 304.0 |
 
 ## Metrics
@@ -44,7 +44,7 @@ profitability, or portfolio optimizer coverage.
 | false_supported_rate_semantic | 0.0000 |
 | false_supported_rate_boundary | 0.0000 |
 | boundary_false_supported_count | 0 |
-| kernel_gap_count | 23 |
+| kernel_gap_count | 20 |
 | token_bloat_index | 0.2200 |
 
 ## Next Best Expansions
@@ -64,15 +64,22 @@ profitability, or portfolio optimizer coverage.
 
 ## Dogfood
 
-- Status: `dogfood_mvp`
-- Classifications: `partially_supported`
+- Status: `dogfood_mvp, dogfood_target`
+- Classifications: `custom_token_required, partially_supported, reserved`
+- MVP target: `5 / 1` (`pass`)
+- Publication target: `5 / 5` (`pass`)
 
 | Row | Status | Classification | Candidate GKR | Evidence report | Limitations |
 | --- | --- | --- | --- | --- | --- |
 | dog_001_original_multi_asset_mean_reversion_grid | dogfood_mvp | partially_supported | tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.partial.gkr.yaml | docs/reports/original_failure_strategy_dogfood.md | Partial record shell only; no staged grid add execution.; No VWAP add optimizer, BTC-led regime model, live order lifecycle, broker/exchange execution, or account feedback runtime. |
+| dog_002_single_asset_trend_following_fsm | dogfood_target | partially_supported | tests/coverage_cases/dogfood/single_asset_trend_following_fsm.partial.gkr.yaml | docs/reports/dogfood_target_set.md | Partial record shell only; no full FSM transition lifecycle.; No broker-side stop order, position lifecycle, or fill feedback runtime. |
+| dog_003_cross_sectional_factor_panel | dogfood_target | partially_supported | tests/coverage_cases/dogfood/cross_sectional_factor_panel.partial.gkr.yaml | docs/reports/dogfood_target_set.md | Partial record shell only; no factor construction governance.; No sector metadata, optimizer, rebalance scheduler, broker, or exchange execution. |
+| dog_004_custom_ml_score_signal | dogfood_target | custom_token_required | not recorded | docs/reports/dogfood_target_set.md | No custom Python import, approval, grant, or execution is part of this dogfood record. |
+| dog_005_reserved_event_stream_orderbook | dogfood_target | reserved | not recorded | docs/reports/dogfood_target_set.md | No candidate GKR is attempted; do not fake order-book events as ordinary time series. |
 
-Dogfood rows remain excluded from headline frontier percentages until the
-frontier publication target dogfood set is complete or explicitly deferred.
+Dogfood rows remain excluded from headline frontier percentages. The publication
+target records breadth evidence for the dogfood set, not runtime execution or
+profitability.
 
 ## Validation
 

@@ -81,5 +81,5 @@ These are recorded as gaps, not silently downgraded into supported behavior.
 The MVP dogfood case is accepted as a `partially_supported` coverage case once the
 candidate GKR validates, hash evidence is recorded, the coverage matrix validator
 passes, and the generated coverage report lists this dogfood row separately. It
-does not satisfy the future frontier publication dogfood target by itself; later
-work must add the broader target set or record an explicit deferral rationale.
+does not satisfy the frontier publication dogfood target by itself;
+`docs/reports/dogfood_target_set.md` records the broader five-case target set.

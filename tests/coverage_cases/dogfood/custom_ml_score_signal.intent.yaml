@@ -1,0 +1,61 @@
+schema_version: "qst-dogfood-intent/0.1"
+dogfood_case:
+  id: "dog_004_custom_ml_score_signal"
+  name: "Custom ML score signal"
+  source:
+    document: "docs/reports/dogfood_target_set.md"
+    extracted_background:
+      - "model-generated signal score"
+      - "feature processing and trained model are external custom logic"
+      - "custom token verification/approval is required before execution"
+  strategy_intent:
+    summary: "Route an ML-generated score through the custom-token boundary without treating model code as built-in token semantics."
+    universe: ["BTC/USDT"]
+    data_requirements:
+      - "feature panel or time-series features"
+      - "external trained model artifact"
+    state_requirements: []
+    risk_weight_requirements:
+      - "downstream signal consumer not modeled in this fixture"
+  expected_classification: "custom_token_required"
+  custom_token_route:
+    reason: "The score model is external code and cannot be represented as an accepted built-in token."
+    input_ports:
+      - "features: Panel[float] or TimeSeries[float]"
+    output_ports:
+      - "score: TimeSeries[float]"
+  expressible_components:
+    - component: "custom token route metadata"
+      candidate_token: "custom runtime boundary"
+  non_expressible_components:
+    - "trained model implementation"
+    - "model artifact loading"
+    - "custom token approval or execution grant"
+  candidate_gkr:
+    path: null
+    status: "not_attempted_custom_route_only"
+    scope: "intent and route record only"
+  validation_evidence:
+    validate:
+      command: null
+      exit_code: null
+      result: "not_applicable"
+    hash:
+      command: null
+      graph_hash: null
+      param_hash: null
+      instance_hash: null
+    canonicalize:
+      command: null
+      exit_code: null
+      artifact_policy: "not_applicable"
+  required_tokens:
+    - "custom token runtime"
+  missing_tokens:
+    - "built-in ML score model"
+  missing_types:
+    - "Model artifact"
+  kernel_gaps: []
+  verdict:
+    classification: "custom_token_required"
+    reason: "The record is routable through custom-token governance, but the ML model itself is not built into QST."

@@ -1,0 +1,76 @@
+schema_version: "qst-dogfood-intent/0.1"
+dogfood_case:
+  id: "dog_002_single_asset_trend_following_fsm"
+  name: "Single-asset trend-following FSM"
+  source:
+    document: "docs/reports/dogfood_target_set.md"
+    extracted_background:
+      - "single-asset trend-following rule"
+      - "EMA trend filter"
+      - "stateful cooldown after accepted decisions"
+      - "full FSM lifecycle and broker-side stops remain outside record-layer evidence"
+  strategy_intent:
+    summary: "Record a trend-following decision with a cooldown gate while deferring full FSM transition lifecycle and live position management."
+    universe: ["BTC/USDT"]
+    data_requirements:
+      - "close price time series"
+      - "trend EMA"
+      - "decision cooldown state"
+    state_requirements:
+      - "cooldown gate"
+      - "future full FSM transition model"
+    risk_weight_requirements:
+      - "none in candidate record"
+  expected_classification: "partially_supported"
+  expressible_components:
+    - component: "EMA trend filter"
+      candidate_token: "indicator.ema"
+    - component: "price above trend comparison"
+      candidate_token: "compare.gt"
+    - component: "boolean decision lift"
+      candidate_token: "decision.lift_bool"
+    - component: "cooldown gate"
+      candidate_token: "gate.cooldown"
+  non_expressible_components:
+    - "complete FSM transition lifecycle"
+    - "broker-side stop order lifecycle"
+    - "position lifecycle and realized fill feedback"
+  candidate_gkr:
+    path: "tests/coverage_cases/dogfood/single_asset_trend_following_fsm.partial.gkr.yaml"
+    status: "validates"
+    scope: "partial record shell"
+  validation_evidence:
+    validate:
+      command: "python -m qst.cli validate tests/coverage_cases/dogfood/single_asset_trend_following_fsm.partial.gkr.yaml"
+      exit_code: 0
+      result: "pass"
+    hash:
+      command: "python -m qst.cli hash tests/coverage_cases/dogfood/single_asset_trend_following_fsm.partial.gkr.yaml"
+      graph_hash: "sha256:c1b5f1e80ea6c704d0c99b3fb4a89845ad609d12ed67d46a55bc6630c70f7a8d"
+      param_hash: "sha256:0303e75b1996ca9da817d3b5fcab550b03fc2381096d849a730073ba04809003"
+      instance_hash: "sha256:ea3022ae2b93e0494fa81c1fa657a21e37a0882cf1497fdc591e8fa1202d41d4"
+    canonicalize:
+      command: "python -m qst.cli canonicalize tests/coverage_cases/dogfood/single_asset_trend_following_fsm.partial.gkr.yaml --output .local_audit/single_asset_trend_following_fsm.canonical.json"
+      exit_code: 0
+      artifact_policy: "local_only_not_committed"
+  required_tokens:
+    - "indicator.ema"
+    - "compare.gt"
+    - "decision.lift_bool"
+    - "gate.cooldown"
+  missing_tokens:
+    - "full FSM transition recipe"
+    - "broker-side stop order record"
+  missing_types:
+    - "Position lifecycle state"
+    - "Fill feedback state"
+  kernel_gaps:
+    - category: "fsm_state_gap"
+      description: "Complete position FSM lifecycle is not represented by the partial cooldown record."
+      preferred_solution: "future recipe or state-token extension"
+    - category: "runtime_feedback_gap"
+      description: "Broker-side stops and realized fills require runtime/adapter support."
+      preferred_solution: "out of scope for coverage frontier record layer"
+  verdict:
+    classification: "partially_supported"
+    reason: "QST can record the EMA trend decision and cooldown gate, but not full position FSM execution or broker-side stop lifecycle."

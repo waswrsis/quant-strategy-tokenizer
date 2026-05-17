@@ -14,6 +14,9 @@ from validate_strategy_coverage_matrix import (
     validation_payload,
 )
 
+DOGFOOD_MVP_TARGET = 1
+DOGFOOD_PUBLICATION_TARGET = 5
+
 
 @dataclass(frozen=True)
 class CheckIssue:
@@ -56,7 +59,7 @@ def build_report(matrix: dict[str, Any], *, repo_root: Path | None = None) -> di
 
     benchmark_groups = _benchmark_group_summary(patterns)
     by_classification = _classification_summary(patterns)
-    kernel_gaps = _kernel_gap_records(patterns)
+    kernel_gaps = _kernel_gap_records(frontier_patterns)
     missing_tokens = _missing_token_records(frontier_patterns)
 
     metrics = {
@@ -83,6 +86,7 @@ def build_report(matrix: dict[str, Any], *, repo_root: Path | None = None) -> di
             "by_classification": by_classification,
             "metrics": metrics,
             "dogfood": _dogfood_summary(dogfood_patterns),
+            "dogfood_target": _dogfood_target_summary(dogfood_patterns),
             "next_best_expansions": _next_best_expansions(missing_tokens, kernel_gaps),
             "validation": validation_payload(validation_issues, validation_summary)[
                 "strategy_coverage_matrix_validation"
@@ -123,6 +127,13 @@ def check_report(report: dict[str, Any], matrix: dict[str, Any]) -> list[CheckIs
         issues.append(CheckIssue("external_benchmark_count_below_threshold", "external benchmark count is below 20"))
     if frontier["dogfood_pattern_count"] < 1:
         issues.append(CheckIssue("dogfood_missing", "dogfood row is missing"))
+    if frontier["dogfood_target"]["publication_status"] != "pass":
+        issues.append(
+            CheckIssue(
+                "dogfood_publication_target_missing",
+                "dogfood publication target requires at least five dogfood rows",
+            )
+        )
     return issues
 
 
@@ -212,6 +223,11 @@ def render_markdown(report: dict[str, Any]) -> str:
             "",
             f"- Status: `{frontier['dogfood']['status']}`",
             f"- Classifications: `{', '.join(frontier['dogfood']['classifications'])}`",
+            f"- MVP target: `{frontier['dogfood_target']['mvp_count']} / {frontier['dogfood_target']['mvp_required']}` "
+            f"(`{frontier['dogfood_target']['mvp_status']}`)",
+            f"- Publication target: `{frontier['dogfood_target']['publication_count']} / "
+            f"{frontier['dogfood_target']['publication_required']}` "
+            f"(`{frontier['dogfood_target']['publication_status']}`)",
             "",
             "| Row | Status | Classification | Candidate GKR | Evidence report | Limitations |",
             "| --- | --- | --- | --- | --- | --- |",
@@ -232,8 +248,9 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.extend(
         [
             "",
-            "Dogfood rows remain excluded from headline frontier percentages until the",
-            "frontier publication target dogfood set is complete or explicitly deferred.",
+            "Dogfood rows remain excluded from headline frontier percentages. The publication",
+            "target records breadth evidence for the dogfood set, not runtime execution or",
+            "profitability.",
             "",
             "## Validation",
             "",
@@ -256,6 +273,7 @@ def render_text(report: dict[str, Any]) -> str:
             f"patterns: {frontier['pattern_count']}",
             f"frontier_patterns: {frontier['frontier_pattern_count']}",
             f"dogfood_patterns: {frontier['dogfood_pattern_count']}",
+            f"dogfood_publication_target: {frontier['dogfood_target']['publication_status']}",
             f"check: {frontier['check']['result']}",
             f"direct_builtin_coverage: {_format_metric(metrics['direct_builtin_coverage'])}",
             f"routable_record_coverage_raw: {_format_metric(metrics['routable_record_coverage_raw'])}",
@@ -302,6 +320,19 @@ def _dogfood_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "classifications": classifications,
         "weight": _weight_sum(rows),
         "rows": [_dogfood_row_summary(row) for row in rows],
+    }
+
+
+def _dogfood_target_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    count = len(rows)
+    return {
+        "mvp_required": DOGFOOD_MVP_TARGET,
+        "mvp_count": count,
+        "mvp_status": "pass" if count >= DOGFOOD_MVP_TARGET else "fail",
+        "publication_required": DOGFOOD_PUBLICATION_TARGET,
+        "publication_count": count,
+        "publication_status": "pass" if count >= DOGFOOD_PUBLICATION_TARGET else "fail",
+        "headline_frontier_policy": "excluded",
     }
 
 

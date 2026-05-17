@@ -7,7 +7,7 @@ metadata:
   benchmark_kind: "mixed"
   repo_head: "d451391561f9b605fccf3f509335b00375f20b02"
   updated_at: "2026-05-17"
-  note: "PR 4 matrix with original failure dogfood MVP case."
+  note: "Dogfood target set matrix with five publication-target cases."
 
 thresholds:
   intent_routing_min: 0.80
@@ -206,3 +206,209 @@ patterns:
       limitations:
         - "Partial record shell only; no staged grid add execution."
         - "No VWAP add optimizer, BTC-led regime model, live order lifecycle, broker/exchange execution, or account feedback runtime."
+
+  - id: "dog_002_single_asset_trend_following_fsm"
+    name: "Single-asset trend-following FSM"
+    benchmark_group: "dogfood"
+    category: "dogfood"
+    status: "dogfood_target"
+    market_weight:
+      source_frequency: 1
+      implementation_relevance: 2
+      user_relevance: 2
+      final: 5
+      evidence:
+        - "docs/reports/dogfood_target_set.md"
+        - "examples/strategies/05_cooldown_trend_following/strategy.gkr.yaml"
+    description: "Trend-following record with EMA decision and cooldown gate, deferring full position FSM runtime."
+    expected_classification: "partially_supported"
+    coverage: *coverage_partial
+    evidence:
+      required_tokens:
+        - "indicator.ema"
+        - "compare.gt"
+        - "decision.lift_bool"
+        - "gate.cooldown"
+      examples:
+        - "tests/coverage_cases/dogfood/single_asset_trend_following_fsm.partial.gkr.yaml"
+      tests:
+        - "tests/coverage_cases/dogfood/single_asset_trend_following_fsm.intent.yaml"
+        - "tests/coverage_cases/test_dogfood_target_set.py"
+    dogfood_evidence:
+      report: "docs/reports/dogfood_target_set.md"
+      intent_fixture: "tests/coverage_cases/dogfood/single_asset_trend_following_fsm.intent.yaml"
+      candidate_gkr: "tests/coverage_cases/dogfood/single_asset_trend_following_fsm.partial.gkr.yaml"
+      canonical_artifact_policy: "local_audit_only"
+    false_supported:
+      mechanical_status: "pass"
+      semantic_status: "pending"
+      boundary_status: "pass"
+    gaps:
+      missing_tokens:
+        - "full FSM transition recipe"
+        - "broker-side stop order record"
+      missing_types:
+        - "Position lifecycle state"
+        - "Fill feedback state"
+      kernel_gaps:
+        - category: "fsm_state_gap"
+          description: "Complete position FSM lifecycle is not represented by the partial cooldown record."
+          preferred_solution: "future recipe or state-token extension"
+        - category: "runtime_feedback_gap"
+          description: "Broker-side stops and realized fills require runtime/adapter support."
+          preferred_solution: "out of scope for coverage frontier record layer"
+    boundary:
+      reserved_reason: null
+      non_goal_reason: null
+      limitations:
+        - "Partial record shell only; no full FSM transition lifecycle."
+        - "No broker-side stop order, position lifecycle, or fill feedback runtime."
+
+  - id: "dog_003_cross_sectional_factor_panel"
+    name: "Cross-sectional factor panel"
+    benchmark_group: "dogfood"
+    category: "dogfood"
+    status: "dogfood_target"
+    market_weight:
+      source_frequency: 1
+      implementation_relevance: 2
+      user_relevance: 2
+      final: 5
+      evidence:
+        - "docs/reports/dogfood_target_set.md"
+        - "examples/strategies/08_market_neutral_rank/strategy.gkr.yaml"
+    description: "Panel factor rank and market-neutral weight shell, deferring factor construction and rebalance execution."
+    expected_classification: "partially_supported"
+    coverage: *coverage_partial
+    evidence:
+      required_tokens:
+        - "panel.rank"
+        - "panel.top_k"
+        - "selection.to_weights"
+        - "weight.market_neutral"
+      examples:
+        - "tests/coverage_cases/dogfood/cross_sectional_factor_panel.partial.gkr.yaml"
+      tests:
+        - "tests/coverage_cases/dogfood/cross_sectional_factor_panel.intent.yaml"
+        - "tests/coverage_cases/test_dogfood_target_set.py"
+    dogfood_evidence:
+      report: "docs/reports/dogfood_target_set.md"
+      intent_fixture: "tests/coverage_cases/dogfood/cross_sectional_factor_panel.intent.yaml"
+      candidate_gkr: "tests/coverage_cases/dogfood/cross_sectional_factor_panel.partial.gkr.yaml"
+      canonical_artifact_policy: "local_audit_only"
+    false_supported:
+      mechanical_status: "pass"
+      semantic_status: "pending"
+      boundary_status: "pass"
+    gaps:
+      missing_tokens:
+        - "factor construction recipe"
+        - "sector neutralization recipe"
+        - "rebalance schedule recipe"
+      missing_types:
+        - "Instrument metadata"
+        - "Sector metadata"
+      kernel_gaps:
+        - category: "metadata_gap"
+          description: "Sector, venue, and instrument metadata are not part of the candidate record."
+          preferred_solution: "future metadata TypeSpec or explicit adapter boundary"
+        - category: "runtime_feedback_gap"
+          description: "Rebalance scheduling and live execution require runtime/adapter support."
+          preferred_solution: "out of scope for coverage frontier record layer"
+    boundary:
+      reserved_reason: null
+      non_goal_reason: null
+      limitations:
+        - "Partial record shell only; no factor construction governance."
+        - "No sector metadata, optimizer, rebalance scheduler, broker, or exchange execution."
+
+  - id: "dog_004_custom_ml_score_signal"
+    name: "Custom ML score signal"
+    benchmark_group: "dogfood"
+    category: "dogfood"
+    status: "dogfood_target"
+    market_weight:
+      source_frequency: 1
+      implementation_relevance: 2
+      user_relevance: 2
+      final: 5
+      evidence:
+        - "docs/reports/dogfood_target_set.md"
+        - "examples/strategies/12_custom_token_kalman_signal/strategy.gkr.yaml"
+    description: "Model-generated score routed through custom-token governance rather than built-in token semantics."
+    expected_classification: "custom_token_required"
+    coverage: *coverage_custom
+    evidence:
+      required_tokens:
+        - "custom token runtime"
+      examples: []
+      tests:
+        - "tests/coverage_cases/dogfood/custom_ml_score_signal.intent.yaml"
+        - "tests/coverage_cases/test_dogfood_target_set.py"
+    dogfood_evidence:
+      report: "docs/reports/dogfood_target_set.md"
+      intent_fixture: "tests/coverage_cases/dogfood/custom_ml_score_signal.intent.yaml"
+      candidate_gkr: null
+      canonical_artifact_policy: "not_applicable_custom_route_only"
+    custom_token_route:
+      reason: "The score model is external code and cannot be represented as an accepted built-in token."
+      input_ports:
+        - "features"
+      output_ports:
+        - "score"
+    false_supported: *false_custom
+    gaps:
+      missing_tokens:
+        - "built-in ML score model"
+      missing_types:
+        - "Model artifact"
+      kernel_gaps: []
+    boundary:
+      reserved_reason: null
+      non_goal_reason: null
+      limitations:
+        - "No custom Python import, approval, grant, or execution is part of this dogfood record."
+
+  - id: "dog_005_reserved_event_stream_orderbook"
+    name: "Reserved event-stream order-book strategy"
+    benchmark_group: "dogfood"
+    category: "dogfood"
+    status: "dogfood_target"
+    market_weight:
+      source_frequency: 1
+      implementation_relevance: 2
+      user_relevance: 2
+      final: 5
+      evidence:
+        - "docs/reports/dogfood_target_set.md"
+        - "docs/coverage/coverage_taxonomy.md"
+    description: "Order-book event-stream strategy classified as reserved until EventStream and OrderBook runtime layers exist."
+    expected_classification: "reserved"
+    coverage: *coverage_reserved
+    evidence:
+      required_tokens:
+        - "event.*"
+      examples: []
+      tests:
+        - "tests/coverage_cases/dogfood/reserved_event_stream_orderbook.intent.yaml"
+        - "tests/coverage_cases/test_dogfood_target_set.py"
+    dogfood_evidence:
+      report: "docs/reports/dogfood_target_set.md"
+      intent_fixture: "tests/coverage_cases/dogfood/reserved_event_stream_orderbook.intent.yaml"
+      candidate_gkr: null
+      canonical_artifact_policy: "not_applicable_reserved_design"
+    false_supported: *false_reserved
+    gaps:
+      missing_tokens: []
+      missing_types:
+        - "EventStream"
+        - "OrderBook"
+      kernel_gaps:
+        - category: "port_temporal_type_gap"
+          description: "Order-book event-stream strategies require event-time data and runtime semantics that are reserved_design."
+          preferred_solution: "future EventStream and OrderBook TypeSpec/runtime"
+    boundary:
+      reserved_reason: "Requires EventStream, OrderBook, and event-time replay runtime."
+      non_goal_reason: null
+      limitations:
+        - "No candidate GKR is attempted; do not fake order-book events as ordinary time series."

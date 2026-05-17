@@ -35,10 +35,10 @@ def test_current_matrix_validator_passes() -> None:
     issues, summary = validator.validate_matrix(_matrix(), repo_root=ROOT)
 
     assert issues == []
-    assert summary["pattern_count"] == 101
+    assert summary["pattern_count"] == 105
     assert summary["benchmark_groups"]["internal_matrix"] == 80
     assert summary["benchmark_groups"]["external_benchmark"] == 20
-    assert summary["benchmark_groups"]["dogfood"] == 1
+    assert summary["benchmark_groups"]["dogfood"] == 5
 
 
 def test_duplicate_id_fails() -> None:

@@ -1,0 +1,61 @@
+schema_version: "qst-dogfood-intent/0.1"
+dogfood_case:
+  id: "dog_005_reserved_event_stream_orderbook"
+  name: "Reserved event-stream order-book strategy"
+  source:
+    document: "docs/reports/dogfood_target_set.md"
+    extracted_background:
+      - "order-book imbalance or replay strategy"
+      - "requires event-time order-book updates"
+      - "cannot be safely represented as ordinary time-series data"
+  strategy_intent:
+    summary: "Classify an order-book event-stream strategy as reserved because it requires EventStream and OrderBook runtime support."
+    universe: ["BTC/USDT"]
+    data_requirements:
+      - "order-book update event stream"
+      - "event-time sequencing"
+      - "same-bar or microstructure feedback"
+    state_requirements:
+      - "event replay state"
+      - "order-book snapshot state"
+    risk_weight_requirements: []
+  expected_classification: "reserved"
+  expressible_components:
+    - component: "reserved design vocabulary marker"
+      candidate_token: "event.*"
+  non_expressible_components:
+    - "EventStream TypeSpec"
+    - "OrderBook TypeSpec"
+    - "event-time replay runtime"
+    - "same-bar order-book feedback"
+  candidate_gkr:
+    path: null
+    status: "not_attempted_reserved_design"
+    scope: "reserved boundary record only"
+  validation_evidence:
+    validate:
+      command: null
+      exit_code: null
+      result: "not_applicable"
+    hash:
+      command: null
+      graph_hash: null
+      param_hash: null
+      instance_hash: null
+    canonicalize:
+      command: null
+      exit_code: null
+      artifact_policy: "not_applicable"
+  required_tokens:
+    - "event.*"
+  missing_tokens: []
+  missing_types:
+    - "EventStream"
+    - "OrderBook"
+  kernel_gaps:
+    - category: "port_temporal_type_gap"
+      description: "Order-book event-stream strategies require event-time data and runtime semantics that are reserved_design."
+      preferred_solution: "future EventStream and OrderBook TypeSpec/runtime"
+  verdict:
+    classification: "reserved"
+    reason: "QST vocabulary may mark event boundaries, but strategy usage must remain reserved until EventStream and OrderBook runtime layers exist."

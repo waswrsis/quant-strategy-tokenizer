@@ -1,0 +1,78 @@
+schema_version: "qst-dogfood-intent/0.1"
+dogfood_case:
+  id: "dog_003_cross_sectional_factor_panel"
+  name: "Cross-sectional factor panel"
+  source:
+    document: "docs/reports/dogfood_target_set.md"
+    extracted_background:
+      - "rank a cross-sectional factor panel"
+      - "select top-ranked assets"
+      - "convert selection into neutralized record weights"
+      - "factor construction and live rebalance remain outside record-layer evidence"
+  strategy_intent:
+    summary: "Record a factor ranking and market-neutral weight shell for a small panel universe while deferring data-quality, optimization, and execution concerns."
+    universe: ["BTC/USDT", "ETH/USDT", "SOL/USDT"]
+    data_requirements:
+      - "panel factor score"
+      - "panel universe mask"
+      - "raw weight panel reference"
+    state_requirements: []
+    risk_weight_requirements:
+      - "top-k selection"
+      - "market-neutral weight transform"
+  expected_classification: "partially_supported"
+  expressible_components:
+    - component: "cross-sectional ranking"
+      candidate_token: "panel.rank"
+    - component: "top-k factor selection"
+      candidate_token: "panel.top_k"
+    - component: "raw equal-long weights"
+      candidate_token: "selection.to_weights"
+    - component: "market-neutral weight transform"
+      candidate_token: "weight.market_neutral"
+  non_expressible_components:
+    - "factor construction and data-quality review"
+    - "sector or venue neutralization"
+    - "rebalance scheduling"
+    - "portfolio optimizer"
+    - "broker/exchange execution"
+  candidate_gkr:
+    path: "tests/coverage_cases/dogfood/cross_sectional_factor_panel.partial.gkr.yaml"
+    status: "validates"
+    scope: "partial record shell"
+  validation_evidence:
+    validate:
+      command: "python -m qst.cli validate tests/coverage_cases/dogfood/cross_sectional_factor_panel.partial.gkr.yaml"
+      exit_code: 0
+      result: "pass"
+    hash:
+      command: "python -m qst.cli hash tests/coverage_cases/dogfood/cross_sectional_factor_panel.partial.gkr.yaml"
+      graph_hash: "sha256:66945174c2482b2e9fc9b912e9123eded097ab2278b79b9727540b5cd8ea39f2"
+      param_hash: "sha256:3477b9883ee34664e8b9e88d77dc21b0695297333062b3ef56921061bef98e9d"
+      instance_hash: "sha256:5a753ec93c0787bce9a341c75549122f21e53599dcf74b6e9484850ddf98dbb9"
+    canonicalize:
+      command: "python -m qst.cli canonicalize tests/coverage_cases/dogfood/cross_sectional_factor_panel.partial.gkr.yaml --output .local_audit/cross_sectional_factor_panel.canonical.json"
+      exit_code: 0
+      artifact_policy: "local_only_not_committed"
+  required_tokens:
+    - "panel.rank"
+    - "panel.top_k"
+    - "selection.to_weights"
+    - "weight.market_neutral"
+  missing_tokens:
+    - "factor construction recipe"
+    - "sector neutralization recipe"
+    - "rebalance schedule recipe"
+  missing_types:
+    - "Instrument metadata"
+    - "Sector metadata"
+  kernel_gaps:
+    - category: "metadata_gap"
+      description: "Sector, venue, and instrument metadata are not part of the candidate record."
+      preferred_solution: "future metadata TypeSpec or explicit adapter boundary"
+    - category: "runtime_feedback_gap"
+      description: "Rebalance scheduling and live execution require runtime/adapter support."
+      preferred_solution: "out of scope for coverage frontier record layer"
+  verdict:
+    classification: "partially_supported"
+    reason: "QST can record the panel ranking and weight shell, but not factor construction governance, sector metadata, optimizer, or live rebalance execution."

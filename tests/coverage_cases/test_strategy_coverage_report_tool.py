@@ -24,11 +24,12 @@ def _report() -> dict[str, Any]:
 def test_report_json_includes_expected_counts() -> None:
     report = _report()["coverage_frontier"]
 
-    assert report["pattern_count"] == 101
+    assert report["pattern_count"] == 105
     assert report["benchmark_groups"]["internal_matrix"]["count"] == 80
     assert report["benchmark_groups"]["external_benchmark"]["count"] == 20
-    assert report["benchmark_groups"]["dogfood"]["count"] == 1
-    assert report["dogfood_pattern_count"] == 1
+    assert report["benchmark_groups"]["dogfood"]["count"] == 5
+    assert report["dogfood_pattern_count"] == 5
+    assert report["dogfood_target"]["publication_status"] == "pass"
     assert report["check"]["result"] == "pass"
 
 
@@ -62,7 +63,7 @@ def test_json_cli_output_is_parseable() -> None:
     )
 
     payload = json.loads(completed.stdout)
-    assert payload["coverage_frontier"]["pattern_count"] == 101
+    assert payload["coverage_frontier"]["pattern_count"] == 105
     assert payload["coverage_frontier"]["check"]["result"] == "pass"
 
 
