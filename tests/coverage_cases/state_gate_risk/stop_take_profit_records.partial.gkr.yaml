@@ -1,0 +1,35 @@
+schema_version: qst-ir-schema/0.4
+ir_version: qst-ir/0.4
+canonical_version: qst-canonical/0.4
+capabilities: [core]
+strategy:
+  id: pr9_stop_take_profit_records_partial
+  version: 1
+  nodes:
+  - id: stop_loss_record
+    token_ref: {namespace: core, name: risk.stop_loss_record, version: 1, behavior_version: 1}
+    inputs:
+      entry_price: $externals.position.entry_price
+      current_price: $externals.market.close
+    params: {stop_loss_pct: 0.08}
+    signature:
+      outputs:
+        decision: {type: Decision}
+  - id: take_profit_record
+    token_ref: {namespace: core, name: risk.take_profit_record, version: 1, behavior_version: 1}
+    inputs:
+      entry_price: $externals.position.entry_price
+      current_price: $externals.market.close
+    params: {take_profit_pct: 0.15}
+    signature:
+      outputs:
+        decision: {type: Decision}
+  outputs:
+    stop_loss_decision: stop_loss_record.decision
+    take_profit_decision: take_profit_record.decision
+metadata:
+  coverage_case: pr9_stop_take_profit_records
+  scope: record_layer_partial_evidence
+  limitations:
+    - stop and take-profit records only
+    - no broker-side stop order, order placement, fill feedback, or execution claim

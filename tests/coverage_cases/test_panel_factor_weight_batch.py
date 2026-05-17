@@ -66,8 +66,8 @@ def test_pr8_candidate_gkrs_validate_hash_and_canonicalize(tmp_path: Path) -> No
 def test_pr8_matrix_counts_are_registered() -> None:
     report = coverage_report.build_report(_matrix(), repo_root=ROOT)["coverage_frontier"]
 
-    assert report["pattern_count"] == 115
-    assert report["benchmark_groups"]["internal_matrix"]["count"] == 90
+    assert report["pattern_count"] == 120
+    assert report["benchmark_groups"]["internal_matrix"]["count"] == 95
     assert report["benchmark_groups"]["external_benchmark"]["count"] == 20
     assert report["benchmark_groups"]["dogfood"]["count"] == 5
     assert report["check"]["result"] == "pass"

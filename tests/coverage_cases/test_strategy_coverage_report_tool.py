@@ -24,8 +24,8 @@ def _report() -> dict[str, Any]:
 def test_report_json_includes_expected_counts() -> None:
     report = _report()["coverage_frontier"]
 
-    assert report["pattern_count"] == 115
-    assert report["benchmark_groups"]["internal_matrix"]["count"] == 90
+    assert report["pattern_count"] == 120
+    assert report["benchmark_groups"]["internal_matrix"]["count"] == 95
     assert report["benchmark_groups"]["external_benchmark"]["count"] == 20
     assert report["benchmark_groups"]["dogfood"]["count"] == 5
     assert report["dogfood_pattern_count"] == 5
@@ -63,7 +63,7 @@ def test_json_cli_output_is_parseable() -> None:
     )
 
     payload = json.loads(completed.stdout)
-    assert payload["coverage_frontier"]["pattern_count"] == 115
+    assert payload["coverage_frontier"]["pattern_count"] == 120
     assert payload["coverage_frontier"]["check"]["result"] == "pass"
 
 
@@ -88,4 +88,5 @@ def test_markdown_writer_creates_expected_sections(tmp_path: Path) -> None:
     assert "## Metrics" in text
     assert "## Next Best Expansions" in text
     assert "## Panel / Factor / Weight Batch" in text
+    assert "## State / Gate / Risk Batch" in text
     assert "direct_builtin_coverage" in text

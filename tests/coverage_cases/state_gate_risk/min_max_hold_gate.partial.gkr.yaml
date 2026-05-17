@@ -1,0 +1,31 @@
+schema_version: qst-ir-schema/0.4
+ir_version: qst-ir/0.4
+canonical_version: qst-canonical/0.4
+capabilities: [core]
+strategy:
+  id: pr9_min_max_hold_gate_partial
+  version: 1
+  nodes:
+  - id: min_hold_gate
+    token_ref: {namespace: core, name: gate.min_hold, version: 1, behavior_version: 1}
+    inputs: {age: $externals.position.age_bars}
+    params: {bars: 3}
+    signature:
+      outputs:
+        decision: {type: Decision}
+  - id: max_hold_gate
+    token_ref: {namespace: core, name: gate.max_hold, version: 1, behavior_version: 1}
+    inputs: {age: $externals.position.age_bars}
+    params: {bars: 20}
+    signature:
+      outputs:
+        decision: {type: Decision}
+  outputs:
+    min_hold_decision: min_hold_gate.decision
+    max_hold_decision: max_hold_gate.decision
+metadata:
+  coverage_case: pr9_min_max_hold_gate
+  scope: record_layer_partial_evidence
+  limitations:
+    - hold-age record gates only
+    - no position lifecycle, fill feedback, broker, or execution claim

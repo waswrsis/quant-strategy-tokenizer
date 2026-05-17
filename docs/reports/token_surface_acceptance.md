@@ -1,7 +1,7 @@
 # Token Surface Acceptance
 
 Stage 3B accepts the token surface as registry-driven evidence, not a hand-written token list.
-PR8 extends the accepted record/reference token surface with the panel/factor/weight coverage batch.
+PR9 extends the accepted record/reference token surface with the state/gate/risk coverage batch.
 
 ## Baseline
 
@@ -9,15 +9,16 @@ PR8 extends the accepted record/reference token surface with the panel/factor/we
 - Baseline tag: `stage-3a-token-surface-complete-20260516`
 - PR6 scope: Section 19 core rule token batch
 - PR8 scope: Panel/factor/weight record token batch
+- PR9 scope: State/gate/risk record token batch
 - Built-in TokenPacks: `6`
-- Built-in tokens: `166`
+- Built-in tokens: `179`
 - Registry result: `ok`
 
 ## Pack Summary
 
 | Pack | Version | Tokens | TokenPack Hash |
 |---|---:|---:|---|
-| qst-tokenpack-core-surface | 0.1.0 | 142 | `sha256:8d30e651d46e1cf82f82cfb719c7534f639503da3cbc89ef3ca3da59b6594707` |
+| qst-tokenpack-core-surface | 0.1.0 | 155 | `sha256:c958b444100f213fe3c2a561e63ad6fe15840c41958c026a63445b81326797ba` |
 | qst-tokenpack-decision-algebra | 0.1.0 | 7 | `sha256:01e109dc96ef027fabff5fa8bcac8d8773e5c2a257462add3fb6050ba85c2794` |
 | qst-tokenpack-panel-ops | 0.1.0 | 10 | `sha256:2b555101b1f2aa0e891f0b0657e99df2a3cc0ecb5314a204dac3169e494466b4` |
 | qst-tokenpack-panel-weights | 0.1.0 | 3 | `sha256:5328a726a59d4204cdaa29996c436f212188a984b78b3f1bd36c17c4c67d6cf0` |
@@ -36,12 +37,12 @@ PR8 extends the accepted record/reference token surface with the panel/factor/we
 - `event`: 3
 - `execution`: 5
 - `factor`: 3
-- `gate`: 5
+- `gate`: 11
 - `indicator`: 16
 - `math`: 21
 - `optimizer`: 1
 - `panel`: 14
-- `risk`: 3
+- `risk`: 10
 - `signal`: 19
 - `state`: 4
 - `time`: 1
@@ -50,14 +51,14 @@ PR8 extends the accepted record/reference token surface with the panel/factor/we
 
 ## Maturity Counts
 
-- `accepted`: 155
+- `accepted`: 168
 - `experimental`: 2
 - `reserved_design`: 9
 
 ## Execution Support Counts
 
 - `metadata_only`: 13
-- `reference_helper`: 153
+- `reference_helper`: 166
 
 ## Inventory
 
@@ -114,9 +115,15 @@ PR8 extends the accepted record/reference token surface with the panel/factor/we
 | core.factor.sector_neutral_rank | qst-tokenpack-core-surface | factor | derived | accepted | reference_helper | reference_semantics | semantic_float64 | accepted |
 | core.gate.circuit_breaker | qst-tokenpack-core-surface | gate | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
 | core.gate.cooldown | qst-tokenpack-core-surface | gate | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
+| core.gate.drawdown | qst-tokenpack-core-surface | gate | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
 | core.gate.market_freeze | qst-tokenpack-core-surface | gate | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
+| core.gate.max_hold | qst-tokenpack-core-surface | gate | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
+| core.gate.min_hold | qst-tokenpack-core-surface | gate | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
 | core.gate.observe_period | qst-tokenpack-core-surface | gate | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
+| core.gate.rebalance | qst-tokenpack-core-surface | gate | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
 | core.gate.slot_budget | qst-tokenpack-core-surface | gate | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
+| core.gate.time_window | qst-tokenpack-core-surface | gate | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
+| core.gate.volatility_regime | qst-tokenpack-core-surface | gate | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
 | core.indicator.atr | qst-tokenpack-core-surface | indicator | derived | accepted | reference_helper | reference_semantics | semantic_float64 | accepted |
 | core.indicator.beta | qst-tokenpack-core-surface | indicator | derived | accepted | reference_helper | reference_semantics | semantic_float64 | accepted |
 | core.indicator.bollinger | qst-tokenpack-core-surface | indicator | derived | accepted | reference_helper | reference_semantics | semantic_float64 | accepted |
@@ -164,9 +171,16 @@ PR8 extends the accepted record/reference token surface with the panel/factor/we
 | core.panel.zscore_by_universe | qst-tokenpack-core-surface | panel | derived | accepted | reference_helper | reference_semantics | semantic_float64 | accepted |
 | core.plan.noop | qst-tokenpack-core-surface | execution | derived | accepted | metadata_only | validation_only | annotation_only | accepted |
 | core.plan.order_intent | qst-tokenpack-core-surface | execution | derived | accepted | metadata_only | validation_only | annotation_only | accepted |
+| core.risk.exposure_cap_record | qst-tokenpack-core-surface | risk | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
+| core.risk.max_drawdown_record | qst-tokenpack-core-surface | risk | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
 | core.risk.position_cap | qst-tokenpack-core-surface | risk | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
+| core.risk.stop_loss_record | qst-tokenpack-core-surface | risk | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
+| core.risk.take_profit_record | qst-tokenpack-core-surface | risk | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
+| core.risk.trailing_stop_record | qst-tokenpack-core-surface | risk | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
 | core.risk.turnover_cap | qst-tokenpack-core-surface | risk | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
+| core.risk.turnover_limit_record | qst-tokenpack-core-surface | risk | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
 | core.risk.volatility_target | qst-tokenpack-core-surface | risk | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
+| core.risk.volatility_target_record | qst-tokenpack-core-surface | risk | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
 | core.score.calibrate | qst-tokenpack-core-surface | continuous_score | derived | experimental | metadata_only | validation_only | annotation_only | accepted |
 | core.score.zscore | qst-tokenpack-core-surface | continuous_score | derived | accepted | reference_helper | reference_semantics | semantic_float64 | accepted |
 | core.selection.bottom_k | qst-tokenpack-core-surface | panel | derived | accepted | reference_helper | reference_semantics | reference_exact | accepted |
@@ -229,7 +243,3 @@ PR8 extends the accepted record/reference token surface with the panel/factor/we
 | core.state.delay | qst-tokenpack-state-basic | state | primitive | accepted | reference_helper | reference_semantics | reference_exact | accepted |
 | core.state.edge_detect | qst-tokenpack-state-basic | state | primitive | accepted | reference_helper | reference_semantics | reference_exact | accepted |
 | core.state.fsm | qst-tokenpack-state-fsm | state | primitive | accepted | reference_helper | reference_semantics | reference_exact | accepted |
-
-## Decision
-
-All built-in tokens are present in deterministic registry order and carry `surface`, `contract`, `maturity`, `execution_support`, and deterministic capability metadata. Reserved-design tokens are accepted as vocabulary-visible boundaries only. PR6 and PR8 additions are accepted reference-helper tokens only and do not imply broad runtime execution, optimizer/rebalance execution, broker/exchange behavior, or production execution.

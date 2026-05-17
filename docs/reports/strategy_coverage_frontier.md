@@ -16,18 +16,19 @@ percentage.
 - PR 6 scope: Section 19 core rule token batch coverage evidence
 - PR 7 scope: kernel gap review and beta numeric-gap retirement
 - PR 8 scope: panel/factor/weight record token batch coverage evidence
+- PR 9 scope: state/gate/risk record token batch coverage evidence
 - Runtime, IR, hash, schema, CI, prompt, and public example behavior changes: none
-- Token surface changes: PR6 and PR8 accepted reference-helper tokens only; no broad runtime execution
+- Token surface changes: PR6, PR8, and PR9 accepted reference-helper tokens only; no broad runtime execution
 
 ## Current Command Evidence
 
 | Command | Exit code | Output summary |
 | --- | ---: | --- |
-| `git status --short` | 0 | PR8 construction edits present before final commit |
+| `git status --short` | 0 | PR9 construction edits present before final commit |
 | `git rev-parse --abbrev-ref HEAD` | 0 | `main` |
-| `git rev-parse HEAD` | 0 | `dff7084c4eae37507fec522f77ecf30bc55ac0ca` before PR8 commit |
+| `git rev-parse HEAD` | 0 | `88b6d60` before PR9 commit |
 | `python -m qst.cli --help` | 0 | CLI exposes `vocabulary`, `validate`, `hash`, `canonicalize`, `write-json`, and `token` |
-| `python -m qst.cli vocabulary --check` | 0 | `ok: true`; 6 packs; 166 tokens; zero diagnostics |
+| `python -m qst.cli vocabulary --check` | 0 | `ok: true`; 6 packs; 179 tokens; zero diagnostics |
 | `python -m pytest tests -q` | 0 | `486 passed` |
 | `python -m pytest --cov=qst --cov-fail-under=85 -q` | 0 | `486 passed`; total code coverage `88.93%` |
 | `python tools/validate_strategy_coverage_matrix.py docs/reports/strategy_coverage_matrix.yaml` | 0 | validation `pass`; zero issues |
@@ -39,6 +40,9 @@ percentage.
 | `python -m qst.cli canonicalize tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.partial.gkr.yaml --output .local_audit/original_failure_strategy_dogfood.canonical.json` | 0 | canonical artifact generated locally |
 | `python -m qst.cli validate tests/coverage_cases/dogfood/single_asset_trend_following_fsm.partial.gkr.yaml` | 0 | dogfood target candidate validates |
 | `python -m qst.cli validate tests/coverage_cases/dogfood/cross_sectional_factor_panel.partial.gkr.yaml` | 0 | dogfood target candidate validates |
+| `python -m qst.cli validate tests/coverage_cases/state_gate_risk/min_max_hold_gate.partial.gkr.yaml` | 0 | PR9 state/gate candidate validates |
+| `python -m qst.cli validate tests/coverage_cases/state_gate_risk/stop_take_profit_records.partial.gkr.yaml` | 0 | PR9 risk record candidate validates |
+| `python -m qst.cli validate tests/coverage_cases/state_gate_risk/rebalance_time_window_records.partial.gkr.yaml` | 0 | PR9 rebalance/time-window candidate validates |
 
 ## Coverage Evidence Files
 
@@ -63,6 +67,8 @@ percentage.
 - `tests/coverage_cases/core_rule/*.hashes.json`
 - `tests/coverage_cases/panel_factor_weight/*.partial.gkr.yaml`
 - `tests/coverage_cases/panel_factor_weight/*.hashes.json`
+- `tests/coverage_cases/state_gate_risk/*.partial.gkr.yaml`
+- `tests/coverage_cases/state_gate_risk/*.hashes.json`
 - `docs/reports/kernel_gap_review.md`
 
 PR 2 created the seed data. PR 3 adds validator/report tooling and a checked-in generated
@@ -75,6 +81,10 @@ determinism gap for `int_050_beta_neutral_signal`.
 PR 8 adds panel/factor/weight candidate records and retires current inverse-vol,
 sector-neutral rank, and beta-neutral signal record gaps where explicit metadata
 and candidate evidence exist.
+PR 9 adds state/gate/risk candidate records and retires current hold, stop,
+drawdown, exposure, turnover, and rebalance-band record gaps while keeping
+Calendar/EventStream, Distribution, optimizer solver, broker/exchange, and
+runtime execution boundaries deferred.
 
 ## Existing Examples
 
@@ -146,8 +156,8 @@ PR 2 adds matrix v0 with seed rows. PR 3 validates that matrix and generates
 | Metric | Value | Evidence |
 | --- | ---: | --- |
 | Schema version | `qst-strategy-coverage/0.3` | `docs/reports/strategy_coverage_matrix.yaml` |
-| Total patterns | 115 | matrix v0 plus dogfood target set, PR6 core rule rows, and PR8 panel/factor/weight rows |
-| Internal matrix rows | 90 | matrix v0 plus PR6 and PR8 internal evidence rows |
+| Total patterns | 120 | matrix v0 plus dogfood target set, PR6 core rule, PR8 panel/factor/weight, and PR9 state/gate/risk rows |
+| Internal matrix rows | 95 | matrix v0 plus PR6, PR8, and PR9 internal evidence rows |
 | External benchmark rows | 20 | matrix v0 plus `external_benchmark_sources.md` |
 | Dogfood rows | 5 | MVP and publication-target dogfood set |
 | Reserved plus non-goal rows | >= 10 | matrix v0 sanity check |
@@ -192,6 +202,28 @@ The PR8 rows are record/reference evidence. They do not add broad runtime
 execution, broker/exchange behavior, backtesting, optimizer/rebalance execution,
 or profitability claims.
 
+PR9 registers fourteen state/gate/risk coverage rows:
+
+- `int_027_min_hold_gate`
+- `int_028_max_hold_gate`
+- `int_029_trailing_stop_record`
+- `int_030_stop_loss_record`
+- `int_031_take_profit_record`
+- `int_032_rebalance_band`
+- `int_035_exposure_cap`
+- `int_055_volatility_regime_gate`
+- `int_056_drawdown_gate`
+- `int_091_state_hold_gate_records`
+- `int_092_stop_take_profit_risk_records`
+- `int_093_trailing_drawdown_risk_records`
+- `int_094_volatility_regime_time_window_records`
+- `int_095_rebalance_exposure_turnover_records`
+
+The PR9 rows are record/reference evidence. They do not add broker/exchange
+execution, live stop orders, position lifecycle runtime, account feedback,
+Calendar/EventStream TypeSpec, a rebalance scheduler, a backtest engine, or
+profitability claims.
+
 The PR 3 report tool now computes:
 
 - intent routing by coverage class
@@ -212,16 +244,16 @@ Current generated metrics from `docs/reports/strategy_coverage_report.md`:
 
 | Metric | Value |
 | --- | ---: |
-| direct_builtin_coverage | 0.2381 |
-| routable_record_coverage_raw | 0.8924 |
-| routable_record_coverage_discounted | 0.8457 |
-| custom_token_route_share | 0.1047 |
+| direct_builtin_coverage | 0.3666 |
+| routable_record_coverage_raw | 0.8970 |
+| routable_record_coverage_discounted | 0.8522 |
+| custom_token_route_share | 0.0998 |
 | false_supported_rate_mechanical | 0.0000 |
 | false_supported_rate_semantic | 0.0000 |
 | false_supported_rate_boundary | 0.0000 |
 | boundary_false_supported_count | 0 |
-| kernel_gap_count | 18 |
-| token_bloat_index | 0.1455 |
+| kernel_gap_count | 12 |
+| token_bloat_index | 0.0609 |
 
 ## External Benchmark Seed
 

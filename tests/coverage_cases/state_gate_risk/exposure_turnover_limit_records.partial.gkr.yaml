@@ -1,0 +1,51 @@
+schema_version: qst-ir-schema/0.4
+ir_version: qst-ir/0.4
+canonical_version: qst-canonical/0.4
+capabilities: [core, panel_type, panel_weights]
+strategy:
+  id: pr9_exposure_turnover_limit_records_partial
+  version: 1
+  nodes:
+  - id: exposure_cap_record
+    token_ref: {namespace: core, name: risk.exposure_cap_record, version: 1, behavior_version: 1}
+    inputs:
+      decision: $externals.decision.base
+      exposure: $externals.position.exposure
+    params: {max_abs_exposure: "1.5"}
+    signature:
+      outputs:
+        decision: {type: Decision}
+  - id: turnover_limit_record
+    token_ref: {namespace: core, name: risk.turnover_limit_record, version: 1, behavior_version: 1}
+    inputs:
+      weights: $externals.panel.target_weights
+      previous: $externals.panel.previous_weights
+    params: {max_turnover: "0.2"}
+    signature:
+      inputs:
+        weights: {type: "Panel[decimal]"}
+        previous: {type: "Panel[decimal]"}
+      outputs:
+        weights: {type: "Panel[decimal]"}
+    metadata:
+      panel_type_by_output:
+        weights:
+          kind: weight_panel
+          universe_mask:
+            universe_ref: examples/universe/exposure_turnover.json
+            members: [BTC/USDT, ETH/USDT, SOL/USDT]
+            included: [BTC/USDT, ETH/USDT, SOL/USDT]
+          missing_policy: {kind: error_on_missing}
+          weight_panel:
+            weight_kind: raw
+            weights_ref: tests/coverage_cases/state_gate_risk/turnover_limit_weights.json
+            weights_hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  outputs:
+    exposure_decision: exposure_cap_record.decision
+    weights: turnover_limit_record.weights
+metadata:
+  coverage_case: pr9_exposure_turnover_limit_records
+  scope: record_layer_partial_evidence
+  limitations:
+    - exposure and turnover limit records only
+    - no redistribution, rebalance engine, broker, or execution claim

@@ -6,10 +6,9 @@ Stage 3B classifies coverage gaps so the next stage does not blindly add vocabul
 
 | Priority | Gap Type | Gap | Evidence | Recommended Next Step |
 |---|---|---|---|---|
-| P1 | Derived/Recipe Gap | trailing stop | Current state/window/decision primitives can express it but no canonical recipe exists. | Strategy Pattern Demonstrations or recipe surface. |
-| P1 | Derived/Recipe Gap | rebalance band | Needs a canonical composition, not a new primitive type. | Strategy Pattern Demonstrations. |
 | P1 | Type Gap | EventStream[T] | event.* is correctly reserved; no EventStream TypeSpec/runtime exists. | Extended TypeSpec if event-driven use cases become priority. |
 | P1 | Type Gap | Distribution[T] | distribution.* is correctly reserved; no Distribution TypeSpec/runtime exists. | Extended TypeSpec if probabilistic workflows become priority. |
+| P1 | Type Gap | Calendar / trading session metadata | Calendar-driven rebalance and instrument sessions remain outside current TypeSpec. | Data model or Extended TypeSpec stage. |
 | P1 | Data Model Gap | Instrument metadata | Instrument/calendar/corporate-action metadata is outside current TypeSpec. | Data model or Extended TypeSpec stage. |
 | P2 | Runtime Gap | optimizer solver execution | optimizer.mean_variance has no deterministic solver contract. | Keep experimental until solver contract exists. |
 | P2 | Runtime Gap | portfolio rebalance engine | Risk/weight helpers are deterministic transforms, not a portfolio engine. | Out of Stage 3B; possible integration stage. |
@@ -19,7 +18,7 @@ Stage 3B classifies coverage gaps so the next stage does not blindly add vocabul
 
 ## Decision
 
-No P0 gap blocks the accepted Stage 3A token surface. P1 gaps cluster around authoring patterns and recipe demonstrations; deeper gaps are TypeSpec/data-model/runtime boundaries and should not be solved by adding metadata-only tokens.
+No P0 gap blocks the accepted Stage 3A token surface. PR9 retires the current stop/trailing-stop/rebalance-band recipe gaps as record-layer evidence. Remaining P1 gaps cluster around TypeSpec/data-model/runtime boundaries and should not be solved by adding metadata-only tokens.
 
 ## Retired Gaps
 
@@ -29,3 +28,5 @@ No P0 gap blocks the accepted Stage 3A token surface. P1 gaps cluster around aut
 | beta estimator determinism for `int_050_beta_neutral_signal` | PR7 kernel gap review | `tests/coverage_cases/core_rule/beta_residual_timeseries.partial.gkr.yaml` |
 | `weight.inverse_vol` convenience gap | PR8 panel/factor/weight batch | `tests/coverage_cases/panel_factor_weight/inverse_vol_weight.partial.gkr.yaml` |
 | sector-neutral rank metadata gap | PR8 panel/factor/weight batch | `tests/coverage_cases/panel_factor_weight/sector_neutral_rank.partial.gkr.yaml` |
+| stop/take-profit/trailing stop record gaps | PR9 state/gate/risk batch | `tests/coverage_cases/state_gate_risk/stop_take_profit_records.partial.gkr.yaml`; `tests/coverage_cases/state_gate_risk/trailing_stop_record.partial.gkr.yaml` |
+| rebalance-band reducer recipe gap | PR9 state/gate/risk batch | `tests/coverage_cases/state_gate_risk/rebalance_time_window_records.partial.gkr.yaml` |

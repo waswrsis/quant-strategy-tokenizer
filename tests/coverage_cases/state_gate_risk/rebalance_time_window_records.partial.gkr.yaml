@@ -1,0 +1,57 @@
+schema_version: qst-ir-schema/0.4
+ir_version: qst-ir/0.4
+canonical_version: qst-canonical/0.4
+capabilities: [core, panel_type, panel_weights]
+strategy:
+  id: pr9_rebalance_time_window_records_partial
+  version: 1
+  nodes:
+  - id: rebalance_gate
+    token_ref: {namespace: core, name: gate.rebalance, version: 1, behavior_version: 1}
+    inputs: {drift: $externals.portfolio.weight_drift}
+    params: {band: "0.05"}
+    signature:
+      outputs:
+        decision: {type: Decision}
+  - id: time_window_gate
+    token_ref: {namespace: core, name: gate.time_window, version: 1, behavior_version: 1}
+    inputs: {timestamp: $externals.time.timestamp}
+    params: {start_hhmm: "09:30", end_hhmm: "15:55"}
+    signature:
+      outputs:
+        decision: {type: Decision}
+  - id: volatility_target_record
+    token_ref: {namespace: core, name: risk.volatility_target_record, version: 1, behavior_version: 1}
+    inputs:
+      weights: $externals.panel.raw_weights
+      volatility: $externals.panel.realized_volatility
+    params: {target_volatility: "0.1"}
+    signature:
+      inputs:
+        weights: {type: "Panel[decimal]"}
+        volatility: {type: "Panel[float]"}
+      outputs:
+        weights: {type: "Panel[decimal]"}
+    metadata:
+      panel_type_by_output:
+        weights:
+          kind: weight_panel
+          universe_mask:
+            universe_ref: examples/universe/rebalance_time_window.json
+            members: [BTC/USDT, ETH/USDT, SOL/USDT]
+            included: [BTC/USDT, ETH/USDT, SOL/USDT]
+          missing_policy: {kind: error_on_missing}
+          weight_panel:
+            weight_kind: raw
+            weights_ref: tests/coverage_cases/state_gate_risk/volatility_target_record_weights.json
+            weights_hash: sha256:0000000000000000000000000000000000000000000000000000000000000000
+  outputs:
+    rebalance_decision: rebalance_gate.decision
+    time_window_decision: time_window_gate.decision
+    weights: volatility_target_record.weights
+metadata:
+  coverage_case: pr9_rebalance_time_window_records
+  scope: record_layer_partial_evidence
+  limitations:
+    - threshold and time-window records only
+    - Calendar TypeSpec, rebalance engine, broker, and execution remain out of scope

@@ -36,6 +36,22 @@ PANEL_FACTOR_WEIGHT_ROW_IDS = {
     "int_089_inverse_volatility_weight_record",
     "int_090_weight_vol_target_wrapper",
 }
+STATE_GATE_RISK_ROW_IDS = {
+    "int_027_min_hold_gate",
+    "int_028_max_hold_gate",
+    "int_029_trailing_stop_record",
+    "int_030_stop_loss_record",
+    "int_031_take_profit_record",
+    "int_032_rebalance_band",
+    "int_035_exposure_cap",
+    "int_055_volatility_regime_gate",
+    "int_056_drawdown_gate",
+    "int_091_state_hold_gate_records",
+    "int_092_stop_take_profit_risk_records",
+    "int_093_trailing_drawdown_risk_records",
+    "int_094_volatility_regime_time_window_records",
+    "int_095_rebalance_exposure_turnover_records",
+}
 
 
 @dataclass(frozen=True)
@@ -109,6 +125,7 @@ def build_report(matrix: dict[str, Any], *, repo_root: Path | None = None) -> di
             "dogfood_target": _dogfood_target_summary(dogfood_patterns),
             "core_rule_token_batch": _core_rule_summary(frontier_patterns),
             "panel_factor_weight_batch": _panel_factor_weight_summary(frontier_patterns),
+            "state_gate_risk_batch": _state_gate_risk_summary(frontier_patterns),
             "next_best_expansions": _next_best_expansions(missing_tokens, kernel_gaps),
             "validation": validation_payload(validation_issues, validation_summary)[
                 "strategy_coverage_matrix_validation"
@@ -290,6 +307,32 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.extend(
         [
             "",
+            "## State / Gate / Risk Batch",
+            "",
+            "PR9 adds accepted record/reference token coverage for common state, gate,",
+            "stop/take-profit, drawdown, exposure, turnover, and rebalance-band records.",
+            "These rows remain record-layer evidence and do not claim broker/exchange",
+            "execution, live stop orders, backtests, account runtime, or Calendar/EventStream",
+            "support.",
+            "",
+            "| Row | Classification | Mechanical status | Example | Required tokens |",
+            "| --- | --- | --- | --- | --- |",
+        ]
+    )
+    for row in frontier["state_gate_risk_batch"]["rows"]:
+        lines.append(
+            "| {id} | {classification} | {mechanical_status} | {example} | {required_tokens} |".format(
+                id=row["id"],
+                classification=row["classification"],
+                mechanical_status=row["mechanical_status"],
+                example=row["example"] or "pending",
+                required_tokens=", ".join(row["required_tokens"]),
+            )
+        )
+
+    lines.extend(
+        [
+            "",
             "## Dogfood",
             "",
             f"- Status: `{frontier['dogfood']['status']}`",
@@ -405,6 +448,15 @@ def _core_rule_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
 
 def _panel_factor_weight_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     selected = [row for row in rows if row.get("id") in PANEL_FACTOR_WEIGHT_ROW_IDS]
+    selected.sort(key=lambda row: str(row.get("id", "")))
+    return {
+        "count": len(selected),
+        "rows": [_core_rule_row_summary(row) for row in selected],
+    }
+
+
+def _state_gate_risk_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    selected = [row for row in rows if row.get("id") in STATE_GATE_RISK_ROW_IDS]
     selected.sort(key=lambda row: str(row.get("id", "")))
     return {
         "count": len(selected),

@@ -8,10 +8,10 @@ profitability, or portfolio optimizer coverage.
 
 ## Summary
 
-- Pattern count: `115`
-- Frontier pattern count: `110`
+- Pattern count: `120`
+- Frontier pattern count: `115`
 - Dogfood pattern count: `5`
-- Total frontier weight: `567.0`
+- Total frontier weight: `592.0`
 - Check result: `pass`
 
 ## Benchmark Groups
@@ -19,8 +19,8 @@ profitability, or portfolio optimizer coverage.
 | Group | Count | Weight | Supported | Partial | Custom | Reserved | Non-goal |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | dogfood | 5 | 25.0 | 0 | 3 | 1 | 1 | 0 |
-| external_benchmark | 20 | 102.0 | 9 | 2 | 3 | 4 | 2 |
-| internal_matrix | 90 | 465.0 | 62 | 11 | 7 | 7 | 3 |
+| external_benchmark | 20 | 102.0 | 11 | 0 | 3 | 4 | 2 |
+| internal_matrix | 95 | 490.0 | 76 | 2 | 7 | 7 | 3 |
 
 ## Classification Summary
 
@@ -28,39 +28,38 @@ profitability, or portfolio optimizer coverage.
 | --- | ---: | ---: |
 | custom_token_required | 11 | 58.0 |
 | non_goal | 5 | 19.0 |
-| partially_supported | 16 | 82.0 |
+| partially_supported | 5 | 25.0 |
 | reserved | 12 | 47.0 |
-| supported | 71 | 386.0 |
+| supported | 87 | 468.0 |
 
 ## Metrics
 
 | Metric | Value |
 | --- | ---: |
-| direct_builtin_coverage | 0.2381 |
-| routable_record_coverage_raw | 0.8924 |
-| routable_record_coverage_discounted | 0.8457 |
-| custom_token_route_share | 0.1047 |
+| direct_builtin_coverage | 0.3666 |
+| routable_record_coverage_raw | 0.8970 |
+| routable_record_coverage_discounted | 0.8522 |
+| custom_token_route_share | 0.0998 |
 | false_supported_rate_mechanical | 0.0000 |
 | false_supported_rate_semantic | 0.0000 |
 | false_supported_rate_boundary | 0.0000 |
 | boundary_false_supported_count | 0 |
-| kernel_gap_count | 18 |
-| token_bloat_index | 0.1455 |
+| kernel_gap_count | 12 |
+| token_bloat_index | 0.0609 |
 
 ## Next Best Expansions
 
 | Family or kernel | Type | Weighted gain | Complexity cost | Coverage efficiency |
 | --- | --- | ---: | ---: | ---: |
 | indicator.kdj | token | 12.0 | 1 | 12.0 |
-| risk.stop_loss_record | token | 11.0 | 1 | 11.0 |
-| risk.trailing_stop_record | token | 11.0 | 1 | 11.0 |
 | port_temporal_type_gap | kernel | 27.0 | 3 | 9.0 |
-| fsm_state_gap | kernel | 26.0 | 3 | 8.6667 |
 | numeric_determinism_gap | kernel | 20.0 | 3 | 6.6667 |
 | built-in Kalman signal | token | 6.0 | 1 | 6.0 |
 | pair_spread_model | token | 6.0 | 1 | 6.0 |
 | bollinger_bandwidth recipe | token | 5.0 | 1 | 5.0 |
-| gate.drawdown recipe | token | 5.0 | 1 | 5.0 |
+| risk.rebalance_calendar | token | 5.0 | 1 | 5.0 |
+| accepted score.calibrate semantics | token | 4.0 | 1 | 4.0 |
+| weight.normalize_net | token | 4.0 | 1 | 4.0 |
 
 ## Core rule token batch
 
@@ -96,6 +95,31 @@ exchange, live execution, or profitability coverage.
 | int_088_group_neutral_weight_record | supported | pass | tests/coverage_cases/panel_factor_weight/group_neutral_net_normalize_weights.partial.gkr.yaml | weight.group_neutral_weight, weight.max_weight_clip, weight.normalize_net |
 | int_089_inverse_volatility_weight_record | supported | pass | tests/coverage_cases/panel_factor_weight/inverse_vol_weight.partial.gkr.yaml | weight.inverse_vol_weight |
 | int_090_weight_vol_target_wrapper | supported | pending | pending | weight.vol_target_weight, risk.volatility_target |
+
+## State / Gate / Risk Batch
+
+PR9 adds accepted record/reference token coverage for common state, gate,
+stop/take-profit, drawdown, exposure, turnover, and rebalance-band records.
+These rows remain record-layer evidence and do not claim broker/exchange
+execution, live stop orders, backtests, account runtime, or Calendar/EventStream
+support.
+
+| Row | Classification | Mechanical status | Example | Required tokens |
+| --- | --- | --- | --- | --- |
+| int_027_min_hold_gate | supported | pass | tests/coverage_cases/state_gate_risk/min_max_hold_gate.partial.gkr.yaml | gate.min_hold |
+| int_028_max_hold_gate | supported | pass | tests/coverage_cases/state_gate_risk/min_max_hold_gate.partial.gkr.yaml | gate.max_hold |
+| int_029_trailing_stop_record | supported | pass | tests/coverage_cases/state_gate_risk/trailing_stop_record.partial.gkr.yaml | risk.trailing_stop_record |
+| int_030_stop_loss_record | supported | pass | tests/coverage_cases/state_gate_risk/stop_take_profit_records.partial.gkr.yaml | risk.stop_loss_record |
+| int_031_take_profit_record | supported | pass | tests/coverage_cases/state_gate_risk/stop_take_profit_records.partial.gkr.yaml | risk.take_profit_record |
+| int_032_rebalance_band | supported | pass | tests/coverage_cases/state_gate_risk/rebalance_time_window_records.partial.gkr.yaml | gate.rebalance, risk.turnover_limit_record |
+| int_035_exposure_cap | supported | pass | tests/coverage_cases/state_gate_risk/exposure_turnover_limit_records.partial.gkr.yaml | risk.exposure_cap_record |
+| int_055_volatility_regime_gate | supported | pass | tests/coverage_cases/state_gate_risk/drawdown_volatility_regime.partial.gkr.yaml | gate.volatility_regime |
+| int_056_drawdown_gate | supported | pass | tests/coverage_cases/state_gate_risk/drawdown_volatility_regime.partial.gkr.yaml | gate.drawdown, risk.max_drawdown_record |
+| int_091_state_hold_gate_records | supported | pass | tests/coverage_cases/state_gate_risk/min_max_hold_gate.partial.gkr.yaml | gate.min_hold, gate.max_hold |
+| int_092_stop_take_profit_risk_records | supported | pass | tests/coverage_cases/state_gate_risk/stop_take_profit_records.partial.gkr.yaml | risk.stop_loss_record, risk.take_profit_record |
+| int_093_trailing_drawdown_risk_records | supported | pass | tests/coverage_cases/state_gate_risk/trailing_stop_record.partial.gkr.yaml | risk.trailing_stop_record, risk.max_drawdown_record, gate.drawdown |
+| int_094_volatility_regime_time_window_records | supported | pass | tests/coverage_cases/state_gate_risk/drawdown_volatility_regime.partial.gkr.yaml | gate.volatility_regime, gate.time_window |
+| int_095_rebalance_exposure_turnover_records | supported | pass | tests/coverage_cases/state_gate_risk/exposure_turnover_limit_records.partial.gkr.yaml | gate.rebalance, risk.exposure_cap_record, risk.turnover_limit_record, risk.volatility_target_record |
 
 ## Dogfood
 

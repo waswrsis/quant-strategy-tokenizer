@@ -127,6 +127,24 @@ coverage-case records only; they do not change the accepted 12 public demos and
 do not claim a rebalance engine, optimizer, broker/exchange execution,
 backtesting, or profitability.
 
+PR9 adds accepted state/gate/risk record coverage:
+
+- `gate.volatility_regime`, `gate.drawdown`, `gate.time_window`,
+  `gate.rebalance`, `gate.min_hold`, and `gate.max_hold` now have accepted
+  reference-helper records.
+- `risk.stop_loss_record`, `risk.take_profit_record`,
+  `risk.trailing_stop_record`, `risk.max_drawdown_record`,
+  `risk.volatility_target_record`, `risk.exposure_cap_record`, and
+  `risk.turnover_limit_record` now have accepted reference-helper records.
+
+PR9 moves min/max hold gates, stop/take-profit/trailing records, rebalance-band
+records, exposure caps, volatility-regime gates, and drawdown gates to supported
+record evidence. Candidate GKR files live under
+`tests/coverage_cases/state_gate_risk/` with hash sentinels. The evidence is
+record-layer only: it does not add broker/exchange execution, live stop orders,
+position lifecycle runtime, a rebalance engine, Calendar/EventStream TypeSpec,
+backtesting, or profitability claims.
+
 ## Hash Impact
 
 | Object | Stage 3A impact |

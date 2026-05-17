@@ -3,20 +3,22 @@
 Coverage Frontier PR7 reviewed repeated kernel gaps after the PR6 core rule
 token batch. PR8 updates this review for the panel/factor/weight batch and
 retires the stale sector-neutral panel metadata gap where explicit GroupSpec
-metadata is now provided by candidate coverage records. This report is evidence
-for deferral and low-risk matrix fixes. It does not implement EventStream,
-Distribution, optimizer solver execution, broker or exchange execution, live
-runtime feedback, a backtest engine, or new IR/hash semantics.
+metadata is now provided by candidate coverage records. PR9 updates the review
+for state/gate/risk records and retires stale FSM/reducer gaps now covered by
+accepted record helpers. This report is evidence for deferral and low-risk
+matrix fixes. It does not implement EventStream, Calendar, Distribution,
+optimizer solver execution, broker or exchange execution, live runtime feedback,
+a backtest engine, or new IR/hash semantics.
 
 ## Decision Summary
 
 | Gap category | Active rows | Active weight | Decision | Preferred next stage |
 | --- | ---: | ---: | --- | --- |
 | `port_temporal_type_gap` | 7 | 27 | Defer | Extended TypeSpec / reserved boundary review |
-| `fsm_state_gap` | 5 | 26 | Defer | Recipe/state-gate design review |
+| `fsm_state_gap` | 0 | 0 | Retired in PR9 for current matrix | Accepted state/gate/risk record helpers |
 | `numeric_determinism_gap` | 5 | 20 | Partially fixed, then defer | Distribution and optimizer solver contracts |
 | `panel_type_gap` | 0 | 0 | Retired in PR8 for current matrix | Explicit group metadata evidence |
-| `reducer_semantics_gap` | 1 | 5 | Defer | Rebalance-band reducer recipe review |
+| `reducer_semantics_gap` | 0 | 0 | Retired in PR9 for current matrix | Rebalance-band record helper evidence |
 
 ## PR7 Fix
 
@@ -50,6 +52,23 @@ infer sector classifications. PR8 also upgrades `int_050_beta_neutral_signal`
 from partial beta/residual evidence to supported factor signal evidence while
 preserving the boundary that it is not a complete beta-neutral portfolio engine.
 
+## PR9 Fix
+
+PR9 accepts state/gate/risk reference-helper records for hold gates,
+stop/take-profit records, trailing stops, drawdown and volatility-regime gates,
+rebalance-band records, exposure caps, volatility-target aliases, and turnover
+limits.
+
+This retires current `fsm_state_gap` rows for minimum hold, maximum hold,
+trailing stop, drawdown gate, and external trailing-stop evidence. PR9 also
+retires the current `reducer_semantics_gap` on `int_032_rebalance_band` with
+explicit `gate.rebalance` and `risk.turnover_limit_record` evidence.
+
+The resulting coverage remains record-layer evidence only. It does not add live
+stop orders, position lifecycle runtime, a rebalance scheduler, Calendar
+TypeSpec, EventStream, broker/exchange execution, account runtime, or
+backtesting.
+
 ## Deferred Kernel Gaps
 
 ### `port_temporal_type_gap`
@@ -61,10 +80,9 @@ boundaries rather than simply retiring stale evidence.
 
 ### `fsm_state_gap`
 
-Affected rows include minimum hold, maximum hold, trailing stop, drawdown gate,
-and external trailing-stop records. These need recipe semantics over accepted
-state/FSM primitives. PR7 does not add recipes because the next design needs to
-separate record-layer state evidence from live order lifecycle behavior.
+No active matrix row currently carries `fsm_state_gap` after PR9. Future
+stateful recipes must still separate record-layer state evidence from live order
+lifecycle, fills, account feedback, and execution runtime.
 
 ### `numeric_determinism_gap`
 
@@ -88,9 +106,10 @@ must not infer sector membership or instrument classifications from symbol text.
 
 ### `reducer_semantics_gap`
 
-The remaining reducer semantics gap is a rebalance-band recipe. It should be
-handled as a recipe/reducer design decision, not as hidden strategy behavior in
-an existing token.
+No active matrix row currently carries `reducer_semantics_gap` after PR9.
+Future reducer recipes must still be explicit record semantics and must not hide
+rebalance scheduling, order routing, or optimizer behavior inside an existing
+token.
 
 ## Acceptance
 
@@ -99,6 +118,8 @@ an existing token.
   `numeric_determinism_gap`.
 - `int_049_sector_neutral_rank` no longer carries `panel_type_gap` because PR8
   candidate evidence supplies explicit group metadata.
+- PR9 hold, stop, drawdown, and rebalance-band rows no longer carry stale
+  `fsm_state_gap` or `reducer_semantics_gap` entries.
 - Remaining `numeric_determinism_gap` records are Distribution or optimizer
   solver deferrals only.
 - No QST runtime, IR, canonical/hash, schema, broker/exchange, or public demo

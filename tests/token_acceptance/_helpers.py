@@ -39,7 +39,7 @@ EXPECTED_PACK_IDS = [
     "qst-tokenpack-state-basic",
     "qst-tokenpack-state-fsm",
 ]
-EXPECTED_TOKEN_COUNT = 166
+EXPECTED_TOKEN_COUNT = 179
 EXPECTED_FAMILIES = {
     "align",
     "bool",

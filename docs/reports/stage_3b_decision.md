@@ -11,7 +11,7 @@ The evidence shows the main near-term gap is not missing primitive coverage. Use
 ## Rejected Alternatives
 
 - **Extended TypeSpec Stage**: valid future work for EventStream, Distribution, and Instrument metadata, but not required before agent authoring because the public demos and common scalar/panel/state patterns are already expressible.
-- **Token Surface Patch**: useful for selected convenience gaps. `indicator.macd` was later retired by PR6, and inverse-volatility weight records were later covered by PR8. Remaining token-patch work should be justified by coverage evidence rather than blanket vocabulary expansion.
+- **Token Surface Patch**: useful for selected convenience gaps. `indicator.macd` was later retired by PR6, inverse-volatility weight records were later covered by PR8, and common state/gate/risk records were later covered by PR9. Remaining token-patch work should be justified by coverage evidence rather than blanket vocabulary expansion.
 - **Strategy Pattern Demonstrations**: useful as part of agent authoring, but insufficient alone because agents also need profile, maturity, and execution-support rules.
 
 ## Acceptance Criteria for Stage 3C

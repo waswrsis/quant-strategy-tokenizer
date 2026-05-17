@@ -92,9 +92,9 @@ def test_pr7_matrix_counts_are_stable() -> None:
     matrix = _matrix()
     report = coverage_report.build_report(matrix, repo_root=ROOT)["coverage_frontier"]
 
-    assert report["pattern_count"] == 115
-    assert report["benchmark_groups"]["internal_matrix"]["count"] == 90
+    assert report["pattern_count"] == 120
+    assert report["benchmark_groups"]["internal_matrix"]["count"] == 95
     assert report["benchmark_groups"]["external_benchmark"]["count"] == 20
     assert report["benchmark_groups"]["dogfood"]["count"] == 5
-    assert report["metrics"]["kernel_gap_count"] == 18
+    assert report["metrics"]["kernel_gap_count"] == 12
     assert report["check"]["result"] == "pass"

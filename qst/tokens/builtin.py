@@ -350,6 +350,69 @@ _TURNOVER_CAP_PARAMS: dict[str, object] = {
     "required": ["max_turnover"],
     "properties": {"max_turnover": {"type": "string"}},
 }
+_HOLD_GATE_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["bars"],
+    "properties": {"bars": {"type": "integer", "minimum": 1}},
+}
+_DRAWDOWN_GATE_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["max_drawdown"],
+    "properties": {"max_drawdown": {"type": "number", "minimum": 0}},
+}
+_VOLATILITY_REGIME_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["max_volatility"],
+    "properties": {"max_volatility": {"type": "number", "minimum": 0}},
+}
+_TIME_WINDOW_GATE_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["start_hhmm", "end_hhmm"],
+    "properties": {
+        "start_hhmm": {"type": "string"},
+        "end_hhmm": {"type": "string"},
+    },
+}
+_REBALANCE_GATE_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["band"],
+    "properties": {"band": {"type": "string"}},
+}
+_STOP_LOSS_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["stop_loss_pct"],
+    "properties": {"stop_loss_pct": {"type": "number", "minimum": 0}},
+}
+_TAKE_PROFIT_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["take_profit_pct"],
+    "properties": {"take_profit_pct": {"type": "number", "minimum": 0}},
+}
+_TRAILING_STOP_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["trail_pct"],
+    "properties": {"trail_pct": {"type": "number", "minimum": 0}},
+}
+_MAX_DRAWDOWN_RECORD_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["max_drawdown"],
+    "properties": {"max_drawdown": {"type": "number", "minimum": 0}},
+}
+_EXPOSURE_CAP_PARAMS: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["max_abs_exposure"],
+    "properties": {"max_abs_exposure": {"type": "string"}},
+}
 _RESERVED_DESIGN_USAGE = (
     "Reserved design token: visible in vocabulary for planning, but not executable in strategies.",
     "Do not treat this token as an implementation instruction.",
@@ -491,9 +554,22 @@ _TOKEN_DEFINITIONS: tuple[dict[str, Any], ...] = (
     {"name": "gate.circuit_breaker", "family": "gate", "category": "state_gate", "inputs": {"decision": _DECISION}, "outputs": {"decision": _DECISION}, "params_schema": _BREACH_THRESHOLD_PARAMS, "numeric": "object", "stateful": True, "failure_mode": "breach threshold emits DecisionKind block; errors remain diagnostics"},
     {"name": "gate.observe_period", "family": "gate", "category": "state_gate", "inputs": {"decision": _DECISION}, "outputs": {"decision": _DECISION}, "params_schema": _OBSERVE_PERIOD_PARAMS, "numeric": "object", "stateful": True, "failure_mode": "observe warmup emits DecisionKind block; errors remain diagnostics"},
     {"name": "gate.slot_budget", "family": "gate", "category": "state_gate", "inputs": {"decision": _DECISION}, "outputs": {"decision": _DECISION}, "params_schema": _SLOT_BUDGET_PARAMS, "numeric": "object", "stateful": True, "failure_mode": "slot budget breach emits DecisionKind block; errors remain diagnostics"},
+    {"name": "gate.volatility_regime", "family": "gate", "category": "risk_gate_record", "inputs": {"volatility": _TS_FLOAT}, "outputs": {"decision": _DECISION}, "params_schema": _VOLATILITY_REGIME_PARAMS, "numeric": "object", "stateful": True, "failure_mode": "volatility above regime threshold emits DecisionKind block; errors remain diagnostics", "usage_notes": ("Record-layer volatility regime gate only; no live risk engine.",)},
+    {"name": "gate.drawdown", "family": "gate", "category": "risk_gate_record", "inputs": {"drawdown": _TS_FLOAT}, "outputs": {"decision": _DECISION}, "params_schema": _DRAWDOWN_GATE_PARAMS, "numeric": "object", "stateful": True, "failure_mode": "drawdown breach emits DecisionKind block; errors remain diagnostics", "usage_notes": ("Drawdown record gate only; no portfolio accounting runtime.",)},
+    {"name": "gate.time_window", "family": "gate", "category": "temporal_gate_record", "inputs": {"timestamp": _TS_OBJECT}, "outputs": {"decision": _DECISION}, "params_schema": _TIME_WINDOW_GATE_PARAMS, "numeric": "object", "stateful": True, "temporal": "UTC timestamp time-of-day inclusive window", "failure_mode": "outside time window emits DecisionKind block; errors remain diagnostics", "usage_notes": ("Time-window record gate only; Calendar TypeSpec remains deferred.",)},
+    {"name": "gate.rebalance", "family": "gate", "category": "rebalance_gate_record", "inputs": {"drift": _TS_FLOAT}, "outputs": {"decision": _DECISION}, "params_schema": _REBALANCE_GATE_PARAMS, "numeric": "object", "stateful": True, "failure_mode": "drift below rebalance band emits DecisionKind block; errors remain diagnostics", "usage_notes": ("Threshold record only; no rebalance scheduler or execution engine.",)},
+    {"name": "gate.min_hold", "family": "gate", "category": "hold_gate_record", "inputs": {"age": _TS_FLOAT}, "outputs": {"decision": _DECISION}, "params_schema": _HOLD_GATE_PARAMS, "numeric": "object", "stateful": True, "failure_mode": "age below minimum hold emits DecisionKind block; errors remain diagnostics", "usage_notes": ("Hold-age record gate only; no position lifecycle runtime.",)},
+    {"name": "gate.max_hold", "family": "gate", "category": "hold_gate_record", "inputs": {"age": _TS_FLOAT}, "outputs": {"decision": _DECISION}, "params_schema": _HOLD_GATE_PARAMS, "numeric": "object", "stateful": True, "failure_mode": "age below maximum hold threshold emits DecisionKind block; errors remain diagnostics", "usage_notes": ("Exit eligibility record only; no order lifecycle runtime.",)},
     {"name": "risk.position_cap", "family": "risk", "category": "risk_gate", "inputs": {"decision": _DECISION, "state": "State[object]"}, "outputs": {"decision": _DECISION}, "params_schema": _POSITION_CAP_PARAMS, "numeric": "object", "risk_level": "medium", "failure_mode": "position cap breach emits DecisionKind block; errors remain diagnostics", "usage_notes": ("Reference helper does not place orders or enforce broker limits.",)},
     {"name": "risk.volatility_target", "family": "risk", "category": "weight_risk", "inputs": {"weights": _PANEL_DECIMAL, "volatility": _PANEL_FLOAT}, "outputs": {"weights": _PANEL_DECIMAL}, "params_schema": _VOLATILITY_TARGET_PARAMS, "numeric": "decimal", "panel_aware": True, "risk_level": "medium", "failure_mode": "missing or nonpositive volatility emits diagnostic error", "usage_notes": ("Scales weights only; no gross/net normalization or portfolio engine.",)},
     {"name": "risk.turnover_cap", "family": "risk", "category": "weight_risk", "inputs": {"weights": _PANEL_DECIMAL, "previous": _PANEL_DECIMAL}, "outputs": {"weights": _PANEL_DECIMAL}, "params_schema": _TURNOVER_CAP_PARAMS, "numeric": "decimal", "panel_aware": True, "risk_level": "medium", "failure_mode": "missing previous weight emits diagnostic error", "usage_notes": ("Clips per-symbol deltas only; no redistribution or rebalance plan.",)},
+    {"name": "risk.stop_loss_record", "family": "risk", "category": "risk_record", "inputs": {"entry_price": _TS_FLOAT, "current_price": _TS_FLOAT}, "outputs": {"decision": _DECISION}, "params_schema": _STOP_LOSS_PARAMS, "numeric": "object", "risk_level": "medium", "failure_mode": "stop loss threshold emits DecisionKind block; errors remain diagnostics", "usage_notes": ("Record-layer stop-loss helper only; no broker-side stop order.",)},
+    {"name": "risk.take_profit_record", "family": "risk", "category": "risk_record", "inputs": {"entry_price": _TS_FLOAT, "current_price": _TS_FLOAT}, "outputs": {"decision": _DECISION}, "params_schema": _TAKE_PROFIT_PARAMS, "numeric": "object", "risk_level": "medium", "failure_mode": "take-profit threshold emits DecisionKind accept; errors remain diagnostics", "usage_notes": ("Record-layer take-profit helper only; no order placement.",)},
+    {"name": "risk.trailing_stop_record", "family": "risk", "category": "risk_record", "inputs": {"price": _TS_FLOAT}, "outputs": {"decision": _DECISION}, "params_schema": _TRAILING_STOP_PARAMS, "numeric": "object", "stateful": True, "risk_level": "medium", "failure_mode": "trailing stop threshold emits DecisionKind block; errors remain diagnostics", "usage_notes": ("Record-layer trailing stop helper only; no broker-side stop order.",)},
+    {"name": "risk.max_drawdown_record", "family": "risk", "category": "risk_record", "inputs": {"equity": _TS_FLOAT}, "outputs": {"decision": _DECISION}, "params_schema": _MAX_DRAWDOWN_RECORD_PARAMS, "numeric": "object", "stateful": True, "risk_level": "medium", "failure_mode": "max drawdown breach emits DecisionKind block; errors remain diagnostics", "usage_notes": ("Equity-curve record helper only; no account runtime.",)},
+    {"name": "risk.volatility_target_record", "family": "risk", "category": "weight_risk_record", "inputs": {"weights": _PANEL_DECIMAL, "volatility": _PANEL_FLOAT}, "outputs": {"weights": _PANEL_DECIMAL}, "params_schema": _VOLATILITY_TARGET_PARAMS, "numeric": "decimal", "panel_aware": True, "risk_level": "medium", "failure_mode": "missing or nonpositive volatility emits diagnostic error", "usage_notes": ("Alias over risk.volatility_target record semantics; no rebalance engine.",)},
+    {"name": "risk.exposure_cap_record", "family": "risk", "category": "risk_record", "inputs": {"decision": _DECISION, "exposure": _TS_FLOAT}, "outputs": {"decision": _DECISION}, "params_schema": _EXPOSURE_CAP_PARAMS, "numeric": "object", "risk_level": "medium", "failure_mode": "exposure cap breach emits DecisionKind block; errors remain diagnostics", "usage_notes": ("Exposure cap record only; no portfolio execution engine.",)},
+    {"name": "risk.turnover_limit_record", "family": "risk", "category": "weight_risk_record", "inputs": {"weights": _PANEL_DECIMAL, "previous": _PANEL_DECIMAL}, "outputs": {"weights": _PANEL_DECIMAL}, "params_schema": _TURNOVER_CAP_PARAMS, "numeric": "decimal", "panel_aware": True, "risk_level": "medium", "failure_mode": "missing previous weight emits diagnostic error", "usage_notes": ("Alias over risk.turnover_cap clip-no-redistribute semantics; no rebalance engine.",)},
     {"name": "plan.noop", "family": "execution", "category": "plan_shell", "inputs": {"decision": _DECISION}, "outputs": {"plan": _PLAN}, "numeric": "object", "execution_support": "metadata_only"},
     {"name": "plan.order_intent", "family": "execution", "category": "plan_shell", "inputs": {"decision": _DECISION, "sizing": "Scalar[float]"}, "outputs": {"plan": _PLAN}, "numeric": "object", "execution_support": "metadata_only"},
     # Experimental optimizer and reserved design boundaries.

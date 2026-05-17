@@ -399,6 +399,72 @@ def evaluate_gate_token(name: str, values: Sequence[Any], **params: Any) -> list
         consumed = [_coerce_gate_int(value) for value in values]
         return _slot_budget_gate(consumed, slot_budget=slot_budget)
 
+    if token == "volatility_regime":
+        max_volatility = _coerce_number(params.get("max_volatility"))
+        if max_volatility < 0:
+            raise TokenReferenceError(
+                "QST_TOKEN_GATE_PARAM_INVALID",
+                "max_volatility must be non-negative.",
+            )
+        return [
+            _gate_decision(
+                blocked=value > max_volatility,
+                block_reason="GATE_BLOCKED_VOLATILITY_REGIME",
+            )
+            for value in _numeric_values(values, field_name="gate.volatility_regime volatility")
+        ]
+
+    if token == "drawdown":
+        max_drawdown = _coerce_number(params.get("max_drawdown"))
+        if max_drawdown < 0:
+            raise TokenReferenceError(
+                "QST_TOKEN_GATE_PARAM_INVALID",
+                "max_drawdown must be non-negative.",
+            )
+        return [
+            _gate_decision(
+                blocked=abs(value) >= max_drawdown,
+                block_reason="GATE_BLOCKED_DRAWDOWN",
+            )
+            for value in _numeric_values(values, field_name="gate.drawdown values")
+        ]
+
+    if token == "time_window":
+        start = _coerce_hhmm(params.get("start_hhmm"), "start_hhmm")
+        end = _coerce_hhmm(params.get("end_hhmm"), "end_hhmm")
+        return [
+            _gate_decision(
+                blocked=not _hhmm_in_window(_timestamp_hhmm(timestamp), start=start, end=end),
+                block_reason="GATE_BLOCKED_TIME_WINDOW",
+            )
+            for timestamp in _timestamp_values(values)
+        ]
+
+    if token == "rebalance":
+        band = _coerce_decimal_param(params.get("band"), "band")
+        if band < 0:
+            raise TokenReferenceError(
+                "QST_TOKEN_GATE_PARAM_INVALID",
+                "band must be non-negative.",
+            )
+        return [
+            _gate_decision(
+                blocked=abs(value) < band,
+                block_reason="GATE_BLOCKED_REBALANCE_BAND",
+            )
+            for value in _decimal_values(values, field_name="gate.rebalance drift")
+        ]
+
+    if token in {"min_hold", "max_hold"}:
+        bars = _coerce_int_param(params.get("bars"), "bars")
+        if bars <= 0:
+            raise TokenReferenceError("QST_TOKEN_GATE_PARAM_INVALID", "bars must be positive.")
+        reason = "GATE_BLOCKED_MIN_HOLD" if token == "min_hold" else "GATE_BLOCKED_MAX_HOLD_WAIT"
+        return [
+            _gate_decision(blocked=value < bars, block_reason=reason)
+            for value in _numeric_values(values, field_name=f"gate.{token} age")
+        ]
+
     raise TokenReferenceError("QST_TOKEN_REFERENCE_UNSUPPORTED", f"Unsupported gate token: {name}")
 
 
@@ -560,6 +626,31 @@ def evaluate_risk_token(name: str, *args: Any, **params: Any) -> TokenReferenceR
         weights, volatility = _expect_args(name, args, 2)
         return _risk_volatility_target(weights, volatility, **params)
     if name == "risk.turnover_cap":
+        weights, previous = _expect_args(name, args, 2)
+        return _risk_turnover_cap(weights, previous, **params)
+    if name == "risk.stop_loss_record":
+        entry_price, current_price = _expect_args(name, args, 2)
+        return _risk_stop_loss_record(entry_price, current_price, **params)
+    if name == "risk.take_profit_record":
+        entry_price, current_price = _expect_args(name, args, 2)
+        return _risk_take_profit_record(entry_price, current_price, **params)
+    if name == "risk.trailing_stop_record":
+        (price,) = _expect_args(name, args, 1)
+        return _risk_trailing_stop_record(price, **params)
+    if name == "risk.max_drawdown_record":
+        (equity,) = _expect_args(name, args, 1)
+        return _risk_max_drawdown_record(equity, **params)
+    if name == "risk.volatility_target_record":
+        weights, volatility = _expect_args(name, args, 2)
+        return _risk_volatility_target(weights, volatility, **params)
+    if name == "risk.exposure_cap_record":
+        decisions, exposures = _expect_args(name, args, 2)
+        return _risk_position_cap(
+            decisions,
+            exposures,
+            max_abs_position=params.get("max_abs_exposure"),
+        )
+    if name == "risk.turnover_limit_record":
         weights, previous = _expect_args(name, args, 2)
         return _risk_turnover_cap(weights, previous, **params)
 
@@ -1770,6 +1861,133 @@ def _risk_turnover_cap(weights: Any, previous: Any, **params: Any) -> TokenRefer
     )
 
 
+def _risk_stop_loss_record(entry_price: Any, current_price: Any, **params: Any) -> TokenReferenceResult:
+    from qst.decision import DecisionV2
+
+    stop_loss_pct = _coerce_number(params.get("stop_loss_pct"))
+    if stop_loss_pct < 0:
+        raise TokenReferenceError(
+            "QST_TOKEN_RISK_PARAM_INVALID",
+            "risk.stop_loss_record stop_loss_pct must be non-negative.",
+        )
+    entries, currents = _aligned_numeric_values(entry_price, current_price)
+    decisions: list[DecisionV2] = []
+    triggered = 0
+    for entry, current in zip(entries, currents, strict=True):
+        breach = current <= entry * (1 - stop_loss_pct)
+        if breach:
+            triggered += 1
+        decisions.append(
+            DecisionV2(
+                kind="block" if breach else "accept",
+                reasons=("RISK_STOP_LOSS_BREACH" if breach else "RISK_ACCEPTED",),
+            )
+        )
+    return TokenReferenceResult(
+        decisions=tuple(decisions),
+        trace={"operator_id": "risk.stop_loss_record", "triggered_count": triggered},
+    )
+
+
+def _risk_take_profit_record(entry_price: Any, current_price: Any, **params: Any) -> TokenReferenceResult:
+    from qst.decision import DecisionV2
+
+    take_profit_pct = _coerce_number(params.get("take_profit_pct"))
+    if take_profit_pct < 0:
+        raise TokenReferenceError(
+            "QST_TOKEN_RISK_PARAM_INVALID",
+            "risk.take_profit_record take_profit_pct must be non-negative.",
+        )
+    entries, currents = _aligned_numeric_values(entry_price, current_price)
+    decisions: list[DecisionV2] = []
+    triggered = 0
+    for entry, current in zip(entries, currents, strict=True):
+        hit = current >= entry * (1 + take_profit_pct)
+        if hit:
+            triggered += 1
+        decisions.append(
+            DecisionV2(
+                kind="accept" if hit else "reject",
+                reasons=("RISK_TAKE_PROFIT_TRIGGERED" if hit else "RISK_TAKE_PROFIT_NOT_TRIGGERED",),
+            )
+        )
+    return TokenReferenceResult(
+        decisions=tuple(decisions),
+        trace={"operator_id": "risk.take_profit_record", "triggered_count": triggered},
+    )
+
+
+def _risk_trailing_stop_record(price: Any, **params: Any) -> TokenReferenceResult:
+    from qst.decision import DecisionV2
+
+    trail_pct = _coerce_number(params.get("trail_pct"))
+    if trail_pct < 0:
+        raise TokenReferenceError(
+            "QST_TOKEN_RISK_PARAM_INVALID",
+            "risk.trailing_stop_record trail_pct must be non-negative.",
+        )
+    prices = _numeric_values(price, field_name="risk.trailing_stop_record price")
+    high_water: float | None = None
+    decisions: list[DecisionV2] = []
+    triggered = 0
+    for value in prices:
+        high_water = value if high_water is None else max(high_water, value)
+        trigger_price = high_water * (1 - trail_pct)
+        hit = value <= trigger_price and value < high_water
+        if hit:
+            triggered += 1
+        decisions.append(
+            DecisionV2(
+                kind="block" if hit else "accept",
+                reasons=("RISK_TRAILING_STOP_TRIGGERED" if hit else "RISK_ACCEPTED",),
+            )
+        )
+    return TokenReferenceResult(
+        decisions=tuple(decisions),
+        trace={
+            "operator_id": "risk.trailing_stop_record",
+            "triggered_count": triggered,
+            "order_execution": "none",
+        },
+    )
+
+
+def _risk_max_drawdown_record(equity: Any, **params: Any) -> TokenReferenceResult:
+    from qst.decision import DecisionV2
+
+    max_drawdown = _coerce_number(params.get("max_drawdown"))
+    if max_drawdown < 0:
+        raise TokenReferenceError(
+            "QST_TOKEN_RISK_PARAM_INVALID",
+            "risk.max_drawdown_record max_drawdown must be non-negative.",
+        )
+    values = _numeric_values(equity, field_name="risk.max_drawdown_record equity")
+    peak: float | None = None
+    decisions: list[DecisionV2] = []
+    blocked_count = 0
+    for value in values:
+        if value <= 0:
+            raise TokenReferenceError(
+                "QST_TOKEN_RISK_EQUITY_NONPOSITIVE",
+                "risk.max_drawdown_record requires positive equity values.",
+            )
+        peak = value if peak is None else max(peak, value)
+        drawdown = (peak - value) / peak
+        breach = drawdown >= max_drawdown
+        if breach:
+            blocked_count += 1
+        decisions.append(
+            DecisionV2(
+                kind="block" if breach else "accept",
+                reasons=("RISK_MAX_DRAWDOWN_EXCEEDED" if breach else "RISK_ACCEPTED",),
+            )
+        )
+    return TokenReferenceResult(
+        decisions=tuple(decisions),
+        trace={"operator_id": "risk.max_drawdown_record", "blocked_count": blocked_count},
+    )
+
+
 def _local_name(name: str, prefix: str) -> str:
     if name.startswith("core."):
         name = name.removeprefix("core.")
@@ -1938,6 +2156,81 @@ def _coerce_gate_int(value: Any) -> int:
             "Gate numeric inputs must be integers, not bool.",
         )
     return value
+
+
+def _numeric_values(values: Sequence[Any], *, field_name: str) -> list[float]:
+    if isinstance(values, (str, bytes)):
+        raise TokenReferenceError(
+            "QST_TOKEN_INPUT_TYPE_INVALID",
+            f"{field_name} must be a sequence of numeric values.",
+        )
+    if all(isinstance(item, tuple) and len(item) == 2 for item in values):
+        return [
+            value
+            for _timestamp, value in _numeric_series(cast(Sequence[SeriesRow], values))
+        ]
+    return [_coerce_number(value) for value in values]
+
+
+def _decimal_values(values: Sequence[Any], *, field_name: str) -> list[Decimal]:
+    if isinstance(values, (str, bytes)):
+        raise TokenReferenceError(
+            "QST_TOKEN_INPUT_TYPE_INVALID",
+            f"{field_name} must be a sequence of decimal-compatible values.",
+        )
+    if all(isinstance(item, tuple) and len(item) == 2 for item in values):
+        return [
+            _coerce_decimal_value(value, field_name)
+            for _timestamp, value in _series_rows(cast(Sequence[SeriesRow], values))
+        ]
+    return [_coerce_decimal_value(value, field_name) for value in values]
+
+
+def _timestamp_values(values: Sequence[Any]) -> list[str]:
+    if isinstance(values, (str, bytes)):
+        raise TokenReferenceError(
+            "QST_TOKEN_INPUT_TYPE_INVALID",
+            "Timestamp gate input must be a sequence.",
+        )
+    timestamps: list[str] = []
+    for item in values:
+        if isinstance(item, tuple) and len(item) == 2:
+            timestamp = item[0]
+        else:
+            timestamp = item
+        if not isinstance(timestamp, str) or not timestamp:
+            raise TokenReferenceError(
+                "QST_TOKEN_SERIES_TIMESTAMP_INVALID",
+                "Timestamp gate input must contain non-empty timestamp strings.",
+            )
+        timestamps.append(timestamp)
+    return timestamps
+
+
+def _hhmm_in_window(value: str, *, start: str, end: str) -> bool:
+    if start <= end:
+        return start <= value <= end
+    return value >= start or value <= end
+
+
+def _aligned_numeric_values(left: Any, right: Any) -> tuple[list[float], list[float]]:
+    left_is_series = isinstance(left, Sequence) and not isinstance(left, (str, bytes)) and all(
+        isinstance(item, tuple) and len(item) == 2 for item in left
+    )
+    right_is_series = isinstance(right, Sequence) and not isinstance(right, (str, bytes)) and all(
+        isinstance(item, tuple) and len(item) == 2 for item in right
+    )
+    if left_is_series and right_is_series:
+        left_rows, right_rows = _align_numeric_pair(left, right)
+        return [value for _timestamp, value in left_rows], [value for _timestamp, value in right_rows]
+    left_values = _numeric_values(left, field_name="left risk input")
+    right_values = _numeric_values(right, field_name="right risk input")
+    if len(left_values) != len(right_values):
+        raise TokenReferenceError(
+            "QST_TOKEN_RISK_INPUT_LENGTH_MISMATCH",
+            "Risk record numeric inputs must have the same length.",
+        )
+    return left_values, right_values
 
 
 def _finite_result(value: float) -> float:

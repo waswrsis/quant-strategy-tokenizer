@@ -1,0 +1,23 @@
+schema_version: qst-ir-schema/0.4
+ir_version: qst-ir/0.4
+canonical_version: qst-canonical/0.4
+capabilities: [core]
+strategy:
+  id: pr9_trailing_stop_record_partial
+  version: 1
+  nodes:
+  - id: trailing_stop_record
+    token_ref: {namespace: core, name: risk.trailing_stop_record, version: 1, behavior_version: 1}
+    inputs: {price: $externals.market.close}
+    params: {trail_pct: 0.1}
+    signature:
+      outputs:
+        decision: {type: Decision}
+  outputs:
+    decision: trailing_stop_record.decision
+metadata:
+  coverage_case: pr9_trailing_stop_record
+  scope: record_layer_partial_evidence
+  limitations:
+    - trailing stop record only
+    - no broker-side stop order, position lifecycle, or execution claim

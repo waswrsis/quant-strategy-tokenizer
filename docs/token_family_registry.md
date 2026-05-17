@@ -217,3 +217,39 @@ Weight helpers reject bool and non-finite numeric material. Group-neutral factor
 and weight helpers require explicit group metadata. These helpers are
 conformance/reference helpers only and do not imply optimizer execution,
 rebalance scheduling, order routing, live trading, backtesting, or profitability.
+
+## PR9 State / Gate / Risk Batch
+
+PR9 extends accepted record/reference coverage for common state, gate, and risk
+controls. It does not add broker/exchange execution, live stop orders, position
+lifecycle runtime, a rebalance engine, EventStream, Calendar TypeSpec,
+backtesting, or optimizer execution.
+
+Gate additions:
+
+- `gate.volatility_regime` blocks decisions when realized volatility exceeds an
+  explicit threshold.
+- `gate.drawdown` blocks decisions when an explicit drawdown record breaches the
+  configured limit.
+- `gate.time_window` records UTC time-of-day gating with inclusive `HH:MM`
+  boundaries. Calendar semantics remain deferred.
+- `gate.rebalance` records threshold/band rebalance intent only.
+- `gate.min_hold` and `gate.max_hold` record hold-age gates without claiming
+  position lifecycle or order-management runtime.
+
+Risk additions:
+
+- `risk.stop_loss_record`, `risk.take_profit_record`, and
+  `risk.trailing_stop_record` record deterministic stop/take-profit thresholds
+  without placing broker-side orders.
+- `risk.max_drawdown_record` records deterministic equity-curve drawdown
+  gating without account runtime.
+- `risk.volatility_target_record`, `risk.exposure_cap_record`, and
+  `risk.turnover_limit_record` expose record-layer aliases for accepted
+  volatility-target, exposure-cap, and turnover-limit semantics.
+
+All PR9 additions are `accepted` with `execution_support=reference_helper`.
+Gate helpers return `DecisionV2` records where `block` is a decision kind and
+errors remain diagnostics. Risk helpers reject bool and non-finite numeric
+material and never imply broker, exchange, backtest, live execution, or
+portfolio/account runtime support.

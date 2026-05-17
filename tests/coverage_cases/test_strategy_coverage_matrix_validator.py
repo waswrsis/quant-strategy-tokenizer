@@ -35,8 +35,8 @@ def test_current_matrix_validator_passes() -> None:
     issues, summary = validator.validate_matrix(_matrix(), repo_root=ROOT)
 
     assert issues == []
-    assert summary["pattern_count"] == 115
-    assert summary["benchmark_groups"]["internal_matrix"] == 90
+    assert summary["pattern_count"] == 120
+    assert summary["benchmark_groups"]["internal_matrix"] == 95
     assert summary["benchmark_groups"]["external_benchmark"] == 20
     assert summary["benchmark_groups"]["dogfood"] == 5
 

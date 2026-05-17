@@ -1,0 +1,39 @@
+schema_version: qst-ir-schema/0.4
+ir_version: qst-ir/0.4
+canonical_version: qst-canonical/0.4
+capabilities: [core]
+strategy:
+  id: pr9_drawdown_volatility_regime_partial
+  version: 1
+  nodes:
+  - id: volatility_regime_gate
+    token_ref: {namespace: core, name: gate.volatility_regime, version: 1, behavior_version: 1}
+    inputs: {volatility: $externals.market.realized_volatility}
+    params: {max_volatility: 0.45}
+    signature:
+      outputs:
+        decision: {type: Decision}
+  - id: drawdown_gate
+    token_ref: {namespace: core, name: gate.drawdown, version: 1, behavior_version: 1}
+    inputs: {drawdown: $externals.account.drawdown}
+    params: {max_drawdown: 0.12}
+    signature:
+      outputs:
+        decision: {type: Decision}
+  - id: max_drawdown_record
+    token_ref: {namespace: core, name: risk.max_drawdown_record, version: 1, behavior_version: 1}
+    inputs: {equity: $externals.account.equity}
+    params: {max_drawdown: 0.2}
+    signature:
+      outputs:
+        decision: {type: Decision}
+  outputs:
+    volatility_regime_decision: volatility_regime_gate.decision
+    drawdown_decision: drawdown_gate.decision
+    max_drawdown_decision: max_drawdown_record.decision
+metadata:
+  coverage_case: pr9_drawdown_volatility_regime
+  scope: record_layer_partial_evidence
+  limitations:
+    - drawdown and volatility regime records only
+    - no portfolio accounting runtime, live risk engine, broker, or execution claim
