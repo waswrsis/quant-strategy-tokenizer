@@ -20,15 +20,15 @@ profitability, or portfolio optimizer coverage.
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | dogfood | 5 | 25.0 | 0 | 3 | 1 | 1 | 0 |
 | external_benchmark | 20 | 102.0 | 9 | 2 | 3 | 4 | 2 |
-| internal_matrix | 85 | 440.0 | 54 | 12 | 9 | 7 | 3 |
+| internal_matrix | 85 | 440.0 | 54 | 13 | 8 | 7 | 3 |
 
 ## Classification Summary
 
 | Classification | Count | Weight |
 | --- | ---: | ---: |
-| custom_token_required | 13 | 68.0 |
+| custom_token_required | 12 | 63.0 |
 | non_goal | 5 | 19.0 |
-| partially_supported | 17 | 88.0 |
+| partially_supported | 18 | 93.0 |
 | reserved | 12 | 47.0 |
 | supported | 63 | 345.0 |
 
@@ -38,13 +38,13 @@ profitability, or portfolio optimizer coverage.
 | --- | ---: |
 | direct_builtin_coverage | 0.1827 |
 | routable_record_coverage_raw | 0.8875 |
-| routable_record_coverage_discounted | 0.8293 |
-| custom_token_route_share | 0.1310 |
+| routable_record_coverage_discounted | 0.8339 |
+| custom_token_route_share | 0.1206 |
 | false_supported_rate_mechanical | 0.0000 |
 | false_supported_rate_semantic | 0.0000 |
 | false_supported_rate_boundary | 0.0000 |
 | boundary_false_supported_count | 0 |
-| kernel_gap_count | 20 |
+| kernel_gap_count | 19 |
 | token_bloat_index | 0.1810 |
 
 ## Next Best Expansions
@@ -56,7 +56,7 @@ profitability, or portfolio optimizer coverage.
 | risk.trailing_stop_record | token | 11.0 | 1 | 11.0 |
 | port_temporal_type_gap | kernel | 27.0 | 3 | 9.0 |
 | fsm_state_gap | kernel | 26.0 | 3 | 8.6667 |
-| numeric_determinism_gap | kernel | 25.0 | 3 | 8.3333 |
+| numeric_determinism_gap | kernel | 20.0 | 3 | 6.6667 |
 | built-in Kalman signal | token | 6.0 | 1 | 6.0 |
 | factor.sector_neutral_rank recipe | token | 6.0 | 1 | 6.0 |
 | pair_spread_model | token | 6.0 | 1 | 6.0 |

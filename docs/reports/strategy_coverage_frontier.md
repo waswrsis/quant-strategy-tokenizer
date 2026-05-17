@@ -14,6 +14,7 @@ percentage.
 - PR 4 scope: original failure strategy dogfood MVP case
 - Dogfood target scope: five-case dogfood publication-target evidence set
 - PR 6 scope: Section 19 core rule token batch coverage evidence
+- PR 7 scope: kernel gap review and beta numeric-gap retirement
 - Runtime, IR, hash, schema, CI, prompt, and public example behavior changes: none
 - Token surface changes: PR6 accepted reference-helper tokens only; no broad runtime execution
 
@@ -21,9 +22,9 @@ percentage.
 
 | Command | Exit code | Output summary |
 | --- | ---: | --- |
-| `git status --short` | 0 | PR6 construction edits present before final commit |
+| `git status --short` | 0 | PR7 construction edits present before final commit |
 | `git rev-parse --abbrev-ref HEAD` | 0 | `main` |
-| `git rev-parse HEAD` | 0 | `25202c83cf0eb4f20e4fe82467c13259c64f04cc` before PR6 commit |
+| `git rev-parse HEAD` | 0 | `8710f5a2118402eced15dcab2ce73834ded13e58` before PR7 commit |
 | `python -m qst.cli --help` | 0 | CLI exposes `vocabulary`, `validate`, `hash`, `canonicalize`, `write-json`, and `token` |
 | `python -m qst.cli vocabulary --check` | 0 | `ok: true`; 6 packs; 150 tokens; zero diagnostics |
 | `python -m pytest tests -q` | 0 | `473 passed` |
@@ -31,7 +32,7 @@ percentage.
 | `python tools/validate_strategy_coverage_matrix.py docs/reports/strategy_coverage_matrix.yaml` | 0 | validation `pass`; zero issues |
 | `python tools/report_strategy_coverage.py docs/reports/strategy_coverage_matrix.yaml --check` | 0 | report check `pass`; zero issues |
 | `python -m pytest tests/token_conformance -q` | 0 | `48 passed` |
-| `python -m pytest tests/coverage_cases -q` | 0 | `27 passed` |
+| `python -m pytest tests/coverage_cases -q` | 0 | `31 passed` |
 | `python -m qst.cli validate tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.partial.gkr.yaml` | 0 | PR4 dogfood candidate validates |
 | `python -m qst.cli hash tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.partial.gkr.yaml` | 0 | PR4 dogfood hashes recorded |
 | `python -m qst.cli canonicalize tests/coverage_cases/dogfood/original_multi_asset_mean_reversion_grid.partial.gkr.yaml --output .local_audit/original_failure_strategy_dogfood.canonical.json` | 0 | canonical artifact generated locally |
@@ -59,12 +60,15 @@ percentage.
 - `tests/coverage_cases/dogfood/reserved_event_stream_orderbook.intent.yaml`
 - `tests/coverage_cases/core_rule/*.partial.gkr.yaml`
 - `tests/coverage_cases/core_rule/*.hashes.json`
+- `docs/reports/kernel_gap_review.md`
 
 PR 2 created the seed data. PR 3 adds validator/report tooling and a checked-in generated
 report. PR 4 adds the first dogfood MVP case and candidate partial GKR. The dogfood
 target set completes the five-case publication-target evidence set while keeping dogfood
 excluded from headline frontier metrics. PR 6 adds core rule token batch candidate
 records under `tests/coverage_cases/core_rule/` without changing public demo acceptance.
+PR 7 reviews active kernel gaps and retires the stale beta-estimator numeric
+determinism gap for `int_050_beta_neutral_signal`.
 
 ## Existing Examples
 
@@ -159,6 +163,12 @@ PR6 registers eight core rule coverage rows:
 The PR6 rows are record/reference evidence. They do not add broad runtime execution,
 broker/exchange behavior, backtesting, optimizer execution, or profitability claims.
 
+PR7 records kernel review evidence in `docs/reports/kernel_gap_review.md`.
+The only PR7 fix changes `int_050_beta_neutral_signal` from custom-token route
+to partially supported beta/residual record evidence. EventStream, OrderBook,
+Calendar, Distribution, optimizer solver determinism, FSM recipes, sector
+metadata, and rebalance-band reducer semantics remain deferred.
+
 The PR 3 report tool now computes:
 
 - intent routing by coverage class
@@ -181,13 +191,13 @@ Current generated metrics from `docs/reports/strategy_coverage_report.md`:
 | --- | ---: |
 | direct_builtin_coverage | 0.1827 |
 | routable_record_coverage_raw | 0.8875 |
-| routable_record_coverage_discounted | 0.8293 |
-| custom_token_route_share | 0.1310 |
+| routable_record_coverage_discounted | 0.8339 |
+| custom_token_route_share | 0.1206 |
 | false_supported_rate_mechanical | 0.0000 |
 | false_supported_rate_semantic | 0.0000 |
 | false_supported_rate_boundary | 0.0000 |
 | boundary_false_supported_count | 0 |
-| kernel_gap_count | 20 |
+| kernel_gap_count | 19 |
 | token_bloat_index | 0.1810 |
 
 ## External Benchmark Seed

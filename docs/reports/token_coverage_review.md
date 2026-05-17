@@ -15,7 +15,7 @@ Stage 3B reviews common strategy patterns against the Stage 3A token surface. Re
 | Bollinger mean reversion | covered with accepted tokens | indicator, compare | none | Use demo 03. |
 | Donchian breakout | covered with accepted tokens | indicator.channel_breakout, window | none | Use demo 04. |
 | KDJ filter | requires custom token | custom_runtime, indicator | built-in KDJ token | Keep as reference strategy/custom token candidate. |
-| MACD trend | Token Gap | indicator, signal | indicator.macd | P1 token candidate; current primitives can express but no canonical token. |
+| MACD trend | covered with accepted tokens | indicator.macd, signal, decision | none | PR6 core rule evidence covers the record. |
 | stateful cooldown | covered with accepted tokens | gate, state, decision | none | Use demo 05. |
 | market freeze | covered with accepted tokens | gate, state, decision | none | Reference facade only. |
 | circuit breaker | covered with accepted tokens | gate, state, decision | none | Use demo 06. |
@@ -41,4 +41,4 @@ Stage 3B reviews common strategy patterns against the Stage 3A token surface. Re
 
 ## Decision
 
-Most scalar/time-series/state/panel/risk examples are covered with accepted tokens. The largest remaining P0/P1 gaps are not raw token count; they are recipe demonstrations, selected indicator convenience tokens, and future type/data-model boundaries for event, distribution, and instrument metadata.
+Most scalar/time-series/state/panel/risk examples are covered with accepted tokens. PR6 retires the MACD token gap, and PR7 retires the stale beta-estimator numeric determinism gap. The largest remaining P0/P1 gaps are recipe demonstrations, selected convenience tokens such as inverse-vol weighting, and future type/data-model boundaries for event, distribution, and instrument metadata.
