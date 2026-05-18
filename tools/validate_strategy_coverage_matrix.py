@@ -45,6 +45,7 @@ CUSTOM_GOVERNANCE_MANIFEST = Path("tests/coverage_cases/custom_token_governance/
 CUSTOM_GOVERNANCE_SCHEMA_VERSION = "qst-custom-token-governance/0.1"
 BOUNDARY_MANIFEST = Path("tests/coverage_cases/reserved_non_goal_boundaries/boundary_cases.yaml")
 BOUNDARY_SCHEMA_VERSION = "qst-reserved-non-goal-boundary/0.1"
+YAML_LOADER = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
 
 
 @dataclass(frozen=True)
@@ -64,11 +65,16 @@ class MatrixIssue:
 
 
 def load_matrix(path: Path) -> dict[str, Any]:
-    loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+    loaded = _load_yaml_mapping(path)
     if not isinstance(loaded, dict):
         msg = f"{path} must parse to a mapping"
         raise ValueError(msg)
     return loaded
+
+
+def _load_yaml_mapping(path: Path) -> Any:
+    # CSafeLoader is the safe loader implemented by libyaml; fall back to SafeLoader.
+    return yaml.load(path.read_text(encoding="utf-8"), Loader=YAML_LOADER)  # noqa: S506
 
 
 def validation_payload(issues: list[MatrixIssue], summary: dict[str, Any]) -> dict[str, Any]:
@@ -520,7 +526,7 @@ def _load_custom_token_governance_manifest(repo_root: Path) -> dict[str, Any]:
     path = repo_root / CUSTOM_GOVERNANCE_MANIFEST
     if not path.exists():
         return {}
-    loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+    loaded = _load_yaml_mapping(path)
     return loaded if isinstance(loaded, dict) else {}
 
 
@@ -544,7 +550,7 @@ def _load_reserved_non_goal_boundary_manifest(repo_root: Path) -> dict[str, Any]
     path = repo_root / BOUNDARY_MANIFEST
     if not path.exists():
         return {}
-    loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+    loaded = _load_yaml_mapping(path)
     return loaded if isinstance(loaded, dict) else {}
 
 

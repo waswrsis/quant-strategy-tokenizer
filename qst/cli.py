@@ -9,6 +9,7 @@ from typing import Annotated, Any
 
 import typer
 
+from qst.adapters.qlib.cli import app as qlib_adapter_app
 from qst.canonical_json import stable_json_bytes
 from qst.custom_runtime import (
     ApprovalRequest,
@@ -31,8 +32,11 @@ from qst.validation import Diagnostic
 app = typer.Typer(no_args_is_help=True)
 token_app = typer.Typer(no_args_is_help=True)
 approval_app = typer.Typer(no_args_is_help=True)
+adapter_app = typer.Typer(no_args_is_help=True)
 app.add_typer(token_app, name="token")
 token_app.add_typer(approval_app, name="approvals")
+app.add_typer(adapter_app, name="adapter")
+adapter_app.add_typer(qlib_adapter_app, name="qlib")
 
 
 def _jsonable(value: Any) -> Any:

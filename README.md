@@ -1,8 +1,50 @@
 # QST
 
+> Status: archived agent-ready research prototype.
+>
+> QST is no longer under active development. It is preserved as a completed
+> prototype for typed strategy records, canonical hashing, validation, token
+> surface governance, Coverage Frontier measurement, and agent handoff.
+>
+> The final tree includes a Qlib partial workflow adapter proof. It imports
+> Qlib workflow YAML as QST record-layer candidate GKR plus coverage evidence
+> without importing Qlib, running qrun, training models, running inference,
+> executing backtests, or connecting to brokers or exchanges.
+
 QST is a typed, canonical strategy record system for research and review workflows. It defines a structured strategy IR, deterministic canonical JSON, stable hash classes, reference token semantics, package metadata, and validation traces for Graph Kernel Records (GKR).
 
 QST is not a trading bot, broker adapter, exchange adapter, portfolio optimizer, or production execution engine. It is the record and verification layer that those systems can consume after they implement their own controls.
+
+## Final Completed Scope
+
+- P0 tokenizer / GKR record loop
+- P0.1 hardening and acceptance
+- Stage 3A-3C token surface, demos, prompt pack, and agent guidance
+- Coverage Frontier v0.3 matrix, governance, dogfood set, report, and publication gate
+- Agent takeover package and secondary development guides
+- Qlib partial workflow adapter proof and adapter boundary documentation
+
+## Not Implemented
+
+- live trading
+- full backtesting
+- broker or exchange integration
+- arbitrary Python strategy tokenization
+- Qlib runtime replacement, model training, inference execution, qrun execution,
+  backtest execution, or lossless Qlib conversion
+- full diff / mutate / repair
+- full parser or authoring DSL
+- plugin / MCP ecosystem
+- RL strategy search
+
+## Final Handoff
+
+Start here:
+
+- [Final Handoff](docs/FINAL_HANDOFF.md)
+- [Agent Takeover Prompt](docs/agent/AGENT_TAKEOVER_PROMPT.md)
+- [Agent Playbook](docs/agent/AGENT_PLAYBOOK.md)
+- [Usage Guide](docs/agent/USAGE_GUIDE.md)
 
 ## Current Status
 
@@ -60,6 +102,21 @@ The 12-demo index is [examples/strategies/README.md](examples/strategies/README.
 Each demo has validation diagnostics and graph/param/instance hash sentinels
 under `tests/reference/strategies/<case>/`.
 
+## Qlib Partial Adapter Proof
+
+Import a supported Qlib workflow YAML as candidate QST records and coverage
+evidence:
+
+```bash
+python -m qst.cli adapter qlib import examples/adapters/qlib/workflow_config_lightgbm_alpha158.yaml --output .local_audit/qlib_lightgbm_alpha158.gkr.yaml --coverage .local_audit/qlib_lightgbm_alpha158.coverage.json
+python -m qst.cli validate .local_audit/qlib_lightgbm_alpha158.gkr.yaml
+python -m qst.cli hash .local_audit/qlib_lightgbm_alpha158.gkr.yaml
+python -m qst.cli canonicalize .local_audit/qlib_lightgbm_alpha158.gkr.yaml --output .local_audit/qlib_lightgbm_alpha158.canonical.json
+```
+
+The adapter is partial and not lossless. It records Qlib workflow structure; it
+does not execute Qlib or replace a Qlib research/runtime environment.
+
 ## What QST Provides
 
 - A single active IR target with typed nodes, structured token refs, capabilities, and port signatures.
@@ -85,6 +142,7 @@ docs/project_history/        Public background material
 examples/strategies/         Public GKR strategy examples
 examples/strategies/README.md Public demo index and coverage table
 examples/custom_token/       Custom-token reference example
+examples/adapters/qlib/      Qlib partial workflow adapter examples
 tests/reference/             Deterministic reference fixtures and traces
 docs/reports/                Token surface acceptance and gap-review reports
 tests/                       Unit and conformance tests
