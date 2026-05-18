@@ -43,6 +43,8 @@ SOURCE_REF_RE = re.compile(r"^docs/reports/external_benchmark_sources\.md#(src-[
 SOURCE_HEADING_RE = re.compile(r"^### (src-[a-z0-9-]+)\s*$", re.MULTILINE)
 CUSTOM_GOVERNANCE_MANIFEST = Path("tests/coverage_cases/custom_token_governance/custom_token_routes.yaml")
 CUSTOM_GOVERNANCE_SCHEMA_VERSION = "qst-custom-token-governance/0.1"
+BOUNDARY_MANIFEST = Path("tests/coverage_cases/reserved_non_goal_boundaries/boundary_cases.yaml")
+BOUNDARY_SCHEMA_VERSION = "qst-reserved-non-goal-boundary/0.1"
 
 
 @dataclass(frozen=True)
@@ -98,6 +100,8 @@ def validate_matrix(
     source_ids = _external_source_ids(root)
     governance_manifest = _load_custom_token_governance_manifest(root)
     governance_routes = _custom_governance_routes(governance_manifest)
+    boundary_manifest = _load_reserved_non_goal_boundary_manifest(root)
+    boundary_cases = _reserved_non_goal_boundary_cases(boundary_manifest)
 
     ids: set[str] = set()
     groups: dict[str, int] = {}
@@ -146,6 +150,7 @@ def validate_matrix(
         _validate_market_weight(row, row_path, add)
         _validate_classification_contract(row, row_path, classification, add)
         _validate_custom_governance(row, row_path, classification, governance_routes, add)
+        _validate_reserved_non_goal_boundary(row, row_path, classification, boundary_cases, add)
         _validate_kernel_gaps(row, row_path, add)
 
     if groups.get("external_benchmark", 0) < 20:
@@ -178,6 +183,12 @@ def load_custom_token_governance_manifest(repo_root: Path | None = None) -> dict
     """Load the optional PR10 custom-token governance manifest."""
     root = repo_root or Path.cwd()
     return _load_custom_token_governance_manifest(root)
+
+
+def load_reserved_non_goal_boundary_manifest(repo_root: Path | None = None) -> dict[str, Any]:
+    """Load the optional PR11 reserved/non-goal boundary manifest."""
+    root = repo_root or Path.cwd()
+    return _load_reserved_non_goal_boundary_manifest(root)
 
 
 def _validate_top_level(matrix: dict[str, Any], add: Any) -> None:
@@ -349,6 +360,98 @@ def _validate_custom_governance(
         )
 
 
+def _validate_reserved_non_goal_boundary(
+    row: dict[str, Any],
+    row_path: str,
+    classification: str,
+    boundary_cases: dict[str, dict[str, Any]],
+    add: Any,
+) -> None:
+    if classification not in {"reserved", "non_goal"}:
+        return
+    row_id = _string(row.get("id"))
+    boundary = row.get("boundary")
+    boundary_map = boundary if isinstance(boundary, dict) else {}
+    gaps = row.get("gaps")
+    gaps_map = gaps if isinstance(gaps, dict) else {}
+    case = boundary_cases.get(row_id)
+    if not isinstance(case, dict):
+        add(
+            "reserved_non_goal_boundary_case_missing",
+            f"{row_path}.boundary",
+            "reserved/non-goal rows must be listed in the boundary manifest",
+        )
+        return
+    if case.get("classification") != classification:
+        add(
+            "reserved_non_goal_boundary_classification_mismatch",
+            f"{row_path}.boundary.classification",
+            "boundary manifest classification must match matrix classification",
+        )
+    if not _string(case.get("diagnostic_class")):
+        add(
+            "reserved_non_goal_boundary_diagnostic_missing",
+            f"{row_path}.boundary.diagnostic_class",
+            "boundary manifest case must include diagnostic_class",
+        )
+    if not _string(case.get("boundary_class")):
+        add(
+            "reserved_non_goal_boundary_class_missing",
+            f"{row_path}.boundary.boundary_class",
+            "boundary manifest case must include boundary_class",
+        )
+    forbidden = case.get("must_not_reclassify_as")
+    if not isinstance(forbidden, list) or "supported" not in forbidden:
+        add(
+            "reserved_non_goal_boundary_forbidden_reclassification_missing",
+            f"{row_path}.boundary.must_not_reclassify_as",
+            "boundary manifest case must forbid supported reclassification",
+        )
+    if classification == "reserved":
+        if not _string(boundary_map.get("reserved_reason")):
+            add(
+                "reserved_boundary_reason_missing",
+                f"{row_path}.boundary.reserved_reason",
+                "reserved boundary manifest case requires matrix reserved_reason",
+            )
+        if case.get("future_stage_allowed") is not True:
+            add(
+                "reserved_boundary_future_stage_missing",
+                f"{row_path}.boundary.future_stage_allowed",
+                "reserved rows must explicitly mark future_stage_allowed: true",
+            )
+    if classification == "non_goal":
+        if not _string(boundary_map.get("non_goal_reason")):
+            add(
+                "non_goal_boundary_reason_missing",
+                f"{row_path}.boundary.non_goal_reason",
+                "non-goal boundary manifest case requires matrix non_goal_reason",
+            )
+        if case.get("future_stage_allowed") is not False:
+            add(
+                "non_goal_boundary_future_stage_allowed",
+                f"{row_path}.boundary.future_stage_allowed",
+                "non-goal rows must explicitly mark future_stage_allowed: false",
+            )
+        for forbidden_class in ("partially_supported", "custom_token_required"):
+            if forbidden_class not in forbidden:
+                add(
+                    "non_goal_boundary_forbidden_reclassification_missing",
+                    f"{row_path}.boundary.must_not_reclassify_as",
+                    "non-goal rows must forbid partial/custom weakening",
+                )
+                break
+    missing_types = gaps_map.get("missing_types")
+    case_missing_types = case.get("missing_types")
+    if isinstance(missing_types, list) and missing_types:
+        if not isinstance(case_missing_types, list) or set(case_missing_types) != set(missing_types):
+            add(
+                "reserved_non_goal_boundary_missing_types_mismatch",
+                f"{row_path}.boundary.missing_types",
+                "boundary manifest missing_types must match matrix gap missing_types",
+            )
+
+
 def _validate_kernel_gaps(row: dict[str, Any], row_path: str, add: Any) -> None:
     gaps = row.get("gaps")
     if not isinstance(gaps, dict):
@@ -434,6 +537,30 @@ def _custom_governance_routes(manifest: dict[str, Any]) -> dict[str, dict[str, A
         pattern_id = _string(route.get("pattern_id"))
         if pattern_id:
             result[pattern_id] = route
+    return result
+
+
+def _load_reserved_non_goal_boundary_manifest(repo_root: Path) -> dict[str, Any]:
+    path = repo_root / BOUNDARY_MANIFEST
+    if not path.exists():
+        return {}
+    loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+    return loaded if isinstance(loaded, dict) else {}
+
+
+def _reserved_non_goal_boundary_cases(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    if manifest.get("schema_version") != BOUNDARY_SCHEMA_VERSION:
+        return {}
+    cases = manifest.get("cases")
+    if not isinstance(cases, list):
+        return {}
+    result: dict[str, dict[str, Any]] = {}
+    for case in cases:
+        if not isinstance(case, dict):
+            continue
+        pattern_id = _string(case.get("pattern_id"))
+        if pattern_id:
+            result[pattern_id] = case
     return result
 
 

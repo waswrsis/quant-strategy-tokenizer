@@ -75,3 +75,20 @@ Fail boundary review if a supported pattern requires:
 Boundary false support must be reported separately from mechanical and semantic false
 support.
 
+## Reserved / Non-Goal Weakening
+
+The following repairs are forbidden:
+
+- changing an EventStream, OrderBook, HFT, Distribution, or optimizer-solver row from
+  `reserved` to `partially_supported` without the missing TypeSpec/runtime/solver
+  contract;
+- changing broker, exchange, live execution, order routing, custody, or full backtest
+  engine requests from `non_goal` to `custom_token_required`;
+- using a time-series token, metadata-only token, or custom-token route to hide a
+  reserved runtime requirement;
+- treating reserved-design vocabulary entries as executable evidence.
+
+PR11 tracks these cases with `diagnostic_class` values in
+`tests/coverage_cases/reserved_non_goal_boundaries/boundary_cases.yaml`. A supported,
+partial, or custom-token classification that conflicts with that manifest is a boundary
+false-supported defect.

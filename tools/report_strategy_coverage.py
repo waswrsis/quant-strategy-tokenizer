@@ -11,6 +11,7 @@ from typing import Any
 from validate_strategy_coverage_matrix import (
     load_custom_token_governance_manifest,
     load_matrix,
+    load_reserved_non_goal_boundary_manifest,
     validate_matrix,
     validation_payload,
 )
@@ -129,6 +130,10 @@ def build_report(matrix: dict[str, Any], *, repo_root: Path | None = None) -> di
                 matrix,
                 repo_root=repo_root,
             ),
+            "reserved_non_goal_boundary": _reserved_non_goal_boundary_summary(
+                patterns,
+                repo_root=repo_root,
+            ),
             "core_rule_token_batch": _core_rule_summary(frontier_patterns),
             "panel_factor_weight_batch": _panel_factor_weight_summary(frontier_patterns),
             "state_gate_risk_batch": _state_gate_risk_summary(frontier_patterns),
@@ -192,6 +197,14 @@ def check_report(report: dict[str, Any], matrix: dict[str, Any]) -> list[CheckIs
             CheckIssue(
                 "stale_custom_token_route_present",
                 "stale custom-token route rows remain in the active matrix",
+            )
+        )
+    boundary = frontier["reserved_non_goal_boundary"]
+    if boundary["missing_boundary_rows"]:
+        issues.append(
+            CheckIssue(
+                "reserved_non_goal_boundary_missing",
+                "reserved/non-goal rows are missing boundary manifest entries",
             )
         )
     return issues
@@ -300,6 +313,37 @@ def render_markdown(report: dict[str, Any]) -> str:
     )
     for row in custom_governance["stale_route_reviews"]:
         lines.append(f"| {row['pattern_id']} | {row['replacement_evidence']} |")
+
+    boundary = frontier["reserved_non_goal_boundary"]
+    lines.extend(
+        [
+            "",
+            "## Reserved / Non-Goal Boundary",
+            "",
+            "PR11 records audit evidence for reserved design and non-goal rows. Reserved",
+            "rows are future design boundaries that require explicit TypeSpec/runtime",
+            "work before use. Non-goal rows remain outside QST scope and must not be",
+            "weakened into partial, custom-token, or supported classifications.",
+            "",
+            f"- Reserved rows: `{boundary['reserved_count']}`",
+            f"- Non-goal rows: `{boundary['non_goal_count']}`",
+            f"- Missing boundary rows: `{len(boundary['missing_boundary_rows'])}`",
+            f"- Boundary false-supported count: `{metrics['boundary_false_supported_count']}`",
+            "",
+            "| Row | Classification | Diagnostic class | Boundary class | Reason |",
+            "| --- | --- | --- | --- | --- |",
+        ]
+    )
+    for row in boundary["rows"]:
+        lines.append(
+            "| {id} | {classification} | {diagnostic_class} | {boundary_class} | {reason} |".format(
+                id=row["id"],
+                classification=row["classification"],
+                diagnostic_class=row["diagnostic_class"],
+                boundary_class=row["boundary_class"],
+                reason=row["reason"],
+            )
+        )
 
     lines.extend(
         [
@@ -455,6 +499,7 @@ def render_text(report: dict[str, Any]) -> str:
             f"routable_record_coverage_raw: {_format_metric(metrics['routable_record_coverage_raw'])}",
             f"routable_record_coverage_discounted: {_format_metric(metrics['routable_record_coverage_discounted'])}",
             f"custom_token_route_share: {_format_metric(metrics['custom_token_route_share'])}",
+            f"reserved_non_goal_boundary: {frontier['reserved_non_goal_boundary']['status']}",
             f"kernel_gap_count: {metrics['kernel_gap_count']}",
         ]
     )
@@ -571,6 +616,65 @@ def _custom_token_governance_summary(
             }
             for review in stale_reviews
         ],
+    }
+
+
+def _reserved_non_goal_boundary_summary(
+    rows: list[dict[str, Any]],
+    *,
+    repo_root: Path | None,
+) -> dict[str, Any]:
+    manifest = load_reserved_non_goal_boundary_manifest(repo_root)
+    boundary_rows = [
+        row
+        for row in rows
+        if row.get("expected_classification") in {"reserved", "non_goal"}
+    ]
+    cases = {
+        str(case.get("pattern_id")): case
+        for case in manifest.get("cases", [])
+        if isinstance(case, dict) and case.get("pattern_id")
+    }
+    summaries = []
+    missing_rows = []
+    for row in sorted(boundary_rows, key=lambda item: str(item.get("id", ""))):
+        row_id = str(row.get("id", ""))
+        classification = str(row.get("expected_classification", ""))
+        boundary = row.get("boundary") if isinstance(row.get("boundary"), dict) else {}
+        case = cases.get(row_id)
+        if not case:
+            missing_rows.append(row_id)
+        if classification == "reserved":
+            reason = str(boundary.get("reserved_reason", ""))
+        else:
+            reason = str(boundary.get("non_goal_reason", ""))
+        summaries.append(
+            {
+                "id": row_id,
+                "classification": classification,
+                "diagnostic_class": str(case.get("diagnostic_class", "")) if case else "",
+                "boundary_class": str(case.get("boundary_class", "")) if case else "",
+                "reason": reason,
+                "future_stage_allowed": bool(case.get("future_stage_allowed")) if case else False,
+            }
+        )
+    reserved_count = sum(1 for row in boundary_rows if row.get("expected_classification") == "reserved")
+    non_goal_count = sum(1 for row in boundary_rows if row.get("expected_classification") == "non_goal")
+    diagnostic_classes = sorted(
+        {
+            str(case.get("diagnostic_class", ""))
+            for case in cases.values()
+            if case.get("diagnostic_class")
+        }
+    )
+    return {
+        "manifest_schema_version": str(manifest.get("schema_version", "")),
+        "status": "pass" if not missing_rows else "fail",
+        "reserved_count": reserved_count,
+        "non_goal_count": non_goal_count,
+        "missing_boundary_rows": missing_rows,
+        "diagnostic_classes": diagnostic_classes,
+        "rows": summaries,
     }
 
 

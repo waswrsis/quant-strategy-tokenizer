@@ -1,0 +1,214 @@
+schema_version: "qst-reserved-non-goal-boundary/0.1"
+policy:
+  reserved_boundary: "future_design_not_executable"
+  non_goal_boundary: "outside_qst_scope"
+  false_positive_max: 0.02
+  reserved_must_not_be_weakened_to:
+    - "supported"
+    - "partially_supported"
+    - "custom_token_required"
+  non_goal_must_not_be_weakened_to:
+    - "supported"
+    - "partially_supported"
+    - "custom_token_required"
+  evidence_report: "docs/reports/reserved_non_goal_boundary_review.md"
+cases:
+  - pattern_id: "int_071_optimizer_mean_variance"
+    classification: "reserved"
+    boundary_class: "optimizer_solver"
+    diagnostic_class: "optimizer_solver_contract_required"
+    reason: "Requires deterministic optimizer solver contract/runtime."
+    missing_types: []
+    future_stage_allowed: true
+    preferred_future_stage: "optimizer_solver_contract"
+    must_not_reclassify_as: ["supported", "partially_supported", "custom_token_required"]
+  - pattern_id: "int_072_event_join_asof"
+    classification: "reserved"
+    boundary_class: "event_stream"
+    diagnostic_class: "reserved_event_stream_required"
+    reason: "Requires EventStream runtime/type."
+    missing_types: ["EventStream"]
+    future_stage_allowed: true
+    preferred_future_stage: "extended_typespec_eventstream"
+    must_not_reclassify_as: ["supported", "partially_supported", "custom_token_required"]
+  - pattern_id: "int_073_event_filter"
+    classification: "reserved"
+    boundary_class: "event_stream"
+    diagnostic_class: "reserved_event_stream_required"
+    reason: "Requires EventStream runtime/type."
+    missing_types: ["EventStream"]
+    future_stage_allowed: true
+    preferred_future_stage: "extended_typespec_eventstream"
+    must_not_reclassify_as: ["supported", "partially_supported", "custom_token_required"]
+  - pattern_id: "int_074_distribution_normal_fit"
+    classification: "reserved"
+    boundary_class: "distribution"
+    diagnostic_class: "reserved_distribution_required"
+    reason: "Requires Distribution type/runtime."
+    missing_types: ["Distribution"]
+    future_stage_allowed: true
+    preferred_future_stage: "extended_typespec_distribution"
+    must_not_reclassify_as: ["supported", "partially_supported", "custom_token_required"]
+  - pattern_id: "int_075_distribution_quantile"
+    classification: "reserved"
+    boundary_class: "distribution"
+    diagnostic_class: "reserved_distribution_required"
+    reason: "Requires Distribution type/runtime."
+    missing_types: ["Distribution"]
+    future_stage_allowed: true
+    preferred_future_stage: "extended_typespec_distribution"
+    must_not_reclassify_as: ["supported", "partially_supported", "custom_token_required"]
+  - pattern_id: "int_076_execution_submit_order"
+    classification: "non_goal"
+    boundary_class: "broker_execution"
+    diagnostic_class: "broker_execution_non_goal"
+    reason: "Requires live broker/exchange order submission."
+    missing_types: []
+    future_stage_allowed: false
+    preferred_future_stage: "non_goal"
+    must_not_reclassify_as: ["supported", "partially_supported", "custom_token_required"]
+  - pattern_id: "int_077_execution_cancel_order"
+    classification: "non_goal"
+    boundary_class: "broker_execution"
+    diagnostic_class: "broker_execution_non_goal"
+    reason: "Requires live broker/exchange order cancellation."
+    missing_types: []
+    future_stage_allowed: false
+    preferred_future_stage: "non_goal"
+    must_not_reclassify_as: ["supported", "partially_supported", "custom_token_required"]
+  - pattern_id: "int_078_execution_fill_report"
+    classification: "non_goal"
+    boundary_class: "execution_feedback"
+    diagnostic_class: "execution_feedback_runtime_non_goal"
+    reason: "Requires execution feedback runtime."
+    missing_types: []
+    future_stage_allowed: false
+    preferred_future_stage: "non_goal"
+    must_not_reclassify_as: ["supported", "partially_supported", "custom_token_required"]
+  - pattern_id: "int_079_order_book_imbalance"
+    classification: "reserved"
+    boundary_class: "order_book_event_stream"
+    diagnostic_class: "order_book_event_runtime_not_supported"
+    reason: "Requires order-book event runtime."
+    missing_types: ["EventStream", "OrderBook"]
+    future_stage_allowed: true
+    preferred_future_stage: "extended_typespec_orderbook"
+    must_not_reclassify_as: ["supported", "partially_supported", "custom_token_required"]
+  - pattern_id: "int_080_hft_latency_arbitrage"
+    classification: "reserved"
+    boundary_class: "hft_runtime"
+    diagnostic_class: "reserved_hft_runtime_required"
+    reason: "Requires HFT runtime."
+    missing_types: ["EventStream"]
+    future_stage_allowed: true
+    preferred_future_stage: "extended_typespec_eventstream"
+    must_not_reclassify_as: ["supported", "partially_supported", "custom_token_required"]
+  - pattern_id: "ext_015_earnings_event_drift"
+    classification: "reserved"
+    boundary_class: "event_stream"
+    diagnostic_class: "reserved_event_stream_required"
+    reason: "Requires event stream data/runtime."
+    missing_types: ["EventStream"]
+    future_stage_allowed: true
+    preferred_future_stage: "extended_typespec_eventstream"
+    must_not_reclassify_as: ["supported", "partially_supported", "custom_token_required"]
+  - pattern_id: "ext_016_order_book_imbalance"
+    classification: "reserved"
+    boundary_class: "order_book_event_stream"
+    diagnostic_class: "order_book_event_runtime_not_supported"
+    reason: "Requires order-book event runtime."
+    missing_types: ["EventStream", "OrderBook"]
+    future_stage_allowed: true
+    preferred_future_stage: "extended_typespec_orderbook"
+    must_not_reclassify_as: ["supported", "partially_supported", "custom_token_required"]
+  - pattern_id: "ext_017_live_broker_execution"
+    classification: "non_goal"
+    boundary_class: "broker_execution"
+    diagnostic_class: "broker_execution_non_goal"
+    reason: "Requires live broker order placement."
+    missing_types: []
+    future_stage_allowed: false
+    preferred_future_stage: "non_goal"
+    must_not_reclassify_as: ["supported", "partially_supported", "custom_token_required"]
+  - pattern_id: "ext_018_exchange_market_making"
+    classification: "non_goal"
+    boundary_class: "exchange_routing"
+    diagnostic_class: "exchange_routing_non_goal"
+    reason: "Requires exchange routing and live quote management."
+    missing_types: []
+    future_stage_allowed: false
+    preferred_future_stage: "non_goal"
+    must_not_reclassify_as: ["supported", "partially_supported", "custom_token_required"]
+  - pattern_id: "ext_019_distribution_var"
+    classification: "reserved"
+    boundary_class: "distribution"
+    diagnostic_class: "reserved_distribution_required"
+    reason: "Requires Distribution type/runtime."
+    missing_types: ["Distribution"]
+    future_stage_allowed: true
+    preferred_future_stage: "extended_typespec_distribution"
+    must_not_reclassify_as: ["supported", "partially_supported", "custom_token_required"]
+  - pattern_id: "ext_020_portfolio_optimizer"
+    classification: "reserved"
+    boundary_class: "optimizer_solver"
+    diagnostic_class: "optimizer_solver_contract_required"
+    reason: "Requires optimizer solver contract/runtime."
+    missing_types: []
+    future_stage_allowed: true
+    preferred_future_stage: "optimizer_solver_contract"
+    must_not_reclassify_as: ["supported", "partially_supported", "custom_token_required"]
+  - pattern_id: "dog_005_reserved_event_stream_orderbook"
+    classification: "reserved"
+    boundary_class: "order_book_event_stream"
+    diagnostic_class: "order_book_event_runtime_not_supported"
+    reason: "Requires EventStream, OrderBook, and event-time replay runtime."
+    missing_types: ["EventStream", "OrderBook"]
+    future_stage_allowed: true
+    preferred_future_stage: "extended_typespec_orderbook"
+    must_not_reclassify_as: ["supported", "partially_supported", "custom_token_required"]
+negative_tests:
+  - id: "event_stream_intraday"
+    expected_classification: "reserved"
+    diagnostic_class: "reserved_event_stream_required"
+    missing_types: ["EventStream"]
+    forbidden_reclassification: ["supported", "partially_supported", "custom_token_required"]
+  - id: "order_book_imbalance"
+    expected_classification: "reserved"
+    diagnostic_class: "order_book_event_runtime_not_supported"
+    missing_types: ["EventStream", "OrderBook"]
+    forbidden_reclassification: ["supported", "partially_supported", "custom_token_required"]
+  - id: "hft_latency_arbitrage"
+    expected_classification: "reserved"
+    diagnostic_class: "reserved_hft_runtime_required"
+    missing_types: ["EventStream"]
+    forbidden_reclassification: ["supported", "partially_supported", "custom_token_required"]
+  - id: "same_bar_execution_feedback"
+    expected_classification: "reserved"
+    diagnostic_class: "same_bar_feedback_not_supported"
+    missing_types: ["EventStream"]
+    forbidden_reclassification: ["supported", "partially_supported", "custom_token_required"]
+  - id: "distribution_var"
+    expected_classification: "reserved"
+    diagnostic_class: "reserved_distribution_required"
+    missing_types: ["Distribution"]
+    forbidden_reclassification: ["supported", "partially_supported", "custom_token_required"]
+  - id: "optimizer_solver_allocation"
+    expected_classification: "reserved"
+    diagnostic_class: "optimizer_solver_contract_required"
+    missing_types: []
+    forbidden_reclassification: ["supported", "partially_supported", "custom_token_required"]
+  - id: "live_broker_execution"
+    expected_classification: "non_goal"
+    diagnostic_class: "broker_execution_non_goal"
+    missing_types: []
+    forbidden_reclassification: ["supported", "partially_supported", "custom_token_required"]
+  - id: "exchange_order_router"
+    expected_classification: "non_goal"
+    diagnostic_class: "exchange_routing_non_goal"
+    missing_types: []
+    forbidden_reclassification: ["supported", "partially_supported", "custom_token_required"]
+  - id: "full_backtest_engine_request"
+    expected_classification: "non_goal"
+    diagnostic_class: "full_backtest_engine_non_goal"
+    missing_types: []
+    forbidden_reclassification: ["supported", "partially_supported", "custom_token_required"]

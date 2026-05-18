@@ -77,6 +77,38 @@ metadata and integrity, but it does not approve, grant, or execute custom code.
 | --- | --- |
 | int_040_net_normalize | tests/coverage_cases/panel_factor_weight/group_neutral_net_normalize_weights.partial.gkr.yaml, tests/coverage_cases/panel_factor_weight/group_neutral_net_normalize_weights.hashes.json |
 
+## Reserved / Non-Goal Boundary
+
+PR11 records audit evidence for reserved design and non-goal rows. Reserved
+rows are future design boundaries that require explicit TypeSpec/runtime
+work before use. Non-goal rows remain outside QST scope and must not be
+weakened into partial, custom-token, or supported classifications.
+
+- Reserved rows: `12`
+- Non-goal rows: `5`
+- Missing boundary rows: `0`
+- Boundary false-supported count: `0`
+
+| Row | Classification | Diagnostic class | Boundary class | Reason |
+| --- | --- | --- | --- | --- |
+| dog_005_reserved_event_stream_orderbook | reserved | order_book_event_runtime_not_supported | order_book_event_stream | Requires EventStream, OrderBook, and event-time replay runtime. |
+| ext_015_earnings_event_drift | reserved | reserved_event_stream_required | event_stream | Requires event stream data/runtime. |
+| ext_016_order_book_imbalance | reserved | order_book_event_runtime_not_supported | order_book_event_stream | Requires order-book event runtime. |
+| ext_017_live_broker_execution | non_goal | broker_execution_non_goal | broker_execution | Requires live broker order placement. |
+| ext_018_exchange_market_making | non_goal | exchange_routing_non_goal | exchange_routing | Requires exchange routing and live quote management. |
+| ext_019_distribution_var | reserved | reserved_distribution_required | distribution | Requires Distribution type/runtime. |
+| ext_020_portfolio_optimizer | reserved | optimizer_solver_contract_required | optimizer_solver | Requires optimizer solver contract/runtime. |
+| int_071_optimizer_mean_variance | reserved | optimizer_solver_contract_required | optimizer_solver | Deterministic solver/runtime contract missing. |
+| int_072_event_join_asof | reserved | reserved_event_stream_required | event_stream | Requires EventStream runtime/type. |
+| int_073_event_filter | reserved | reserved_event_stream_required | event_stream | Requires EventStream runtime/type. |
+| int_074_distribution_normal_fit | reserved | reserved_distribution_required | distribution | Requires Distribution type/runtime. |
+| int_075_distribution_quantile | reserved | reserved_distribution_required | distribution | Requires Distribution type/runtime. |
+| int_076_execution_submit_order | non_goal | broker_execution_non_goal | broker_execution | Requires live broker/exchange order submission. |
+| int_077_execution_cancel_order | non_goal | broker_execution_non_goal | broker_execution | Requires live broker/exchange order cancellation. |
+| int_078_execution_fill_report | non_goal | execution_feedback_runtime_non_goal | execution_feedback | Requires execution feedback runtime. |
+| int_079_order_book_imbalance | reserved | order_book_event_runtime_not_supported | order_book_event_stream | Requires order-book event runtime. |
+| int_080_hft_latency_arbitrage | reserved | reserved_hft_runtime_required | hft_runtime | Requires HFT runtime. |
+
 ## Next Best Expansions
 
 | Family or kernel | Type | Weighted gain | Complexity cost | Coverage efficiency |
