@@ -1,63 +1,27 @@
 # QST
 
-> Status: archived agent-ready research prototype.
->
-> QST is no longer under active development. It is preserved as a completed
-> prototype for typed strategy records, canonical hashing, validation, token
-> surface governance, Coverage Frontier measurement, and agent handoff.
->
-> The final tree includes a Qlib partial workflow adapter proof. It imports
-> Qlib workflow YAML as QST record-layer candidate GKR plus coverage evidence
-> without importing Qlib, running qrun, training models, running inference,
-> executing backtests, or connecting to brokers or exchanges.
+Archived agent-ready research prototype for typed quantitative strategy records.
 
-QST is a typed, canonical strategy record system for research and review workflows. It defines a structured strategy IR, deterministic canonical JSON, stable hash classes, reference token semantics, package metadata, and validation traces for Graph Kernel Records (GKR).
+QST turns strategy intent into deterministic Graph Kernel Records (GKR): typed
+`.gkr.yaml` files that can be validated, canonicalized, hashed, reviewed, and
+handed off to agents or downstream systems.
 
-QST is not a trading bot, broker adapter, exchange adapter, portfolio optimizer, or production execution engine. It is the record and verification layer that those systems can consume after they implement their own controls.
+It is not a trading bot, broker adapter, exchange adapter, backtester, optimizer
+runtime, or production execution engine.
 
-## Final Completed Scope
+## Status
 
-- P0 tokenizer / GKR record loop
-- P0.1 hardening and acceptance
-- Stage 3A-3C token surface, demos, prompt pack, and agent guidance
-- Coverage Frontier v0.3 matrix, governance, dogfood set, report, and publication gate
-- Agent takeover package and secondary development guides
-- Qlib partial workflow adapter proof and adapter boundary documentation
+This repository is closed as an **archived agent-ready research prototype**.
 
-## Not Implemented
+The final tree includes:
 
-- live trading
-- full backtesting
-- broker or exchange integration
-- arbitrary Python strategy tokenization
-- Qlib runtime replacement, model training, inference execution, qrun execution,
-  backtest execution, or lossless Qlib conversion
-- full diff / mutate / repair
-- full parser or authoring DSL
-- plugin / MCP ecosystem
-- RL strategy search
-
-## Final Handoff
-
-Start here:
-
-- [Final Handoff](docs/FINAL_HANDOFF.md)
-- [Agent Takeover Prompt](docs/agent/AGENT_TAKEOVER_PROMPT.md)
-- [Agent Playbook](docs/agent/AGENT_PLAYBOOK.md)
-- [Usage Guide](docs/agent/USAGE_GUIDE.md)
-
-## Current Status
-
-The active public tree targets:
-
-- Python import package: `qst`
-- CLI: `qst`
-- Distribution name: `quant-strategy-tokenizer`
-- Editable strategy source: `.gkr.yaml`
-- Packaged Graph Kernel Record suffix: `.gkr`
-- Internal schema identity: `qst-ir/0.4` and `qst-canonical/0.4`
-
-The public tree is intentionally current-only. Earlier construction notes and audit history are preserved outside the active documentation set in the release artifact attached to the pre-reset tag.
+- typed `qst-ir/0.4` strategy records
+- deterministic `qst-canonical/0.4` canonical JSON
+- graph, parameter, and instance hashes
+- token surface governance and conformance tests
+- Coverage Frontier v0.3 evidence and publication gate
+- active agent prompt pack and handoff docs
+- a Qlib partial workflow adapter proof
 
 ## Install
 
@@ -65,47 +29,18 @@ The public tree is intentionally current-only. Earlier construction notes and au
 pip install -e ".[dev]"
 ```
 
-## Quick Start
-
-Validate the vocabulary and inspect a reference strategy:
+## Quick Check
 
 ```bash
-qst vocabulary --check
-qst validate examples/strategies/kdj_cross_basic.gkr.yaml
-qst hash examples/strategies/kdj_cross_basic.gkr.yaml
-qst canonicalize examples/strategies/kdj_cross_basic.gkr.yaml --output /tmp/kdj.canonical.json
+python -m qst.cli vocabulary --check
+python -m qst.cli validate examples/strategies/kdj_cross_basic.gkr.yaml
+python -m qst.cli hash examples/strategies/kdj_cross_basic.gkr.yaml
+python -m qst.cli canonicalize examples/strategies/kdj_cross_basic.gkr.yaml --output .local_audit/kdj.canonical.json
 ```
 
-Run the same commands through the module entry point:
+## Qlib Adapter Proof
 
-```bash
-python -m qst --help
-python -m qst.cli hash examples/strategies/kdj_with_ema_filter.gkr.yaml
-```
-
-Custom-token workflows are explicit and approval-bound:
-
-```bash
-qst token verify --help
-qst token approve --help
-qst token execute --help
-```
-
-Public token-surface demos live under `examples/strategies/<case>/strategy.gkr.yaml`:
-
-```bash
-qst validate examples/strategies/01_ema_cross/strategy.gkr.yaml
-qst hash examples/strategies/12_custom_token_kalman_signal/strategy.gkr.yaml
-```
-
-The 12-demo index is [examples/strategies/README.md](examples/strategies/README.md).
-Each demo has validation diagnostics and graph/param/instance hash sentinels
-under `tests/reference/strategies/<case>/`.
-
-## Qlib Partial Adapter Proof
-
-Import a supported Qlib workflow YAML as candidate QST records and coverage
-evidence:
+QST includes a partial Qlib workflow YAML importer:
 
 ```bash
 python -m qst.cli adapter qlib import examples/adapters/qlib/workflow_config_lightgbm_alpha158.yaml --output .local_audit/qlib_lightgbm_alpha158.gkr.yaml --coverage .local_audit/qlib_lightgbm_alpha158.coverage.json
@@ -114,54 +49,66 @@ python -m qst.cli hash .local_audit/qlib_lightgbm_alpha158.gkr.yaml
 python -m qst.cli canonicalize .local_audit/qlib_lightgbm_alpha158.gkr.yaml --output .local_audit/qlib_lightgbm_alpha158.canonical.json
 ```
 
-The adapter is partial and not lossless. It records Qlib workflow structure; it
-does not execute Qlib or replace a Qlib research/runtime environment.
+The adapter is record-layer evidence only. It does not import Qlib, run qrun,
+train models, run inference, execute backtests, connect to brokers or exchanges,
+or claim lossless Qlib conversion.
 
-## What QST Provides
+## What It Provides
 
-- A single active IR target with typed nodes, structured token refs, capabilities, and port signatures.
-- Canonical JSON and deterministic hash helpers for graph, params, instance, behavior, signatures, token specs, token packs, runtime environments, audits, and reference artifacts.
-- TypeSpec and PortSpec models for scalar, time-series, panel, decision, state, event, and stream surfaces.
-- Temporal validation, numeric policy metadata, token evolution policy, TokenSpec and TokenPack metadata, and registry resolution.
-- Token surface metadata for family, maturity, execution support, contracts, and agent-facing usage notes.
-- Reference semantics for state, FSM, decision algebra, panel operators, weight operators, and custom token integrity/approval/execution boundaries.
-- Reference validation fixtures under `tests/reference/` for temporal, state, panel, and custom-token cases.
+- **Record layer:** stable `.gkr.yaml` strategy records with typed nodes,
+  token refs, capabilities, and port signatures.
+- **Identity layer:** canonical JSON plus deterministic graph, parameter, and
+  instance hashes.
+- **Token layer:** accepted, experimental, reserved, and custom-token surfaces
+  with maturity and execution-support metadata.
+- **Evidence layer:** public demos, reference diagnostics, hash sentinels,
+  coverage matrix, coverage report, and dogfood cases.
+- **Agent layer:** active prompt pack, takeover prompt, playbook, usage guide,
+  and secondary development guides.
 
-## Repository Layout
+## Boundaries
+
+QST deliberately does not provide:
+
+- live trading
+- broker or exchange integration
+- full backtesting
+- Qlib runtime replacement
+- qrun execution
+- model training or inference execution
+- lossless Qlib conversion
+- arbitrary Python strategy parsing
+- production portfolio optimization
+- profitability claims
+
+Custom-token execution is explicit and approval-bound. Verification does not
+import or execute user code; execution requires integrity verification, local
+approval, an execution grant, and output validation.
+
+## Handoff
+
+Start here:
+
+- [Final Handoff](docs/FINAL_HANDOFF.md)
+- [Final Scope](docs/FINAL_SCOPE.md)
+- [Final Acceptance](docs/FINAL_ACCEPTANCE.md)
+- [Agent Takeover Prompt](docs/agent/AGENT_TAKEOVER_PROMPT.md)
+- [Agent Playbook](docs/agent/AGENT_PLAYBOOK.md)
+- [Usage Guide](docs/agent/USAGE_GUIDE.md)
+
+## Key Paths
 
 ```text
 qst/                         Python package and CLI
-docs/architecture.md         System architecture
-docs/security.md             Trust and execution boundary
-docs/reference.md            Schema and artifact reference
-docs/token_family_registry.md Token family, maturity, and execution-support registry
-docs/token_coverage.md       Token coverage and hash impact matrix
-docs/adr/                    Active architecture decisions
-docs/agent/                  Agent workflow and conformance guidance
-docs/project_history/        Public background material
-examples/strategies/         Public GKR strategy examples
-examples/strategies/README.md Public demo index and coverage table
-examples/custom_token/       Custom-token reference example
+examples/strategies/         12 public GKR strategy examples
 examples/adapters/qlib/      Qlib partial workflow adapter examples
+examples/custom_token/       Custom-token reference example
 tests/reference/             Deterministic reference fixtures and traces
-docs/reports/                Token surface acceptance and gap-review reports
-tests/                       Unit and conformance tests
+tests/adapters/qlib/         Qlib adapter proof tests
+docs/agent/                  Agent handoff and prompt guidance
+docs/adapters/               Adapter boundary and Qlib adapter guide
+docs/reports/                Coverage Frontier and acceptance reports
 ```
-
-## Security Boundary
-
-Custom token verification does not import or execute user code. Execution requires integrity verification, local approval, an execution grant, and output validation against TokenSpec ports and numeric policy. There is no sandbox in this tree; executing a custom token means executing approved local Python code.
-
-See [docs/security.md](docs/security.md).
-
-## Limitations
-
-- No broad strategy runtime is provided for every IR node.
-- No broker, exchange, order router, or production trading engine is included.
-- No portfolio optimizer or simultaneous constraint solver is included.
-- Token maturity `accepted` does not imply broad runtime executability; check `execution_support`.
-- Panel numeric behavior is semantic float64 reference behavior, not bit-exact reproducibility.
-- `.gkr` package handling is reserved by suffix and documentation boundary; this tree does not add a packaged runtime.
 
 ## Documentation
 
@@ -170,8 +117,16 @@ See [docs/security.md](docs/security.md).
 - [Reference](docs/reference.md)
 - [Token Family Registry](docs/token_family_registry.md)
 - [Token Coverage](docs/token_coverage.md)
-- [Stage 3B Token Surface Acceptance](docs/reports/token_surface_acceptance.md)
-- [GKR Artifact Naming ADR](docs/adr/gkr-artifact-naming.md)
-- [Token-First Surface ADR](docs/adr/token-first-after-core.md)
+- [Coverage Report](docs/reports/strategy_coverage_report.md)
+- [Qlib Adapter Boundary](docs/adapters/QLIB_ADAPTER_BOUNDARY.md)
 - [Agent Guidance](docs/agent/README.md)
-- [Project Background](docs/project_history/PROJECT_EXPERIENCE.md)
+
+## Project Identity
+
+- Python import package: `qst`
+- CLI: `qst`
+- Distribution name: `quant-strategy-tokenizer`
+- Editable strategy source: `.gkr.yaml`
+- Packaged record suffix: `.gkr`
+- IR: `qst-ir/0.4`
+- Canonical schema: `qst-canonical/0.4`
