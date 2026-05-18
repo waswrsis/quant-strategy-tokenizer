@@ -7,7 +7,7 @@ for claiming built-in coverage.
 
 ```yaml
 custom_token_policy:
-  max_weighted_share: 0.40
+  max_weighted_share: 0.30
   counts_toward_routable_record_coverage: true
   counts_toward_direct_builtin_coverage: false
   requires_template: true
@@ -20,7 +20,7 @@ Custom-token routes must preserve verify, approve, grant, execute, and output-va
 boundaries. They do not imply custom code execution.
 
 The active coverage matrix uses `thresholds.custom_token_route_max` as the
-machine-enforced cap. PR10 records route evidence in
+machine-enforced cap. PR12 sets the frontier publication cap to `0.30`. PR10 records route evidence in
 `tests/coverage_cases/custom_token_governance/custom_token_routes.yaml` so a
 row cannot be counted as custom-token coverage by reason and ports alone.
 

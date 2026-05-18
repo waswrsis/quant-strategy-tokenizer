@@ -5,16 +5,17 @@ metadata:
   scope: "record_validation_hash_agent_authoring"
   runtime_scope: "out_of_scope"
   benchmark_kind: "mixed"
-  repo_head: "88b6d60"
-  updated_at: "2026-05-17"
-  note: "Dogfood target set matrix plus PR6 core rule, PR8 panel/factor/weight, PR9 state/gate/risk, and PR10 custom-token governance evidence."
+  repo_head: "c065dc1"
+  updated_at: "2026-05-18"
+  note: "Coverage Frontier v0.3 publication-gate matrix with PR6-PR11 evidence; PR12 changes gate policy only and does not change pattern count."
 
 thresholds:
-  intent_routing_min: 0.80
-  direct_builtin_min: 0.30
-  routable_record_min: 0.50
-  custom_token_route_max: 0.40
-  false_supported_max: 0.05
+  intent_routing_min: 0.90
+  direct_builtin_min: "measured_frontier"
+  routable_record_min: "measured_frontier"
+  custom_token_route_max: 0.30
+  false_supported_max: 0.02
+  reserved_non_goal_false_positive_max: 0.02
 
 coverage_policy:
   custom_token_discount:

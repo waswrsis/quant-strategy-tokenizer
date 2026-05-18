@@ -8,7 +8,7 @@ the coverage matrix.
 ## Policy
 
 - Route manifest: `tests/coverage_cases/custom_token_governance/custom_token_routes.yaml`
-- Route cap: `custom_token_route_max = 0.40`
+- Route cap: `custom_token_route_max = 0.30` after the PR12 frontier publication gate
 - Provisional discount: `0.5`
 - Verification boundary: metadata and integrity only
 - Approval, grant, and execution remain separate user-authorized steps

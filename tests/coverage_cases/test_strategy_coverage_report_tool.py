@@ -30,6 +30,8 @@ def test_report_json_includes_expected_counts() -> None:
     assert report["benchmark_groups"]["dogfood"]["count"] == 5
     assert report["dogfood_pattern_count"] == 5
     assert report["dogfood_target"]["publication_status"] == "pass"
+    assert report["frontier_gate"]["result"] == "pass"
+    assert report["frontier_gate"]["headline"]["metric"] == "routable_record_coverage_raw"
     assert report["check"]["result"] == "pass"
 
 
@@ -64,6 +66,7 @@ def test_json_cli_output_is_parseable() -> None:
 
     payload = json.loads(completed.stdout)
     assert payload["coverage_frontier"]["pattern_count"] == 120
+    assert payload["coverage_frontier"]["frontier_gate"]["result"] == "pass"
     assert payload["coverage_frontier"]["check"]["result"] == "pass"
 
 
@@ -86,6 +89,8 @@ def test_markdown_writer_creates_expected_sections(tmp_path: Path) -> None:
     assert "# Strategy Coverage Report" in text
     assert "## Benchmark Groups" in text
     assert "## Metrics" in text
+    assert "## Frontier Gate" in text
+    assert "## Public Statement" in text
     assert "## Next Best Expansions" in text
     assert "## Custom Token Governance" in text
     assert "## Reserved / Non-Goal Boundary" in text

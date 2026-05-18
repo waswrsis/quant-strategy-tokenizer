@@ -96,7 +96,7 @@ def test_report_exposes_custom_token_governance_and_cap_status() -> None:
     assert governance["active_route_count"] == 10
     assert governance["missing_governance_rows"] == []
     assert governance["stale_route_count"] == 0
-    assert governance["route_cap"] == 0.4
+    assert governance["route_cap"] == 0.3
     assert report["metrics"]["custom_token_route_share"] < governance["route_cap"]
     assert "Custom Token Governance" in markdown
     assert "int_013_kdj_cross_basic" in markdown

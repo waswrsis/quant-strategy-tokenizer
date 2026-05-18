@@ -19,6 +19,7 @@ percentage.
 - PR 9 scope: state/gate/risk record token batch coverage evidence
 - PR 10 scope: custom-token route governance, cap enforcement, and stale-route cleanup
 - PR 11 scope: reserved/non-goal boundary evidence, diagnostic mapping, and negative fixtures
+- PR 12 scope: frontier publication gate, generated public statement, and CI threshold enforcement
 - Runtime, IR, hash, schema, CI, prompt, and public example behavior changes: none
 - Token surface changes: PR6, PR8, and PR9 accepted reference-helper tokens only; no broad runtime execution
 
@@ -26,17 +27,17 @@ percentage.
 
 | Command | Exit code | Output summary |
 | --- | ---: | --- |
-| `git status --short` | 0 | PR11 construction edits present before final commit |
+| `git status --short` | 0 | PR12 construction edits present before final commit |
 | `git rev-parse --abbrev-ref HEAD` | 0 | `main` |
-| `git rev-parse HEAD` | 0 | `67f6c87` before PR11 commit |
+| `git rev-parse HEAD` | 0 | `c065dc1` before PR12 commit |
 | `python -m qst.cli --help` | 0 | CLI exposes `vocabulary`, `validate`, `hash`, `canonicalize`, `write-json`, and `token` |
 | `python -m qst.cli vocabulary --check` | 0 | `ok: true`; 6 packs; 179 tokens; zero diagnostics |
-| `python -m pytest tests -q` | 0 | `507 passed` |
-| `python -m pytest --cov=qst --cov-fail-under=85 -q` | 0 | `507 passed`; total code coverage `88.89%` |
+| `python -m pytest tests -q` | 0 | `511 passed` |
+| `python -m pytest --cov=qst --cov-fail-under=85 -q` | 0 | `511 passed`; total code coverage `88.89%` |
 | `python tools/validate_strategy_coverage_matrix.py docs/reports/strategy_coverage_matrix.yaml` | 0 | validation `pass`; zero issues |
 | `python tools/report_strategy_coverage.py docs/reports/strategy_coverage_matrix.yaml --check` | 0 | report check `pass`; zero issues |
 | `python -m pytest tests/token_conformance -q` | 0 | `53 passed` |
-| `python -m pytest tests/coverage_cases -q` | 0 | `50 passed` |
+| `python -m pytest tests/coverage_cases -q` | 0 | `54 passed` |
 | `python -m pytest tests/token_conformance/test_wp3a5_reserved_design.py -q` | 0 | `6 passed` |
 | `python -m pytest tests/token_acceptance/test_reserved_design_rejection.py -q` | 0 | `2 passed` |
 | `python -m pytest tests/custom_runtime -q` | 0 | `16 passed` |
@@ -55,6 +56,7 @@ percentage.
 - `docs/reports/strategy_coverage_matrix.yaml`
 - `docs/reports/external_benchmark_sources.md`
 - `docs/reports/strategy_coverage_report.md`
+- `docs/reports/strategy_coverage_public_statement.md`
 - `tests/coverage_cases/external/README.md`
 - `tests/coverage_cases/external/external_benchmark_seed.yaml`
 - `tools/validate_strategy_coverage_matrix.py`
@@ -102,6 +104,10 @@ PR 11 records reserved/non-goal boundary review evidence, maps boundary rows to
 stable diagnostic classes, and adds negative boundary fixtures. It does not add
 EventStream, Distribution, OrderBook, optimizer solver, broker/exchange,
 live-execution, backtest, or broad runtime support.
+PR 12 applies the frontier publication gate, upgrades matrix thresholds to
+frontier policy, and records the public statement generated from the report
+tool. It does not change any pattern classification, token surface, runtime, or
+public demo semantics.
 
 ## Existing Examples
 
@@ -181,6 +187,7 @@ PR 2 adds matrix v0 with seed rows. PR 3 validates that matrix and generates
 | External stratification | complete for PR 2 required categories | matrix v0 sanity check |
 | Validator result | pass | `tools/validate_strategy_coverage_matrix.py` |
 | Report check result | pass | `tools/report_strategy_coverage.py --check` |
+| Frontier gate result | pass | `tools/report_strategy_coverage.py --check` |
 
 PR6 registers eight core rule coverage rows:
 
@@ -271,6 +278,29 @@ Current generated metrics from `docs/reports/strategy_coverage_report.md`:
 | boundary_false_supported_count | 0 |
 | kernel_gap_count | 12 |
 | token_bloat_index | 0.0522 |
+
+## Frontier Gate
+
+PR12 applies the frontier publication thresholds in
+`docs/reports/strategy_coverage_matrix.yaml`.
+
+Current gate status:
+
+- frontier gate result: pass
+- headline metric: `routable_record_coverage_raw`
+- headline value: 89.70%
+- direct built-in coverage: 37.33%
+- discounted routable record coverage: 85.56%
+- custom-token route cap: 0.30
+- current custom-token route share: 0.0923
+- false-supported max: 0.02
+- reserved/non-goal false positive max: 0.02
+
+The public statement is recorded at
+`docs/reports/strategy_coverage_public_statement.md`. The headline deliberately
+uses raw routable record-layer coverage and also publishes direct built-in and
+discounted routable coverage so the custom-token route contribution remains
+visible.
 
 ## Custom Token Governance
 

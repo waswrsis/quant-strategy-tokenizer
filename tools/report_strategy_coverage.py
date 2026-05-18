@@ -18,6 +18,8 @@ from validate_strategy_coverage_matrix import (
 
 DOGFOOD_MVP_TARGET = 1
 DOGFOOD_PUBLICATION_TARGET = 5
+HEADLINE_METRIC = "routable_record_coverage_raw"
+HEADLINE_METRIC_LABEL = "measured strategy record-layer raw routable coverage"
 CORE_RULE_ROW_IDS = {
     "int_020_macd_trend",
     "int_021_atr_filter",
@@ -143,6 +145,7 @@ def build_report(matrix: dict[str, Any], *, repo_root: Path | None = None) -> di
             ],
         }
     }
+    report["coverage_frontier"]["frontier_gate"] = _frontier_gate_summary(report["coverage_frontier"], matrix)
     check_issues = check_report(report, matrix)
     report["coverage_frontier"]["check"] = {
         "result": "pass" if not check_issues else "fail",
@@ -207,6 +210,8 @@ def check_report(report: dict[str, Any], matrix: dict[str, Any]) -> list[CheckIs
                 "reserved/non-goal rows are missing boundary manifest entries",
             )
         )
+    if frontier["frontier_gate"]["result"] != "pass":
+        issues.append(CheckIssue("frontier_gate_failed", "coverage frontier publication gate failed"))
     return issues
 
 
@@ -272,6 +277,45 @@ def render_markdown(report: dict[str, Any]) -> str:
     )
     for key, value in metrics.items():
         lines.append(f"| {key} | {_format_metric(value)} |")
+
+    gate = frontier["frontier_gate"]
+    headline = gate["headline"]
+    lines.extend(
+        [
+            "",
+            "## Frontier Gate",
+            "",
+            "PR12 applies publication-gate thresholds to the measured coverage frontier.",
+            "`measured_frontier` thresholds are reported as measured values, not hardcoded",
+            "target percentages.",
+            "",
+            f"- Gate result: `{gate['result']}`",
+            f"- Headline metric: `{headline['metric']}`",
+            f"- Headline value: `{_format_percent(headline['value'])}`",
+            f"- Headline label: `{headline['label']}`",
+            "",
+            "| Gate | Threshold | Measured | Result |",
+            "| --- | --- | ---: | --- |",
+        ]
+    )
+    for check in gate["checks"]:
+        lines.append(
+            "| {name} | {threshold} | {measured} | {result} |".format(
+                name=check["name"],
+                threshold=check["threshold"],
+                measured=_format_gate_value(check["measured"]),
+                result=check["result"],
+            )
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Public Statement",
+            "",
+            _public_statement_text(frontier),
+        ]
+    )
 
     custom_governance = frontier["custom_token_governance"]
     lines.extend(
@@ -495,6 +539,9 @@ def render_text(report: dict[str, Any]) -> str:
             f"dogfood_patterns: {frontier['dogfood_pattern_count']}",
             f"dogfood_publication_target: {frontier['dogfood_target']['publication_status']}",
             f"check: {frontier['check']['result']}",
+            f"frontier_gate: {frontier['frontier_gate']['result']}",
+            f"headline_metric: {frontier['frontier_gate']['headline']['metric']}",
+            f"headline_value: {_format_metric(frontier['frontier_gate']['headline']['value'])}",
             f"direct_builtin_coverage: {_format_metric(metrics['direct_builtin_coverage'])}",
             f"routable_record_coverage_raw: {_format_metric(metrics['routable_record_coverage_raw'])}",
             f"routable_record_coverage_discounted: {_format_metric(metrics['routable_record_coverage_discounted'])}",
@@ -675,6 +722,161 @@ def _reserved_non_goal_boundary_summary(
         "missing_boundary_rows": missing_rows,
         "diagnostic_classes": diagnostic_classes,
         "rows": summaries,
+    }
+
+
+def _frontier_gate_summary(frontier: dict[str, Any], matrix: dict[str, Any]) -> dict[str, Any]:
+    metrics = frontier["metrics"]
+    thresholds = matrix.get("thresholds") if isinstance(matrix.get("thresholds"), dict) else {}
+    group_counts = frontier["benchmark_groups"]
+    validation = frontier["validation"]
+    custom_governance = frontier["custom_token_governance"]
+    boundary = frontier["reserved_non_goal_boundary"]
+
+    frontier_count = max(int(frontier.get("frontier_pattern_count", 0)), 1)
+    classified_count = 0
+    for group_name, summary in group_counts.items():
+        if group_name == "dogfood":
+            continue
+        class_counts = summary.get("class_counts", {})
+        if isinstance(class_counts, dict):
+            classified_count += sum(int(count) for count in class_counts.values())
+    intent_routing = _ratio(classified_count, frontier_count)
+    reserved_non_goal_false_positive_rate = _ratio(
+        int(metrics["boundary_false_supported_count"]),
+        frontier_count,
+    )
+    checks = [
+        _gate_check("intent_routing", thresholds.get("intent_routing_min", 0.0), intent_routing, minimum=True),
+        _gate_check(
+            "direct_builtin",
+            thresholds.get("direct_builtin_min", "measured_frontier"),
+            metrics["direct_builtin_coverage"],
+            minimum=True,
+        ),
+        _gate_check(
+            "routable_record_raw",
+            thresholds.get("routable_record_min", "measured_frontier"),
+            metrics["routable_record_coverage_raw"],
+            minimum=True,
+        ),
+        _gate_check(
+            "custom_token_route_share",
+            thresholds.get("custom_token_route_max", 1.0),
+            metrics["custom_token_route_share"],
+            minimum=False,
+        ),
+        _gate_check(
+            "mechanical_false_supported_rate",
+            thresholds.get("false_supported_max", 1.0),
+            metrics["false_supported_rate_mechanical"],
+            minimum=False,
+        ),
+        _gate_check(
+            "semantic_false_supported_rate",
+            thresholds.get("false_supported_max", 1.0),
+            metrics["false_supported_rate_semantic"],
+            minimum=False,
+        ),
+        _gate_check(
+            "boundary_false_supported_rate",
+            thresholds.get("false_supported_max", 1.0),
+            metrics["false_supported_rate_boundary"],
+            minimum=False,
+        ),
+        _gate_check(
+            "reserved_non_goal_false_positive_rate",
+            thresholds.get("reserved_non_goal_false_positive_max", 1.0),
+            reserved_non_goal_false_positive_rate,
+            minimum=False,
+        ),
+        _minimum_count_gate_check(
+            "external_benchmark_rows",
+            20,
+            group_counts.get("external_benchmark", {}).get("count", 0),
+        ),
+        _exact_gate_check("dogfood_publication_target", "pass", frontier["dogfood_target"]["publication_status"]),
+        _exact_gate_check("matrix_validator", "pass", validation["result"]),
+        _exact_gate_check("custom_governance_manifest", 0, len(custom_governance["missing_governance_rows"])),
+        _exact_gate_check("reserved_non_goal_boundary_manifest", 0, len(boundary["missing_boundary_rows"])),
+    ]
+    issues = [
+        {
+            "code": f"{check['name']}_failed",
+            "message": f"{check['name']} gate failed",
+        }
+        for check in checks
+        if check["result"] != "pass"
+    ]
+    headline_value = float(metrics[HEADLINE_METRIC])
+    return {
+        "result": "pass" if not issues else "fail",
+        "headline": {
+            "metric": HEADLINE_METRIC,
+            "label": HEADLINE_METRIC_LABEL,
+            "value": headline_value,
+            "percent": _round(headline_value * 100),
+        },
+        "threshold_policy": {
+            "intent_routing_min": thresholds.get("intent_routing_min"),
+            "direct_builtin_min": thresholds.get("direct_builtin_min"),
+            "routable_record_min": thresholds.get("routable_record_min"),
+            "custom_token_route_max": thresholds.get("custom_token_route_max"),
+            "false_supported_max": thresholds.get("false_supported_max"),
+            "reserved_non_goal_false_positive_max": thresholds.get("reserved_non_goal_false_positive_max"),
+        },
+        "checks": checks,
+        "issues": issues,
+        "group_split": {
+            "internal_matrix": group_counts.get("internal_matrix", {}),
+            "external_benchmark": group_counts.get("external_benchmark", {}),
+            "dogfood": group_counts.get("dogfood", {}),
+        },
+        "public_statement": _public_statement_text(frontier),
+    }
+
+
+def _gate_check(name: str, threshold: object, measured: object, *, minimum: bool) -> dict[str, Any]:
+    measured_number = _number(measured, 0.0)
+    if threshold == "measured_frontier":
+        result = "pass"
+        threshold_mode = "measured_frontier"
+    else:
+        threshold_number = _number(threshold, 0.0 if minimum else 1.0)
+        if minimum:
+            result = "pass" if measured_number >= threshold_number else "fail"
+            threshold_mode = "minimum"
+        else:
+            result = "pass" if measured_number <= threshold_number else "fail"
+            threshold_mode = "maximum"
+    return {
+        "name": name,
+        "threshold": threshold,
+        "measured": measured_number,
+        "result": result,
+        "threshold_mode": threshold_mode,
+    }
+
+
+def _exact_gate_check(name: str, expected: object, measured: object) -> dict[str, Any]:
+    result = "pass" if measured == expected else "fail"
+    return {
+        "name": name,
+        "threshold": expected,
+        "measured": measured,
+        "result": result,
+        "threshold_mode": "exact",
+    }
+
+
+def _minimum_count_gate_check(name: str, expected: int, measured: object) -> dict[str, Any]:
+    measured_count = int(measured) if isinstance(measured, int) else 0
+    return {
+        "name": name,
+        "threshold": expected,
+        "measured": measured_count,
+        "result": "pass" if measured_count >= expected else "fail",
+        "threshold_mode": "minimum",
     }
 
 
@@ -878,6 +1080,32 @@ def _format_metric(value: object) -> str:
     if isinstance(value, float):
         return f"{value:.4f}"
     return str(value)
+
+
+def _format_percent(value: object) -> str:
+    return f"{(_number(value, 0.0) * 100):.2f}%"
+
+
+def _format_gate_value(value: object) -> str:
+    if isinstance(value, float):
+        return _format_metric(value)
+    return str(value)
+
+
+def _public_statement_text(frontier: dict[str, Any]) -> str:
+    metrics = frontier["metrics"]
+    headline_value = metrics[HEADLINE_METRIC]
+    return (
+        "QST has reached a measured strategy record-layer raw routable coverage "
+        f"frontier of {_format_percent(headline_value)} on the current Coverage "
+        "Frontier v0.3 benchmark. This headline includes direct built-in GKR support, "
+        "partial records, and bounded custom-token-required routes. Direct built-in "
+        f"coverage is {_format_percent(metrics['direct_builtin_coverage'])}; discounted "
+        "routable record coverage is "
+        f"{_format_percent(metrics['routable_record_coverage_discounted'])}. This does "
+        "not include runtime, backtest, broker, exchange, HFT, optimizer execution, "
+        "profitability, production execution, or live trading coverage."
+    )
 
 
 def main(argv: list[str] | None = None) -> int:

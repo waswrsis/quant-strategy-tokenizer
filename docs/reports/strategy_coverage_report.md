@@ -47,6 +47,37 @@ profitability, or portfolio optimizer coverage.
 | kernel_gap_count | 12 |
 | token_bloat_index | 0.0522 |
 
+## Frontier Gate
+
+PR12 applies publication-gate thresholds to the measured coverage frontier.
+`measured_frontier` thresholds are reported as measured values, not hardcoded
+target percentages.
+
+- Gate result: `pass`
+- Headline metric: `routable_record_coverage_raw`
+- Headline value: `89.70%`
+- Headline label: `measured strategy record-layer raw routable coverage`
+
+| Gate | Threshold | Measured | Result |
+| --- | --- | ---: | --- |
+| intent_routing | 0.9 | 1.0000 | pass |
+| direct_builtin | measured_frontier | 0.3733 | pass |
+| routable_record_raw | measured_frontier | 0.8970 | pass |
+| custom_token_route_share | 0.3 | 0.0923 | pass |
+| mechanical_false_supported_rate | 0.02 | 0.0000 | pass |
+| semantic_false_supported_rate | 0.02 | 0.0000 | pass |
+| boundary_false_supported_rate | 0.02 | 0.0000 | pass |
+| reserved_non_goal_false_positive_rate | 0.02 | 0.0000 | pass |
+| external_benchmark_rows | 20 | 20 | pass |
+| dogfood_publication_target | pass | pass | pass |
+| matrix_validator | pass | pass | pass |
+| custom_governance_manifest | 0 | 0 | pass |
+| reserved_non_goal_boundary_manifest | 0 | 0 | pass |
+
+## Public Statement
+
+QST has reached a measured strategy record-layer raw routable coverage frontier of 89.70% on the current Coverage Frontier v0.3 benchmark. This headline includes direct built-in GKR support, partial records, and bounded custom-token-required routes. Direct built-in coverage is 37.33%; discounted routable record coverage is 85.56%. This does not include runtime, backtest, broker, exchange, HFT, optimizer execution, profitability, production execution, or live trading coverage.
+
 ## Custom Token Governance
 
 PR10 records governance evidence for active custom-token routes. These routes
@@ -54,7 +85,7 @@ remain record-layer classification evidence only; verification may inspect
 metadata and integrity, but it does not approve, grant, or execute custom code.
 
 - Route share: `0.0923`
-- Route cap: `0.4000`
+- Route cap: `0.3000`
 - Discount: `0.5000` (`provisional`)
 - Active custom routes: `10`
 - Missing governance rows: `0`
