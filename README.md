@@ -11,7 +11,13 @@ runtime, or production execution engine.
 
 ## Status
 
-This repository is closed as an **archived agent-ready research prototype**.
+The tagged v0.4 line is an **archived agent-ready research prototype**. Active local
+research on the `research/qst-1.0-agent-provenance` branch is redefining QST 1.0 as a
+deterministic strategy identity, evidence, claim-control, and token-governance layer.
+The rearchitecture is staged and does not change the accepted v0.4 contracts silently.
+
+See [QST 1.0 rearchitecture](docs/rearchitecture/README.md) for the staged construction
+and freeze policy.
 
 The final tree includes:
 

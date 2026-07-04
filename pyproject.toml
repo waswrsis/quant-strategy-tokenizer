@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "quant-strategy-tokenizer"
-version = "0.1.0"
-description = "Decompose quant trading strategies into reusable computation tokens"
+version = "1.0.0a1"
+description = "Deterministic strategy identity, evidence, and governance for financial agents"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"

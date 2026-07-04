@@ -1,0 +1,45 @@
+schema_version: qst-rearchitecture-stage/1
+stage_id: 0
+title: Baseline and product redefinition
+status: frozen
+branch: research/qst-1.0-agent-provenance
+base_commit: 284baef304ce0ed785182635a4701895144a2673
+freeze_tag: qst-1.0-stage-0-baseline-frozen
+scope:
+  - product redefinition ADR
+  - v0.4 compatibility boundary
+  - stage gate and supersession policy
+  - package alpha version signal
+frozen_contracts:
+  - qst-1.0-product-boundary
+  - qst-1.0-stage-governance
+  - qst-v0.4-compatibility-baseline
+supersedes: []
+gates:
+  - command: python -m compileall -q qst
+    result: pass
+  - command: python -m ruff check .
+    result: pass
+  - command: python -m mypy qst
+    result: pass
+  - command: python -m qst.lint.stateless qst
+    result: pass
+  - command: python -m pytest tests -q
+    result: pass
+    summary: 530 passed after Stage 0
+  - command: python -m pytest --cov=qst --cov-fail-under=85 -q
+    result: pass
+    summary: 530 passed; 89.08 percent coverage
+  - command: python -m qst.cli vocabulary --check
+    result: pass
+    summary: 6 packs; 179 tokens; zero diagnostics
+  - command: python tools/validate_rearchitecture_stages.py
+    result: pass
+    summary: 1 manifest; zero issues
+  - command: python -m pytest tests/rearchitecture -q
+    result: pass
+    summary: 4 passed
+evidence_notes:
+  - The unmodified v0.4 baseline passed 526 tests at 89.08 percent coverage.
+  - Baseline commands ran on Windows with Python 3.12.10.
+  - No QST runtime, IR, canonical, token, adapter, or demo semantics changed in Stage 0.
