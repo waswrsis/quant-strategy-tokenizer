@@ -68,3 +68,7 @@ print(decision.authorized)
 Use `mode="enforce"` only where the surrounding product policy requires a gate. Do not
 infer runtime, broker, exchange, model execution, or trading authorization from these
 record-layer decisions.
+
+For consistent application-level defaults, use the named profiles documented in
+[Authority Policy Profiles](AUTHORITY_POLICY_PROFILES.md). Explicit overrides remain
+possible but must record why the configured mode was changed.

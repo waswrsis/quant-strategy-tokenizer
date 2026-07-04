@@ -34,6 +34,14 @@ def _load_manifests(root: Path) -> tuple[list[tuple[Path, dict[str, Any]]], list
             )
             continue
         manifests.append((path, value))
+    manifests.sort(
+        key=lambda item: (
+            item[1].get("stage_id")
+            if isinstance(item[1].get("stage_id"), int)
+            else float("inf"),
+            item[0].name,
+        )
+    )
     if not manifests:
         issues.append(_issue("QST_STAGE_MANIFEST_MISSING", root, "no stage manifests found"))
     return manifests, issues
@@ -138,4 +146,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

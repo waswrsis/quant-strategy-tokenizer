@@ -16,6 +16,8 @@
   adapter, token-incubator, customization, and Qlib negative paths.
 - Added Stage 9 Ed25519 authority records, scoped quorum, non-transitive delegation,
   revocation, and switchable `record_only`, `advisory`, and `enforce` policy modes.
+- Added Stage 10 use-case authority profiles and auditable mode overrides for ingestion,
+  migration, claims, token governance, and customization.
 - Kept the candidate local; no GitHub branch, tag, or release was created.
 
 ## Stage 3A Token Surface Completion

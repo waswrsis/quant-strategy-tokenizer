@@ -12,7 +12,7 @@ runtime, or production execution engine.
 ## Status
 
 The tagged v0.4 line is an **archived agent-ready research prototype**. The local
-`research/qst-1.0-agent-provenance` branch is a `1.0.0a1` candidate. Ten stages are
+`research/qst-1.0-agent-provenance` branch is a `1.0.0a1` candidate. Eleven stages are
 locally committed and frozen; nothing on this branch has been pushed.
 
 See [QST 1.0 rearchitecture](docs/rearchitecture/README.md) for the staged construction
@@ -28,6 +28,7 @@ The alpha candidate includes:
 - content-addressed artifact storage and a rebuildable SQLite index
 - deterministic Token Gap Resolver and human-governed Token Incubator
 - mode-aware Ed25519 authority records with quorum, delegation, and revocation
+- use-case authority profiles with identity-bearing declared overrides
 - FinRobot, FinGPT, FinRL-Meta, FinRL, FinRL-X, and Qlib evidence adapters
 
 ## Install

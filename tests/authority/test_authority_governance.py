@@ -8,6 +8,7 @@ from pydantic import ValidationError
 
 from qst.attestations import Attestation, seal_attestation
 from qst.authority import (
+    AuthorityBoundTransitionResult,
     AuthorityDecision,
     AuthorityPrincipal,
     AuthorityRegistry,
@@ -21,7 +22,9 @@ from qst.authority import (
     authority_key_from_public_key,
     authorize_bundle,
     build_governance_bundle,
+    controlled_release_profile,
     evaluate_claim_with_authority,
+    research_advisory_profile,
     seal_authority_registry,
     seal_delegation,
     seal_governance_statement,
@@ -483,6 +486,7 @@ def test_token_transition_binds_human_actor_subject_scope_and_signature() -> Non
         registry=registry,
         evaluated_at=LATER,
         mode="enforce",
+        mode_override_reason="Exercise the strict token-review boundary.",
     )
     assert result.applied
     assert result.proposal is not None
@@ -498,12 +502,28 @@ def test_token_transition_binds_human_actor_subject_scope_and_signature() -> Non
     assert recorded.proposal is not None
     assert recorded.authority_decision.authorized is None
     assert recorded.authority_decision.proceed
+    assert recorded.mode_selection.profile_id == "record-capture"
+
+    advisory = apply_transition_with_authority(
+        proposal,
+        transition,
+        evaluated_at=LATER,
+        authority_profile=research_advisory_profile(),
+    )
+    assert advisory.applied
+    assert advisory.mode == "advisory"
+    assert advisory.mode_selection.use_case == "token_review"
+    with pytest.raises(ValidationError, match="mode must match"):
+        AuthorityBoundTransitionResult.model_validate(
+            {**advisory.model_dump(mode="json"), "mode": "record_only"}
+        )
 
     blocked = apply_transition_with_authority(
         proposal,
         transition,
         evaluated_at=LATER,
         mode="enforce",
+        mode_override_reason="Exercise the strict token-review boundary.",
     )
     assert not blocked.applied
     assert blocked.proposal is None
@@ -543,6 +563,7 @@ def test_customization_and_claim_use_authority_bound_entrypoints() -> None:
         registry=registry,
         evaluated_at=LATER,
         mode="enforce",
+        mode_override_reason="Exercise strict customization approval.",
     )
     assert customization_result.applied
     assert customization_result.result is not None
@@ -560,6 +581,16 @@ def test_customization_and_claim_use_authority_bound_entrypoints() -> None:
     assert recorded_customization.applied
     assert recorded_customization.result is not None
     assert recorded_customization.authority_decisions[0].authorized is None
+
+    controlled_customization = apply_customizations_with_authority(
+        base,
+        (declaration,),
+        evaluated_at=LATER,
+        authority_profile=controlled_release_profile(),
+    )
+    assert not controlled_customization.applied
+    assert controlled_customization.result is None
+    assert controlled_customization.mode == "enforce"
 
     evidence = seal_evidence(
         EvidenceEnvelope(
@@ -617,6 +648,7 @@ def test_customization_and_claim_use_authority_bound_entrypoints() -> None:
         subject_ref="experiment:authority",
         evaluated_at=LATER,
         mode="enforce",
+        mode_override_reason="Exercise strict attestation verification.",
     )
     unauthorized = evaluate_claim_with_authority(
         policy,
@@ -627,6 +659,7 @@ def test_customization_and_claim_use_authority_bound_entrypoints() -> None:
         subject_ref="experiment:authority",
         evaluated_at=LATER,
         mode="enforce",
+        mode_override_reason="Exercise strict attestation verification.",
     )
     assert authorized.claim_decision.allowed
     assert authorized.authority_satisfied
@@ -674,6 +707,7 @@ def test_enforce_claim_without_attestations_does_not_invent_an_authority_gate() 
         subject_ref="experiment:evidence-only",
         evaluated_at=LATER,
         mode="enforce",
+        mode_override_reason="Exercise strict evidence-only claim evaluation.",
     )
     assert result.claim_decision.allowed
     assert result.authority_satisfied

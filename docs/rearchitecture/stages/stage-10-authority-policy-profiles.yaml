@@ -1,0 +1,77 @@
+schema_version: qst-rearchitecture-stage/1
+stage_id: 10
+title: Use-case authority policy profiles
+status: frozen
+branch: research/qst-1.0-agent-provenance
+base_tag: qst-1.0-stage-9-authority-governance-frozen
+freeze_tag: qst-1.0-stage-10-authority-policy-profiles-frozen
+scope:
+  - complete deterministic authority use-case taxonomy
+  - sealed record-capture, research-advisory, controlled-release, and strict profiles
+  - identity-bearing effective-mode selections
+  - mandatory rationale for mode-changing overrides
+  - profile-aware claim, token transition, and customization facades
+  - result-model consistency validation
+  - two-digit stage manifest ordering repair
+  - post-construction policy-profile audit
+frozen_contracts:
+  - qst-authority-policy-profile/1.0
+  - qst-authority-mode-selection/1.0
+  - qst-authority-use-cases/1.0
+supersedes:
+  - stage-9:qst-authority-policy-modes/1.0:application-selection
+supersession_reason: >-
+  Stage 9 defined safe primitive modes but intentionally left application mapping as a
+  product decision. Stage 10 adds complete named use-case profiles without changing
+  cryptographic authorization semantics. Direct mode changes remain available only as
+  explicit identity-bearing overrides with a recorded reason.
+gates:
+  - command: python -m compileall -q qst
+    result: pass
+  - command: python -m ruff check .
+    result: pass
+  - command: python -m mypy qst
+    result: pass
+    summary: 156 source files checked
+  - command: python -m qst.lint.stateless qst
+    result: pass
+  - command: python -m pytest tests/authority -q
+    result: pass
+    summary: 12 passed
+  - command: python -m pytest tests -q
+    result: pass
+    summary: 619 passed
+  - command: python -m pytest --cov=qst --cov-fail-under=85 -q
+    result: pass
+    summary: 619 passed; 89.64 percent coverage
+  - command: python tools/validate_prompt_set.py docs/agent/prompts/qst_stage_3c_v0_3_2
+    result: pass
+    summary: 14 checks; zero issues
+  - command: python tools/verify_prompt_remote_artifacts.py docs/agent/prompts/qst_stage_3c_v0_3_2
+    result: pass
+    summary: 11 artifacts checked
+  - command: python tools/validate_strategy_coverage_matrix.py docs/reports/strategy_coverage_matrix.yaml
+    result: pass
+    summary: 120 patterns; zero issues
+  - command: python tools/report_strategy_coverage.py docs/reports/strategy_coverage_matrix.yaml --check
+    result: pass
+    summary: frontier gate passed; raw routable headline 0.8970
+  - command: python -m qst.cli vocabulary --check
+    result: pass
+    summary: 6 packs; 179 tokens; zero diagnostics
+  - command: python tools/validate_rearchitecture_stages.py
+    result: pass
+    summary: 11 manifests; zero issues
+  - command: python -m pip wheel . --no-deps --wheel-dir .local_audit/stage-10-dist
+    result: pass
+    summary: quant_strategy_tokenizer-1.0.0a1-py3-none-any.whl built
+  - command: git diff --check
+    result: pass
+evidence_notes:
+  - The default profile preserves non-blocking record-layer behavior.
+  - Profiles never change the authorized fact produced by cryptographic evaluation.
+  - Explicit overrides are allowed but cannot be hidden or unreasoned.
+  - No execution, broker, exchange, backtest, model, or trading capability is added.
+  - Full review found and repaired two-digit stage ordering and facade-result consistency
+    defects before freeze.
+  - No remote branch, tag, pull request, or release is created by this stage.
