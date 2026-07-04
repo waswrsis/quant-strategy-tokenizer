@@ -1,0 +1,54 @@
+schema_version: qst-rearchitecture-stage/1
+stage_id: 2
+title: Evidence attestation and claim kernel
+status: frozen
+branch: research/qst-1.0-agent-provenance
+base_tag: qst-1.0-stage-1-resolver-frozen
+freeze_tag: qst-1.0-stage-2-evidence-kernel-frozen
+scope:
+  - actor activity and artifact provenance descriptors
+  - typed evidence envelopes
+  - issuer attestations
+  - claim policy and claim decision records
+  - domain-separated immutable identities
+frozen_contracts:
+  - qst-actor/1.0
+  - qst-activity/1.0
+  - qst-artifact-descriptor/1.0
+  - qst-evidence/1.0
+  - qst-attestation/1.0
+  - qst-claim-policy/1.0
+  - qst-claim-decision/1.0
+supersedes: []
+gates:
+  - command: python -m compileall -q qst
+    result: pass
+  - command: python -m pytest tests/evidence -q
+    result: pass
+    summary: 9 passed
+  - command: python -m ruff check .
+    result: pass
+  - command: python -m mypy qst
+    result: pass
+    summary: 129 source files checked
+  - command: python -m qst.lint.stateless qst
+    result: pass
+  - command: python -m pytest tests -q
+    result: pass
+    summary: 550 passed
+  - command: python -m pytest --cov=qst --cov-fail-under=85 -q
+    result: pass
+    summary: 550 passed; 89.40 percent coverage
+  - command: python -m qst.cli vocabulary --check
+    result: pass
+    summary: 6 packs; 179 tokens; zero diagnostics
+  - command: python tools/validate_rearchitecture_stages.py
+    result: pass
+    summary: 3 manifests; zero issues
+  - command: git diff --check
+    result: pass
+evidence_notes:
+  - Evidence cannot contain a claim-policy decision field.
+  - Attestation does not imply policy approval or execution authorization.
+  - Raw artifact digest remains distinct from any declared normalized digest.
+  - Stage 2 defines activity states but Stage 3 owns transition enforcement.
