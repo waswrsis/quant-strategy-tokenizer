@@ -1,5 +1,6 @@
-"""QST 1.0 claim policy records."""
+"""QST 1.0 claim policy records and evaluation."""
 
+from qst.claims.evaluator import evaluate_claim
 from qst.claims.models import (
     ClaimDecision,
     ClaimPolicy,
@@ -16,6 +17,7 @@ __all__ = [
     "EvidenceRequirement",
     "claim_decision_identity",
     "claim_policy_identity",
+    "evaluate_claim",
     "seal_claim_decision",
     "seal_claim_policy",
 ]

@@ -1,0 +1,52 @@
+schema_version: qst-rearchitecture-stage/1
+stage_id: 6
+title: Claim policy customization and receipt workflows
+status: frozen
+branch: research/qst-1.0-agent-provenance
+base_tag: qst-1.0-stage-5-token-incubator-frozen
+freeze_tag: qst-1.0-stage-6-claims-customization-frozen
+scope:
+  - declared customization overlays and approval binding
+  - undeclared customization rejection
+  - deterministic claim policy evaluation
+  - adapter maturity attestations
+  - experiment and agent receipt identities
+  - AI4Finance golden claim boundaries
+frozen_contracts:
+  - qst-customization/1.0
+  - qst-customized-result/1.0
+  - qst-claim-evaluator/1.0
+  - qst-experiment-receipt/1.0
+  - qst-agent-receipt/1.0
+supersedes: []
+gates:
+  - command: python -m compileall -q qst
+    result: pass
+  - command: python -m pytest tests/governance -q
+    result: pass
+    summary: 7 passed
+  - command: python -m ruff check .
+    result: pass
+  - command: python -m mypy qst
+    result: pass
+    summary: 148 source files checked
+  - command: python -m qst.lint.stateless qst
+    result: pass
+  - command: python -m pytest tests -q
+    result: pass
+    summary: 580 passed
+  - command: python -m pytest --cov=qst --cov-fail-under=85 -q
+    result: pass
+    summary: 580 passed; 89.67 percent coverage
+  - command: python -m qst.cli vocabulary --check
+    result: pass
+    summary: 6 packs; 179 tokens; zero diagnostics
+  - command: python tools/validate_rearchitecture_stages.py
+    result: pass
+    summary: 7 manifests; zero issues
+  - command: git diff --check
+    result: pass
+evidence_notes:
+  - Python gates ran using an ignored local runtime mirror because the managed sandbox blocked WindowsApps execution.
+  - Claim evaluation consumes sealed evidence and attestations only.
+  - Customization approval does not imply token publication or activation.
