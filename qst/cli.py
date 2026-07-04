@@ -30,11 +30,13 @@ from qst.tokens import TokenRegistryV2, builtin_token_packs
 from qst.validation import Diagnostic
 
 app = typer.Typer(no_args_is_help=True)
-token_app = typer.Typer(no_args_is_help=True)
+compat_app = typer.Typer(no_args_is_help=True)
+compat_token_app = typer.Typer(no_args_is_help=True)
 approval_app = typer.Typer(no_args_is_help=True)
 adapter_app = typer.Typer(no_args_is_help=True)
-app.add_typer(token_app, name="token")
-token_app.add_typer(approval_app, name="approvals")
+app.add_typer(compat_app, name="compat-v04")
+compat_app.add_typer(compat_token_app, name="token")
+compat_token_app.add_typer(approval_app, name="approvals")
 app.add_typer(adapter_app, name="adapter")
 adapter_app.add_typer(qlib_adapter_app, name="qlib")
 
@@ -232,7 +234,7 @@ def canonicalize(
         output.write_bytes(payload)
 
 
-@token_app.command("verify")
+@compat_token_app.command("verify")
 def token_verify(
     pack: Path,
     token_ref: Annotated[str, typer.Option("--token-ref")],
@@ -263,7 +265,7 @@ def token_verify(
         raise typer.Exit(1)
 
 
-@token_app.command("approve")
+@compat_token_app.command("approve")
 def token_approve(
     pack: Path,
     token_ref: Annotated[str, typer.Option("--token-ref")],
@@ -327,7 +329,7 @@ def approvals_revoke(
     _echo_json({"path": str(path), "records": updated.records})
 
 
-@token_app.command("execute")
+@compat_token_app.command("execute")
 def token_execute(
     pack: Path,
     token_ref: Annotated[str, typer.Option("--token-ref")],
@@ -340,7 +342,7 @@ def token_execute(
     inputs_file: Annotated[Path | None, typer.Option("--inputs-file")] = None,
     ttl_seconds: Annotated[int, typer.Option("--ttl-seconds")] = 900,
 ) -> None:
-    """Execute an approved custom token with a short-lived grant."""
+    """Run the legacy v0.4 approved custom-token executor."""
 
     token_pack = load_token_pack(pack)
     ref = _parse_token_ref(token_ref)

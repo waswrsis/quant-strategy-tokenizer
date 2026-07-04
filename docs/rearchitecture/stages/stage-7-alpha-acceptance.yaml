@@ -1,0 +1,66 @@
+schema_version: qst-rearchitecture-stage/1
+stage_id: 7
+title: Migration compatibility and alpha acceptance
+status: frozen
+branch: research/qst-1.0-agent-provenance
+base_tag: qst-1.0-stage-6-claims-customization-frozen
+freeze_tag: qst-1.0-stage-7-alpha-candidate-frozen
+scope:
+  - v0.4 compatibility package and hash regression
+  - legacy custom runtime CLI isolation
+  - alpha documentation and handoff
+  - tamper and NUL-source rejection
+  - bounded response and identity performance acceptance
+  - final requirement audit
+frozen_contracts:
+  - qst-1.0-alpha-product-surface
+  - qst-v0.4-compatibility-namespace
+  - qst-1.0-alpha-acceptance-gate
+supersedes:
+  - stage-0:qst-v0.4-compatibility-baseline:custom-runtime-cli-location
+supersession_reason: >-
+  Stage 0 preserved the v0.4 custom runtime temporarily. Stage 7 retains its code and
+  behavior but moves all commands under compat-v04 so QST 1.0 has no primary execution
+  surface. Strategy IR, canonical, token, and hash contracts are unchanged.
+gates:
+  - command: python -m compileall -q qst
+    result: pass
+  - command: python -m pytest tests/rearchitecture tests/docs -q
+    result: pass
+    summary: 20 passed
+  - command: python -m ruff check .
+    result: pass
+  - command: python -m mypy qst
+    result: pass
+    summary: 150 source files checked
+  - command: python -m qst.lint.stateless qst
+    result: pass
+  - command: python tools/validate_prompt_set.py docs/agent/prompts/qst_stage_3c_v0_3_2
+    result: pass
+  - command: python tools/verify_prompt_remote_artifacts.py docs/agent/prompts/qst_stage_3c_v0_3_2
+    result: pass
+    summary: 11 artifacts checked
+  - command: python tools/validate_strategy_coverage_matrix.py docs/reports/strategy_coverage_matrix.yaml
+    result: pass
+    summary: 120 patterns; zero issues
+  - command: python tools/report_strategy_coverage.py docs/reports/strategy_coverage_matrix.yaml --check
+    result: pass
+    summary: frontier gate passed; raw routable headline 0.8970
+  - command: python -m qst.cli vocabulary --check
+    result: pass
+    summary: 6 packs; 179 tokens; zero diagnostics
+  - command: python -m pytest tests -q
+    result: pass
+    summary: 589 passed
+  - command: python -m pytest --cov=qst --cov-fail-under=85 -q
+    result: pass
+    summary: 589 passed; 89.67 percent coverage
+  - command: python tools/validate_rearchitecture_stages.py
+    result: pass
+    summary: 8 manifests; zero issues
+  - command: git diff --check
+    result: pass
+evidence_notes:
+  - Every final local gate passed before the stage was frozen.
+  - The completion audit maps the accepted product requirements to implementation and test evidence.
+  - The GitHub remote is not modified by alpha acceptance.

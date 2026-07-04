@@ -1,6 +1,7 @@
 # Agent Takeover Prompt
 
-You are taking over QST, an archived agent-ready research prototype.
+You are taking over the local QST `1.0.0a1` agent-provenance candidate. The tagged v0.4
+line remains an archived agent-ready research prototype and compatibility baseline.
 
 Treat the repository as a deterministic record, validation, coverage, and
 handoff system. QST is not a broker, exchange adapter, live execution engine,
@@ -14,6 +15,8 @@ Read these before changing code:
 - `docs/FINAL_HANDOFF.md`
 - `docs/FINAL_SCOPE.md`
 - `docs/FINAL_ACCEPTANCE.md`
+- `docs/rearchitecture/README.md`
+- `docs/rearchitecture/ADR-0001-qst-1.0-product-redefinition.md`
 - `docs/agent/README.md`
 - `docs/agent/prompts/qst_stage_3c_v0_3_2/README.md`
 - `docs/reports/strategy_coverage_report.md`
@@ -27,6 +30,7 @@ Read these before changing code:
 - Editable strategy files: `.gkr.yaml`.
 - Internal schemas: `qst-ir/0.4` and `qst-canonical/0.4`.
 - Qlib partial adapter proof command: `qst adapter qlib import`.
+- Legacy custom runtime command namespace: `qst compat-v04 token`.
 - Adapter-local refs use the `adapter` namespace and are not built-in token
   vocabulary.
 
@@ -37,7 +41,8 @@ Read these before changing code:
 - Do not claim runtime execution, qrun execution, model training, inference,
   backtesting, broker integration, exchange integration, live execution, or
   lossless Qlib conversion.
-- Keep custom-token verify, approve, grant, and execute boundaries separate.
+- Never treat the v0.4 compatibility executor as a QST 1.0 capability.
+- Keep draft, validation, human approval, publication, and activation separate.
 - Preserve coverage taxonomy classifications and reserved/non-goal boundaries.
 
 ## Minimal Smoke Commands

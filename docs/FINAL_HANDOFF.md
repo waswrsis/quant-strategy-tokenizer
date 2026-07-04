@@ -2,47 +2,30 @@
 
 ## Entry Point
 
-QST is archived as an agent-ready research prototype.
+QST v0.4 is the archived compatibility baseline. QST `1.0.0a1` is a local alpha
+candidate on `research/qst-1.0-agent-provenance`; it has not been pushed.
 
-Start with:
+Read in this order:
 
-- [Final Scope](FINAL_SCOPE.md)
-- [Final Acceptance](FINAL_ACCEPTANCE.md)
-- [Final Report](FINAL_REPORT.md)
-- [Agent Takeover Prompt](agent/AGENT_TAKEOVER_PROMPT.md)
-- [Agent Playbook](agent/AGENT_PLAYBOOK.md)
-- [Usage Guide](agent/USAGE_GUIDE.md)
-- [Qlib Adapter Boundary](adapters/QLIB_ADAPTER_BOUNDARY.md)
-- [Qlib Adapter Guide](adapters/QLIB_ADAPTER_GUIDE.md)
+1. [Product Redefinition](rearchitecture/ADR-0001-qst-1.0-product-redefinition.md)
+2. [Stage Governance](rearchitecture/STAGE_GOVERNANCE.md)
+3. [Resolver Policy](rearchitecture/RESOLVER_POLICY.md)
+4. [Evidence Kernel](rearchitecture/EVIDENCE_KERNEL.md)
+5. [AI4Finance Adapters](rearchitecture/AI4FINANCE_ADAPTERS.md)
+6. [Token Incubator](rearchitecture/TOKEN_INCUBATOR.md)
+7. [Claims, Customization, and Receipts](rearchitecture/CLAIMS_CUSTOMIZATION_RECEIPTS.md)
 
 ## Current Truth
 
-- Python package: `qst`.
-- Strategy source: `.gkr.yaml`.
-- Active IR: `qst-ir/0.4`.
-- Active canonical schema: `qst-canonical/0.4`.
-- Active prompt pack: `docs/agent/prompts/qst_stage_3c_v0_3_2/`.
-- Coverage Frontier report: `docs/reports/strategy_coverage_report.md`.
-- Qlib adapter proof: `qst adapter qlib import`.
+- Python package and CLI: `qst`.
+- Candidate version: `1.0.0a1`.
+- Preserved strategy schemas: `qst-ir/0.4` and `qst-canonical/0.4`.
+- Primary CLI has no model, backtest, custom-code, or trading executor.
+- Legacy custom runtime is isolated under `qst compat-v04 token`.
+- AI4Finance adapters collect declared evidence and never launch external work.
 
-## Qlib Adapter Usage
+## Repository Rule
 
-```bash
-python -m qst.cli adapter qlib import examples/adapters/qlib/workflow_config_lightgbm_alpha158.yaml --output .local_audit/qlib_lightgbm_alpha158.gkr.yaml --coverage .local_audit/qlib_lightgbm_alpha158.coverage.json
-python -m qst.cli validate .local_audit/qlib_lightgbm_alpha158.gkr.yaml
-python -m qst.cli hash .local_audit/qlib_lightgbm_alpha158.gkr.yaml
-python -m qst.cli canonicalize .local_audit/qlib_lightgbm_alpha158.gkr.yaml --output .local_audit/qlib_lightgbm_alpha158.canonical.json
-```
-
-Treat generated artifacts as record-layer evidence only. They do not prove
-runtime execution, backtesting, broker integration, exchange integration, live
-execution, or profitability.
-
-## Handoff Rules
-
-- Preserve QST boundaries before extending functionality.
-- Do not add token coverage merely to improve a percentage.
-- Do not weaken reserved, non-goal, or custom runtime boundaries.
-- Keep adapter-local token refs outside built-in vocabulary unless a future
-  explicit token-surface process accepts them.
-- Run the final acceptance gates before claiming closure.
+Each rearchitecture stage is a local commit plus annotated freeze tag and passing
+manifest. Do not rewrite frozen history. Do not push this branch or its tags without
+explicit user approval.

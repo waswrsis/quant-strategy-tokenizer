@@ -1,33 +1,8 @@
-# Roadmap Closed
+# Roadmap Status
 
-## Closed Scope
+The v0.4 prototype roadmap is closed and preserved by its release tag. The QST 1.0
+rearchitecture roadmap is implemented as eight locally frozen stages. Future work after
+the alpha candidate requires a new stage and explicit supersession records; frozen
+contracts must not be silently edited.
 
-The QST roadmap is closed at the archived agent-ready research prototype stage.
-
-The final state includes a Qlib partial workflow adapter proof. This proof is a
-record importer, not a runtime bridge.
-
-## Completed Tracks
-
-- Typed GKR record and validation loop.
-- Canonical JSON and hash identities.
-- Token surface governance and reference conformance.
-- Stage 3 agent prompt pack.
-- Coverage Frontier matrix, report, dogfood, and publication gate.
-- Agent takeover and secondary development documentation.
-- Qlib workflow YAML to candidate GKR and coverage JSON import proof.
-
-## Deferred Future Work
-
-- Qlib runtime replacement.
-- qrun execution.
-- model training or inference.
-- backtest execution.
-- lossless Qlib conversion.
-- additional adapter ecosystems.
-- parser / authoring DSL.
-- broker, exchange, or live execution systems.
-- plugin / MCP ecosystem.
-
-Future work should begin with an explicit product decision and should not treat
-the archived prototype as a production execution engine.
+No remote branch, tag, pull request, or release is created without user approval.

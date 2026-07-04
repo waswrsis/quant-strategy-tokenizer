@@ -44,13 +44,17 @@ evidence. It does not import Qlib, run qrun, train models, run inference,
 execute backtests, connect to a broker, connect to an exchange, or provide live
 execution.
 
-## Custom Tokens
+## QST 1.0 Token Governance
+
+Use the deterministic resolver and Token Incubator APIs. Agent drafts never become
+published or active without explicit human transitions.
+
+## Legacy v0.4 Custom Runtime
 
 ```bash
-python -m qst.cli token verify --help
-python -m qst.cli token approve --help
-python -m qst.cli token execute --help
+python -m qst.cli compat-v04 token verify --help
+python -m qst.cli compat-v04 token approve --help
+python -m qst.cli compat-v04 token execute --help
 ```
 
-Custom token execution remains explicit and approval-bound. Do not treat
-verification as approval, and do not treat approval as an execution grant.
+This namespace is compatibility-only and excluded from QST 1.0 product claims.

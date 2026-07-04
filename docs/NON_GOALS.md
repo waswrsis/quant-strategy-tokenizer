@@ -17,6 +17,8 @@ QST is not:
 - a production risk system
 - a profitability claim
 
-The Qlib adapter proof is intentionally narrow. It reads YAML workflow metadata
-and writes candidate QST records plus coverage JSON. It does not execute Qlib
-or connect to markets.
+All AI4Finance adapters are intentionally read-only. They collect declared plans,
+existing results, and artifact identities; they do not execute external systems.
+
+The legacy v0.4 custom executor is not a QST 1.0 feature and is accessible only through
+the explicit compatibility namespace.

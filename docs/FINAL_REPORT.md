@@ -2,41 +2,30 @@
 
 ## Summary
 
-QST closes as an archived agent-ready research prototype for typed strategy
-records, canonical hashing, validation, token governance, Coverage Frontier
-measurement, agent handoff, and a Qlib partial workflow adapter proof.
+QST `1.0.0a1` is a locally frozen alpha candidate for deterministic financial-agent
+strategy identity, provenance, evidence, claim control, customization, and token
+governance. It builds on the archived v0.4 GKR and token research prototype without
+silently changing its hashes or public examples.
 
-## What Was Proved
+## Proved Locally
 
-- GKR records can be validated, canonicalized, and hashed deterministically.
-- Built-in token surface governance and conformance tests exist.
-- Coverage Frontier evidence can be validated and reported.
-- Agent prompt guidance and takeover documentation are present.
-- Qlib workflow YAML can be imported into candidate QST record-layer GKR and
-  deterministic coverage JSON without importing or executing Qlib.
+- Resolver decisions include vocabulary, aliases, recipes, proposals, profiles, and
+  resolver-policy identities.
+- Evidence, attestations, and claim decisions are separate tamper-evident records.
+- Opaque artifacts use bounded streaming hashes and a rebuildable local index.
+- AI4Finance adapters collect declared output evidence without executing workflows.
+- Agents may draft tokens; only humans can approve publication and activation.
+- Customization is declared, approval-bound where required, and identity-changing.
+- Strategy, experiment, and agent receipt hashes remain distinct.
+- v0.4 strategy hashes, vocabulary, demos, and Qlib import stay compatible.
 
-## Qlib Adapter Proof
+## Boundary
 
-The proof case is:
+QST does not train, infer, backtest, trade, route orders, replace AI4Finance runtimes,
+or prove profitability. The v0.4 custom executor is retained only under the explicit
+`compat-v04` namespace.
 
-```text
-examples/adapters/qlib/workflow_config_lightgbm_alpha158.yaml
-```
+## Publication Status
 
-The adapter extracts model, dataset, record, TopkDropoutStrategy, and backtest
-metadata into candidate GKR nodes with adapter-local token refs. The generated
-candidate can pass QST validation, hash, and canonicalization gates.
-
-Custom Qlib model and custom processor examples are intentionally classified as
-partial. They demonstrate route evidence without claiming executable support.
-
-## Boundaries
-
-This final tree does not provide Qlib runtime execution, qrun execution, model
-training, inference, backtesting, broker integration, exchange integration,
-live trading, or lossless Qlib conversion.
-
-## Final Status
-
-The repository is ready for archive and agent takeover. Further development
-should start from the handoff documents and must preserve the stated boundaries.
+All rearchitecture commits and freeze tags are local. GitHub publication requires the
+user's separate approval.

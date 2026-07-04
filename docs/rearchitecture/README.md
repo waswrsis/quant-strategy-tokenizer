@@ -23,10 +23,14 @@ Each stage must pass its declared gates before the next stage starts. A complete
 is saved in a local commit and frozen with an annotated local tag. Nothing is pushed
 without explicit user approval.
 
+Stages 0 through 7 are frozen. The resulting alpha candidate remains local until the
+user explicitly authorizes publication.
+
 ## Authoritative Documents
 
 - [Product redefinition ADR](ADR-0001-qst-1.0-product-redefinition.md)
 - [Stage governance](STAGE_GOVERNANCE.md)
 - [v0.4 compatibility boundary](V04_COMPATIBILITY_BOUNDARY.md)
+- [Alpha acceptance](ALPHA_ACCEPTANCE.md)
+- [Completion audit](COMPLETION_AUDIT.md)
 - [Stage manifests](stages/)
-

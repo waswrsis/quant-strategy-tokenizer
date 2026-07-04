@@ -1,7 +1,7 @@
-# QST Custom Token Guide
+# QST Custom Token Compatibility Guide
 
-Custom tokens cover user-specific or proprietary logic that should not become a
-built-in token.
+This document describes the legacy v0.4 custom runtime. QST 1.0 routes new logic through
+Token Gap Evidence and the human-governed Token Incubator instead.
 
 ## Boundary
 
@@ -48,9 +48,9 @@ examples/custom_token/kalman/
 Useful commands:
 
 ```bash
-python -m qst.cli token verify --help
-python -m qst.cli token approve --help
-python -m qst.cli token execute --help
+python -m qst.cli compat-v04 token verify --help
+python -m qst.cli compat-v04 token approve --help
+python -m qst.cli compat-v04 token execute --help
 ```
 
 ## Governance Evidence

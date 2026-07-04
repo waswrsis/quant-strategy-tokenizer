@@ -2,9 +2,15 @@
 
 Agents working in this repository should treat QST as a deterministic record and validation system. The agent should prefer small scoped edits, explicit command evidence, and no hidden trust transitions.
 
-## Active Prompt System
+## QST 1.0 Alpha Guidance
 
-The active prompt system is:
+For current architecture work, read `docs/rearchitecture/` and
+`docs/FINAL_HANDOFF.md` first. The prompt set below is preserved for v0.4 strategy
+authoring compatibility; it is not authority for QST 1.0 execution or governance.
+
+## Compatibility Prompt System
+
+The preserved v0.4 prompt system is:
 
 - [qst_stage_3c_v0_3_2](prompts/qst_stage_3c_v0_3_2/README.md)
 
@@ -14,7 +20,7 @@ Validate it with:
 python tools/validate_prompt_set.py docs/agent/prompts/qst_stage_3c_v0_3_2
 ```
 
-There is no other active prompt system in this tree.
+There is no separate QST 1.0 generative prompt system in this tree.
 
 Read these documents first:
 

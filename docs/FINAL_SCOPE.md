@@ -2,45 +2,24 @@
 
 ## Status
 
-QST is closed as an archived agent-ready research prototype.
+QST v0.4 remains an archived agent-ready research prototype. The local QST `1.0.0a1`
+candidate redefines the product as a deterministic strategy identity, evidence,
+attestation, claim-control, customization, and token-governance layer.
 
-The final accepted scope includes a Qlib partial workflow adapter proof. The
-adapter imports Qlib workflow YAML into QST record-layer candidate GKR and
-coverage JSON. It is partial, not lossless, and does not execute Qlib.
+## Accepted Alpha Scope
 
-## Completed
+- Frozen v0.4 GKR validation, canonicalization, hashes, vocabulary, and demos.
+- Deterministic Token Gap Resolver with hash-bearing policy and complete fact collection.
+- Typed actor, activity, artifact, evidence, attestation, and claim records.
+- Streaming content-addressed storage and rebuildable local SQLite WAL index.
+- Read-only AI4Finance evidence adapters with explicit L0-L4 maturity.
+- FinRobot compact read-only tools.
+- Declared customization overlays with approval binding.
+- Human-governed token proposal publication and explicit project activation.
+- Separate strategy, experiment, and agent receipt identities.
 
-- P0 typed GKR record loop.
-- P0.1 hardening and acceptance.
-- Stage 3A token surface completion.
-- Stage 3B token surface acceptance and gap review.
-- Stage 3C active agent prompt pack.
-- Coverage Frontier v0.3 through publication gate.
-- Agent takeover documentation.
-- Token, recipe, custom-token, and secondary development guides.
-- Qlib partial workflow adapter proof.
-- Final handoff documentation.
+## Excluded Scope
 
-## Not Completed
-
-- Qlib runtime replacement.
-- qrun execution.
-- model training.
-- inference execution.
-- backtest execution.
-- live trading.
-- broker or exchange integration.
-- arbitrary Python strategy tokenization.
-- lossless strategy conversion.
-- full diff / mutate / repair.
-- full parser or authoring DSL.
-- plugin / MCP ecosystem.
-- RL-guided strategy search.
-
-## Closure Reason
-
-The project reached a coherent research prototype endpoint. Further work would
-require product commitment, ecosystem maintenance, parser complexity, adapter
-expansion, and a clearer user base.
-
-The project is closed as a completed prototype, not as a failed implementation.
+QST 1.0 does not train models, run inference, execute backtests, replace external
+runtimes, route orders, connect to brokers or exchanges, execute live trading, or prove
+profitability. The legacy v0.4 custom executor is compatibility-only.

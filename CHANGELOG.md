@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.0.0a1 Agent Provenance Candidate
+
+- Redefined QST as a deterministic strategy identity, evidence, claim-control, and
+  token-governance layer for financial agents.
+- Added domain-separated provenance, evidence, attestation, claim, customization,
+  experiment receipt, and agent receipt records.
+- Added streaming content-addressed storage, rebuildable local indexing, and read-only
+  AI4Finance evidence adapters.
+- Added deterministic token-gap resolution and human-governed project-local token
+  incubation with publication separated from activation.
+- Preserved v0.4 GKR/hash/token behavior and isolated the legacy custom executor under
+  the explicit `compat-v04` CLI namespace.
+- Kept the candidate local; no GitHub branch, tag, or release was created.
+
 ## Stage 3A Token Surface Completion
 
 - Added TokenSurfaceSpec metadata and token contract fields to TokenSpec.

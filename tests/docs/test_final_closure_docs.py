@@ -55,13 +55,15 @@ def test_final_closure_docs_exist_and_are_non_empty() -> None:
         assert len(text.split()) >= 20, relative
 
 
-def test_readme_declares_archive_status_and_handoff_links() -> None:
+def test_readme_declares_alpha_and_v04_compatibility_status() -> None:
     readme = _read("README.md")
     assert "archived agent-ready research prototype" in readme
+    assert "1.0.0a1" in readme
+    assert "strategy identity, evidence, and governance" in readme
     assert "Final Handoff" in readme
     assert "docs/FINAL_HANDOFF.md" in readme
     assert "docs/agent/AGENT_TAKEOVER_PROMPT.md" in readme
-    assert "Qlib partial workflow adapter proof" in readme
+    assert "Qlib Compatibility Import" in readme
     assert "qst.cli adapter qlib import" in readme
 
 
@@ -103,14 +105,20 @@ def test_agent_readme_links_final_handoff_guides_without_replacing_prompt_pack()
         assert relative in text
 
 
-def test_qlib_command_is_documented_in_final_acceptance_and_usage() -> None:
+def test_qlib_command_remains_documented_in_compatibility_usage() -> None:
     for relative in [
-        "docs/FINAL_ACCEPTANCE.md",
-        "docs/FINAL_HANDOFF.md",
         "docs/agent/USAGE_GUIDE.md",
+        "docs/adapters/QLIB_ADAPTER_GUIDE.md",
     ]:
         text = _read(relative)
         assert "qst.cli adapter qlib import" in text
+
+
+def test_v04_executor_is_only_documented_under_compatibility_namespace() -> None:
+    for relative in CLOSURE_DOCS:
+        text = _read(relative)
+        if "token execute" in text:
+            assert "compat-v04 token execute" in text
 
 
 def test_no_freqtrade_adapter_docs_remain() -> None:

@@ -1,33 +1,33 @@
 # QST
 
-Archived agent-ready research prototype for typed quantitative strategy records.
+Deterministic strategy identity, evidence, and governance for financial agents.
 
-QST turns strategy intent into deterministic Graph Kernel Records (GKR): typed
-`.gkr.yaml` files that can be validated, canonicalized, hashed, reviewed, and
-handed off to agents or downstream systems.
+QST records strategy identity, external workflow evidence, agent provenance,
+claim decisions, declared customizations, and human-governed token proposals.
+Its v0.4 Graph Kernel Records remain a compatibility surface.
 
 It is not a trading bot, broker adapter, exchange adapter, backtester, optimizer
 runtime, or production execution engine.
 
 ## Status
 
-The tagged v0.4 line is an **archived agent-ready research prototype**. Active local
-research on the `research/qst-1.0-agent-provenance` branch is redefining QST 1.0 as a
-deterministic strategy identity, evidence, claim-control, and token-governance layer.
-The rearchitecture is staged and does not change the accepted v0.4 contracts silently.
+The tagged v0.4 line is an **archived agent-ready research prototype**. The local
+`research/qst-1.0-agent-provenance` branch is a `1.0.0a1` candidate. Eight stages are
+locally committed and frozen; nothing on this branch has been pushed.
 
 See [QST 1.0 rearchitecture](docs/rearchitecture/README.md) for the staged construction
 and freeze policy.
 
-The final tree includes:
+The alpha candidate includes:
 
 - typed `qst-ir/0.4` strategy records
 - deterministic `qst-canonical/0.4` canonical JSON
 - graph, parameter, and instance hashes
 - token surface governance and conformance tests
-- Coverage Frontier v0.3 evidence and publication gate
-- active agent prompt pack and handoff docs
-- a Qlib partial workflow adapter proof
+- typed Evidence, Attestation, Claim, Customization, and Receipt records
+- content-addressed artifact storage and a rebuildable SQLite index
+- deterministic Token Gap Resolver and human-governed Token Incubator
+- FinRobot, FinGPT, FinRL-Meta, FinRL, FinRL-X, and Qlib evidence adapters
 
 ## Install
 
@@ -44,7 +44,13 @@ python -m qst.cli hash examples/strategies/kdj_cross_basic.gkr.yaml
 python -m qst.cli canonicalize examples/strategies/kdj_cross_basic.gkr.yaml --output .local_audit/kdj.canonical.json
 ```
 
-## Qlib Adapter Proof
+## AI4Finance Evidence
+
+AI4Finance adapters consume declared manifests and existing output artifacts. FinRobot,
+FinRL, FinRL-X, and Qlib have L3 golden fixtures; FinGPT and FinRL-Meta remain L2.
+No adapter launches an external workflow.
+
+## Qlib Compatibility Import
 
 QST includes a partial Qlib workflow YAML importer:
 
@@ -61,16 +67,12 @@ or claim lossless Qlib conversion.
 
 ## What It Provides
 
-- **Record layer:** stable `.gkr.yaml` strategy records with typed nodes,
-  token refs, capabilities, and port signatures.
-- **Identity layer:** canonical JSON plus deterministic graph, parameter, and
-  instance hashes.
-- **Token layer:** accepted, experimental, reserved, and custom-token surfaces
-  with maturity and execution-support metadata.
-- **Evidence layer:** public demos, reference diagnostics, hash sentinels,
-  coverage matrix, coverage report, and dogfood cases.
-- **Agent layer:** active prompt pack, takeover prompt, playbook, usage guide,
-  and secondary development guides.
+- **Identity:** domain-separated strategy, evidence, experiment, and agent receipts.
+- **Evidence:** immutable actors, activities, artifacts, envelopes, and attestations.
+- **Claims:** policy decisions that cannot be substituted by evidence or assertions.
+- **Governance:** declared customization and human-approved token incubation.
+- **Adapters:** read-only AI4Finance collectors with explicit maturity levels.
+- **Compatibility:** frozen `qst-ir/0.4`, token vocabulary, demos, and hashes.
 
 ## Boundaries
 
@@ -87,14 +89,16 @@ QST deliberately does not provide:
 - production portfolio optimization
 - profitability claims
 
-Custom-token execution is explicit and approval-bound. Verification does not
-import or execute user code; execution requires integrity verification, local
-approval, an execution grant, and output validation.
+QST 1.0 does not execute custom code. The former v0.4 executor is available only through
+the explicit `qst compat-v04 token ...` compatibility namespace and is excluded from
+QST 1.0 product claims.
 
 ## Handoff
 
-Start here:
+Start with the active alpha documents:
 
+- [QST 1.0 Rearchitecture](docs/rearchitecture/README.md)
+- [Product Redefinition ADR](docs/rearchitecture/ADR-0001-qst-1.0-product-redefinition.md)
 - [Final Handoff](docs/FINAL_HANDOFF.md)
 - [Final Scope](docs/FINAL_SCOPE.md)
 - [Final Acceptance](docs/FINAL_ACCEPTANCE.md)
@@ -106,6 +110,10 @@ Start here:
 
 ```text
 qst/                         Python package and CLI
+qst/evidence/                Typed evidence envelopes
+qst/provenance/              Actor, activity, and artifact records
+qst/incubator/               Human-governed token proposals
+qst/adapters/ai4finance/     Read-only AI4Finance evidence adapters
 examples/strategies/         12 public GKR strategy examples
 examples/adapters/qlib/      Qlib partial workflow adapter examples
 examples/custom_token/       Custom-token reference example
@@ -136,3 +144,4 @@ docs/reports/                Coverage Frontier and acceptance reports
 - Packaged record suffix: `.gkr`
 - IR: `qst-ir/0.4`
 - Canonical schema: `qst-canonical/0.4`
+- Package candidate: `1.0.0a1`
