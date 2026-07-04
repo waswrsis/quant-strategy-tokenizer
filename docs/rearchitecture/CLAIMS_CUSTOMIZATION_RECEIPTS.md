@@ -16,8 +16,13 @@ TokenSpec, strategy, evidence, or adapter record in place.
 Claim policies require evidence payload kinds, counts, verified-result status, and a
 minimum adapter maturity. Adapter maturity is accepted only through a sealed
 `qst.adapter-verification/1.0` attestation. L2 evidence cannot satisfy an L3 requirement.
-The evaluator emits a sealed `ClaimDecision`; it does not execute an experiment or grant
-approval.
+The evaluator deduplicates evidence identities, isolates the requested subject, rejects
+future observations and attestations, and revalidates policy/evidence/attestation
+identities. L4 requires a signature artifact. The evaluator emits a sealed
+`ClaimDecision`; it does not execute an experiment or grant approval.
+
+Customization declarations must be sealed and unique. Exact and parent/child JSON
+Pointer overlaps are rejected rather than resolved by last-writer order.
 
 ## Receipt Layers
 
@@ -39,4 +44,3 @@ FinRobot, FinRL, FinRL-X, and Qlib L3 fixtures may satisfy a workflow-evidence m
 requirement when their result artifacts and adapter attestation verify. FinGPT and
 FinRL-Meta remain L2 and cannot satisfy the same claim. No claim implies profitability,
 live execution, broker integration, or production readiness.
-

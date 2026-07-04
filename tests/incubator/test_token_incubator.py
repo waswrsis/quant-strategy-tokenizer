@@ -175,3 +175,37 @@ def test_transition_cannot_skip_states() -> None:
     with pytest.raises(ValidationError, match="invalid proposal transition"):
         _advance(_proposal(), "contract_approved", review_kind="contract")
 
+
+def test_transition_requires_a_sealed_current_proposal() -> None:
+    proposal = _proposal().model_copy(update={"proposal_id": None})
+    transition = ProposalTransition(
+        from_status="detected",
+        to_status="agent_draft",
+        actor_id=HASH_C,
+        actor_kind="agent",
+        checklist=("recorded",),
+        reason_codes=("QST_PROPOSAL_DRAFTED",),
+        occurred_at=NOW,
+    )
+    with pytest.raises(ValueError, match="current proposal must be sealed"):
+        apply_transition(proposal, transition)
+
+
+def test_proposal_history_rejects_unsealed_transitions() -> None:
+    proposal = _proposal()
+    transition = ProposalTransition(
+        from_status="detected",
+        to_status="agent_draft",
+        actor_id=HASH_C,
+        actor_kind="agent",
+        checklist=("recorded",),
+        reason_codes=("QST_PROPOSAL_DRAFTED",),
+        occurred_at=NOW,
+    )
+    with pytest.raises(ValidationError, match="proposal transitions must be sealed"):
+        proposal.__class__(
+            gap_id=proposal.gap_id,
+            draft=proposal.draft,
+            status="agent_draft",
+            transitions=(transition,),
+        )

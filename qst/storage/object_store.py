@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import BinaryIO
 
 from qst.canonical_json import stable_json_bytes
-from qst.provenance import ArtifactDescriptor, seal_artifact
+from qst.provenance import ArtifactDescriptor, artifact_identity, seal_artifact
 
 DEFAULT_CHUNK_SIZE = 4 * 1024 * 1024
 
@@ -31,6 +31,8 @@ class ContentAddressedStore:
     """Local immutable object store; it never interprets artifact bytes."""
 
     def __init__(self, root: Path, *, chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
+        if chunk_size <= 0:
+            raise ValueError("chunk_size must be positive")
         self.root = root.resolve()
         self.chunk_size = chunk_size
         self.objects = self.root / "objects" / "sha256"
@@ -60,10 +62,16 @@ class ContentAddressedStore:
             object_path = self.objects / hex_digest[:2] / hex_digest
             object_path.parent.mkdir(parents=True, exist_ok=True)
             if object_path.exists():
+                with object_path.open("rb") as existing_stream:
+                    existing_digest, existing_size = hash_stream(
+                        existing_stream, chunk_size=self.chunk_size
+                    )
+                if existing_digest != f"sha256:{hex_digest}" or existing_size != size:
+                    raise OSError(
+                        "existing content-addressed object has unexpected digest or size"
+                    )
                 temporary.unlink()
                 temporary = None
-                if object_path.stat().st_size != size:
-                    raise OSError("existing content-addressed object has unexpected size")
             else:
                 os.replace(temporary, object_path)
                 temporary = None
@@ -86,6 +94,11 @@ class ContentAddressedStore:
         return self.objects / hex_digest[:2] / hex_digest
 
     def verify(self, descriptor: ArtifactDescriptor) -> bool:
+        if (
+            descriptor.descriptor_id is None
+            or descriptor.descriptor_id != artifact_identity(descriptor)
+        ):
+            return False
         path = self.object_path(descriptor)
         if not path.is_file():
             return False
@@ -105,4 +118,3 @@ class ContentAddressedStore:
             raise OSError("descriptor identity collision")
         if not path.exists():
             path.write_bytes(payload)
-

@@ -9,7 +9,8 @@ from typing import Any, cast
 import yaml
 
 from qst.adapters.ai4finance.models import AdapterDescriptor, DeclaredWorkflowManifest
-from qst.evidence import EvidenceEnvelope, ExternalRecordEvidencePayload
+from qst.canonical_json import stable_json_bytes
+from qst.evidence import EvidenceEnvelope, ExternalRecordEvidencePayload, evidence_identity
 from qst.provenance import ArtifactDescriptor
 from qst.storage import ContentAddressedStore
 
@@ -18,7 +19,13 @@ def _normalize(value: Any) -> Any:
     if isinstance(value, datetime | date):
         return value.isoformat()
     if isinstance(value, dict):
-        return {str(key): _normalize(item) for key, item in value.items()}
+        result: dict[str, Any] = {}
+        for key, item in value.items():
+            normalized_key = str(key)
+            if normalized_key in result:
+                raise ValueError(f"workflow manifest key collision: {normalized_key}")
+            result[normalized_key] = _normalize(item)
+        return result
     if isinstance(value, list):
         return [_normalize(item) for item in value]
     return value
@@ -87,17 +94,34 @@ class DeclaredManifestAdapter:
 
     def verify(self, evidence: EvidenceEnvelope) -> bool:
         payload = evidence.payload
-        return (
+        if not (
             isinstance(payload, ExternalRecordEvidencePayload)
             and payload.adapter_id == self.descriptor.adapter_id
+            and payload.record_schema == "qst-ai4finance-workflow/1.0"
             and evidence.evidence_id is not None
-        )
+            and evidence.evidence_id == evidence_identity(evidence)
+        ):
+            return False
+        run_id = payload.record.get("run_id")
+        status = payload.record.get("status")
+        result = payload.record.get("result")
+        if not isinstance(run_id, str) or not run_id or evidence.subject_ref != run_id:
+            return False
+        if status not in {"planned", "running", "partial", "complete", "failed"}:
+            return False
+        if not isinstance(result, dict):
+            return False
+        if status == "complete" and not self.required_result_fields <= set(result):
+            return False
+        return True
 
     def _load(self, source: str) -> DeclaredWorkflowManifest:
         raw = yaml.safe_load(Path(source).read_text(encoding="utf-8"))
         if not isinstance(raw, dict):
             raise ValueError("workflow manifest must be a mapping")
-        return DeclaredWorkflowManifest.model_validate(_normalize(cast(dict[str, Any], raw)))
+        normalized = _normalize(cast(dict[str, Any], raw))
+        stable_json_bytes(normalized)
+        return DeclaredWorkflowManifest.model_validate(normalized)
 
     def _validate_system(self, manifest: DeclaredWorkflowManifest) -> None:
         if manifest.system != self.descriptor.system:

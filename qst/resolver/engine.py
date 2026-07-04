@@ -38,40 +38,55 @@ class TokenGapResolver:
         profile_policy_material: dict[str, Any] | None = None,
     ) -> None:
         self.snapshot = snapshot
+        expected_snapshot_hash = resolver_hash(
+            "qst:vocabulary-snapshot:v1",
+            [record.model_dump(mode="json") for record in snapshot.records],
+        )
+        if snapshot.snapshot_hash != expected_snapshot_hash:
+            raise ValueError("snapshot_hash does not match vocabulary snapshot material")
         self.policy = policy or ResolverPolicy()
         self.aliases = dict(sorted((aliases or {}).items()))
         self.recipes = tuple(sorted(recipes, key=lambda item: item.recipe_id))
         self.proposals = tuple(sorted(proposals, key=lambda item: item.proposal_id))
-        self.profile_policy_material = profile_policy_material or {
-            "policy": "token-contract-supported-profiles"
-        }
+        _require_unique(self.recipes, field_name="recipe_id")
+        _require_unique(self.proposals, field_name="proposal_id")
+        self.profile_policy_material = (
+            {"policy": "token-contract-supported-profiles"}
+            if profile_policy_material is None
+            else profile_policy_material
+        )
         stable_json_bytes(self.aliases)
         stable_json_bytes(self.profile_policy_material)
 
     def resolve(self, value: TokenIntent | dict[str, Any]) -> ResolutionResult:
         """Resolve structured intent without fuzzy matching or short-circuit fact collection."""
 
-        raw = value.model_dump(mode="json") if isinstance(value, TokenIntent) else value
-        raw_hash = resolver_hash("qst:token-intent:v1", raw)
+        raw = value.model_dump(mode="python") if isinstance(value, TokenIntent) else value
         try:
-            intent = value if isinstance(value, TokenIntent) else TokenIntent.model_validate(value)
+            intent = TokenIntent.model_validate(raw)
         except ValidationError as exc:
             issues = tuple(
-                ResolverIssue(
-                    code="QST_RESOLVER_INVALID_INTENT",
-                    path=".".join(str(item) for item in error["loc"]),
-                    message=error["msg"],
+                sorted(
+                    (
+                        ResolverIssue(
+                            code="QST_RESOLVER_INVALID_INTENT",
+                            path=".".join(str(item) for item in error["loc"]),
+                            message=error["msg"],
+                        )
+                        for error in exc.errors(include_url=False)
+                    ),
+                    key=lambda item: (item.path, item.code, item.message),
                 )
-                for error in exc.errors(include_url=False)
             )
             return self._result(
                 route="invalid_intent",
                 intent=None,
-                intent_hash=raw_hash,
+                intent_hash=_invalid_intent_hash(raw, issues),
                 candidates=(),
                 issues=issues,
             )
 
+        raw_hash = resolver_hash("qst:token-intent:v1", intent.model_dump(mode="json"))
         candidates = self._collect_candidates(intent)
         evidence_only_terms = set(self.policy.evidence_only_runtime_terms)
         non_goal_terms = tuple(
@@ -79,7 +94,7 @@ class TokenGapResolver:
         )
         reserved_terms = set(intent.required_types) & set(self.policy.reserved_type_terms)
         reserved_terms.update(candidate.token_id for candidate in candidates if candidate.reserved)
-        boundary_terms = non_goal_terms or tuple(sorted(reserved_terms))
+        boundary_terms = tuple(sorted(set(non_goal_terms) | reserved_terms))
         recipes = self._matching_recipes(intent)
         proposals = self._matching_proposals(intent)
 
@@ -369,3 +384,23 @@ def _json_type_matches(value: Any, expected: str) -> bool:
     if expected == "null":
         return value is None
     return False
+
+
+def _require_unique(values: tuple[Any, ...], *, field_name: str) -> None:
+    identifiers = [getattr(item, field_name) for item in values]
+    if len(identifiers) != len(set(identifiers)):
+        raise ValueError(f"{field_name} values must be unique")
+
+
+def _invalid_intent_hash(raw: Any, issues: tuple[ResolverIssue, ...]) -> str:
+    try:
+        return resolver_hash("qst:token-intent:v1", raw)
+    except (TypeError, ValueError):
+        return resolver_hash(
+            "qst:token-intent:v1",
+            {
+                "canonical_input": False,
+                "input_type": f"{type(raw).__module__}.{type(raw).__qualname__}",
+                "issues": [item.model_dump(mode="json") for item in issues],
+            },
+        )

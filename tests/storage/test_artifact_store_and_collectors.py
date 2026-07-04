@@ -46,6 +46,29 @@ def test_store_deduplicates_verifies_and_rejects_tampering(tmp_path: Path) -> No
     assert not store.verify(first)
 
 
+def test_store_rejects_invalid_chunk_size_and_same_size_corruption(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="chunk_size must be positive"):
+        ContentAddressedStore(tmp_path / "bad-store", chunk_size=0)
+    source = tmp_path / "source.bin"
+    source.write_bytes(b"abcd")
+    store = ContentAddressedStore(tmp_path / "store")
+    descriptor = store.put_file(source, media_type="application/octet-stream")
+    store.object_path(descriptor).write_bytes(b"wxyz")
+    with pytest.raises(OSError, match="digest or size"):
+        store.put_file(source, media_type="application/octet-stream")
+
+
+def test_store_and_index_reject_tampered_descriptor_identity(tmp_path: Path) -> None:
+    source = tmp_path / "source.bin"
+    source.write_bytes(b"evidence")
+    store = ContentAddressedStore(tmp_path / "store")
+    descriptor = store.put_file(source, media_type="application/octet-stream")
+    tampered = descriptor.model_copy(update={"media_type": "text/plain"})
+    assert not store.verify(tampered)
+    with pytest.raises(ValueError, match="descriptor_id does not match"):
+        ArtifactIndex(tmp_path / "index.sqlite").upsert(tampered)
+
+
 def test_sqlite_index_is_wal_and_rebuildable(tmp_path: Path) -> None:
     source = tmp_path / "source.csv"
     source.write_text("a,b\n1,2\n", encoding="utf-8")
@@ -94,3 +117,31 @@ def test_collector_rejects_skip_terminal_and_unstable_artifacts(tmp_path: Path) 
     verified = transition_activity(complete, "verified", at=NOW)
     with pytest.raises(ValueError, match="artifact set"):
         verified_result_evidence(verified, (), subject_ref="run:1", observed_at=NOW)
+
+
+def test_collector_rejects_tampered_activity_and_descriptor(tmp_path: Path) -> None:
+    source = tmp_path / "result.json"
+    source.write_text('{"metric":1}', encoding="utf-8")
+    descriptor = ContentAddressedStore(tmp_path / "store").put_file(
+        source, media_type="application/json"
+    )
+    discovered = seal_activity(
+        ActivityRecord(activity_type="external.run", status="discovered", started_at=NOW)
+    )
+    tampered_activity = discovered.model_copy(update={"activity_type": "other.run"})
+    with pytest.raises(ValueError, match="activity_id does not match"):
+        transition_activity(tampered_activity, "collecting", at=NOW)
+
+    collecting = transition_activity(discovered, "collecting", at=NOW)
+    complete = transition_activity(
+        collecting,
+        "complete",
+        at=NOW,
+        output_artifact_ids=(descriptor.descriptor_id,),
+    )
+    verified = transition_activity(complete, "verified", at=NOW)
+    tampered_descriptor = descriptor.model_copy(update={"media_type": "text/plain"})
+    with pytest.raises(ValueError, match="descriptor_id does not match"):
+        verified_result_evidence(
+            verified, (tampered_descriptor,), subject_ref="run:1", observed_at=NOW
+        )

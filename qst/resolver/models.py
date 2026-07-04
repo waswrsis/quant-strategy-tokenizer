@@ -185,6 +185,11 @@ class ResolverPolicy(BaseModel):
             raise ValueError("candidate_status_rank must define every status exactly once")
         if len(set(self.candidate_status_rank.values())) != len(expected_statuses):
             raise ValueError("candidate status ranks must be unique")
+        overlap = set(self.non_goal_runtime_terms) & set(self.evidence_only_runtime_terms)
+        if overlap:
+            raise ValueError(
+                "runtime term classes must be disjoint: " + ", ".join(sorted(overlap))
+            )
         return self
 
 

@@ -7,7 +7,7 @@ release or remote acceptance.
 
 ## Required Evidence
 
-- Stage manifests 0 through 7 validate and every local freeze tag exists.
+- Stage manifests 0 through 8 validate and every local freeze tag exists.
 - Full pytest and coverage gates pass.
 - Ruff, mypy, compileall, stateless lint, vocabulary, prompt, and coverage gates pass.
 - v0.4 reference strategy hashes remain unchanged.
@@ -19,12 +19,13 @@ release or remote acceptance.
 
 ## Local Result
 
-- Full suite: `589 passed`.
-- Coverage suite: `589 passed`; `89.67%` total package coverage.
+- Full suite: `606 passed`.
+- Coverage suite: `606 passed`; `89.73%` total package coverage.
 - Static, prompt, artifact, coverage-frontier, vocabulary, compatibility, and stage
   manifest gates passed.
 - Completion evidence is recorded in
-  `docs/rearchitecture/COMPLETION_AUDIT.md` and the Stage 7 manifest.
+  `docs/rearchitecture/COMPLETION_AUDIT.md`,
+  `docs/rearchitecture/FULL_AUDIT.md`, and the Stage 8 manifest.
 
 ## Boundary
 

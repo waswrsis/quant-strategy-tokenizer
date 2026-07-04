@@ -55,6 +55,11 @@ class CustomizationDeclaration(BaseModel):
         paths = [item.path for item in self.operations]
         if len(paths) != len(set(paths)):
             raise ValueError("customization operation paths must be unique")
+        overlap = _first_path_overlap(paths)
+        if overlap is not None:
+            raise ValueError(
+                f"overlapping customization paths are not allowed: {overlap[0]}, {overlap[1]}"
+            )
         if self.identity_impact == "none" and self.risk != "low":
             raise ValueError("non-low-risk customization must declare identity impact")
         if self.customization_id is not None and self.customization_id != customization_identity(self):
@@ -98,11 +103,24 @@ def apply_customizations(
     stable_json_bytes(base)
     base_identity = identity_hash("qst:customization-base:v1", base)
     result = copy.deepcopy(base)
-    approvals = approvals or {}
+    approvals = {} if approvals is None else approvals
     ordered = sorted(declarations, key=lambda item: item.customization_id or "")
+    ids = [item.customization_id for item in ordered]
+    if any(item is None for item in ids):
+        raise ValueError("customization declaration must be sealed")
+    if len(ids) != len(set(ids)):
+        raise ValueError("customization declarations must be unique")
+    all_paths = [operation.path for declaration in ordered for operation in declaration.operations]
+    overlap = _first_path_overlap(all_paths)
+    if overlap is not None:
+        raise ValueError(
+            f"overlapping customization paths are not allowed: {overlap[0]}, {overlap[1]}"
+        )
     for declaration in ordered:
         if declaration.customization_id is None:
             raise ValueError("customization declaration must be sealed")
+        if declaration.customization_id != customization_identity(declaration):
+            raise ValueError("customization_id does not match declaration material")
         if declaration.base_identity != base_identity:
             raise ValueError("customization base_identity mismatch")
         if declaration.approval_required and declaration.customization_id not in approvals:
@@ -111,20 +129,24 @@ def apply_customizations(
             raise ValueError("customization declares forbidden base identity mutation")
         for operation in sorted(declaration.operations, key=lambda item: item.path):
             _set_pointer(result, operation.path, operation.value)
-    ids = tuple(item.customization_id for item in ordered if item.customization_id is not None)
-    approval_ids = tuple(sorted(approvals[item] for item in ids if item in approvals))
+    customization_ids = tuple(
+        item.customization_id for item in ordered if item.customization_id is not None
+    )
+    approval_ids = tuple(
+        sorted(approvals[item] for item in customization_ids if item in approvals)
+    )
     result_identity = identity_hash(
         "qst:customized-result:v1",
         {
             "base_identity": base_identity,
-            "customization_ids": list(ids),
+            "customization_ids": list(customization_ids),
             "approval_ids": list(approval_ids),
             "value": result,
         },
     )
     return CustomizationResult(
         base_identity=base_identity,
-        customization_ids=ids,
+        customization_ids=customization_ids,
         approval_ids=approval_ids,
         result_identity=result_identity,
         value=result,
@@ -155,3 +177,12 @@ def _set_pointer(target: dict[str, Any], path: str, value: Any) -> None:
             raise ValueError(f"customization parent path does not exist: {path}")
         current = child
     current[parts[-1]] = copy.deepcopy(value)
+
+
+def _first_path_overlap(paths: list[str]) -> tuple[str, str] | None:
+    ordered = sorted(paths)
+    for index, left in enumerate(ordered):
+        for right in ordered[index + 1 :]:
+            if right == left or right.startswith(left + "/"):
+                return left, right
+    return None

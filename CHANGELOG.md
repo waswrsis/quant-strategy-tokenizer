@@ -12,6 +12,8 @@
   incubation with publication separated from activation.
 - Preserved v0.4 GKR/hash/token behavior and isolated the legacy custom executor under
   the explicit `compat-v04` CLI namespace.
+- Added Stage 8 full-audit hardening for resolver, claim, evidence, artifact, collector,
+  adapter, token-incubator, customization, and Qlib negative paths.
 - Kept the candidate local; no GitHub branch, tag, or release was created.
 
 ## Stage 3A Token Surface Completion

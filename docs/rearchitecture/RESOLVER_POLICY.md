@@ -20,6 +20,11 @@ Phase A collects every relevant fact without routing:
 - existing governed proposals;
 - reserved type and non-goal runtime requirements.
 
+The resolver rejects duplicate recipe/proposal IDs and contradictory runtime policy
+classes. It rehashes vocabulary snapshot material before use. Invalid Python input that
+cannot enter canonical JSON still produces a deterministic `invalid_intent` result
+instead of escaping as a serializer exception.
+
 Type and parameter checks are sibling facts. Neither can short-circuit the other, so
 changing their implementation order cannot change the route.
 
@@ -47,6 +52,10 @@ alone is insufficient.
 
 Changing this order requires a new resolver-policy schema version. It is not a runtime
 configuration knob in policy 1.0.
+
+Route precedence selects one route, but does not discard sibling facts. For example, a
+request that requires both live execution and `EventStream` routes to `non_goal_runtime`
+while retaining both non-goal and reserved terms in `boundary_terms`.
 
 ## Candidate Ordering
 

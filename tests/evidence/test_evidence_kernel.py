@@ -182,6 +182,21 @@ def test_verified_activity_requires_end_time() -> None:
         ActivityRecord(activity_type="external.run", status="verified", started_at=NOW)
 
 
+def test_verified_activity_and_result_require_stable_artifacts() -> None:
+    with pytest.raises(ValidationError, match="requires output artifacts"):
+        ActivityRecord(
+            activity_type="external.run",
+            status="verified",
+            started_at=NOW,
+            ended_at=NOW,
+        )
+    with pytest.raises(ValidationError, match="requires artifact_ids"):
+        ResultEvidencePayload(
+            activity_id=HASH_A,
+            collection_status="verified",
+        )
+
+
 def test_models_reject_cross_layer_fields() -> None:
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         EvidenceEnvelope.model_validate(

@@ -140,7 +140,11 @@ def test_non_goal_precedes_reserved_and_reserved_precedes_token_match() -> None:
         TokenIntent(concept="core.event.filter", requested_token_id="core.event.filter")
     )
     assert non_goal.route == "non_goal_runtime"
-    assert non_goal.boundary_terms == ("live_execution",)
+    assert non_goal.boundary_terms == (
+        "EventStream",
+        "core.event.filter",
+        "live_execution",
+    )
     assert reserved.route == "reserved_typespec"
     assert reserved.candidates[0].reserved
 
@@ -161,6 +165,41 @@ def test_invalid_intent_has_stable_route_and_issue() -> None:
     assert result.route == "invalid_intent"
     assert result.intent is None
     assert {issue.code for issue in result.issues} == {"QST_RESOLVER_INVALID_INTENT"}
+
+
+def test_noncanonical_invalid_intent_returns_a_stable_invalid_route() -> None:
+    resolver = TokenGapResolver(_snapshot())
+    first = resolver.resolve({"concept": "bad", "params": {"values": {2, 1}}})
+    second = resolver.resolve({"concept": "bad", "params": {"values": {1, 2}}})
+    assert first.route == "invalid_intent"
+    assert first.identity.intent_hash == second.identity.intent_hash
+    assert {issue.code for issue in first.issues} == {"QST_RESOLVER_INVALID_INTENT"}
+    mutated = TokenIntent(concept="bad")
+    mutated.params["values"] = {1, 2}
+    assert resolver.resolve(mutated).route == "invalid_intent"
+
+
+def test_catalog_ids_must_be_unique() -> None:
+    recipe = RecipeSpec(
+        recipe_id="recipe.duplicate",
+        concepts=("concept",),
+        token_refs=("core.math.add/v1/bv1",),
+    )
+    with pytest.raises(ValueError, match="recipe_id values must be unique"):
+        TokenGapResolver(_snapshot(), recipes=(recipe, recipe))
+
+
+def test_resolver_rejects_tampered_vocabulary_snapshot() -> None:
+    snapshot = _snapshot().model_copy(update={"snapshot_hash": "sha256:" + "0" * 64})
+    with pytest.raises(ValueError, match="snapshot_hash does not match"):
+        TokenGapResolver(snapshot)
+
+
+def test_policy_runtime_term_classes_must_not_overlap() -> None:
+    data = ResolverPolicy().model_dump(mode="json")
+    data["evidence_only_runtime_terms"].append("live_execution")
+    with pytest.raises(ValueError, match="runtime term classes must be disjoint"):
+        ResolverPolicy.model_validate(data)
 
 
 def test_policy_route_order_is_immutable_in_v1() -> None:

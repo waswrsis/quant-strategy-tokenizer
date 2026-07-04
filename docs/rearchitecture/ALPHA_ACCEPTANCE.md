@@ -4,7 +4,7 @@
 
 The accepted local candidate is package version `1.0.0a1` on
 `research/qst-1.0-agent-provenance`. Its authoritative construction evidence is the
-ordered Stage 0-7 manifests and corresponding annotated local freeze tags.
+ordered Stage 0-8 manifests and corresponding annotated local freeze tags.
 
 ## Required Invariants
 

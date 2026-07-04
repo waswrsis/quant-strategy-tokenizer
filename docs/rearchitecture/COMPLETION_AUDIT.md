@@ -40,14 +40,14 @@ claim that the branch, commits, or freeze tags have been published to GitHub.
 ## Local Gate Evidence
 
 - Focused rearchitecture and documentation tests: `20 passed`.
-- Full test suite: `589 passed`.
-- Coverage suite: `589 passed`; total package coverage `89.67%`.
+- Full test suite after Stage 8 audit hardening: `606 passed`.
+- Coverage suite: `606 passed`; total package coverage `89.73%`.
 - Static gates: compileall, Ruff, mypy (`150 source files`), and stateless lint passed.
 - Prompt pack and prompt artifact validation passed.
 - Coverage matrix validation passed for `120` patterns; the publication frontier check
   passed with its record-layer disclaimers intact.
 - Vocabulary validation passed for `6` packs and `179` tokens with zero diagnostics.
-- All eight stage manifests validate with zero issues.
+- All nine stage manifests validate with zero issues.
 - `git diff --check` passed.
 
 ## Explicit Non-Goals
@@ -59,6 +59,6 @@ own token proposal.
 
 ## Freeze Policy
 
-Stages 0 through 7 are frozen by local commits and annotated local tags. Any later
+Stages 0 through 8 are frozen by local commits and annotated local tags. Any later
 change to a frozen contract requires an explicit supersession record. Publishing the
 branch or tags requires separate user authorization.

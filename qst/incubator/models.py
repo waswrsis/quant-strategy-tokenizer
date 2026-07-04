@@ -157,6 +157,10 @@ class TokenProposal(BaseModel):
     def _validate_history(self) -> TokenProposal:
         current: ProposalStatus = "detected"
         for transition in self.transitions:
+            if transition.transition_id is None:
+                raise ValueError("proposal transitions must be sealed")
+            if transition.transition_id != transition_identity(transition):
+                raise ValueError("transition_id does not match transition material")
             if transition.from_status != current:
                 raise ValueError("proposal transition history is discontinuous")
             current = transition.to_status
@@ -271,6 +275,8 @@ def seal_transition(value: ProposalTransition) -> ProposalTransition:
 def create_proposal(gap: TokenGapEvidence, draft: TokenDraft) -> TokenProposal:
     if gap.gap_id is None:
         raise ValueError("gap must be sealed")
+    if gap.gap_id != token_gap_identity(gap):
+        raise ValueError("gap_id does not match gap material")
     value = TokenProposal(gap_id=gap.gap_id, draft=draft)
     return TokenProposal.model_validate(
         {
@@ -281,8 +287,14 @@ def create_proposal(gap: TokenGapEvidence, draft: TokenDraft) -> TokenProposal:
 
 
 def apply_transition(value: TokenProposal, transition: ProposalTransition) -> TokenProposal:
+    if value.proposal_id is None:
+        raise ValueError("current proposal must be sealed")
+    if value.proposal_id != token_proposal_identity(value):
+        raise ValueError("proposal_id does not match proposal material")
     if transition.transition_id is None:
         transition = seal_transition(transition)
+    elif transition.transition_id != transition_identity(transition):
+        raise ValueError("transition_id does not match transition material")
     if transition.from_status != value.status:
         raise ValueError("transition does not start at current proposal status")
     updated = TokenProposal(

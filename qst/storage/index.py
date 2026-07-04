@@ -6,7 +6,7 @@ import json
 import sqlite3
 from pathlib import Path
 
-from qst.provenance import ArtifactDescriptor
+from qst.provenance import ArtifactDescriptor, artifact_identity
 
 
 class ArtifactIndex:
@@ -30,6 +30,8 @@ class ArtifactIndex:
     def upsert(self, descriptor: ArtifactDescriptor) -> None:
         if descriptor.descriptor_id is None:
             raise ValueError("descriptor must be sealed")
+        if descriptor.descriptor_id != artifact_identity(descriptor):
+            raise ValueError("descriptor_id does not match descriptor material")
         payload = descriptor.model_dump_json()
         with self._connect() as connection:
             connection.execute(
@@ -68,4 +70,3 @@ class ArtifactIndex:
 
     def _connect(self) -> sqlite3.Connection:
         return sqlite3.connect(self.path)
-

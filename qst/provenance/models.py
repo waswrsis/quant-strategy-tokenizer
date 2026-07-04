@@ -139,6 +139,8 @@ class ActivityRecord(BaseModel):
                 raise ValueError("ended_at cannot precede started_at")
         if self.status == "verified" and self.ended_at is None:
             raise ValueError("verified activity requires ended_at")
+        if self.status == "verified" and not self.output_artifact_ids:
+            raise ValueError("verified activity requires output artifacts")
         if self.activity_id is not None and self.activity_id != activity_identity(self):
             raise ValueError("activity_id does not match activity material")
         return self

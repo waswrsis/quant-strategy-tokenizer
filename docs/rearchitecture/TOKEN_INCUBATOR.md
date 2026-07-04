@@ -16,6 +16,9 @@ detected -> agent_draft -> statically_validated -> contract_approved
 Every transition is immutable, hash-bearing, adjacent, timestamped, and carries actor,
 evidence, checklist, and reason codes. Rejection is terminal.
 
+Lifecycle APIs revalidate the current proposal and transition identities. A proposal
+history cannot contain unsealed transitions.
+
 ## Required Gates
 
 - Static validation: schema, namespace, ports, params, and boundary checks by a system.
@@ -29,4 +32,3 @@ evidence, checklist, and reason codes. Rejection is terminal.
 An agent cannot approve, publish, activate, mark a token accepted, create an execution
 grant, or add a draft to the core namespace. Publication does not trigger activation.
 Activation is project-local and does not mutate `builtin_token_packs()`.
-

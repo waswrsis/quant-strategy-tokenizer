@@ -5,6 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 import yaml
 
 from qst.adapters.qlib.extractor import (
@@ -185,3 +186,35 @@ def test_candidate_yaml_is_canonical_json_compatible(tmp_path: Path) -> None:
     assert loaded["metadata"]["lossless"] is False
     assert loaded["metadata"]["runtime_execution"] is False
     assert loaded["metadata"]["classification"] == result.coverage.classification
+
+
+def test_loader_rejects_noncanonical_yaml_values(tmp_path: Path) -> None:
+    nonfinite = tmp_path / "nonfinite.yaml"
+    nonfinite.write_text("task:\n  value: .nan\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="NaN and Infinity"):
+        load_workflow_config(nonfinite)
+
+    yaml_set = tmp_path / "set.yaml"
+    yaml_set.write_text("task:\n  values: !!set {a: null, b: null}\n", encoding="utf-8")
+    with pytest.raises(TypeError, match="unsupported YAML value type"):
+        load_workflow_config(yaml_set)
+
+
+def test_mapper_assigns_unique_ids_to_duplicate_record_classes(tmp_path: Path) -> None:
+    workflow = tmp_path / "duplicate-records.yaml"
+    workflow.write_text(
+        "task:\n"
+        "  model:\n"
+        "    class: LGBModel\n"
+        "  record:\n"
+        "    - class: SignalRecord\n"
+        "    - class: SignalRecord\n",
+        encoding="utf-8",
+    )
+    output = tmp_path / "duplicate-records.gkr.yaml"
+    import_qlib_workflow(workflow, output_path=output)
+    ir = load_ir_v04_file(output)
+    ids = [node.id for node in ir.strategy.nodes]
+    assert len(ids) == len(set(ids))
+    assert {"signal_record", "signal_record_2"} <= set(ids)
+    assert validate_ir_v04(ir).ok

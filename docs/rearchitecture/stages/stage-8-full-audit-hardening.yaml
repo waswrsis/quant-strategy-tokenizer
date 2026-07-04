@@ -1,0 +1,76 @@
+schema_version: qst-rearchitecture-stage/1
+stage_id: 8
+title: Full alpha audit and trust-boundary hardening
+status: frozen
+branch: research/qst-1.0-agent-provenance
+base_tag: qst-1.0-stage-7-alpha-candidate-frozen
+freeze_tag: qst-1.0-stage-8-full-audit-hardening-frozen
+scope:
+  - full local architecture and release audit
+  - resolver input, snapshot, catalog, and boundary-fact hardening
+  - claim subject, time, identity, uniqueness, and L4 signature hardening
+  - artifact store, collector, and adapter trust-boundary hardening
+  - token proposal and customization composition hardening
+  - Qlib canonical input and duplicate-record compatibility repair
+  - residual risk and improvement decision record
+frozen_contracts:
+  - qst-1.0-alpha-audit-baseline
+  - qst-1.0-trust-boundary-validation
+  - qst-1.0-claim-subject-isolation
+  - qst-1.0-resolver-complete-boundary-facts
+supersedes:
+  - stage-1:qst-resolver-policy/1.0:invalid-input-and-boundary-evidence
+  - stage-2:qst-evidence/1.0:verified-artifact-requirement
+  - stage-3:qst-artifact-store/1.0:dedup-integrity-validation
+  - stage-4:qst-ai4finance-adapter/1.0:verification-depth
+  - stage-5:qst-token-proposal/1.0:sealed-history-enforcement
+  - stage-6:qst-claim-evaluator/1.0:subject-time-and-attestation-isolation
+  - stage-6:qst-customization/1.0:conflict-rejection
+supersession_reason: >-
+  Full negative-path auditing proved that several frozen interfaces preserved route or
+  record shape while accepting stale identities, incomplete boundary evidence, or
+  ambiguous composition. Stage 8 tightens rejection behavior without changing identity
+  domains, schema names, accepted v0.4 strategy hashes, or execution boundaries.
+gates:
+  - command: python -m compileall -q qst
+    result: pass
+  - command: python -m ruff check .
+    result: pass
+  - command: python -m mypy qst
+    result: pass
+    summary: 150 source files checked
+  - command: python -m qst.lint.stateless qst
+    result: pass
+  - command: python -m pytest tests -q
+    result: pass
+    summary: 606 passed
+  - command: python -m pytest --cov=qst --cov-fail-under=85 -q
+    result: pass
+    summary: 606 passed; 89.73 percent coverage
+  - command: python tools/validate_prompt_set.py docs/agent/prompts/qst_stage_3c_v0_3_2
+    result: pass
+    summary: 14 checks; zero issues
+  - command: python tools/verify_prompt_remote_artifacts.py docs/agent/prompts/qst_stage_3c_v0_3_2
+    result: pass
+    summary: 11 artifacts checked
+  - command: python tools/validate_strategy_coverage_matrix.py docs/reports/strategy_coverage_matrix.yaml
+    result: pass
+    summary: 120 patterns; zero issues
+  - command: python tools/report_strategy_coverage.py docs/reports/strategy_coverage_matrix.yaml --check
+    result: pass
+    summary: frontier gate passed; raw routable headline 0.8970
+  - command: python -m qst.cli vocabulary --check
+    result: pass
+    summary: 6 packs; 179 tokens; zero diagnostics
+  - command: python tools/validate_rearchitecture_stages.py
+    result: pass
+    summary: 9 manifests; zero issues
+  - command: python -m pip wheel . --no-deps --wheel-dir .local_audit/audit-dist
+    result: pass
+    summary: quant_strategy_tokenizer-1.0.0a1-py3-none-any.whl built
+  - command: git diff --check
+    result: pass
+evidence_notes:
+  - Every Stage 8 local gate passed before the audit freeze.
+  - Seventeen negative-path regression tests were added above the Stage 7 baseline.
+  - No remote branch, tag, pull request, or release is created by this audit.

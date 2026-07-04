@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -124,6 +124,135 @@ def test_claim_requires_verified_result_and_l3_adapter_attestation() -> None:
     assert allowed.allowed
     assert not denied.allowed
     assert denied.reason_codes == ("QST_CLAIM_REQUIREMENT_MISSING:result",)
+
+
+def test_claim_rejects_other_subject_duplicate_evidence_and_unsealed_attestation() -> None:
+    policy = seal_claim_policy(
+        ClaimPolicy(
+            policy_id="two-results-v1",
+            policy_version=1,
+            claim_type="experiment_completed",
+            requirements=(
+                EvidenceRequirement(
+                    payload_kind="result",
+                    minimum_count=2,
+                    require_verified_result=True,
+                    minimum_adapter_maturity="L3",
+                ),
+            ),
+        )
+    )
+    evidence, sealed_attestation = _claim_inputs("L3")
+    wrong_subject = seal_evidence(
+        evidence.model_copy(update={"evidence_id": None, "subject_ref": "experiment:other"})
+    )
+    unsealed_attestation = sealed_attestation.model_copy(update={"attestation_id": None})
+    decision = evaluate_claim(
+        policy,
+        (evidence, evidence, wrong_subject),
+        (unsealed_attestation,),
+        subject_ref="experiment:1",
+        evaluated_at=NOW,
+    )
+    assert not decision.allowed
+    assert decision.evidence_ids == (evidence.evidence_id,)
+    assert decision.attestation_ids == ()
+
+
+def test_claim_rejects_tampered_policy_identity() -> None:
+    policy = seal_claim_policy(
+        ClaimPolicy(
+            policy_id="sealed-policy-v1",
+            policy_version=1,
+            claim_type="experiment_completed",
+            requirements=(EvidenceRequirement(payload_kind="result"),),
+        )
+    )
+    tampered = policy.model_copy(update={"policy_version": 2})
+    with pytest.raises(ValueError, match="policy_hash does not match"):
+        evaluate_claim(tampered, (), (), subject_ref="experiment:1", evaluated_at=NOW)
+
+
+def test_claim_rejects_future_evidence_and_unsigned_l4_attestation() -> None:
+    policy = seal_claim_policy(
+        ClaimPolicy(
+            policy_id="l4-result-v1",
+            policy_version=1,
+            claim_type="experiment_completed",
+            requirements=(
+                EvidenceRequirement(
+                    payload_kind="result",
+                    require_verified_result=True,
+                    minimum_adapter_maturity="L4",
+                ),
+            ),
+        )
+    )
+    evidence, unsigned_l4 = _claim_inputs("L4")
+    denied_unsigned = evaluate_claim(
+        policy,
+        (evidence,),
+        (unsigned_l4,),
+        subject_ref="experiment:1",
+        evaluated_at=NOW,
+    )
+    signed_l4 = seal_attestation(
+        unsigned_l4.model_copy(
+            update={"attestation_id": None, "signature_artifact_id": HASH_A}
+        )
+    )
+    allowed_signed = evaluate_claim(
+        policy,
+        (evidence,),
+        (signed_l4,),
+        subject_ref="experiment:1",
+        evaluated_at=NOW,
+    )
+    future_evidence = seal_evidence(
+        evidence.model_copy(
+            update={"evidence_id": None, "observed_at": NOW + timedelta(minutes=1)}
+        )
+    )
+    denied_future = evaluate_claim(
+        seal_claim_policy(
+            ClaimPolicy(
+                policy_id="result-v1",
+                policy_version=1,
+                claim_type="experiment_completed",
+                requirements=(EvidenceRequirement(payload_kind="result"),),
+            )
+        ),
+        (future_evidence,),
+        (),
+        subject_ref="experiment:1",
+        evaluated_at=NOW,
+    )
+    assert not denied_unsigned.allowed
+    assert allowed_signed.allowed
+    assert not denied_future.allowed
+
+
+def test_customization_rejects_duplicate_or_overlapping_operations() -> None:
+    base = {"params": {"threshold": 1}}
+    first = _customization(base, approval_required=False)
+    with pytest.raises(ValueError, match="customization declarations must be unique"):
+        apply_customizations(base, (first, first))
+    second = seal_customization(
+        CustomizationDeclaration(
+            requested_by_actor_id=HASH_A,
+            authored_by_actor_id=HASH_C,
+            scope="strategy.parameters",
+            rationale="Conflicting override",
+            base_identity=identity_hash("qst:customization-base:v1", base),
+            operations=(CustomizationOperation(path="/params", value={"threshold": 3}),),
+            identity_impact="derived_identity_changes",
+            risk="medium",
+            approval_required=False,
+            declared_at=NOW,
+        )
+    )
+    with pytest.raises(ValueError, match="overlapping customization paths"):
+        apply_customizations(base, (first, second))
 
 
 def test_ai4finance_maturity_matrix_matches_golden_claim_boundary() -> None:

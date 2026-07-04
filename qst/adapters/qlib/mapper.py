@@ -30,9 +30,13 @@ def build_candidate_gkr(coverage: QlibImportCoverage) -> dict[str, Any]:
                 {"dataset": "dataset.record"} if coverage.dataset is not None else {},
             )
         )
+    used_node_ids = {node["id"] for node in nodes}
     for index, record in enumerate(coverage.records, start=1):
         local_name = _record_token_name(record.class_name)
-        node_id = _record_node_id(record.class_name, index)
+        node_id = _unique_node_id(
+            _record_node_id(record.class_name, index), used_node_ids
+        )
+        used_node_ids.add(node_id)
         inputs = {"model": "model.record"} if coverage.model is not None else {}
         nodes.append(_node(node_id, local_name, record.model_dump(mode="json"), inputs))
     if coverage.strategy is not None:
@@ -124,6 +128,15 @@ def _record_node_id(class_name: str | None, index: int) -> str:
     if class_name == "PortAnaRecord":
         return "portfolio_analysis_record"
     return f"record_{index}"
+
+
+def _unique_node_id(base: str, used: set[str]) -> str:
+    if base not in used:
+        return base
+    suffix = 2
+    while f"{base}_{suffix}" in used:
+        suffix += 1
+    return f"{base}_{suffix}"
 
 
 def _strategy_id(source: str) -> str:

@@ -98,6 +98,51 @@ def test_adapter_rejects_wrong_project_manifest(tmp_path: Path) -> None:
         adapter.extract_plan(str(FIXTURES / "finrl.yaml"))
 
 
+def test_adapter_verify_requires_sealed_identity_and_declared_schema(tmp_path: Path) -> None:
+    adapter = FinRobotEvidenceAdapter(ContentAddressedStore(tmp_path / "store"))
+    source = str(FIXTURES / "finrobot.yaml")
+    result = adapter.collect_run(source)
+    evidence = seal_evidence(
+        EvidenceEnvelope(
+            subject_ref=result["run_id"],
+            observed_at=NOW,
+            payload=ExternalRecordEvidencePayload(
+                adapter_id=adapter.descriptor.adapter_id,
+                record_type="golden_workflow",
+                record_schema="qst-ai4finance-workflow/1.0",
+                record=result,
+            ),
+        )
+    )
+    assert not adapter.verify(evidence.model_copy(update={"evidence_id": None}))
+    wrong_schema = seal_evidence(
+        evidence.model_copy(
+            update={
+                "evidence_id": None,
+                "payload": evidence.payload.model_copy(update={"record_schema": "other/1.0"}),
+            }
+        )
+    )
+    assert not adapter.verify(wrong_schema)
+    wrong_subject = seal_evidence(
+        evidence.model_copy(
+            update={"evidence_id": None, "subject_ref": "another-run"}
+        )
+    )
+    assert not adapter.verify(wrong_subject)
+    incomplete_record = seal_evidence(
+        evidence.model_copy(
+            update={
+                "evidence_id": None,
+                "payload": evidence.payload.model_copy(
+                    update={"record": {"run_id": result["run_id"], "status": "complete", "result": {}}}
+                ),
+            }
+        )
+    )
+    assert not adapter.verify(incomplete_record)
+
+
 def test_finrobot_exposes_six_compact_read_only_tools(tmp_path: Path) -> None:
     tools = FinRobotReadOnlyTools(ContentAddressedStore(tmp_path / "store"))
     public_tools = {

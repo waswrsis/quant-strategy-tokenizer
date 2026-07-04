@@ -6,7 +6,13 @@ from datetime import datetime
 from typing import Any, Protocol, runtime_checkable
 
 from qst.evidence import EvidenceEnvelope, ResultEvidencePayload, seal_evidence
-from qst.provenance import ActivityRecord, ArtifactDescriptor, seal_activity
+from qst.provenance import (
+    ActivityRecord,
+    ArtifactDescriptor,
+    activity_identity,
+    artifact_identity,
+    seal_activity,
+)
 
 ALLOWED_TRANSITIONS = {
     "discovered": {"collecting", "failed"},
@@ -46,6 +52,8 @@ def transition_activity(
 
     if current.activity_id is None:
         raise ValueError("current activity must be sealed")
+    if current.activity_id != activity_identity(current):
+        raise ValueError("activity_id does not match activity material")
     if status not in ALLOWED_TRANSITIONS[current.status]:
         raise ValueError(f"invalid activity transition {current.status} -> {status}")
     outputs = current.output_artifact_ids if output_artifact_ids is None else output_artifact_ids
@@ -79,9 +87,13 @@ def verified_result_evidence(
 
     if activity.status != "verified" or activity.activity_id is None:
         raise ValueError("result activity must be sealed and verified")
+    if activity.activity_id != activity_identity(activity):
+        raise ValueError("activity_id does not match activity material")
     descriptor_ids = tuple(item.descriptor_id for item in artifacts)
     if any(item is None for item in descriptor_ids):
         raise ValueError("all artifact descriptors must be sealed")
+    if any(item.descriptor_id != artifact_identity(item) for item in artifacts):
+        raise ValueError("descriptor_id does not match descriptor material")
     expected = tuple(sorted(activity.output_artifact_ids))
     actual = tuple(sorted(item for item in descriptor_ids if item is not None))
     if actual != expected:
@@ -98,4 +110,3 @@ def verified_result_evidence(
             ),
         )
     )
-

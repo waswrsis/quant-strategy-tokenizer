@@ -16,6 +16,10 @@ stable contracts.
 Only L3 and L4 adapters are eligible to support a workflow claim. Adapter verification
 still does not prove profitability or authorize execution.
 
+Verification requires a sealed evidence identity, the declared workflow schema, a
+matching run subject, a known status, a result mapping, and all adapter-specific result
+fields for complete runs.
+
 | System | Level | Declared evidence |
 |---|---:|---|
 | FinRobot | L3 | agents, tools, task, material message log, report |
@@ -41,4 +45,3 @@ verification, and claim-readiness inventory. Claim readiness deliberately return
 `qst-ai4finance-workflow/1.0` manifests are declarations. Artifact paths must remain
 inside the manifest directory. Complete runs require artifacts. Opaque files retain raw
 byte digests in the Stage 3 object store.
-

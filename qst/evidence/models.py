@@ -48,6 +48,12 @@ class ResultEvidencePayload(BaseModel):
         stable_json_bytes(value)
         return value
 
+    @model_validator(mode="after")
+    def _verified_requires_artifacts(self) -> ResultEvidencePayload:
+        if self.collection_status == "verified" and not self.artifact_ids:
+            raise ValueError("verified result evidence requires artifact_ids")
+        return self
+
 
 class AgentActionEvidencePayload(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)

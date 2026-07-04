@@ -18,13 +18,14 @@ replace the runtimes from which it collects evidence.
 6. Stage 5: token-gap evidence, agent drafts, review, publication, and activation.
 7. Stage 6: customization declarations, claim policy, and golden workflows.
 8. Stage 7: v0.4 migration, tamper and performance acceptance, and alpha candidate.
+9. Stage 8: full audit, negative-path repair, and trust-boundary hardening.
 
 Each stage must pass its declared gates before the next stage starts. A completed stage
 is saved in a local commit and frozen with an annotated local tag. Nothing is pushed
 without explicit user approval.
 
-Stages 0 through 7 are frozen. The resulting alpha candidate remains local until the
-user explicitly authorizes publication.
+Stages 0 through 8 are frozen. The audited candidate remains local until the user
+explicitly authorizes publication.
 
 ## Authoritative Documents
 
@@ -33,4 +34,5 @@ user explicitly authorizes publication.
 - [v0.4 compatibility boundary](V04_COMPATIBILITY_BOUNDARY.md)
 - [Alpha acceptance](ALPHA_ACCEPTANCE.md)
 - [Completion audit](COMPLETION_AUDIT.md)
+- [Full alpha audit](FULL_AUDIT.md)
 - [Stage manifests](stages/)

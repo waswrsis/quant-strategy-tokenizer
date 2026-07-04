@@ -12,7 +12,7 @@ runtime, or production execution engine.
 ## Status
 
 The tagged v0.4 line is an **archived agent-ready research prototype**. The local
-`research/qst-1.0-agent-provenance` branch is a `1.0.0a1` candidate. Eight stages are
+`research/qst-1.0-agent-provenance` branch is a `1.0.0a1` candidate. Nine stages are
 locally committed and frozen; nothing on this branch has been pushed.
 
 See [QST 1.0 rearchitecture](docs/rearchitecture/README.md) for the staged construction

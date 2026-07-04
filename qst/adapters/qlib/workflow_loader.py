@@ -9,6 +9,8 @@ from typing import Any
 
 import yaml
 
+from qst.canonical_json import stable_json_bytes
+
 YAML_LOADER = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
 
 
@@ -21,6 +23,7 @@ def load_workflow_config(path: Path) -> dict[str, Any]:
     normalized = _normalize_yaml_value(raw)
     if not isinstance(normalized, dict):
         raise ValueError("Qlib workflow config must normalize to a mapping")
+    stable_json_bytes(normalized)
     return normalized
 
 
@@ -28,10 +31,15 @@ def _normalize_yaml_value(value: Any) -> Any:
     if isinstance(value, datetime | date):
         return value.isoformat()
     if isinstance(value, Mapping):
-        return {str(key): _normalize_yaml_value(item) for key, item in value.items()}
+        result: dict[str, Any] = {}
+        for key, item in value.items():
+            normalized_key = str(key)
+            if normalized_key in result:
+                raise ValueError(f"Qlib workflow key collision: {normalized_key}")
+            result[normalized_key] = _normalize_yaml_value(item)
+        return result
     if isinstance(value, list | tuple):
         return [_normalize_yaml_value(item) for item in value]
     if value is None or isinstance(value, str | int | float | bool):
         return value
-    return str(value)
-
+    raise TypeError(f"unsupported YAML value type: {type(value).__name__}")
