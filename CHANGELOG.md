@@ -18,6 +18,8 @@
   revocation, and switchable `record_only`, `advisory`, and `enforce` policy modes.
 - Added Stage 10 use-case authority profiles and auditable mode overrides for ingestion,
   migration, claims, token governance, and customization.
+- Added Stage 11 deterministic JSON/YAML profile persistence, declared project-local
+  policy records, builtin impersonation checks, and a non-executing authority CLI.
 - Kept the candidate local; no GitHub branch, tag, or release was created.
 
 ## Stage 3A Token Surface Completion

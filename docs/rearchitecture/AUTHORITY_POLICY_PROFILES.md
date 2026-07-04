@@ -1,6 +1,8 @@
 # Authority Policy Profiles
 
-Stage 10 turns the Stage 9 authority modes into deterministic use-case profiles. A
+Stage 10 turns the Stage 9 authority modes into deterministic use-case profiles. Stage
+11 updates persisted profiles to `qst-authority-policy-profile/1.1` so custom policy is
+explicitly declared. A
 profile is a sealed record that defines every supported use case exactly once. The
 selected effective mode is returned as an identity-bearing `AuthorityModeSelection`.
 
@@ -56,3 +58,8 @@ and model validation requires those values to agree.
 - Structural corruption remains an error in every profile.
 - Selecting a strict profile does not turn QST into an execution or trading runtime.
 - Custom profiles must be complete, sealed, versioned, and evidence-bearing.
+- Persisted project-local profiles must declare an actor and rationale; persisted
+  builtin profiles must exactly match built-in material.
+
+See [Authority Profile Persistence and CLI](AUTHORITY_PROFILE_CLI.md) for local file and
+command usage.

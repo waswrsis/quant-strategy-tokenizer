@@ -1,0 +1,77 @@
+schema_version: qst-rearchitecture-stage/1
+stage_id: 11
+title: Declared authority profile persistence and CLI
+status: frozen
+branch: research/qst-1.0-agent-provenance
+base_tag: qst-1.0-stage-10-authority-policy-profiles-frozen
+freeze_tag: qst-1.0-stage-11-authority-profile-cli-frozen
+scope:
+  - deterministic JSON and YAML authority profile persistence
+  - strict duplicate-key, size, identity, and builtin-origin validation
+  - atomic profile writes and overwrite controls
+  - declared project-local actor and rationale metadata
+  - profile list, show, export, seal, and validate CLI commands
+  - identity-bearing mode selection CLI command
+  - post-construction profile IO and CLI audit
+frozen_contracts:
+  - qst-authority-policy-profile/1.1
+  - qst-authority-profile-file-io/1.0
+  - qst-authority-profile-cli/1.0
+supersedes:
+  - stage-10:qst-authority-policy-profile/1.0:custom-profile-declaration
+supersession_reason: >-
+  Stage 10 made profile selection deterministic but did not record ownership of custom
+  profile definitions. Stage 11 upgrades persisted profiles to distinguish immutable
+  builtin material from project-local policy declared by an actor with a rationale.
+  Authorization and mode semantics do not change.
+gates:
+  - command: python -m compileall -q qst
+    result: pass
+  - command: python -m ruff check .
+    result: pass
+  - command: python -m mypy qst
+    result: pass
+    summary: 157 source files checked
+  - command: python -m qst.lint.stateless qst
+    result: pass
+  - command: python -m pytest tests/authority -q
+    result: pass
+    summary: 21 passed
+  - command: python -m pytest tests -q
+    result: pass
+    summary: 628 passed
+  - command: python -m pytest --cov=qst --cov-fail-under=85 -q
+    result: pass
+    summary: 628 passed; 89.65 percent coverage
+  - command: python tools/validate_prompt_set.py docs/agent/prompts/qst_stage_3c_v0_3_2
+    result: pass
+    summary: 14 checks; zero issues
+  - command: python tools/verify_prompt_remote_artifacts.py docs/agent/prompts/qst_stage_3c_v0_3_2
+    result: pass
+    summary: 11 artifacts checked
+  - command: python tools/validate_strategy_coverage_matrix.py docs/reports/strategy_coverage_matrix.yaml
+    result: pass
+    summary: 120 patterns; zero issues
+  - command: python tools/report_strategy_coverage.py docs/reports/strategy_coverage_matrix.yaml --check
+    result: pass
+    summary: frontier gate passed; raw routable headline 0.8970
+  - command: python -m qst.cli vocabulary --check
+    result: pass
+    summary: 6 packs; 179 tokens; zero diagnostics
+  - command: python tools/validate_rearchitecture_stages.py
+    result: pass
+    summary: 12 manifests; zero issues
+  - command: python -m pip wheel . --no-deps --wheel-dir .local_audit/stage-11-dist
+    result: pass
+    summary: quant_strategy_tokenizer-1.0.0a1-py3-none-any.whl built
+  - command: git diff --check
+    result: pass
+evidence_notes:
+  - CLI commands only manipulate authority policy records and selections.
+  - Project-local policy cannot be sealed without a declaring actor and reason.
+  - Persisted builtin profiles cannot diverge from built-in material.
+  - No private key, approval, grant, execution, broker, exchange, or trading surface is added.
+  - Construction review repaired declaration, parser, bounded-read, alias-cycle, and
+    builtin-resolution defects before freeze.
+  - Full repository and package-build gates passed before freeze.
+  - No remote branch, tag, pull request, or release is created by this stage.

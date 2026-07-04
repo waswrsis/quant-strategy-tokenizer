@@ -72,6 +72,9 @@ def test_unsealed_or_incomplete_profile_is_rejected() -> None:
             profile_id="incomplete",
             version=1,
             description="Missing most use cases.",
+            origin="project_local",
+            declared_by_actor_id="sha256:" + "a" * 64,
+            declaration_reason="Project-specific policy.",
             rules=(AuthorityPolicyRule(use_case="record_ingestion", mode="record_only"),),
         )
 

@@ -21,6 +21,7 @@ AuthorityUseCase = Literal[
     "token_activation",
     "customization",
 ]
+AuthorityProfileOrigin = Literal["builtin", "project_local"]
 
 AUTHORITY_USE_CASES: tuple[AuthorityUseCase, ...] = (
     "claim_evaluation",
@@ -45,13 +46,16 @@ class AuthorityPolicyProfile(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    schema_version: Literal["qst-authority-policy-profile/1.0"] = (
-        "qst-authority-policy-profile/1.0"
+    schema_version: Literal["qst-authority-policy-profile/1.1"] = (
+        "qst-authority-policy-profile/1.1"
     )
     profile_hash: HashString | None = None
     profile_id: str = Field(min_length=1)
     version: int = Field(ge=1)
     description: str = Field(min_length=1)
+    origin: AuthorityProfileOrigin
+    declared_by_actor_id: HashString | None = None
+    declaration_reason: str | None = None
     rules: tuple[AuthorityPolicyRule, ...]
 
     @field_validator("rules", mode="after")
@@ -64,6 +68,15 @@ class AuthorityPolicyProfile(BaseModel):
         use_cases = tuple(item.use_case for item in self.rules)
         if use_cases != AUTHORITY_USE_CASES:
             raise ValueError("authority profile must define every use case exactly once")
+        if self.origin == "builtin":
+            if self.declared_by_actor_id is not None or self.declaration_reason is not None:
+                raise ValueError("builtin authority profile cannot contain project declaration")
+        elif self.declared_by_actor_id is None or not (
+            self.declaration_reason and self.declaration_reason.strip()
+        ):
+            raise ValueError(
+                "project-local authority profile requires declaring actor and reason"
+            )
         if self.profile_hash is not None and self.profile_hash != authority_policy_profile_identity(
             self
         ):
@@ -110,7 +123,7 @@ class AuthorityModeSelection(BaseModel):
 def authority_policy_profile_identity(value: AuthorityPolicyProfile) -> str:
     return model_identity(
         value,
-        domain="qst:authority-policy-profile:v1",
+        domain="qst:authority-policy-profile:v1.1",
         identity_field="profile_hash",
     )
 
@@ -236,6 +249,7 @@ def _profile(
             profile_id=profile_id,
             version=1,
             description=description,
+            origin="builtin",
             rules=tuple(
                 AuthorityPolicyRule(use_case=use_case, mode=mode)
                 for use_case, mode in modes.items()

@@ -5,11 +5,23 @@ from __future__ import annotations
 import json
 from dataclasses import asdict
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, NoReturn, cast
 
 import typer
+import yaml
 
 from qst.adapters.qlib.cli import app as qlib_adapter_app
+from qst.authority import (
+    AUTHORITY_USE_CASES,
+    AuthorityMode,
+    AuthorityUseCase,
+    builtin_authority_profiles,
+    load_authority_policy_profile,
+    resolve_authority_policy_profile,
+    save_authority_policy_profile,
+    seal_authority_policy_profile_file,
+    select_authority_mode,
+)
 from qst.canonical_json import stable_json_bytes
 from qst.custom_runtime import (
     ApprovalRequest,
@@ -34,11 +46,17 @@ compat_app = typer.Typer(no_args_is_help=True)
 compat_token_app = typer.Typer(no_args_is_help=True)
 approval_app = typer.Typer(no_args_is_help=True)
 adapter_app = typer.Typer(no_args_is_help=True)
+authority_app = typer.Typer(no_args_is_help=True, help="Authority policy records")
+authority_profile_app = typer.Typer(no_args_is_help=True, help="Authority policy profiles")
+authority_mode_app = typer.Typer(no_args_is_help=True, help="Authority mode selection")
 app.add_typer(compat_app, name="compat-v04")
 compat_app.add_typer(compat_token_app, name="token")
 compat_token_app.add_typer(approval_app, name="approvals")
 app.add_typer(adapter_app, name="adapter")
 adapter_app.add_typer(qlib_adapter_app, name="qlib")
+app.add_typer(authority_app, name="authority")
+authority_app.add_typer(authority_profile_app, name="profile")
+authority_app.add_typer(authority_mode_app, name="mode")
 
 
 def _jsonable(value: Any) -> Any:
@@ -55,6 +73,26 @@ def _jsonable(value: Any) -> Any:
 
 def _echo_json(value: Any) -> None:
     typer.echo(json.dumps(_jsonable(value), ensure_ascii=False, indent=2, sort_keys=True))
+
+
+def _authority_error(exc: OSError | ValueError | yaml.YAMLError) -> NoReturn:
+    _echo_json({"ok": False, "error": str(exc)})
+    raise typer.Exit(1)
+
+
+def _parse_authority_use_case(value: str) -> AuthorityUseCase:
+    if value not in AUTHORITY_USE_CASES:
+        choices = ", ".join(AUTHORITY_USE_CASES)
+        raise typer.BadParameter(f"authority use case must be one of: {choices}")
+    return value
+
+
+def _parse_authority_mode(value: str | None) -> AuthorityMode | None:
+    if value is None:
+        return None
+    if value not in {"record_only", "advisory", "enforce"}:
+        raise typer.BadParameter("authority mode must be record_only, advisory, or enforce")
+    return cast(AuthorityMode, value)
 
 
 def _parse_token_ref(value: str) -> TokenRefV04:
@@ -232,6 +270,131 @@ def canonicalize(
     else:
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_bytes(payload)
+
+
+@authority_profile_app.command("list")
+def authority_profile_list() -> None:
+    """List sealed built-in authority policy profiles."""
+
+    _echo_json(
+        {
+            "ok": True,
+            "profiles": [
+                {
+                    "profile_id": profile.profile_id,
+                    "profile_hash": profile.profile_hash,
+                    "version": profile.version,
+                    "modes": {item.use_case: item.mode for item in profile.rules},
+                }
+                for profile in builtin_authority_profiles()
+            ],
+        }
+    )
+
+
+@authority_profile_app.command("show")
+def authority_profile_show(reference: str) -> None:
+    """Show a built-in profile ID or sealed local profile file."""
+
+    try:
+        profile = resolve_authority_policy_profile(reference)
+    except (OSError, ValueError, yaml.YAMLError) as exc:
+        _authority_error(exc)
+    _echo_json({"ok": True, "profile": profile})
+
+
+@authority_profile_app.command("validate")
+def authority_profile_validate(path: Path) -> None:
+    """Validate identity and schema of a persisted authority profile."""
+
+    try:
+        profile = load_authority_policy_profile(path)
+    except (OSError, ValueError, yaml.YAMLError) as exc:
+        _authority_error(exc)
+    _echo_json(
+        {
+            "ok": True,
+            "profile_id": profile.profile_id,
+            "profile_hash": profile.profile_hash,
+        }
+    )
+
+
+@authority_profile_app.command("export")
+def authority_profile_export(
+    reference: str,
+    output: Annotated[Path, typer.Option("--output")],
+    overwrite: Annotated[bool, typer.Option("--overwrite")] = False,
+) -> None:
+    """Persist a built-in or local sealed profile without changing its identity."""
+
+    try:
+        profile = resolve_authority_policy_profile(reference)
+        save_authority_policy_profile(profile, output, overwrite=overwrite)
+    except (OSError, ValueError, yaml.YAMLError) as exc:
+        _authority_error(exc)
+    _echo_json(
+        {
+            "ok": True,
+            "output": output.as_posix(),
+            "profile_id": profile.profile_id,
+            "profile_hash": profile.profile_hash,
+        }
+    )
+
+
+@authority_profile_app.command("seal")
+def authority_profile_seal(
+    source: Path,
+    output: Annotated[Path, typer.Option("--output")],
+    declared_by_actor_id: Annotated[str, typer.Option("--declared-by-actor-id")],
+    declaration_reason: Annotated[str, typer.Option("--declaration-reason")],
+    overwrite: Annotated[bool, typer.Option("--overwrite")] = False,
+) -> None:
+    """Seal edited profile material and atomically persist the new identity."""
+
+    try:
+        profile = seal_authority_policy_profile_file(
+            source,
+            output,
+            declared_by_actor_id=declared_by_actor_id,
+            declaration_reason=declaration_reason,
+            overwrite=overwrite,
+        )
+    except (OSError, ValueError, yaml.YAMLError) as exc:
+        _authority_error(exc)
+    _echo_json(
+        {
+            "ok": True,
+            "output": output.as_posix(),
+            "profile_id": profile.profile_id,
+            "profile_hash": profile.profile_hash,
+        }
+    )
+
+
+@authority_mode_app.command("select")
+def authority_mode_select(
+    use_case: str,
+    profile: Annotated[str, typer.Option("--profile")] = "record-capture",
+    mode_override: Annotated[str | None, typer.Option("--mode-override")] = None,
+    override_reason: Annotated[str | None, typer.Option("--override-reason")] = None,
+) -> None:
+    """Resolve and emit an identity-bearing authority mode selection record."""
+
+    parsed_use_case = _parse_authority_use_case(use_case)
+    parsed_mode = _parse_authority_mode(mode_override)
+    try:
+        resolved_profile = resolve_authority_policy_profile(profile)
+        selection = select_authority_mode(
+            parsed_use_case,
+            profile=resolved_profile,
+            mode_override=parsed_mode,
+            override_reason=override_reason,
+        )
+    except (OSError, ValueError, yaml.YAMLError) as exc:
+        _authority_error(exc)
+    _echo_json({"ok": True, "selection": selection})
 
 
 @compat_token_app.command("verify")

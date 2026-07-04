@@ -21,12 +21,13 @@ replace the runtimes from which it collects evidence.
 9. Stage 8: full audit, negative-path repair, and trust-boundary hardening.
 10. Stage 9: mode-aware authority, signatures, delegation, revocation, and quorum.
 11. Stage 10: deterministic use-case authority profiles and declared mode overrides.
+12. Stage 11: declared profile persistence and non-executing authority CLI.
 
 Each stage must pass its declared gates before the next stage starts. A completed stage
 is saved in a local commit and frozen with an annotated local tag. Nothing is pushed
 without explicit user approval.
 
-Stages 0 through 10 are frozen. The audited candidate remains local until the user
+Stages 0 through 11 are frozen. The audited candidate remains local until the user
 explicitly authorizes publication.
 
 ## Authoritative Documents
@@ -40,5 +41,7 @@ explicitly authorizes publication.
 - [Authority governance](AUTHORITY_GOVERNANCE.md)
 - [Authority policy profiles](AUTHORITY_POLICY_PROFILES.md)
 - [Authority policy profile audit](AUTHORITY_POLICY_PROFILE_AUDIT.md)
+- [Authority profile persistence and CLI](AUTHORITY_PROFILE_CLI.md)
+- [Authority profile persistence and CLI audit](AUTHORITY_PROFILE_CLI_AUDIT.md)
 - [Authority governance audit](AUTHORITY_GOVERNANCE_AUDIT.md)
 - [Stage manifests](stages/)
