@@ -1,0 +1,20 @@
+schema_version: qst-ai4finance-workflow/1.0
+system: finrl
+run_id: finrl-golden-1
+status: complete
+plan:
+  training_activity: train
+  testing_activity: test
+  trading_simulation_activity: simulation
+  seed: 7
+result:
+  checkpoint: artifacts/model.bin
+  metrics: {sharpe: 1.0}
+  simulation_result: artifacts/result.csv
+artifacts:
+  - path: artifacts/model.bin
+    media_type: application/octet-stream
+    role: checkpoint
+  - path: artifacts/result.csv
+    media_type: text/csv
+    role: simulation_result

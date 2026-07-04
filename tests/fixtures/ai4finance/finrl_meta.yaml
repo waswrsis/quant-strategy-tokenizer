@@ -1,0 +1,14 @@
+schema_version: qst-ai4finance-workflow/1.0
+system: finrl_meta
+run_id: finrl-meta-golden-1
+status: partial
+plan:
+  environment: StockTradingEnv
+  data_processor: YahooDownloader
+  state: declared-state-vector
+  action: declared-action-vector
+  reward: source-digest-only
+  date_range: [2020-01-01, 2020-12-31]
+  seed: 11
+result: {}
+artifacts: []

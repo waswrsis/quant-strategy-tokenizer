@@ -1,0 +1,18 @@
+schema_version: qst-ai4finance-workflow/1.0
+system: finrobot
+run_id: finrobot-golden-1
+status: complete
+plan:
+  agents: [market_analyst, reviewer]
+  tools: [qst_validate, qst_hash]
+  task: review_strategy
+result:
+  message_log: messages.json
+  report: report.md
+artifacts:
+  - path: artifacts/messages.json
+    media_type: application/json
+    role: message_log
+  - path: artifacts/report.md
+    media_type: text/markdown
+    role: report

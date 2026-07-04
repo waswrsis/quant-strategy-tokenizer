@@ -1,0 +1,17 @@
+schema_version: qst-ai4finance-workflow/1.0
+system: qlib
+run_id: qlib-golden-1
+status: complete
+plan:
+  model: LGBModel
+  dataset: DatasetH/Alpha158
+  records: [SignalRecord, PortAnaRecord]
+  strategy: TopkDropoutStrategy
+result:
+  recorder: qlib-recorder-1
+  metrics: {annualized_return: 0.1}
+  artifacts: [artifacts/result.csv]
+artifacts:
+  - path: artifacts/result.csv
+    media_type: text/csv
+    role: portfolio_analysis

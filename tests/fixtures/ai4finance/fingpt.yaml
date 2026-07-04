@@ -1,0 +1,13 @@
+schema_version: qst-ai4finance-workflow/1.0
+system: fingpt
+run_id: fingpt-golden-1
+status: partial
+plan:
+  model_repo: ai4finance/fingpt-model
+  model_revision: declared-revision
+  tokenizer_revision: declared-tokenizer-revision
+  dataset: declared-dataset-snapshot
+  task: sentiment
+  parameters: {temperature: 0}
+result: {}
+artifacts: []

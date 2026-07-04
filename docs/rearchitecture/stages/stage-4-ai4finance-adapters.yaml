@@ -1,0 +1,52 @@
+schema_version: qst-rearchitecture-stage/1
+stage_id: 4
+title: AI4Finance evidence adapters
+status: frozen
+branch: research/qst-1.0-agent-provenance
+base_tag: qst-1.0-stage-3-storage-collectors-frozen
+freeze_tag: qst-1.0-stage-4-ai4finance-adapters-frozen
+scope:
+  - declared AI4Finance workflow manifest
+  - FinRobot L3 adapter and six read-only tools
+  - FinGPT L2 adapter
+  - FinRL-Meta L2 adapter
+  - FinRL L3 adapter
+  - FinRL-X L3 adapter
+  - Qlib L3 evidence adapter
+  - maturity-gated workflow claims
+frozen_contracts:
+  - qst-ai4finance-workflow/1.0
+  - qst-adapter-maturity/1.0
+  - qst-finrobot-read-only-tools/1.0
+supersedes: []
+gates:
+  - command: python -m compileall -q qst
+    result: pass
+  - command: python -m pytest tests/adapters/ai4finance -q
+    result: pass
+    summary: 13 passed
+  - command: python -m ruff check .
+    result: pass
+  - command: python -m mypy qst
+    result: pass
+    summary: 141 source files checked
+  - command: python -m qst.lint.stateless qst
+    result: pass
+  - command: python -m pytest tests -q
+    result: pass
+    summary: 568 passed
+  - command: python -m pytest --cov=qst --cov-fail-under=85 -q
+    result: pass
+    summary: 568 passed; 89.51 percent coverage
+  - command: python -m qst.cli vocabulary --check
+    result: pass
+    summary: 6 packs; 179 tokens; zero diagnostics
+  - command: python tools/validate_rearchitecture_stages.py
+    result: pass
+    summary: 5 manifests; zero issues
+  - command: git diff --check
+    result: pass
+evidence_notes:
+  - Adapter classes satisfy the read-only EvidenceAdapter protocol and expose no execute method.
+  - L2 adapters cannot support workflow claims.
+  - Golden artifacts are small non-profitability fixtures and are never executed.

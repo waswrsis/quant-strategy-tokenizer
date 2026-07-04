@@ -1,0 +1,21 @@
+schema_version: qst-ai4finance-workflow/1.0
+system: finrl_x
+run_id: finrl-x-golden-1
+status: complete
+plan:
+  settings: {market: test}
+  selection: top_k
+  allocation: equal_weight
+  timing: daily
+  risk: position_cap
+  transaction_costs: {rate: 0.001}
+result:
+  target_weights: artifacts/weights.csv
+  backtest_result: artifacts/result.csv
+artifacts:
+  - path: artifacts/weights.csv
+    media_type: text/csv
+    role: target_weights
+  - path: artifacts/result.csv
+    media_type: text/csv
+    role: backtest_result
