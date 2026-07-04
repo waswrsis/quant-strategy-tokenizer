@@ -14,6 +14,8 @@
   the explicit `compat-v04` CLI namespace.
 - Added Stage 8 full-audit hardening for resolver, claim, evidence, artifact, collector,
   adapter, token-incubator, customization, and Qlib negative paths.
+- Added Stage 9 Ed25519 authority records, scoped quorum, non-transitive delegation,
+  revocation, and switchable `record_only`, `advisory`, and `enforce` policy modes.
 - Kept the candidate local; no GitHub branch, tag, or release was created.
 
 ## Stage 3A Token Surface Completion

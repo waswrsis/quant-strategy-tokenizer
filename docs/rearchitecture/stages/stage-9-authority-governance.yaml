@@ -1,0 +1,80 @@
+schema_version: qst-rearchitecture-stage/1
+stage_id: 9
+title: Mode-aware authority governance
+status: frozen
+branch: research/qst-1.0-agent-provenance
+base_tag: qst-1.0-stage-8-full-audit-hardening-frozen
+freeze_tag: qst-1.0-stage-9-authority-governance-frozen
+scope:
+  - Ed25519 actor-bound governance signatures
+  - scoped distinct-actor quorum rules
+  - time-bounded non-transitive delegation
+  - actor, key, delegation, and bundle revocation records
+  - record_only, advisory, and enforce policy modes
+  - authority-bound claim, token transition, and customization facades
+  - post-construction authority audit and defect repair
+frozen_contracts:
+  - qst-authority-registry/1.0
+  - qst-governance-statement/1.0
+  - qst-authority-decision/1.0
+  - qst-authority-policy-modes/1.0
+supersedes:
+  - stage-6:qst-claim-evaluator/1.0:declared-attestation-authority
+  - stage-6:qst-customization/1.0:opaque-approval-reference
+  - stage-5:qst-token-proposal/1.0:declared-human-review
+supersession_reason: >-
+  Earlier stages deliberately kept authority external and represented issuers, human
+  actors, and approval references as declared records. Stage 9 adds optional
+  cryptographic verification while preserving record-layer usability: record_only is
+  the default, advisory reports without blocking, and only explicit enforce mode gates
+  a governed operation. Integrity validation remains mandatory in every mode.
+gates:
+  - command: python -m compileall -q qst
+    result: pass
+  - command: python -m ruff check .
+    result: pass
+  - command: python -m mypy qst
+    result: pass
+    summary: 155 source files checked
+  - command: python -m qst.lint.stateless qst
+    result: pass
+  - command: python -m pytest tests/authority -q
+    result: pass
+    summary: 8 passed
+  - command: python -m pytest tests -q
+    result: pass
+    summary: 614 passed
+  - command: python -m pytest --cov=qst --cov-fail-under=85 -q
+    result: pass
+    summary: 614 passed; 89.63 percent coverage
+  - command: python tools/validate_prompt_set.py docs/agent/prompts/qst_stage_3c_v0_3_2
+    result: pass
+    summary: 14 checks; zero issues
+  - command: python tools/verify_prompt_remote_artifacts.py docs/agent/prompts/qst_stage_3c_v0_3_2
+    result: pass
+    summary: 11 artifacts checked
+  - command: python tools/validate_strategy_coverage_matrix.py docs/reports/strategy_coverage_matrix.yaml
+    result: pass
+    summary: 120 patterns; zero issues
+  - command: python tools/report_strategy_coverage.py docs/reports/strategy_coverage_matrix.yaml --check
+    result: pass
+    summary: frontier gate passed; raw routable headline 0.8970
+  - command: python -m qst.cli vocabulary --check
+    result: pass
+    summary: 6 packs; 179 tokens; zero diagnostics
+  - command: python tools/validate_rearchitecture_stages.py
+    result: pass
+    summary: 10 manifests; zero issues
+  - command: python -m pip wheel . --no-deps --wheel-dir .local_audit/stage-9-dist
+    result: pass
+    summary: quant_strategy_tokenizer-1.0.0a1-py3-none-any.whl built
+  - command: git diff --check
+    result: pass
+evidence_notes:
+  - Authority modes control workflow progression, not cryptographic truth.
+  - Missing authority evidence is explicit and never represented as authorized.
+  - The registry remains a caller-pinned snapshot; PKI distribution is out of scope.
+  - No runtime, broker, exchange, backtest, or trading capability is introduced.
+  - Full construction review found and repaired strict-mode, decision-binding, and
+    evidence-only claim coordination defects before freeze.
+  - No remote branch, tag, pull request, or release is created by this stage.

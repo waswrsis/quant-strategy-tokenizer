@@ -114,9 +114,10 @@ without changing singleton output.
 These items are not silently implemented because each changes a public trust or
 compatibility contract.
 
-1. **Authority and signature layer (recommended next).** `actor_kind`, approval IDs,
-   and attestation issuers are declared records, not yet resolved through a trusted
-   authority registry with key verification, delegation, revocation, and quorum rules.
+1. **Authority registry distribution.** Stage 9 adds mode-aware Ed25519 verification,
+   delegation, revocation, and quorum records. A registry remains a caller-pinned trust
+   snapshot; global registry distribution, transparency logging, and organizational
+   PKI integration remain product decisions.
 2. **Deep immutable record values.** Pydantic frozen models are shallow; nested mappings
    can be mutated in memory. Trust-boundary rehashing now rejects stale identities, but
    persistent immutable containers would prevent mutation earlier.

@@ -19,12 +19,13 @@ replace the runtimes from which it collects evidence.
 7. Stage 6: customization declarations, claim policy, and golden workflows.
 8. Stage 7: v0.4 migration, tamper and performance acceptance, and alpha candidate.
 9. Stage 8: full audit, negative-path repair, and trust-boundary hardening.
+10. Stage 9: mode-aware authority, signatures, delegation, revocation, and quorum.
 
 Each stage must pass its declared gates before the next stage starts. A completed stage
 is saved in a local commit and frozen with an annotated local tag. Nothing is pushed
 without explicit user approval.
 
-Stages 0 through 8 are frozen. The audited candidate remains local until the user
+Stages 0 through 9 are frozen. The audited candidate remains local until the user
 explicitly authorizes publication.
 
 ## Authoritative Documents
@@ -35,4 +36,6 @@ explicitly authorizes publication.
 - [Alpha acceptance](ALPHA_ACCEPTANCE.md)
 - [Completion audit](COMPLETION_AUDIT.md)
 - [Full alpha audit](FULL_AUDIT.md)
+- [Authority governance](AUTHORITY_GOVERNANCE.md)
+- [Authority governance audit](AUTHORITY_GOVERNANCE_AUDIT.md)
 - [Stage manifests](stages/)

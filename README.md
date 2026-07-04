@@ -12,7 +12,7 @@ runtime, or production execution engine.
 ## Status
 
 The tagged v0.4 line is an **archived agent-ready research prototype**. The local
-`research/qst-1.0-agent-provenance` branch is a `1.0.0a1` candidate. Nine stages are
+`research/qst-1.0-agent-provenance` branch is a `1.0.0a1` candidate. Ten stages are
 locally committed and frozen; nothing on this branch has been pushed.
 
 See [QST 1.0 rearchitecture](docs/rearchitecture/README.md) for the staged construction
@@ -27,6 +27,7 @@ The alpha candidate includes:
 - typed Evidence, Attestation, Claim, Customization, and Receipt records
 - content-addressed artifact storage and a rebuildable SQLite index
 - deterministic Token Gap Resolver and human-governed Token Incubator
+- mode-aware Ed25519 authority records with quorum, delegation, and revocation
 - FinRobot, FinGPT, FinRL-Meta, FinRL, FinRL-X, and Qlib evidence adapters
 
 ## Install
@@ -71,6 +72,8 @@ or claim lossless Qlib conversion.
 - **Evidence:** immutable actors, activities, artifacts, envelopes, and attestations.
 - **Claims:** policy decisions that cannot be substituted by evidence or assertions.
 - **Governance:** declared customization and human-approved token incubation.
+- **Authority:** switchable record-only, advisory, and enforce modes without treating
+  unverified records as authorized.
 - **Adapters:** read-only AI4Finance collectors with explicit maturity levels.
 - **Compatibility:** frozen `qst-ir/0.4`, token vocabulary, demos, and hashes.
 
@@ -113,6 +116,7 @@ qst/                         Python package and CLI
 qst/evidence/                Typed evidence envelopes
 qst/provenance/              Actor, activity, and artifact records
 qst/incubator/               Human-governed token proposals
+qst/authority/               Signed authority records and mode-aware governance
 qst/adapters/ai4finance/     Read-only AI4Finance evidence adapters
 examples/strategies/         12 public GKR strategy examples
 examples/adapters/qlib/      Qlib partial workflow adapter examples
