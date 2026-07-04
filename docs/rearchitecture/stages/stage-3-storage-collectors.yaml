@@ -1,0 +1,50 @@
+schema_version: qst-rearchitecture-stage/1
+stage_id: 3
+title: Artifact store collectors and derived index
+status: frozen
+branch: research/qst-1.0-agent-provenance
+base_tag: qst-1.0-stage-2-evidence-kernel-frozen
+freeze_tag: qst-1.0-stage-3-storage-collectors-frozen
+scope:
+  - streaming content-addressed object storage
+  - sealed descriptor persistence
+  - rebuildable SQLite WAL index
+  - read-only EvidenceAdapter protocol
+  - immutable collector transition enforcement
+  - verified result evidence gate
+frozen_contracts:
+  - qst-content-addressed-store/1.0
+  - qst-evidence-adapter-protocol/1.0
+  - qst-collector-transition-policy/1.0
+supersedes: []
+gates:
+  - command: python -m compileall -q qst
+    result: pass
+  - command: python -m pytest tests/storage -q
+    result: pass
+    summary: 5 passed
+  - command: python -m ruff check .
+    result: pass
+  - command: python -m mypy qst
+    result: pass
+    summary: 134 source files checked
+  - command: python -m qst.lint.stateless qst
+    result: pass
+  - command: python -m pytest tests -q
+    result: pass
+    summary: 555 passed
+  - command: python -m pytest --cov=qst --cov-fail-under=85 -q
+    result: pass
+    summary: 555 passed; 89.46 percent coverage
+  - command: python -m qst.cli vocabulary --check
+    result: pass
+    summary: 6 packs; 179 tokens; zero diagnostics
+  - command: python tools/validate_rearchitecture_stages.py
+    result: pass
+    summary: 4 manifests; zero issues
+  - command: git diff --check
+    result: pass
+evidence_notes:
+  - Object hashing uses bounded reads and preserves opaque source bytes.
+  - SQLite is derived local state and can be rebuilt from descriptors.
+  - Collector protocols expose no external execution method.
