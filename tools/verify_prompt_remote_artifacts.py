@@ -25,8 +25,6 @@ PROMPT_MARKDOWN_FILES = (
     "core/00_FOUNDATION.md",
     "tasks/CLASSIFY_STRATEGY_INTENT.md",
     "validation/VALIDATE_PROMPT_SET.md",
-    "construction/STAGE_3C_PROMPT_ACCEPTANCE.md",
-    "construction/STAGE_3C_PROMPT_ACCEPTANCE_EVIDENCE.md",
 )
 
 GOLDEN_YAML_FILES = (

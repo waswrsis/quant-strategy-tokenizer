@@ -42,11 +42,6 @@ REQUIRED_FILES = (
     "schemas/GOLDEN_TASK_SCHEMA.md",
     "validation/VALIDATE_PROMPT_SET.md",
     "validation/PROMPT_GOLDEN_TEST_PROTOCOL.md",
-    "construction/INSTALLATION_PLAN.md",
-    "construction/REPLACEMENT_PLAN.md",
-    "construction/ROADMAP_BY_MODULE.md",
-    "construction/STAGE_3C_PROMPT_ACCEPTANCE.md",
-    "construction/STAGE_3C_PROMPT_ACCEPTANCE_EVIDENCE.md",
 )
 
 STALE_PATTERNS = (
@@ -63,7 +58,7 @@ STALE_PATTERNS = (
     (r"sha256:[0-9a-f]{64}", "hardcoded_hash_truth"),
 )
 
-REFERENCE_PATTERN = re.compile(r"`((?:core|load_profiles|readers|tasks|schemas|golden|validation|construction)/[^`]+?)`")
+REFERENCE_PATTERN = re.compile(r"`((?:core|load_profiles|readers|tasks|schemas|golden|validation)/[^`]+?)`")
 MAX_MARKDOWN_LINE_LENGTH = 240
 MIN_MARKDOWN_LINES = 5
 

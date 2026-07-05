@@ -4,13 +4,14 @@ prompt_system_version: qst-stage-3c-v0.3.2.3
 
 ## Purpose
 
-This directory is the only active QST prompt system. It teaches an agent how to inspect
-the repository, select current token surfaces, author or repair GKR strategies, and hand
-off evidence without relying on stale project memory.
+This directory preserves the v0.4 compatibility prompt system. It teaches an agent how
+to inspect the compatibility surface, select token records, author or repair GKR
+strategies, and hand off evidence without relying on stale project memory. Current QST
+1.0 work starts from `docs/agent/QST_1_0_AGENT_PROMPT.md` instead.
 
 ## Versioning
 
-The directory name remains `qst_stage_3c_v0_3_2` for stable links. The active patch
+The directory name remains `qst_stage_3c_v0_3_2` for stable links. The preserved patch
 prompt-system version is `qst-stage-3c-v0.3.2.3`.
 
 Previous version: `qst-stage-3c-v0.3.2.2`. It installed operational guidance for repo
