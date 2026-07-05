@@ -21,6 +21,7 @@ from qst.identity import identity_hash
 from qst.provenance import ActivityRecord, seal_activity
 from qst.receipts import (
     AgentReceipt,
+    EvaluationWindow,
     ExperimentReceipt,
     seal_agent_receipt,
     seal_experiment_receipt,
@@ -98,12 +99,34 @@ def _claim_inputs(maturity: str):
     return evidence, attestation
 
 
+def _experiment_receipt(evidence: EvidenceEnvelope) -> ExperimentReceipt:
+    assert evidence.evidence_id is not None
+    return seal_experiment_receipt(
+        ExperimentReceipt(
+            subject_ref=evidence.subject_ref,
+            strategy_receipt_id=HASH_A,
+            strategy_hash=HASH_A,
+            data_snapshot_ids=(HASH_B,),
+            evaluation_window=EvaluationWindow(start="2026-01-01", end="2026-06-30"),
+            evaluator_adapter_id="qst.ai4finance.finrl",
+            evaluator_adapter_version="1.0.0a2",
+            parameters={"window": 20},
+            costs={"commission_rate": 0.001},
+            slippage={"model": "fixed_bps", "bps": 2},
+            seeds=(7,),
+            metric_definitions={"sharpe": "annualized excess-return Sharpe ratio"},
+            result_evidence_ids=(evidence.evidence_id,),
+        )
+    )
+
+
 def test_claim_requires_verified_result_and_l3_adapter_attestation() -> None:
     policy = seal_claim_policy(
         ClaimPolicy(
             policy_id="backtested-v1",
             policy_version=1,
             claim_type="backtested",
+            required_receipt_type="experiment",
             requirements=(
                 EvidenceRequirement(
                     payload_kind="result",
@@ -116,10 +139,20 @@ def test_claim_requires_verified_result_and_l3_adapter_attestation() -> None:
     l3_evidence, l3_attestation = _claim_inputs("L3")
     l2_evidence, l2_attestation = _claim_inputs("L2")
     allowed = evaluate_claim(
-        policy, (l3_evidence,), (l3_attestation,), subject_ref="experiment:1", evaluated_at=NOW
+        policy,
+        (l3_evidence,),
+        (l3_attestation,),
+        subject_ref="experiment:1",
+        evaluated_at=NOW,
+        experiment_receipts=(_experiment_receipt(l3_evidence),),
     )
     denied = evaluate_claim(
-        policy, (l2_evidence,), (l2_attestation,), subject_ref="experiment:1", evaluated_at=NOW
+        policy,
+        (l2_evidence,),
+        (l2_attestation,),
+        subject_ref="experiment:1",
+        evaluated_at=NOW,
+        experiment_receipts=(_experiment_receipt(l2_evidence),),
     )
     assert allowed.allowed
     assert not denied.allowed
@@ -326,13 +359,19 @@ def test_finrobot_golden_workflow_produces_claim_evidence(tmp_path: Path) -> Non
 def test_receipt_layers_have_distinct_identity_material() -> None:
     experiment = seal_experiment_receipt(
         ExperimentReceipt(
+            subject_ref="experiment:receipt-layer",
+            strategy_receipt_id=HASH_A,
             strategy_hash=HASH_A,
             data_snapshot_ids=(HASH_B,),
+            evaluation_window=EvaluationWindow(start="2026-01-01", end="2026-06-30"),
             evaluator_adapter_id="qst.ai4finance.finrl",
-            evaluator_adapter_version="1.0.0a1",
+            evaluator_adapter_version="1.0.0a2",
             parameters={"window": 20},
             costs={"rate": 0.001},
+            slippage={"model": "fixed_bps", "bps": 2},
             seeds=(7,),
+            metric_definitions={"sharpe": "annualized excess-return Sharpe ratio"},
+            result_evidence_ids=(HASH_C,),
         )
     )
     agent = seal_agent_receipt(
@@ -340,10 +379,12 @@ def test_receipt_layers_have_distinct_identity_material() -> None:
             experiment_hash=experiment.experiment_hash,
             agent_actor_id=HASH_C,
             model_id="declared-model",
-            tool_versions={"qst": "1.0.0a1"},
+            model_version="declared-model-v1",
+            tool_versions={"qst": "1.0.0a2"},
             prompt_ref="prompt:v1",
             task_ref="task:review",
             approval_ids=(HASH_B,),
+            output_artifact_ids=(HASH_C,),
             recommendation={"decision": "review"},
         )
     )

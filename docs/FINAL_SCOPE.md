@@ -2,7 +2,7 @@
 
 ## Status
 
-QST v0.4 remains an archived agent-ready research prototype. The local QST `1.0.0a1`
+QST v0.4 remains an archived agent-ready research prototype. The local QST `1.0.0a2`
 candidate redefines the product as a deterministic strategy identity, evidence,
 attestation, claim-control, customization, and token-governance layer.
 

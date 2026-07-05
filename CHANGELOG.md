@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.0.0a2 FinRobot Provenance Closure
+
+- Replaced public receipt 1.0 models with strict strategy, experiment, and agent receipt
+  2.0 identities.
+- Added a complete canonical GKR strategy hash while preserving graph, parameter, and
+  instance hashes as separate identities.
+- Made every `backtested` claim require a sealed experiment receipt with data snapshots,
+  date range, costs, slippage, seeds, metric definitions, and verified result evidence.
+- Expanded the read-only FinRobot bridge with bounded text/path inspection, canonical
+  delivery, stable diagnostics, strategy-memory admission, and backtest admission.
+- Added financial-report provenance review gates and a tamper-evident append-only JSONL
+  audit export.
+- Preserved the no-model, no-backtest, no-broker, no-exchange, and no-live-execution
+  product boundary.
+
 ## 1.0.0a1 Agent Provenance Candidate
 
 - Redefined QST as a deterministic strategy identity, evidence, claim-control, and

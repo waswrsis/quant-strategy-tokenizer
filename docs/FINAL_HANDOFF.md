@@ -2,7 +2,7 @@
 
 ## Entry Point
 
-QST v0.4 is the archived compatibility baseline. QST `1.0.0a1` is a local alpha
+QST v0.4 is the archived compatibility baseline. QST `1.0.0a2` is a local alpha
 candidate on `research/qst-1.0-agent-provenance`; it has not been pushed.
 
 Read in this order:
@@ -18,7 +18,7 @@ Read in this order:
 ## Current Truth
 
 - Python package and CLI: `qst`.
-- Candidate version: `1.0.0a1`.
+- Candidate version: `1.0.0a2`.
 - Preserved strategy schemas: `qst-ir/0.4` and `qst-canonical/0.4`.
 - Primary CLI has no model, backtest, custom-code, or trading executor.
 - Legacy custom runtime is isolated under `qst compat-v04 token`.

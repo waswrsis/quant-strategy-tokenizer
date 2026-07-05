@@ -14,6 +14,7 @@ from qst.claims.models import (
 )
 from qst.evidence import EvidenceEnvelope, ResultEvidencePayload, evidence_identity
 from qst.provenance import normalize_utc
+from qst.receipts import ExperimentReceipt, experiment_identity
 
 MATURITY_RANK = {"L0": 0, "L1": 1, "L2": 2, "L3": 3, "L4": 4}
 
@@ -25,6 +26,7 @@ def evaluate_claim(
     *,
     subject_ref: str,
     evaluated_at: datetime,
+    experiment_receipts: tuple[ExperimentReceipt, ...] = (),
 ) -> ClaimDecision:
     """Evaluate requirements without treating evidence or attestations as self-approval."""
 
@@ -52,6 +54,30 @@ def evaluate_claim(
     )
     reasons: list[str] = []
     allowed = True
+    valid_receipt_ids: list[str] = []
+    if policy.claim_type == "backtested":
+        verified_result_ids = {
+            item.evidence_id
+            for item in valid_evidence
+            if item.evidence_id is not None
+            and isinstance(item.payload, ResultEvidencePayload)
+            and item.payload.collection_status == "verified"
+        }
+        matching_receipts = [
+            item
+            for item in experiment_receipts
+            if item.experiment_hash is not None
+            and item.experiment_hash == experiment_identity(item)
+            and item.subject_ref == subject_ref
+            and set(item.result_evidence_ids).issubset(verified_result_ids)
+        ]
+        if not matching_receipts:
+            allowed = False
+            reasons.append("QST_CLAIM_EXPERIMENT_RECEIPT_REQUIRED")
+        else:
+            valid_receipt_ids.extend(
+                item.experiment_hash for item in matching_receipts if item.experiment_hash
+            )
     for requirement in policy.requirements:
         candidates = by_kind.get(requirement.payload_kind, [])
         qualifying = []
@@ -78,6 +104,7 @@ def evaluate_claim(
             allowed=allowed,
             evidence_ids=tuple(item.evidence_id for item in valid_evidence if item.evidence_id),
             attestation_ids=valid_attestation_ids,
+            receipt_ids=tuple(valid_receipt_ids),
             reason_codes=tuple(reasons),
             evaluated_at=evaluated_at,
         )

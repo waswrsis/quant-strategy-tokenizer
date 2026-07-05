@@ -2,7 +2,7 @@
 
 ## Verdict
 
-QST `1.0.0a1` satisfies the locally defined rearchitecture scope. The candidate is a
+QST `1.0.0a2` satisfies the locally defined rearchitecture scope. The candidate is a
 deterministic record, evidence, attestation, claim-control, customization, and
 human-governed token-incubation layer for financial agents. It is not an execution
 runtime.
@@ -14,7 +14,7 @@ claim that the branch, commits, or freeze tags have been published to GitHub.
 
 | Requirement | Evidence | Result |
 |---|---|---|
-| Product redefinition and major-version signal | `ADR-0001-qst-1.0-product-redefinition.md`, package version `1.0.0a1` | pass |
+| Product redefinition and major-version signal | `ADR-0001-qst-1.0-product-redefinition.md`, package version `1.0.0a2` | pass |
 | Deterministic token-gap resolution | `qst/resolver/`, frozen resolver policy identity, immutable route lattice, alias/recipe/proposal/profile/policy hashes | pass |
 | Evidence, attestation, and claim separation | `qst/evidence/`, `qst/attestations/`, `qst/claims/`, domain-separated identities in `qst/identity/` | pass |
 | Efficient artifact recording | content-addressed objects and SQLite WAL index in `qst/storage/`; bounded read-only collectors in `qst/collectors/` | pass |

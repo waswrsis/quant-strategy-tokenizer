@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "quant-strategy-tokenizer"
-version = "1.0.0a1"
+version = "1.0.0a2"
 description = "Deterministic strategy identity, evidence, and governance for financial agents"
 readme = "README.md"
 license = "MIT"

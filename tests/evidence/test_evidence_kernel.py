@@ -133,6 +133,7 @@ def test_evidence_attestation_and_claim_are_separate_sealed_records() -> None:
             policy_id="backtest-policy",
             policy_version=1,
             claim_type="backtested",
+            required_receipt_type="experiment",
             requirements=(
                 EvidenceRequirement(
                     payload_kind="result",
@@ -150,6 +151,7 @@ def test_evidence_attestation_and_claim_are_separate_sealed_records() -> None:
             allowed=True,
             evidence_ids=(evidence.evidence_id,),
             attestation_ids=(attestation.attestation_id,),
+            receipt_ids=(HASH_A,),
             reason_codes=("QST_CLAIM_REQUIREMENTS_MET",),
             evaluated_at=NOW,
         )

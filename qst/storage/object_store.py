@@ -89,6 +89,19 @@ class ContentAddressedStore:
             if temporary is not None and temporary.exists():
                 temporary.unlink()
 
+    def put_bytes(self, payload: bytes, *, media_type: str) -> ArtifactDescriptor:
+        """Store bounded in-memory output without requiring callers to manage temp files."""
+
+        with tempfile.NamedTemporaryFile(dir=self.root, delete=False) as stream:
+            temporary = Path(stream.name)
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+        try:
+            return self.put_file(temporary, media_type=media_type)
+        finally:
+            temporary.unlink(missing_ok=True)
+
     def object_path(self, descriptor: ArtifactDescriptor) -> Path:
         hex_digest = descriptor.digest.removeprefix("sha256:")
         return self.objects / hex_digest[:2] / hex_digest

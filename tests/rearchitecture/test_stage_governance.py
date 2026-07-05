@@ -36,9 +36,9 @@ def test_stage_zero_manifest_is_frozen_with_passing_gates() -> None:
 
 
 def test_product_version_signals_major_alpha_redefinition() -> None:
-    assert __version__ == "1.0.0a1"
+    assert __version__ == "1.0.0a2"
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    assert 'version = "1.0.0a1"' in pyproject
+    assert 'version = "1.0.0a2"' in pyproject
 
 
 def test_product_boundary_disallows_execution_claims() -> None:

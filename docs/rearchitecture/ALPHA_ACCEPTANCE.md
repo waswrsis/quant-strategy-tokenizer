@@ -2,9 +2,9 @@
 
 ## Candidate Definition
 
-The accepted local candidate is package version `1.0.0a1` on
+The accepted local candidate is package version `1.0.0a2` on
 `research/qst-1.0-agent-provenance`. Its authoritative construction evidence is the
-ordered Stage 0-8 manifests and corresponding annotated local freeze tags.
+ordered local stage commits and acceptance reports.
 
 ## Required Invariants
 

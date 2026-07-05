@@ -2,7 +2,7 @@
 
 ## Summary
 
-QST `1.0.0a1` is a locally frozen alpha candidate for deterministic financial-agent
+QST `1.0.0a2` is a locally frozen alpha candidate for deterministic financial-agent
 strategy identity, provenance, evidence, claim control, customization, and token
 governance. It builds on the archived v0.4 GKR and token research prototype without
 silently changing its hashes or public examples.

@@ -12,7 +12,7 @@ runtime, or production execution engine.
 ## Status
 
 The tagged v0.4 line is an **archived agent-ready research prototype**. The local
-`research/qst-1.0-agent-provenance` branch is a `1.0.0a1` candidate. Twelve stages are
+`research/qst-1.0-agent-provenance` branch is a `1.0.0a2` candidate. Fifteen stages are
 locally committed and frozen; nothing on this branch has been pushed.
 
 See [QST 1.0 rearchitecture](docs/rearchitecture/README.md) for the staged construction
@@ -31,6 +31,8 @@ The alpha candidate includes:
 - use-case authority profiles with identity-bearing declared overrides
 - declared project-local profile persistence and a non-executing authority CLI
 - FinRobot, FinGPT, FinRL-Meta, FinRL, FinRL-X, and Qlib evidence adapters
+- strict strategy, experiment, and agent receipt 2.0 admission records
+- FinRobot-facing report provenance review and hash-chained JSONL audit export
 
 ## Install
 
@@ -54,6 +56,19 @@ python -m qst.cli authority mode select token_review --profile research-advisory
 AI4Finance adapters consume declared manifests and existing output artifacts. FinRobot,
 FinRL, FinRL-X, and Qlib have L3 golden fixtures; FinGPT and FinRL-Meta remain L2.
 No adapter launches an external workflow.
+
+### FinRobot Provenance Closure
+
+The read-only FinRobot bridge accepts bounded GKR paths or YAML text, validates the
+record, returns canonical content plus graph/parameter/instance and complete-strategy
+hashes, and emits stable agent-facing diagnostics. Strategy-memory and `backtested`
+labels require sealed receipts; report drafts can be checked for missing sources,
+evidence-free sections, path escapes, unexplained valuation changes, retries, fallbacks,
+and truncation.
+
+This is a vendor-neutral sidecar integration. QST does not import FinRobot or AutoGen,
+write FinRobot memory, run tools on its behalf, publish reports, or execute experiments.
+See [FinRobot Posts Acceptance](docs/rearchitecture/FINROBOT_POSTS_ACCEPTANCE.md).
 
 ## Qlib Compatibility Import
 
@@ -122,6 +137,9 @@ qst/provenance/              Actor, activity, and artifact records
 qst/incubator/               Human-governed token proposals
 qst/authority/               Signed authority records and mode-aware governance
 qst/adapters/ai4finance/     Read-only AI4Finance evidence adapters
+qst/integrations/finrobot/   Vendor-neutral FinRobot read-only facade
+qst/receipts/                Strategy, experiment, and agent receipt 2.0 records
+qst/report_audit/            Financial-report provenance and review gates
 examples/strategies/         12 public GKR strategy examples
 examples/adapters/qlib/      Qlib partial workflow adapter examples
 examples/custom_token/       Custom-token reference example
@@ -141,6 +159,7 @@ docs/reports/                Coverage Frontier and acceptance reports
 - [Token Coverage](docs/token_coverage.md)
 - [Coverage Report](docs/reports/strategy_coverage_report.md)
 - [Qlib Adapter Boundary](docs/adapters/QLIB_ADAPTER_BOUNDARY.md)
+- [FinRobot Posts Acceptance](docs/rearchitecture/FINROBOT_POSTS_ACCEPTANCE.md)
 - [Agent Guidance](docs/agent/README.md)
 
 ## Project Identity
@@ -152,4 +171,4 @@ docs/reports/                Coverage Frontier and acceptance reports
 - Packaged record suffix: `.gkr`
 - IR: `qst-ir/0.4`
 - Canonical schema: `qst-canonical/0.4`
-- Package candidate: `1.0.0a1`
+- Package candidate: `1.0.0a2`

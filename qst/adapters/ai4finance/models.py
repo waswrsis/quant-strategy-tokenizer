@@ -16,7 +16,7 @@ class AdapterDescriptor(BaseModel):
     adapter_id: str
     system: WorkflowSystem
     maturity: AdapterMaturity
-    adapter_version: str = "1.0.0a1"
+    adapter_version: str = "1.0.0a2"
     evidence_only: bool = True
 
     @property
@@ -50,4 +50,3 @@ class DeclaredWorkflowManifest(BaseModel):
         if self.status == "complete" and not self.artifacts:
             raise ValueError("complete workflow manifest requires artifacts")
         return self
-

@@ -1,6 +1,6 @@
 # Agent Takeover Prompt
 
-You are taking over the local QST `1.0.0a1` agent-provenance candidate. The tagged v0.4
+You are taking over the local QST `1.0.0a2` agent-provenance candidate. The tagged v0.4
 line remains an archived agent-ready research prototype and compatibility baseline.
 
 Treat the repository as a deterministic record, validation, coverage, and

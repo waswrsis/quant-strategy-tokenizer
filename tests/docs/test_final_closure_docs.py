@@ -58,7 +58,7 @@ def test_final_closure_docs_exist_and_are_non_empty() -> None:
 def test_readme_declares_alpha_and_v04_compatibility_status() -> None:
     readme = _read("README.md")
     assert "archived agent-ready research prototype" in readme
-    assert "1.0.0a1" in readme
+    assert "1.0.0a2" in readme
     assert "strategy identity, evidence, and governance" in readme
     assert "Final Handoff" in readme
     assert "docs/FINAL_HANDOFF.md" in readme

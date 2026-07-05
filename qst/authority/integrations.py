@@ -17,6 +17,7 @@ from qst.evidence import EvidenceEnvelope
 from qst.hash.common import HashString
 from qst.incubator import ProposalTransition, TokenProposal, apply_transition, seal_transition
 from qst.incubator.models import ProposalStatus
+from qst.receipts import ExperimentReceipt
 
 from .evaluator import authority_not_evaluated, authorize_bundle
 from .models import (
@@ -138,6 +139,7 @@ def evaluate_claim_with_authority(
     attestation_bundles: dict[HashString, GovernanceBundle] | None = None,
     registry: AuthorityRegistry | None = None,
     delegations: tuple[SignedDelegation, ...] = (),
+    experiment_receipts: tuple[ExperimentReceipt, ...] = (),
 ) -> AuthorityBoundClaimResult:
     """Evaluate a claim while keeping authority facts separate from claim facts."""
 
@@ -186,6 +188,7 @@ def evaluate_claim_with_authority(
         tuple(usable_attestations),
         subject_ref=subject_ref,
         evaluated_at=evaluated_at,
+        experiment_receipts=experiment_receipts,
     )
     return AuthorityBoundClaimResult(
         mode=effective_mode,

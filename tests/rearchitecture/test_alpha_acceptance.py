@@ -14,8 +14,8 @@ ROOT = Path(__file__).resolve().parents[2]
 def test_alpha_package_and_document_status_are_consistent() -> None:
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    assert 'version = "1.0.0a1"' in pyproject
-    assert "1.0.0a1" in readme
+    assert 'version = "1.0.0a2"' in pyproject
+    assert "1.0.0a2" in readme
     assert "research/qst-1.0-agent-provenance" in readme
     assert "nothing on this branch has been pushed" in readme.lower()
 
