@@ -2,8 +2,9 @@
 
 ## Entry Point
 
-QST v0.4 is the archived compatibility baseline. QST `1.0.0a2` is a local alpha
-candidate on `research/qst-1.0-agent-provenance`; it has not been pushed.
+QST v0.4 is the archived compatibility baseline. QST `1.0.0a2` is a research alpha
+candidate on `research/qst-1.0-agent-provenance`, published separately under
+`v1.0.0a2-agent-provenance`. It is not merged into `main` or released as production.
 
 Read in this order:
 
@@ -14,6 +15,7 @@ Read in this order:
 5. [AI4Finance Adapters](rearchitecture/AI4FINANCE_ADAPTERS.md)
 6. [Token Incubator](rearchitecture/TOKEN_INCUBATOR.md)
 7. [Claims, Customization, and Receipts](rearchitecture/CLAIMS_CUSTOMIZATION_RECEIPTS.md)
+8. [Record-Layer Workflow](agent/RECORD_LAYER_WORKFLOW.md)
 
 ## Current Truth
 
@@ -23,6 +25,10 @@ Read in this order:
 - Primary CLI has no model, backtest, custom-code, or trading executor.
 - Legacy custom runtime is isolated under `qst compat-v04 token`.
 - AI4Finance adapters collect declared evidence and never launch external work.
+- FinRobot is a read-only sidecar with receipt-backed admission and report review; it is
+  not an upstream deployment or execution runtime.
+- Agent work starts from `agent/AGENT_PLAYBOOK.md` and then loads only the task-specific
+  record, authority, token, adapter, or compatibility guide.
 
 ## Repository Rule
 

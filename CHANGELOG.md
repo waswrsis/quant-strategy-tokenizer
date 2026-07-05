@@ -14,6 +14,8 @@
   audit export.
 - Preserved the no-model, no-backtest, no-broker, no-exchange, and no-live-execution
   product boundary.
+- Published the research candidate on `research/qst-1.0-agent-provenance` under annotated
+  tag `v1.0.0a2-agent-provenance`; this is not a production release or `main` promotion.
 
 ## 1.0.0a1 Agent Provenance Candidate
 

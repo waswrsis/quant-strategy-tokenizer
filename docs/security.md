@@ -23,3 +23,23 @@ Approval records and execution grants are local security state. They are not can
 ## External Systems
 
 QST does not provide broker, exchange, custody, order-routing, or production trading controls. Integrations must enforce their own risk checks, credentials, throttles, and operational approvals.
+
+## Agent and Report Inputs
+
+FinRobot strategy inputs are bounded and parsed as data; they are not imported or
+executed. Financial-report provenance rejects credential-bearing parameter keys and
+credential-like values. Report review checks source artifacts, ticker/period consistency,
+workspace paths, evidence bindings, retries, fallbacks, failures, truncation, and
+valuation-change reasons.
+
+Audit JSONL stores record references, hashes, and bounded summaries. It rejects common
+credential fields and uses a single-writer lock plus sequence and previous-line hashes.
+The export is tamper-evident, not a substitute for signatures or remote immutable
+storage.
+
+## Agent Tool Permissions
+
+Coding-agent or orchestrator permissions do not replace QST authority. Read access,
+editing, command execution, commit, push, token approval, activation, custom-code
+execution, and external financial workflow execution are distinct permissions. Use the
+least authority appropriate to the task and record any override explicitly.

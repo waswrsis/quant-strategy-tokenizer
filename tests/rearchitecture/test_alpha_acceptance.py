@@ -17,7 +17,8 @@ def test_alpha_package_and_document_status_are_consistent() -> None:
     assert 'version = "1.0.0a2"' in pyproject
     assert "1.0.0a2" in readme
     assert "research/qst-1.0-agent-provenance" in readme
-    assert "nothing on this branch has been pushed" in readme.lower()
+    assert "v1.0.0a2-agent-provenance" in readme
+    assert "not merged into `main`" in readme
 
 
 def test_public_demo_set_and_vocabulary_baseline_are_unchanged() -> None:

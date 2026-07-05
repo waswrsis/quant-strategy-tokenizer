@@ -13,7 +13,9 @@ runtime, or production execution engine.
 
 The tagged v0.4 line is an **archived agent-ready research prototype**. The local
 `research/qst-1.0-agent-provenance` branch is a `1.0.0a2` candidate. Fifteen stages are
-locally committed and frozen; nothing on this branch has been pushed.
+committed and frozen. The candidate is published on its research branch and identified
+by `v1.0.0a2-agent-provenance`; it is not merged into `main` and is not a production
+release.
 
 See [QST 1.0 rearchitecture](docs/rearchitecture/README.md) for the staged construction
 and freeze policy.
@@ -44,6 +46,7 @@ pip install -e ".[dev]"
 
 ```bash
 python -m qst.cli vocabulary --check
+python -m qst.cli inspect examples/strategies/01_ema_cross/strategy.gkr.yaml
 python -m qst.cli validate examples/strategies/kdj_cross_basic.gkr.yaml
 python -m qst.cli hash examples/strategies/kdj_cross_basic.gkr.yaml
 python -m qst.cli canonicalize examples/strategies/kdj_cross_basic.gkr.yaml --output .local_audit/kdj.canonical.json
@@ -125,8 +128,10 @@ Start with the active alpha documents:
 - [Final Scope](docs/FINAL_SCOPE.md)
 - [Final Acceptance](docs/FINAL_ACCEPTANCE.md)
 - [Agent Takeover Prompt](docs/agent/AGENT_TAKEOVER_PROMPT.md)
+- [QST 1.0 Agent Prompt](docs/agent/QST_1_0_AGENT_PROMPT.md)
 - [Agent Playbook](docs/agent/AGENT_PLAYBOOK.md)
 - [Usage Guide](docs/agent/USAGE_GUIDE.md)
+- [Record-Layer Workflow](docs/agent/RECORD_LAYER_WORKFLOW.md)
 
 ## Key Paths
 
@@ -146,6 +151,7 @@ examples/custom_token/       Custom-token reference example
 tests/reference/             Deterministic reference fixtures and traces
 tests/adapters/qlib/         Qlib adapter proof tests
 docs/agent/                  Agent handoff and prompt guidance
+CLAUDE.md                    Concise Claude Code project memory
 docs/adapters/               Adapter boundary and Qlib adapter guide
 docs/reports/                Coverage Frontier and acceptance reports
 ```
@@ -172,3 +178,4 @@ docs/reports/                Coverage Frontier and acceptance reports
 - IR: `qst-ir/0.4`
 - Canonical schema: `qst-canonical/0.4`
 - Package candidate: `1.0.0a2`
+- Research branch tag: `v1.0.0a2-agent-provenance`

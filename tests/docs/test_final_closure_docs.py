@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -21,6 +22,8 @@ AGENT_DOCS = [
     "docs/agent/RECIPE_AUTHORING_GUIDE.md",
     "docs/agent/CUSTOM_TOKEN_GUIDE.md",
     "docs/agent/SECONDARY_DEVELOPMENT_GUIDE.md",
+    "docs/agent/RECORD_LAYER_WORKFLOW.md",
+    "docs/agent/QST_1_0_AGENT_PROMPT.md",
 ]
 
 ADAPTER_DOCS = [
@@ -101,6 +104,8 @@ def test_agent_readme_links_final_handoff_guides_without_replacing_prompt_pack()
         "AGENT_PLAYBOOK.md",
         "USAGE_GUIDE.md",
         "TOKEN_REGISTRATION_GUIDE.md",
+        "RECORD_LAYER_WORKFLOW.md",
+        "QST_1_0_AGENT_PROMPT.md",
     ]:
         assert relative in text
 
@@ -124,3 +129,64 @@ def test_v04_executor_is_only_documented_under_compatibility_namespace() -> None
 def test_no_freqtrade_adapter_docs_remain() -> None:
     assert not (ROOT / "docs" / "adapters" / "FREQTRADE_ADAPTER_BOUNDARY.md").exists()
     assert not (ROOT / "docs" / "adapters" / "FREQTRADE_ADAPTER_GUIDE.md").exists()
+
+
+def test_record_layer_agent_guidance_has_current_admission_boundaries() -> None:
+    joined = "\n".join(
+        _read(relative)
+        for relative in [
+            "docs/agent/RECORD_LAYER_WORKFLOW.md",
+            "docs/agent/USAGE_GUIDE.md",
+            "docs/agent/AGENT_PLAYBOOK.md",
+        ]
+    )
+    for required in [
+        "StrategyRecordReceipt",
+        "ExperimentReceipt 2.0",
+        "AgentReceipt 2.0",
+        "backtested",
+        "record_only",
+        "advisory",
+        "enforce",
+        "not_executable_by_adapter",
+        "human review",
+    ]:
+        assert required in joined
+
+
+def test_claude_project_memory_is_concise_and_points_to_canonical_guidance() -> None:
+    text = _read("CLAUDE.md")
+    assert text.startswith("# QST Project Instructions")
+    assert len(text.splitlines()) < 100
+    assert "docs/agent/QST_1_0_AGENT_PROMPT.md" in text
+    assert "docs/agent/RECORD_LAYER_WORKFLOW.md" in text
+    assert "Evidence is not approval" in text
+    assert "Do not commit, push, tag" in text
+
+
+def test_qst_1_agent_prompt_is_operational_but_compact() -> None:
+    text = _read("docs/agent/QST_1_0_AGENT_PROMPT.md")
+    assert len(text.splitlines()) < 180
+    for required in [
+        "git status --short",
+        "StrategyRecordReceipt",
+        "ExperimentReceipt 2.0",
+        "AgentReceipt 2.0",
+        "record_only",
+        "advisory",
+        "enforce",
+        "Explicit Permission Required",
+        "Stop Conditions",
+        "Commit/push/tag status",
+        "qst.cli inspect",
+    ]:
+        assert required in text
+
+
+def test_agent_facing_prompts_use_english_only() -> None:
+    paths = [ROOT / "CLAUDE.md", ROOT / "docs" / "agent" / "QST_1_0_AGENT_PROMPT.md"]
+    paths.extend(
+        (ROOT / "docs" / "agent" / "prompts" / "qst_stage_3c_v0_3_2").rglob("*.md")
+    )
+    for path in paths:
+        assert not re.search(r"[\u3400-\u9fff]", path.read_text(encoding="utf-8")), path

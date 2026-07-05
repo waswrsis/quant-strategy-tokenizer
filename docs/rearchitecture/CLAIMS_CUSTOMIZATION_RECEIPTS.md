@@ -2,45 +2,52 @@
 
 ## Declared Customization
 
-Every semantic override is a sealed `CustomizationDeclaration` with distinct requester
-and author, scope, rationale, base identity, JSON Pointer operations, identity impact,
-risk, approval requirement, and UTC declaration time. Operations apply to a deep copy.
-If approval is required, the caller must provide an approval identity. A candidate that
-differs from the declared overlay is rejected as undeclared customization.
+Every semantic override is a sealed `CustomizationDeclaration` with requester, author,
+scope, rationale, base identity, JSON Pointer operations, identity impact, risk,
+approval requirement, and UTC time. Operations apply to a deep copy. Undeclared or
+overlapping changes are rejected.
 
-Customization changes a derived result identity. It never mutates the accepted base
-TokenSpec, strategy, evidence, or adapter record in place.
+## Receipt 2.0 Layers
+
+```text
+strategy_hash
+  = complete canonical GKR in the qst:canonical-strategy:v2 domain
+
+experiment_hash
+  = strategy receipt + data snapshots + date range + evaluator + parameters
+    + costs + slippage + seeds + metric definitions + result evidence
+
+agent_receipt_hash
+  = experiment + agent/model/model-version + tools + prompt/task
+    + approvals + output artifacts + recommendation
+```
+
+`StrategyRecordReceipt` also retains graph, parameter, and instance hashes. This avoids
+overloading one hash with four different identity questions. Receipt 1.0 is not a public
+compatibility surface.
 
 ## Claim Evaluation
 
-Claim policies require evidence payload kinds, counts, verified-result status, and a
-minimum adapter maturity. Adapter maturity is accepted only through a sealed
-`qst.adapter-verification/1.0` attestation. L2 evidence cannot satisfy an L3 requirement.
-The evaluator deduplicates evidence identities, isolates the requested subject, rejects
-future observations and attestations, and revalidates policy/evidence/attestation
-identities. L4 requires a signature artifact. The evaluator emits a sealed
-`ClaimDecision`; it does not execute an experiment or grant approval.
+Claim policies require evidence kind/count, verified-result status, and adapter maturity.
+Every `backtested` policy additionally requires an ExperimentReceipt 2.0 and a verified
+result requirement. The evaluator checks that receipt result IDs refer to sealed,
+verified result evidence for the same subject. A custom policy cannot disable this gate.
 
-Customization declarations must be sealed and unique. Exact and parent/child JSON
-Pointer overlaps are rejected rather than resolved by last-writer order.
+Adapter maturity is accepted only through a sealed `qst.adapter-verification/1.0`
+attestation. L2 cannot satisfy L3. L4 additionally requires a signature artifact. The
+evaluator emits a sealed ClaimDecision; it does not execute an experiment or grant
+approval.
 
-## Receipt Layers
+## Authority Interaction
 
-The identities remain separate:
+Claim truth and authority are separate. `record_only` and `advisory` modes may allow an
+external workflow to continue collecting records, but they do not turn a denied claim
+into an allowed claim. `enforce` mode additionally blocks governed transitions when
+authority evidence is insufficient.
 
-```text
-strategy_hash      = canonical strategy identity
-experiment_hash    = strategy + data snapshots + evaluator + parameters + costs + seeds
-agent_receipt_hash = experiment + agent/model/tools/prompt/task + approvals + recommendation
-```
+## AI4Finance Boundary
 
-Changing a seed, cost, data snapshot, model, tool version, approval, or recommendation
-changes the corresponding receipt identity without changing the underlying strategy
-identity.
-
-## AI4Finance Golden Boundary
-
-FinRobot, FinRL, FinRL-X, and Qlib L3 fixtures may satisfy a workflow-evidence maturity
-requirement when their result artifacts and adapter attestation verify. FinGPT and
-FinRL-Meta remain L2 and cannot satisfy the same claim. No claim implies profitability,
-live execution, broker integration, or production readiness.
+FinRobot, FinRL, FinRL-X, and Qlib L3 fixtures may satisfy workflow-evidence maturity
+requirements when result artifacts and adapter attestations verify. FinGPT and
+FinRL-Meta remain L2. No receipt or claim implies profitability, live execution, broker
+integration, or production readiness.

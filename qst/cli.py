@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import asdict
 from pathlib import Path
@@ -11,6 +12,7 @@ import typer
 import yaml
 
 from qst.adapters.qlib.cli import app as qlib_adapter_app
+from qst.admission import admit_strategy_memory
 from qst.authority import (
     AUTHORITY_USE_CASES,
     AuthorityMode,
@@ -38,6 +40,7 @@ from qst.ir import (
     load_ir_v04_file,
     validate_ir_v04,
 )
+from qst.receipts import build_strategy_record_receipt
 from qst.tokens import TokenRegistryV2, builtin_token_packs
 from qst.validation import Diagnostic
 
@@ -270,6 +273,55 @@ def canonicalize(
     else:
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_bytes(payload)
+        _echo_json(
+            {
+                "ok": True,
+                "output": output.as_posix(),
+                "canonical_digest": f"sha256:{hashlib.sha256(payload).hexdigest()}",
+                "canonical_size": len(payload),
+            }
+        )
+
+
+@app.command("inspect")
+def inspect_strategy(
+    strategy: Path,
+    canonical_output: Annotated[Path | None, typer.Option("--canonical-output")] = None,
+) -> None:
+    """Validate and summarize identity, canonical material, and memory admission."""
+
+    ir = _load_gkr_source(strategy)
+    validation = validate_ir_v04(ir)
+    canonical = canonical_bytes_v04(ir)
+    receipt = build_strategy_record_receipt(
+        ir,
+        non_goals=(
+            "no backtest or profitability claim",
+            "no broker or exchange execution",
+            "no live trading runtime",
+        ),
+    )
+    admission = admit_strategy_memory(receipt)
+    if canonical_output is not None:
+        canonical_output.parent.mkdir(parents=True, exist_ok=True)
+        canonical_output.write_bytes(canonical)
+    _echo_json(
+        {
+            "ok": validation.ok,
+            "strategy": strategy.as_posix(),
+            "validation": validation,
+            "hashes": compute_hashes_v2(ir),
+            "strategy_receipt": receipt,
+            "memory_admission": admission,
+            "canonical": {
+                "digest": receipt.canonical_digest,
+                "size": receipt.canonical_size,
+                "output": canonical_output.as_posix() if canonical_output is not None else None,
+            },
+        }
+    )
+    if not validation.ok:
+        raise typer.Exit(1)
 
 
 @authority_profile_app.command("list")

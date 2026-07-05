@@ -2,8 +2,9 @@
 
 ## Candidate
 
-This document covers the local QST `1.0.0a2` candidate. It does not constitute a GitHub
-release or remote acceptance.
+This document covers the QST `1.0.0a2` research-branch candidate. Its branch/tag
+publication does not constitute a production release, merge into `main`, or upstream
+AI4Finance acceptance.
 
 ## Required Evidence
 
@@ -22,8 +23,8 @@ release or remote acceptance.
 
 ## Local Result
 
-- Full suite: `645 passed`.
-- Coverage suite: `645 passed`; `89.58%` total package coverage.
+- Full test suite passed locally.
+- The `--cov-fail-under=85` package coverage gate passed locally.
 - Static, prompt, artifact, coverage-frontier, vocabulary, compatibility, and stage
   manifest gates passed.
 - Completion evidence is recorded in
@@ -37,4 +38,5 @@ The candidate is an evidence and governance system. It makes no claim of model t
 inference, backtesting, profitability, broker/exchange integration, HFT, order routing,
 or production execution support.
 
-The final commit and freeze tag remain local until the user authorizes GitHub submission.
+The research branch is versioned by `v1.0.0a2-agent-provenance`. Promotion to `main`, a
+GitHub release, or an upstream integration requires separate approval and evidence.

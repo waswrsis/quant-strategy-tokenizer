@@ -54,9 +54,21 @@ class FinRobotReadOnlyTools:
         diagnostics = [item.model_dump(mode="json") for item in result.diagnostics]
         diagnostics.extend(self._agent_diagnostics(ir))
         diagnostics.sort(key=lambda item: (item["code"], item.get("message", "")))
+        error_count = sum(item["severity"] == "error" for item in diagnostics)
+        warning_count = sum(item["severity"] == "warning" for item in diagnostics)
+        admission_blockers = {
+            item["code"]
+            for item in diagnostics
+            if item["severity"] == "error"
+            or item["code"] in {"missing_data_binding", "missing_risk_constraint"}
+        }
         return {
-            "ok": result.ok and not any(item["severity"] == "error" for item in diagnostics),
+            "ok": result.ok and error_count == 0,
+            "admission_ready": result.ok and not admission_blockers,
+            "admission_blockers": sorted(admission_blockers),
             "diagnostic_count": len(diagnostics),
+            "error_count": error_count,
+            "warning_count": warning_count,
             "diagnostics": diagnostics,
         }
 
@@ -207,7 +219,11 @@ class FinRobotReadOnlyTools:
                 )
             )
         if not any(
-            node.token_ref is not None and node.token_ref.namespace in {"risk", "gate"}
+            node.token_ref is not None
+            and (
+                node.token_ref.namespace in {"risk", "gate"}
+                or node.token_ref.name.startswith(("risk.", "gate."))
+            )
             for node in ir.strategy.nodes
         ):
             diagnostics.append(

@@ -22,6 +22,45 @@ def test_finrobot_returns_canonical_record_and_three_hashes(tmp_path: Path) -> N
     assert identity["canonical"]["delivery"] == "inline"
     assert identity["canonical"]["value"]["ir_version"] == "qst-ir/0.4"
 
+    validation = tools.strategy_validate(STRATEGY)
+    assert validation["ok"]
+    assert not validation["admission_ready"]
+    assert validation["error_count"] == 0
+    assert validation["warning_count"] == 3
+    assert validation["admission_blockers"] == [
+        "missing_data_binding",
+        "missing_risk_constraint",
+    ]
+
+
+def test_non_executable_boundary_warning_does_not_block_record_admission(
+    tmp_path: Path,
+) -> None:
+    tools = FinRobotReadOnlyTools(ContentAddressedStore(tmp_path / "store"))
+    payload = yaml.safe_load(STRATEGY.read_text(encoding="utf-8"))
+    payload["metadata"]["data_binding"] = "sha256:" + "a" * 64
+    payload["strategy"]["nodes"].append(
+        {
+            "id": "risk_cap",
+            "token_ref": {
+                "namespace": "core",
+                "name": "risk.position_cap",
+                "version": 1,
+                "behavior_version": 1,
+            },
+            "inputs": {},
+            "params": {"cap": 1.0},
+            "signature": {},
+        }
+    )
+    result = tools.strategy_validate(yaml.safe_dump(payload, sort_keys=False))
+    assert result["ok"]
+    assert result["admission_ready"]
+    assert result["admission_blockers"] == []
+    assert "not_executable_by_adapter" in {
+        item["code"] for item in result["diagnostics"]
+    }
+
 
 def test_finrobot_accepts_yaml_text_and_emits_stable_agent_diagnostics(tmp_path: Path) -> None:
     tools = FinRobotReadOnlyTools(ContentAddressedStore(tmp_path / "store"))

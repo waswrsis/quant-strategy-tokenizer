@@ -17,7 +17,10 @@ Read these before changing code:
 - `docs/FINAL_ACCEPTANCE.md`
 - `docs/rearchitecture/README.md`
 - `docs/rearchitecture/ADR-0001-qst-1.0-product-redefinition.md`
+- `docs/rearchitecture/FINROBOT_POSTS_ACCEPTANCE.md`
 - `docs/agent/README.md`
+- `docs/agent/QST_1_0_AGENT_PROMPT.md`
+- `docs/agent/RECORD_LAYER_WORKFLOW.md`
 - `docs/agent/prompts/qst_stage_3c_v0_3_2/README.md`
 - `docs/reports/strategy_coverage_report.md`
 - `docs/adapters/QLIB_ADAPTER_BOUNDARY.md`
@@ -33,6 +36,10 @@ Read these before changing code:
 - Legacy custom runtime command namespace: `qst compat-v04 token`.
 - Adapter-local refs use the `adapter` namespace and are not built-in token
   vocabulary.
+- Strategy, experiment, agent, claim-policy, and claim-decision receipts use their 2.0
+  schemas; no receipt 1.0 compatibility reader exists.
+- A `backtested` claim requires ExperimentReceipt 2.0 and verified result evidence.
+- FinRobot integration is a vendor-neutral read-only sidecar, not an upstream deployment.
 
 ## Operating Rules
 
@@ -43,6 +50,9 @@ Read these before changing code:
   lossless Qlib conversion.
 - Never treat the v0.4 compatibility executor as a QST 1.0 capability.
 - Keep draft, validation, human approval, publication, and activation separate.
+- Keep evidence, receipt, claim decision, and authority decision separate.
+- Select `record_only`, `advisory`, or `enforce` from the use case; never weaken mode to
+  hide a failed gate.
 - Preserve coverage taxonomy classifications and reserved/non-goal boundaries.
 
 ## Minimal Smoke Commands

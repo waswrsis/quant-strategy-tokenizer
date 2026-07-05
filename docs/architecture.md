@@ -16,6 +16,13 @@ QST is organized around Graph Kernel Records: typed strategy records with determ
 - `qst.decision`: decision kinds, monoids, fold policies, aggregators, and migration classification helpers.
 - `qst.panel`: panel type-layer metadata, panel reference operators, weight operators, and reference validation runners.
 - `qst.custom_runtime`: custom-token integrity, local approval, execution grants, audit records, and output validation.
+- `qst.provenance` and `qst.evidence`: immutable actors, activities, artifacts, and observations.
+- `qst.receipts`: complete-strategy, experiment, and agent receipt 2.0 identities.
+- `qst.claims` and `qst.admission`: evidence policy decisions and receipt-backed labels.
+- `qst.authority`: mode-aware signatures, quorum, delegation, revocation, and governed transitions.
+- `qst.storage`: content-addressed artifacts and rebuildable derived indexing.
+- `qst.integrations.finrobot`: bounded read-only agent sidecar operations.
+- `qst.report_audit` and `qst.audit_jsonl`: report review gates and tamper-evident audit export.
 
 ## Canonical Material
 
@@ -24,6 +31,10 @@ The canonical surface is JSON-compatible and deterministic. Semantic model chang
 Token surface metadata is canonical TokenSpec material. It changes TokenSpec and
 TokenPack hashes, but it does not alter strategy graph or parameter hashes unless
 the strategy graph or params themselves change.
+
+Receipt and authority identities use separate versioned domains. They do not enter v0.4
+strategy graph/parameter/instance hash material. Typed records and CAS artifacts are the
+source of truth; JSONL is a derived append-only audit view.
 
 ## Public Artifacts
 

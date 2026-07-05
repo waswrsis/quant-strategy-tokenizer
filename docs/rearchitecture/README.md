@@ -22,13 +22,17 @@ replace the runtimes from which it collects evidence.
 10. Stage 9: mode-aware authority, signatures, delegation, revocation, and quorum.
 11. Stage 10: deterministic use-case authority profiles and declared mode overrides.
 12. Stage 11: declared profile persistence and non-executing authority CLI.
+13. Stage 12: strategy, experiment, agent, claim policy, and claim decision receipt 2.0.
+14. Stage 13: bounded FinRobot read-only tools, canonical delivery, and admission gates.
+15. Stage 14: financial-report provenance, review gates, and JSONL audit export.
 
 Each stage must pass its declared gates before the next stage starts. A completed stage
 is saved in a local commit and frozen with an annotated local tag. Nothing is pushed
 without explicit user approval.
 
-Stages 0 through 11 are frozen. The audited candidate remains local until the user
-explicitly authorizes publication.
+Stages 0 through 14 are frozen. The audited candidate is published on its research branch
+under `v1.0.0a2-agent-provenance`; promotion beyond that branch requires separate
+approval.
 
 ## Authoritative Documents
 
@@ -44,4 +48,5 @@ explicitly authorizes publication.
 - [Authority profile persistence and CLI](AUTHORITY_PROFILE_CLI.md)
 - [Authority profile persistence and CLI audit](AUTHORITY_PROFILE_CLI_AUDIT.md)
 - [Authority governance audit](AUTHORITY_GOVERNANCE_AUDIT.md)
+- [FinRobot posts acceptance](FINROBOT_POSTS_ACCEPTANCE.md)
 - [Stage manifests](stages/)

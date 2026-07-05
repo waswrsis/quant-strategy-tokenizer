@@ -35,10 +35,16 @@ not interpreted semantically.
 
 ## FinRobot Tools
 
-`FinRobotReadOnlyTools` exposes six compact operations: strategy validation, strategy
-identity summary, deterministic token resolution, evidence inspection, artifact
-verification, and claim-readiness inventory. Claim readiness deliberately returns
-`not_evaluated`; Stage 6 owns claim-policy evaluation.
+`FinRobotReadOnlyTools` exposes six compact registration operations: strategy validation,
+strategy identity and canonical delivery, deterministic token resolution, evidence
+inspection, artifact verification, and claim-readiness inventory. It also exposes
+explicit strategy-record, strategy-memory admission, and backtest-admission methods for
+an orchestrator that chooses to call them. Claim readiness deliberately returns
+`not_evaluated`; only receipt-backed claim evaluation can admit a label.
+
+Inputs are bounded to 1 MiB. Canonical output is inline through 256 KiB and otherwise
+stored in CAS. The bridge emits stable diagnostics for unsupported/custom tokens,
+missing data/risk records, and the non-executable adapter boundary.
 
 ## Manifest Boundary
 

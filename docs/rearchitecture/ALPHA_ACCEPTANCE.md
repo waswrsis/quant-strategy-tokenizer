@@ -30,5 +30,6 @@ These are record-layer measurements, not model, backtest, or trading performance
 
 ## Publication
 
-The candidate commit and all stage tags remain local. GitHub publication is outside this
-acceptance and requires explicit user approval.
+The candidate is published on `research/qst-1.0-agent-provenance` and identified by
+`v1.0.0a2-agent-provenance`. This acceptance does not imply merge into `main`, a
+production release, or upstream AI4Finance acceptance.
